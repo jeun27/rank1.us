@@ -30,7 +30,7 @@ const team = (over: Partial<TeamExtras> = {}): TeamExtras => ({
   formAction: "/team",
   input,
   fixes: { ranked: exampleFixes, tidyUps: exampleTidyUps, unchecked: [], noDomain: false },
-  suggestions: [],
+  loadSuggestions: vi.fn(async () => []),
   actions: {
     status: vi.fn(async () => undefined),
     add: vi.fn(async () => undefined),
@@ -143,5 +143,30 @@ describe("Fix list context", () => {
       </TeamProvider>,
     );
     expect(screen.queryByText("Nothing to fix yet. Run your first check.")).toBeNull();
+  });
+});
+
+// Review on #60: Maps suggestions cost the team user's maps_lookup tokens, so they load only when
+// the Competitors view opens, never on a /team load or a client switch.
+describe("competitor suggestions load on demand", () => {
+  const doc = (t: TeamExtras, section: "competitors" | "fixes") =>
+    render(
+      <TeamProvider value={t}>
+        <DocView view={view} sel={{ kind: "section", section }} now={NOW} onPick={() => {}} />
+      </TeamProvider>,
+    );
+
+  it("not for other sections", () => {
+    const loadSuggestions = vi.fn(async () => []);
+    doc(team({ loadSuggestions }), "fixes");
+    expect(loadSuggestions).not.toHaveBeenCalled();
+  });
+
+  it("once, for the selected client, when Competitors opens", async () => {
+    const loadSuggestions = vi.fn(async () => [{ name: "Example Pho Spot", domain: "examplepho.test", cid: "s2" }]);
+    doc(team({ loadSuggestions }), "competitors");
+    expect(await screen.findByText("Example Pho Spot")).toBeInTheDocument();
+    expect(loadSuggestions).toHaveBeenCalledTimes(1);
+    expect(loadSuggestions).toHaveBeenCalledWith("b1");
   });
 });
