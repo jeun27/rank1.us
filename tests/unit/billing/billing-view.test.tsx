@@ -13,7 +13,7 @@ const paid = { status: "active" as const, seats: 2, nextInvoiceAt: "2026-12-01T0
 
 // UI.md 4b "Billing + switcher". Amounts are the x $99 math, never fetched from Stripe.
 describe("BillingView (/app/billing)", () => {
-  it.each([null, "canceled", "incomplete"] as const)(
+  it.each([null, "canceled", "incomplete", "incomplete_expired"] as const)(
     "no plan (%s): 'Start for $99/mo' opens Checkout",
     async (status) => {
       const a = actions();
