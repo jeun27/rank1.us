@@ -68,7 +68,10 @@ export async function handleStripeWebhook(
   try {
     let outcome: string;
     if (SUBSCRIPTION.has(event.type)) {
-      outcome = await deps.applySubscription(fromSubscription(event, event.data.object as Stripe.Subscription));
+      // Apply Stripe's current state, not the event's snapshot: same-second created/updated events can
+      // arrive out of order. event.created still drives the stale check.
+      const current = await deps.retrieveSubscription((event.data.object as Stripe.Subscription).id);
+      outcome = await deps.applySubscription(fromSubscription(event, current));
     } else if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
       const subId = idOf(session.subscription);

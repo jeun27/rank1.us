@@ -699,11 +699,12 @@ Changed
   - unknown → 200 ignored.
   - applied/duplicate/stale → 200 (logged). not_found → 500 "not_linked" (lead, after review): a subscription event can arrive before checkout.session.completed links the customer, 0018 leaves not_found unrecorded, and Stripe retries with its own backoff. An RPC error → 500 "apply_failed".
   - checkout.session.completed retrieves the subscription (items come back by default) and applies the full state (status, quantity, period end) plus client_reference_id, so seats/status are right even with no later subscription event.
+  - Review (#73): every customer.subscription.* event also retrieves the subscription and applies Stripe's current state, not the event snapshot, because same-second created/updated events can leave a paid workspace "incomplete". event.created still drives the stale check. A failed retrieve → 500 (Stripe retries).
   - Test changed, with reason: the not_found case moved from 200 to 500 not_linked (lead decision); an ordering test covers subscription-first then checkout.
   - Logs: event type, id and outcome only.
 - .env.example: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY marked UNUSED (hosted Checkout).
 - Wiring (after #72):
   - POST /api/stripe/webhook reads req.text() and verifies with stripe.webhooks.constructEvent + STRIPE_WEBHOOK_SECRET. It calls applyStripeSubscription / recordStripeEvent (service client). Unix times are converted to ISO for the RPC.
   - A live key or a missing secret → 500 {error: "not_configured"}.
-- src/lib/stripe/service.ts (server-only; frontend's server actions pass the workspaceId from getBillingState): startCheckout, addBusinessSeat, removeBusinessAtPeriodEnd (the Stripe schedule, then scheduleBusinessRemoval at the period end), openPortal. Stripe ids are read with the service client and never sent to the browser.
+- src/lib/stripe/service.ts (server-only): startCheckout(callerDb, quantity, urls), addBusinessSeat(callerDb), removeBusinessAtPeriodEnd(callerDb, businessId), openPortal(callerDb, returnUrl). Review (#73): each takes the caller's own client and derives the workspace from getBillingState(callerDb). Removal first checks the business is in listMyBusinesses(callerDb) (RLS), before any Stripe call or schedule_business_removal, so no cross-tenant archive. Stripe ids are read with the service client and never sent to the browser.
 - Stripe's `paused` subscription status is in 0018's SubscriptionStatus (backend added it), so a paused subscription applies instead of failing with 22023.

@@ -38,12 +38,9 @@ describe("event mapping", () => {
   it.each(["customer.subscription.created", "customer.subscription.updated", "customer.subscription.deleted"])(
     "%s → apply_stripe_subscription with the item quantity and period end",
     async (type) => {
-      const { r, d } = await send(
-        event(type, sub({ status: type.endsWith("deleted") ? "canceled" : "past_due", quantity: 4 }), {
-          id: "evt_example_9",
-          created: 1764547300,
-        }),
-      );
+      const state = sub({ status: type.endsWith("deleted") ? "canceled" : "past_due", quantity: 4 });
+      const d0 = deps({ retrieveSubscription: vi.fn(async () => state as unknown as Stripe.Subscription) });
+      const { r, d } = await send(event(type, state, { id: "evt_example_9", created: 1764547300 }), d0);
       expect(r).toEqual({ status: 200, body: { received: "applied" } });
       expect(d.applySubscription).toHaveBeenCalledWith({
         event_id: "evt_example_9",
@@ -101,6 +98,38 @@ describe("event mapping", () => {
     expect(r).toEqual({ status: 200, body: { received: "ignored" } });
     expect(d.applySubscription).not.toHaveBeenCalled();
     expect(d.recordEvent).not.toHaveBeenCalled();
+  });
+});
+
+describe("current state, not the event snapshot (review)", () => {
+  it.each(["customer.subscription.created", "customer.subscription.updated", "customer.subscription.deleted"])(
+    "%s retrieves the subscription and applies Stripe's current state, keeping event.created",
+    async (type) => {
+      const d = deps({
+        retrieveSubscription: vi.fn(
+          async () => sub({ status: "active", quantity: 5 }) as unknown as Stripe.Subscription,
+        ),
+      });
+      // A same-second created/updated pair: the payload still says incomplete, Stripe now says active.
+      await send(
+        event(type, sub({ status: "incomplete", quantity: 1 }), { id: "evt_example_s", created: 1764547300 }),
+        d,
+      );
+      expect(d.retrieveSubscription).toHaveBeenCalledWith("sub_example_1");
+      expect(d.applySubscription.mock.calls[0][0]).toMatchObject({
+        status: "active",
+        quantity: 5,
+        event_id: "evt_example_s",
+        event_created: "2025-12-01T00:01:40.000Z",
+      });
+    },
+  );
+
+  it("a failing retrieve → 500 so Stripe retries, nothing applied", async () => {
+    const d = deps({ retrieveSubscription: vi.fn(async () => Promise.reject({ code: "rate_limit" })) });
+    const { r } = await send(event("customer.subscription.updated", sub()), d);
+    expect(r).toEqual({ status: 500, body: { error: "apply_failed" } });
+    expect(d.applySubscription).not.toHaveBeenCalled();
   });
 });
 

@@ -4,6 +4,18 @@ import { TEST_WEBHOOK_SECRET, event, signed, sub } from "./fixtures";
 const q = vi.hoisted(() => ({ applyStripeSubscription: vi.fn(), recordStripeEvent: vi.fn() }));
 vi.mock("@/lib/queries/billing", () => q);
 vi.mock("@/lib/supabase/service", () => ({ createServiceClient: () => ({}) }));
+// The real client (live-key guard, real signature check); only the subscription fetch is stubbed.
+vi.mock("@/lib/stripe/client", async (real) => {
+  const mod = await real<typeof import("@/lib/stripe/client")>();
+  return {
+    ...mod,
+    stripeClient: () => {
+      const s = mod.stripeClient();
+      s.subscriptions.retrieve = (async () => sub({ quantity: 2 })) as never;
+      return s;
+    },
+  };
+});
 
 const { POST } = await import("@/app/api/stripe/webhook/route");
 const post = (body: string, sig?: string) =>
