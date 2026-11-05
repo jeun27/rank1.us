@@ -86,6 +86,24 @@ Table headers in the landing page's "What you see on Monday." mock panels. The p
 | "Named" |
 | "Example data" |
 
+## Team workspace (lead, 2026-11-05)
+
+Strings for the /team team workspace shell (ENG_HANDOFF_STEP2 §3). Nav labels are the 4b screen names; data in the panes is Example data.
+
+| Where | String |
+|---|---|
+| Sidebar toggle | "Workspace", "Analytics" |
+| Sidebar nav (adds to the 4b screen names) | "Reports", "Settings" |
+| Sidebar group | "Recents" |
+| Sidebar buttons (labels) | "Help", "Dark theme", "Collapse sidebar" |
+| Context pane | "Prompt template", "Copy context", "Copied", "Open in Claude" |
+| After Open in Claude | "Brief copied. Paste it in Claude if the box is empty." |
+| Clipboard blocked (either button) | "Couldn't copy. Allow clipboard access and try again." |
+| Pane divider (label) | "Resize panes" |
+| Document tabs | "Document", "New tab", "Close tab", "Expand", "Split" |
+| Phone tab bar | "Nav", "Context", "Document" |
+| Every pane | "Example data" |
+
 # 4b. App screens: every state
 
 Copy in quotes is exact. Every number shows n + checked X ago. Results labeled API-measured, directional.

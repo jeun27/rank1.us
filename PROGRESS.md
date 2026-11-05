@@ -161,3 +161,23 @@ Blocked/open
 - Migration 20261105000008 (+ .down.sql): `user_roles` (team | dfy_client; no row = self-serve; readable only by self; service role writes). `ensure_self_serve_workspace()` returns the caller's workspace, or creates one with the caller as owner on first sign-in, behind a per-user advisory lock. Team and dfy_client get null. `my_landing()` returns team | dfy_client | onboarding | dashboard. Both are executable by authenticated only (anon EXECUTE revoked).
 - Queries: ensureSelfServeWorkspace, getLanding (src/lib/queries/auth.ts). Tests: tests/db/roles.test.ts.
 - Open: auto-created workspaces start at seats_quantity 0, so onboarding cannot insert a business until checkout. Lead settles this in Step 5.
+
+## Team workspace shell (frontend, branch feat/team-workspace, issue #10)
+Changed
+- /team: 3-pane team workspace like Profound's Wrenfield demo (sidebar 240px, context and document panes split 50/50 by a keyboard-resizable divider). Example data only (Example Ramen House seed), read-only. Off unless ENABLE_TEAM_WORKSPACE=true.
+- src/lib/queries/workspace.ts: getWorkspaceRows (read-only, takes a DbClient) and buildWorkspace (every count from stored answers and citations). tests/db/workspace.test.ts checks the DB rows build the same view as /team's Example data.
+- scripts/seed/data.ts: the pure part of scripts/seed/generate.ts (no file reads), so /team can import the seed rows. seed.sql and seed.dev.sql are unchanged (seed.test.ts still passes).
+- Dark theme tokens (src/styles/tokens.ts darkColors, globals.css [data-theme="dark"]). Same token names, so the Final set components switch with it. New token `raised` (selected rows, active tab, composer).
+- src/lib/workspace/context.ts: per-selection facts and the Markdown brief. src/lib/workspace/prefs.ts: theme, split and collapse in localStorage key rank1.workspace.
+
+Blocked
+- Nothing. Preview needs ENABLE_TEAM_WORKSPACE=true set in Vercel (Preview environment) by the lead.
+
+Doc differences
+- Dark mode: docs/PRODUCT.md and UI.md said "dark mode: not in v1" / "Light mode only". Jeun's locks (ENG_HANDOFF_OVERNIGHT §3, ENG_HANDOFF_STEP2 §3: "light + dark; team nav always dark") override that for /team, so both docs now scope the rule to customer pages. Dark applies only through data-theme; there is still no prefers-color-scheme CSS.
+- Route: Step 3 routing reserves /app for self-serve owners/members, /team for the team, /client for DFY clients. The workspace moved from /app to /team; /app is a 404 until the owner app exists.
+- "Open in Claude": claude.ai has no documented prefill parameter. `https://claude.ai/new?q=<brief>` is the known form, but one report says it no longer prefills, and claude.ai blocks headless checks behind a Cloudflare challenge, so it is unverified. The button copies the brief to the clipboard first, then opens ?q= (no ?q= when the encoded brief is over 6000 characters), and says "Brief copied. Paste it in Claude if the box is empty."
+- Fix list, Experiments and Reports show their 4b empty states: the seed has no fixes, experiments or reports (fixes come from the fix_rules engine later). The Reports document previews the dashboard summary.
+- Clipboard blocked: both buttons show "Couldn't copy. Allow clipboard access and try again." instead of failing silently (review note on #11).
+- The business switcher shows the name only: UI.md hides the switcher while the workspace has 1 business.
+- Tailwind v4 inlines theme shadows into utilities, so the light shadows also render in dark (the inset white highlight is subtle on dark surfaces). The workspace itself uses borders, not shadows.
