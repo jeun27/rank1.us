@@ -1,4 +1,4 @@
-import { EngineError, arr, isObj, num, postJson, str } from "./shared";
+import { EngineError, apiBase, arr, isObj, num, postJson, str } from "./shared";
 import type { EngineDeps } from "./types";
 
 export const DFS_BASE = "https://api.dataforseo.com/v3";
@@ -11,7 +11,13 @@ export async function dfsLive(deps: EngineDeps, path: string, task: Record<strin
   const { DATAFORSEO_LOGIN: login, DATAFORSEO_PASSWORD: password } = deps.env;
   if (!login || !password) throw new EngineError("missing keys: DATAFORSEO_LOGIN, DATAFORSEO_PASSWORD");
   const auth = `Basic ${Buffer.from(`${login}:${password}`).toString("base64")}`;
-  const json = await postJson(deps, `${DFS_BASE}${path}`, { Authorization: auth }, [task], DFS_TIMEOUT_MS);
+  const json = await postJson(
+    deps,
+    `${apiBase(deps.env, deps.env.DATAFORSEO_API_URL, DFS_BASE)}${path}`,
+    { Authorization: auth },
+    [task],
+    DFS_TIMEOUT_MS,
+  );
   if (!isObj(json)) throw new EngineError("response is not an object", json);
   const t = arr(json.tasks)[0];
   const cost = isObj(t) ? num(t.cost) : null;
