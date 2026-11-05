@@ -1,5 +1,9 @@
 import { contactEmail, sendEmail } from "@/lib/email/resend";
-import { countRecentContactRequests, insertContactRequest, markContactRequestEmailed } from "@/lib/queries/contactRequests";
+import {
+  countRecentContactRequests,
+  insertContactRequest,
+  markContactRequestEmailed,
+} from "@/lib/queries/contactRequests";
 import { clientIp, hashIp } from "@/lib/spam/ipHash";
 import { CONTACT_LIMIT, contactWindowStart, honeypotFilled } from "@/lib/spam/rateLimit";
 import { readBody } from "@/lib/spam/readBody";
@@ -19,7 +23,8 @@ export async function POST(req: Request) {
   if (honeypotFilled(body)) return Response.json({ ok: true });
 
   const ip = clientIp(req);
-  if (!(await verifyTurnstile(body[TURNSTILE_FIELD], ip))) return Response.json({ error: "turnstile" }, { status: 403 });
+  if (!(await verifyTurnstile(body[TURNSTILE_FIELD], ip)))
+    return Response.json({ error: "turnstile" }, { status: 403 });
 
   let db: DbClient;
   let id: string;

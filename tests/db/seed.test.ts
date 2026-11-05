@@ -45,19 +45,43 @@ describe("supabase/seed.sql on a fresh db reset", () => {
   it("loads every seeded table", async () => {
     const counts = Object.fromEntries(
       await Promise.all(
-        ["question_templates", "local_places", "fix_rules", "domain_categories", "workspaces", "workspace_members", "businesses",
-          "competitors", "questions", "runs", "answers", "citations", "fixes"].map(async (t) => [t, await count(`select count(*) n from public.${t}`)]),
+        [
+          "question_templates",
+          "local_places",
+          "fix_rules",
+          "domain_categories",
+          "workspaces",
+          "workspace_members",
+          "businesses",
+          "competitors",
+          "questions",
+          "runs",
+          "answers",
+          "citations",
+          "fixes",
+        ].map(async (t) => [t, await count(`select count(*) n from public.${t}`)]),
       ),
     );
     expect(counts).toMatchObject({
-      question_templates: 20, fix_rules: 16, domain_categories: 5, workspaces: 1, workspace_members: 1, businesses: 1,
-      competitors: 5, questions: 25, runs: 2, answers: 500, fixes: 0,
+      question_templates: 20,
+      fix_rules: 16,
+      domain_categories: 5,
+      workspaces: 1,
+      workspace_members: 1,
+      businesses: 1,
+      competitors: 5,
+      questions: 25,
+      runs: 2,
+      answers: 500,
+      fixes: 0,
     });
     expect(counts.citations).toBeGreaterThan(0);
   });
 
   it("question_templates match TEMPLATES verbatim", async () => {
-    const db = await rows(`select short_form, long_form, slots, fixed_cuisine, fixed_city, origin, sort from public.question_templates order by sort`);
+    const db = await rows(
+      `select short_form, long_form, slots, fixed_cuisine, fixed_city, origin, sort from public.question_templates order by sort`,
+    );
     expect(db).toEqual(TEMPLATES.map((t) => ({ ...t, slots: [...t.slots] })));
   });
 
@@ -66,21 +90,35 @@ describe("supabase/seed.sql on a fresh db reset", () => {
       `select key, enabled, unverified, grp, ai_lever from public.fix_rules order by key`,
     );
     expect(r.some((x) => x.key.startsWith("A"))).toBe(false);
-    expect(r.filter((x) => x.enabled).map((x) => x.key).sort()).toEqual(["H1", "R10", "R11", "R14"]);
+    expect(
+      r
+        .filter((x) => x.enabled)
+        .map((x) => x.key)
+        .sort(),
+    ).toEqual(["H1", "R10", "R11", "R14"]);
     expect(r.filter((x) => !x.enabled).every((x) => x.unverified.length > 0)).toBe(true);
     expect(r.find((x) => x.key === "H1")).toMatchObject({ grp: "hygiene", ai_lever: false });
   });
 
   it("local_places: Irvine places verified, Eighteen Main as a landmark", async () => {
-    expect(await count(`select count(*) n from public.local_places where city = 'Irvine' and state = 'CA' and verified`)).toBe(IRVINE_PLACES.length);
-    expect(await count(`select count(*) n from public.local_places where name = 'Eighteen Main' and kind = 'landmark'`)).toBe(1);
+    expect(
+      await count(`select count(*) n from public.local_places where city = 'Irvine' and state = 'CA' and verified`),
+    ).toBe(IRVINE_PLACES.length);
+    expect(
+      await count(`select count(*) n from public.local_places where name = 'Eighteen Main' and kind = 'landmark'`),
+    ).toBe(1);
   });
 
   it("Example Agency is owned by the example user and Example Ramen House has 25 active questions", async () => {
     const [ws] = await rows(`select w.name, w.seats_quantity, u.email, m.role from public.workspaces w
       join auth.users u on u.id = w.owner_id join public.workspace_members m on m.workspace_id = w.id and m.user_id = u.id`);
     expect(ws).toEqual({ name: "Example Agency", seats_quantity: 1, email: "owner@example.test", role: "owner" });
-    expect(await count(`select count(*) n from public.questions where business_id = $1 and active and city = 'Irvine' and state = 'CA' and country = 'US'`, [IDS.business])).toBe(25);
+    expect(
+      await count(
+        `select count(*) n from public.questions where business_id = $1 and active and city = 'Irvine' and state = 'CA' and country = 'US'`,
+        [IDS.business],
+      ),
+    ).toBe(25);
   });
 
   it("every brand name starts with Example", async () => {
@@ -104,17 +142,22 @@ describe("supabase/seed.sql on a fresh db reset", () => {
 
   it("visibility excludes failed and no_overview answers from the denominator", async () => {
     const summary = (await getLatestRunSummary(serviceClient(), IDS.business))!;
-    const [exp] = await rows<{ ok: number; named: number; excluded: number }>(`
+    const [exp] = await rows<{ ok: number; named: number; excluded: number }>(
+      `
       select (count(*) filter (where status = 'ok'))::int ok, (count(*) filter (where status = 'ok' and mentioned))::int named,
              (count(*) filter (where status in ('failed', 'no_overview')))::int excluded
-      from public.answers where run_id = $1`, [summary.id]);
+      from public.answers where run_id = $1`,
+      [summary.id],
+    );
     expect(exp.excluded).toBe(17);
     expect(summary.visibility).toEqual({ value: exp.named / exp.ok, numerator: exp.named, denominator: exp.ok });
     expect(summary.visibility.denominator).toBe(250 - 17);
   });
 
   it("location_supported: fallback_country for chatgpt and gemini, exact for google_aio and perplexity", async () => {
-    const r = await rows(`select engine, array_agg(distinct location_supported) s from public.answers group by engine order by engine`);
+    const r = await rows(
+      `select engine, array_agg(distinct location_supported) s from public.answers group by engine order by engine`,
+    );
     expect(r).toEqual([
       { engine: "chatgpt", s: ["fallback_country"] },
       { engine: "gemini", s: ["fallback_country"] },
@@ -124,8 +167,10 @@ describe("supabase/seed.sql on a fresh db reset", () => {
   });
 
   it("citations use fake .test domains with a known category", async () => {
-    expect(await count(`select count(*) n from public.citations c left join public.domain_categories d using (domain)
-      where c.domain not like 'example-%.test' or d.category is distinct from c.category`)).toBe(0);
+    expect(
+      await count(`select count(*) n from public.citations c left join public.domain_categories d using (domain)
+      where c.domain not like 'example-%.test' or d.category is distinct from c.category`),
+    ).toBe(0);
   });
 
   it("no real CSV restaurant name appears in runs, answers or citations", async () => {
@@ -140,9 +185,16 @@ describe("supabase/seed.dev.sql", () => {
   }, 60_000);
 
   it("adds the CSV restaurants as hidden suggested competitors and clusters as unverified landmarks", async () => {
-    expect(await count(`select count(*) n from public.competitors where business_id = $1 and source = 'suggested' and hidden`, [IDS.business])).toBe(devCompetitors().length);
+    expect(
+      await count(
+        `select count(*) n from public.competitors where business_id = $1 and source = 'suggested' and hidden`,
+        [IDS.business],
+      ),
+    ).toBe(devCompetitors().length);
     expect(await count(`select count(*) n from public.competitors where source = 'suggested' and not hidden`)).toBe(0);
-    expect(await count(`select count(*) n from public.local_places where not verified and kind = 'landmark'`)).toBe(devPlaces().length);
+    expect(await count(`select count(*) n from public.local_places where not verified and kind = 'landmark'`)).toBe(
+      devPlaces().length,
+    );
     expect(await count(`select count(*) n from public.local_places where verified`)).toBe(IRVINE_PLACES.length);
   });
 

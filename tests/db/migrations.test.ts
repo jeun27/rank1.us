@@ -6,14 +6,35 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { apiUrl, dbUrl } from "./helpers";
 
 const TABLES = [
-  "workspaces", "workspace_members", "businesses", "competitors", "questions", "runs", "answers", "citations",
-  "domain_categories", "fix_rules", "question_templates", "local_places", "listing_snapshots", "fixes",
-  "experiments", "experiment_questions", "google_tokens", "ai_traffic", "reports", "leads", "contact_requests",
+  "workspaces",
+  "workspace_members",
+  "businesses",
+  "competitors",
+  "questions",
+  "runs",
+  "answers",
+  "citations",
+  "domain_categories",
+  "fix_rules",
+  "question_templates",
+  "local_places",
+  "listing_snapshots",
+  "fixes",
+  "experiments",
+  "experiment_questions",
+  "google_tokens",
+  "ai_traffic",
+  "reports",
+  "leads",
+  "contact_requests",
   "stripe_events",
 ].sort();
 
 const dir = (sub: string) => join(process.cwd(), "supabase", sub);
-const sqlFiles = (sub: string) => readdirSync(dir(sub)).filter((f) => f.endsWith(".sql")).sort();
+const sqlFiles = (sub: string) =>
+  readdirSync(dir(sub))
+    .filter((f) => f.endsWith(".sql"))
+    .sort();
 
 let pg: Client;
 

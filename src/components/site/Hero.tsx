@@ -7,7 +7,11 @@ import { container } from "./Section";
 
 export function Hero() {
   return (
-    <section id="hero" aria-labelledby="hero-title" className={`${container} grid items-center gap-12 py-16 md:grid-cols-2 md:py-24`}>
+    <section
+      id="hero"
+      aria-labelledby="hero-title"
+      className={`${container} grid items-center gap-12 py-16 md:grid-cols-2 md:py-24`}
+    >
       <div>
         <h1 id="hero-title" className="font-display text-display font-semibold md:text-display-md">
           Be the brand AI names first.
@@ -18,7 +22,9 @@ export function Hero() {
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-4">
           <Button href="#audit">Get my free audit</Button>
-          <Button variant="secondary" href="#pricing">See pricing</Button>
+          <Button variant="secondary" href="#pricing">
+            See pricing
+          </Button>
         </div>
         <p className="mt-4 text-caption text-inkMuted">Same-day results as CSV + PNG. No card.</p>
       </div>

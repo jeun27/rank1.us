@@ -45,7 +45,8 @@ export function Turnstile({ resetSignal }: { resetSignal: number }) {
     let gone = false;
     loadScript()
       .then(() => {
-        if (!gone && ref.current && window.turnstile) widget.current = window.turnstile.render(ref.current, { sitekey });
+        if (!gone && ref.current && window.turnstile)
+          widget.current = window.turnstile.render(ref.current, { sitekey });
       })
       .catch(() => {
         // No widget means no token; the server rejects the submit and the form shows its error state.

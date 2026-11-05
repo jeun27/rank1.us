@@ -10,7 +10,10 @@ export const INDUSTRY_OTHER_MAX = 60;
 
 // industry_other (max 60 chars) is only allowed when industry is "Other".
 export type ContactRequestInsert = Omit<TablesInsert<"contact_requests">, "industry" | "industry_other"> &
-  ({ industry: Exclude<Industry, "Other">; industry_other?: null } | { industry: "Other"; industry_other?: string | null });
+  (
+    | { industry: Exclude<Industry, "Other">; industry_other?: null }
+    | { industry: "Other"; industry_other?: string | null }
+  );
 
 export async function insertContactRequest(db: DbClient, row: ContactRequestInsert): Promise<string> {
   const insert: TablesInsert<"contact_requests"> = row;

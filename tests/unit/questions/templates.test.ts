@@ -24,7 +24,12 @@ function tableRows(heading: string): string[][] {
     .split("\n")
     .filter((line) => line.startsWith("|"))
     .slice(2)
-    .map((line) => line.split("|").slice(1, -1).map((cell) => cell.trim()));
+    .map((line) =>
+      line
+        .split("|")
+        .slice(1, -1)
+        .map((cell) => cell.trim()),
+    );
 }
 
 const REQUIRED = [
@@ -49,8 +54,7 @@ describe("question templates match docs/UI.md", () => {
   });
 
   it("dietary and occasion options match docs/UI.md", () => {
-    const list = (name: string) =>
-      uiMd.split(`- **{${name}}**: `)[1].split("\n")[0].split(", ");
+    const list = (name: string) => uiMd.split(`- **{${name}}**: `)[1].split("\n")[0].split(", ");
     expect([...DIETARY]).toEqual(list("dietary"));
     expect([...OCCASIONS]).toEqual(list("occasion"));
   });
@@ -112,9 +116,7 @@ describe("filling templates for Example Ramen House", () => {
   it("expands over every pick, and nothing when a slot has no picks", () => {
     const nearLandmark = TEMPLATES[1];
     expect(expandTemplate(nearLandmark, exampleRamenHouse, exampleRamenHousePicks)).toHaveLength(3);
-    expect(
-      expandTemplate(nearLandmark, exampleRamenHouse, { ...exampleRamenHousePicks, landmarks: [] }),
-    ).toEqual([]);
+    expect(expandTemplate(nearLandmark, exampleRamenHouse, { ...exampleRamenHousePicks, landmarks: [] })).toEqual([]);
   });
 
   it("uses fixed templates only for a matching cuisine and city", () => {
@@ -131,9 +133,7 @@ describe("Example Ramen House active questions", () => {
   const shorts = exampleRamenHouseQuestions.map((q) => q.short_text);
 
   it("generates more than the cap, so the cap is exercised", () => {
-    const all = TEMPLATES.flatMap((t) =>
-      expandTemplate(t, exampleRamenHouse, exampleRamenHousePicks),
-    );
+    const all = TEMPLATES.flatMap((t) => expandTemplate(t, exampleRamenHouse, exampleRamenHousePicks));
     expect(new Set(all.map((q) => q.short_text.toLowerCase())).size).toBe(27);
   });
 

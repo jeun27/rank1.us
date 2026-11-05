@@ -31,7 +31,8 @@ test("/contact: empty submit shows inline errors and sends nothing", async ({ pa
   const bodies = await mockApi(page, "/api/contact", 200, { ok: true });
   await page.goto("/contact");
   await page.getByRole("button", { name: "Send" }).click();
-  for (const l of ["Name", "Email", "Industry", "Tier", "Message"]) await expect(page.getByLabel(l, { exact: true })).toHaveAttribute("aria-invalid", "true");
+  for (const l of ["Name", "Email", "Industry", "Tier", "Message"])
+    await expect(page.getByLabel(l, { exact: true })).toHaveAttribute("aria-invalid", "true");
   await expect(page.getByLabel("Industry", { exact: true })).toHaveAccessibleDescription("Pick your industry.");
   await expect(page.locator("p", { hasText: "Pick your industry." })).toBeVisible();
   await expect(page.getByLabel("Name")).toBeFocused();
@@ -48,7 +49,12 @@ test("/contact: Sending… then success, with the Turnstile token posted", async
   await expect(page.getByRole("button", { name: "Sending…" })).toBeDisabled();
   release();
   await expect(page.getByRole("status")).toHaveText("Thanks. We'll reply by email within 2 business days.");
-  expect(bodies[0]).toMatchObject({ name: "Ana Example", tier: "Other", "cf-turnstile-response": DUMMY_TOKEN, website: "" });
+  expect(bodies[0]).toMatchObject({
+    name: "Ana Example",
+    tier: "Other",
+    "cf-turnstile-response": DUMMY_TOKEN,
+    website: "",
+  });
 });
 
 for (const [status, text] of [
@@ -62,7 +68,11 @@ for (const [status, text] of [
     await page.getByRole("button", { name: "Send" }).click();
     await expect(page.locator("form").getByRole("alert")).toContainText(text);
     await expectAxeClean(page);
-    if (status === 502) await page.screenshot({ path: `test-results/screenshots/contact-error-${info.project.name}.png`, fullPage: true });
+    if (status === 502)
+      await page.screenshot({
+        path: `test-results/screenshots/contact-error-${info.project.name}.png`,
+        fullPage: true,
+      });
   });
 }
 
@@ -138,7 +148,14 @@ for (const where of ["/contact", "modal"] as const) {
     const industry = scope.getByLabel("Industry", { exact: true });
     await expect(industry).toHaveAttribute("required", "");
     await expect(industry.locator("option").first()).toHaveText("Pick your industry.");
-    expect(await industry.locator("option:not([disabled])").allTextContents()).toEqual(["Restaurant", "HVAC", "Plumbing", "Roofing", "Pest control", "Other"]);
+    expect(await industry.locator("option:not([disabled])").allTextContents()).toEqual([
+      "Restaurant",
+      "HVAC",
+      "Plumbing",
+      "Roofing",
+      "Pest control",
+      "Other",
+    ]);
     await expect(scope).not.toContainText("$");
     expect((await industry.boundingBox())!.height).toBeGreaterThanOrEqual(44);
 
@@ -157,7 +174,10 @@ for (const where of ["/contact", "modal"] as const) {
     await expect(other).toBeVisible();
     await expect(other).toHaveAttribute("maxlength", "60");
     await expectAxeClean(page);
-    await page.screenshot({ path: `test-results/screenshots/contact-industry-${where === "modal" ? "modal-" : ""}${info.project.name}.png`, fullPage: where !== "modal" });
+    await page.screenshot({
+      path: `test-results/screenshots/contact-industry-${where === "modal" ? "modal-" : ""}${info.project.name}.png`,
+      fullPage: where !== "modal",
+    });
 
     await other.fill("Pool service");
     await scope.getByRole("button", { name: "Send" }).click();

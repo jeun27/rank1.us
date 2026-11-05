@@ -4,7 +4,8 @@ import { DUMMY_TOKEN, expectAxeClean, expectNoSideScroll, mockApi, stubTurnstile
 // AuditRequestForm on the ink band in /dev/forms, until the landing page hosts it.
 test.beforeEach(async ({ page }) => stubTurnstile(page));
 
-const submit = (page: import("@playwright/test").Page) => page.getByRole("button", { name: "Get my free audit" }).click();
+const submit = (page: import("@playwright/test").Page) =>
+  page.getByRole("button", { name: "Get my free audit" }).click();
 
 test("idle: labeled fields, amber final button, 44px targets, axe clean", async ({ page }, info) => {
   await page.goto("/dev/forms");
@@ -16,7 +17,10 @@ test("idle: labeled fields, amber final button, 44px targets, axe clean", async 
   await expect(page.getByLabel("Your domain")).toHaveAttribute("placeholder", "yourbusiness.com");
   await expectNoSideScroll(page);
   await expectAxeClean(page);
-  await page.locator("section").first().screenshot({ path: `test-results/screenshots/audit-form-${info.project.name}.png` });
+  await page
+    .locator("section")
+    .first()
+    .screenshot({ path: `test-results/screenshots/audit-form-${info.project.name}.png` });
 });
 
 test("error: domain without an ending shows the Final set string, readable on ink", async ({ page }, info) => {
@@ -29,12 +33,21 @@ test("error: domain without an ending shows the Final set string, readable on in
   await expect(page.getByLabel("Your domain")).toBeFocused();
   expect(bodies).toHaveLength(0);
   await expectAxeClean(page);
-  await page.locator("section").first().screenshot({ path: `test-results/screenshots/audit-form-error-${info.project.name}.png` });
+  await page
+    .locator("section")
+    .first()
+    .screenshot({ path: `test-results/screenshots/audit-form-error-${info.project.name}.png` });
 });
 
 test("submitting shows Checking…, then success with the email", async ({ page }) => {
   let release!: () => void;
-  const bodies = await mockApi(page, "/api/audit/request", 202, { status: "queued" }, new Promise<void>((r) => (release = r)));
+  const bodies = await mockApi(
+    page,
+    "/api/audit/request",
+    202,
+    { status: "queued" },
+    new Promise<void>((r) => (release = r)),
+  );
   await page.goto("/dev/forms");
   await page.getByLabel("Email").fill("owner@example.test");
   await page.getByLabel("Your domain").fill("ramenhouse.com");
@@ -42,7 +55,12 @@ test("submitting shows Checking…, then success with the email", async ({ page 
   await expect(page.getByRole("button", { name: "Checking…" })).toBeDisabled();
   release();
   await expect(page.getByRole("status")).toHaveText("Got it. We'll email your audit to owner@example.test.");
-  expect(bodies[0]).toMatchObject({ email: "owner@example.test", domain: "ramenhouse.com", "cf-turnstile-response": DUMMY_TOKEN, website: "" });
+  expect(bodies[0]).toMatchObject({
+    email: "owner@example.test",
+    domain: "ramenhouse.com",
+    "cf-turnstile-response": DUMMY_TOKEN,
+    website: "",
+  });
   await expectAxeClean(page);
 });
 

@@ -4,7 +4,8 @@ import { LegalPlaceholder } from "@/components/contact/LegalPlaceholder";
 
 export const metadata: Metadata = { title: "Terms - Rank1" };
 
-const link = "text-jellyDeep underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
+const link =
+  "text-jellyDeep underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
 
 // Placeholder copy (exempt from COPY.md). No legal claims until review.
 export default function TermsPage() {
@@ -22,9 +23,7 @@ export default function TermsPage() {
       <section>
         <h2>Questions</h2>
         <p>
-          Ask us anything through the{" "}
-          <ContactUsLink className={link}>Contact us</ContactUsLink>{" "}
-          form.
+          Ask us anything through the <ContactUsLink className={link}>Contact us</ContactUsLink> form.
         </p>
       </section>
     </LegalPlaceholder>

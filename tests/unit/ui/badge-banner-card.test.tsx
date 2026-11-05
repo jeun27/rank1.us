@@ -21,10 +21,22 @@ describe("Badge", () => {
 
 describe("Banner", () => {
   it("error: white, 1.5px brick edge, brick text, 64px Jelly, one sentence and one text-link action", () => {
-    render(<Banner tone="error" action={{ label: "Try again", href: "#" }}>We couldn&apos;t load your results. Try again.</Banner>);
+    render(
+      <Banner tone="error" action={{ label: "Try again", href: "#" }}>
+        We couldn&apos;t load your results. Try again.
+      </Banner>,
+    );
     const el = screen.getByRole("alert");
     const cls = el.className.split(" ");
-    for (const c of ["bg-white", "border-[1.5px]", "border-brick", "text-brick", "rounded-banner", "shadow-banner-error"]) expect(cls).toContain(c);
+    for (const c of [
+      "bg-white",
+      "border-[1.5px]",
+      "border-brick",
+      "text-brick",
+      "rounded-banner",
+      "shadow-banner-error",
+    ])
+      expect(cls).toContain(c);
     expect(el.className).not.toMatch(/bg-errorBg/);
     expect(screen.getByRole("link", { name: "Try again" }).className).toMatch(/text-jellyDeep/);
     const jelly = el.querySelector("img")!;
@@ -36,7 +48,15 @@ describe("Banner", () => {
     render(<Banner tone="info">Info</Banner>);
     const el = screen.getByRole("status");
     const cls = el.className.split(" ");
-    for (const c of ["bg-white", "border-[1.5px]", "border-jellyDeep", "text-jellyDeep", "rounded-banner", "shadow-field"]) expect(cls).toContain(c);
+    for (const c of [
+      "bg-white",
+      "border-[1.5px]",
+      "border-jellyDeep",
+      "text-jellyDeep",
+      "rounded-banner",
+      "shadow-field",
+    ])
+      expect(cls).toContain(c);
     expect(el.className).not.toMatch(/bg-infoBg/);
     const chip = el.querySelector("[data-icon=info]")!.parentElement!;
     expect(chip.className).toContain("bg-infoBg");

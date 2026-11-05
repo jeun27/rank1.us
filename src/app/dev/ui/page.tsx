@@ -39,7 +39,11 @@ const auditField: DomainFieldProps = {
   loadingLabel: "Checking…",
   errorText: "Add the ending, like ramenhouse.com",
 };
-const emptyField: DomainFieldProps = { label: "Your domain", placeholder: "yoursite.com", buttonLabel: "Add my business" };
+const emptyField: DomainFieldProps = {
+  label: "Your domain",
+  placeholder: "yoursite.com",
+  buttonLabel: "Add my business",
+};
 const emptyMessage = "Nothing tracked yet. Add your domain and I'll find the questions.";
 const loadingMessage = "Checking 4 AI engines…";
 
@@ -79,7 +83,11 @@ function Section({ name, example, children }: { name: string; example?: boolean;
   return (
     <section className="border-t border-border py-8">
       <h2 className="mb-4 font-display text-h2 font-semibold md:text-h2-md">{name}</h2>
-      {example && <p className="mb-4"><Badge tone="info">Example data</Badge></p>}
+      {example && (
+        <p className="mb-4">
+          <Badge tone="info">Example data</Badge>
+        </p>
+      )}
       <div className="flex flex-col gap-4">{children}</div>
     </section>
   );
@@ -90,7 +98,9 @@ export default function DevUiPage() {
   return (
     <main className="mx-auto max-w-page px-5 py-12 md:px-8">
       <h1 className="font-display text-display font-semibold md:text-display-md">UI components</h1>
-      <p className="mt-2 text-inkMuted">Every component and state from docs/UI.md. <Badge tone="info">Example data</Badge></p>
+      <p className="mt-2 text-inkMuted">
+        Every component and state from docs/UI.md. <Badge tone="info">Example data</Badge>
+      </p>
 
       <Section name="Logo">
         <Logo />
@@ -111,7 +121,9 @@ export default function DevUiPage() {
       <Section name="Button">
         <div className="flex flex-wrap items-center gap-4">
           <Button>Get my free audit</Button>
-          <Button variant="secondary" href="#pricing">See pricing</Button>
+          <Button variant="secondary" href="#pricing">
+            See pricing
+          </Button>
           <Button loading>Checking…</Button>
           <Button disabled>Add business</Button>
         </div>
@@ -170,7 +182,9 @@ export default function DevUiPage() {
             visibility: formatPercent(r.now),
             change: pointsChange(r.now, r.lastWeek),
           }))}
-          footnote={<Freshness checkedAt={exampleCheck.checkedAt} answers={exampleCheck.answers} now={exampleCheck.now} />}
+          footnote={
+            <Freshness checkedAt={exampleCheck.checkedAt} answers={exampleCheck.answers} now={exampleCheck.now} />
+          }
         />
       </Section>
 
@@ -211,7 +225,9 @@ export default function DevUiPage() {
           <div className="flex flex-col gap-10">
             <div>
               <p className="font-display text-h3 font-semibold">Final set</p>
-              <p className="text-inkMuted">Each action and state has its own look, so people can tell them apart at a glance.</p>
+              <p className="text-inkMuted">
+                Each action and state has its own look, so people can tell them apart at a glance.
+              </p>
             </div>
             <SetRow title="Get my free audit" note="Field + Button. Default, focused, loading, error.">
               <FieldStates />
@@ -223,7 +239,9 @@ export default function DevUiPage() {
             </SetRow>
             <SetRow title="See pricing · Add business" note="Text link, and the disabled pill.">
               <div className="flex flex-wrap items-center gap-6">
-                <Button variant="secondary" href="#pricing">See pricing</Button>
+                <Button variant="secondary" href="#pricing">
+                  See pricing
+                </Button>
                 <Button disabled>Add business</Button>
               </div>
             </SetRow>

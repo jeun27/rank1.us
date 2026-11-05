@@ -7,7 +7,15 @@ export function formatAge(checkedAt: Date, now: Date): string {
   return h < 48 ? `${h} h` : `${Math.floor(h / 24)} d`;
 }
 
-export function Freshness({ checkedAt, answers, now = new Date() }: { checkedAt: Date | string; answers: number; now?: Date }) {
+export function Freshness({
+  checkedAt,
+  answers,
+  now = new Date(),
+}: {
+  checkedAt: Date | string;
+  answers: number;
+  now?: Date;
+}) {
   const n = `${answers.toLocaleString("en-US")} ${answers === 1 ? "answer" : "answers"}`;
   return (
     <p className="flex items-center gap-2 text-caption text-inkMuted tabular-nums">

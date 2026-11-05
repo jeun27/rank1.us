@@ -9,7 +9,11 @@ const metric = (numerator: number, denominator: number): Metric => ({
 });
 
 // Fixed times so the gallery renders the same every time: "Checked 14 h ago".
-export const exampleCheck = { checkedAt: new Date("2026-11-04T22:00:00Z"), now: new Date("2026-11-05T12:00:00Z"), answers: 250 };
+export const exampleCheck = {
+  checkedAt: new Date("2026-11-04T22:00:00Z"),
+  now: new Date("2026-11-05T12:00:00Z"),
+  answers: 250,
+};
 
 export const exampleLeaderboard = [
   { brand: "Example Ramen House", you: true, now: metric(75, 250), lastWeek: metric(60, 250) },

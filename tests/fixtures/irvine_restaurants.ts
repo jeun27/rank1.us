@@ -61,7 +61,8 @@ export function loadIrvineRestaurants(path = IRVINE_RESTAURANTS_CSV): {
 } {
   const [header, ...body] = parseCsv(readFileSync(path, "utf8"));
   const rows = body.map((cells, n) => {
-    if (cells.length !== header.length) throw new Error(`row ${n + 2}: ${cells.length} cells, expected ${header.length}`);
+    if (cells.length !== header.length)
+      throw new Error(`row ${n + 2}: ${cells.length} cells, expected ${header.length}`);
     return Object.fromEntries(header.map((h, i) => [h, cells[i]])) as IrvineRestaurant;
   });
   return { header, rows };

@@ -4,7 +4,16 @@ import { container } from "./Section";
 // Small decorative icons (paths from Lucide, ISC license) in moss and amber.
 function FeatureIcon({ className, children }: { className: string; children: ReactNode }) {
   return (
-    <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={`size-6 ${className}`}>
+    <svg
+      aria-hidden
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`size-6 ${className}`}
+    >
       {children}
     </svg>
   );

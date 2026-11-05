@@ -10,7 +10,10 @@ beforeAll(async () => {
 });
 
 const question = (businessId: string, active = true) => ({
-  business_id: businessId, short_text: `q ${crypto.randomUUID()}`, location_level: "city", active,
+  business_id: businessId,
+  short_text: `q ${crypto.randomUUID()}`,
+  location_level: "city",
+  active,
 });
 
 describe("at most 25 active questions per business", () => {

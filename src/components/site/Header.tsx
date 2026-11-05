@@ -13,8 +13,12 @@ export function Header() {
         <Logo />
       </Link>
       <nav className="flex items-center gap-1 md:gap-4">
-        <a href="#pricing" className={navLink}>Pricing</a>
-        <a href="#faq" className={navLink}>FAQ</a>
+        <a href="#pricing" className={navLink}>
+          Pricing
+        </a>
+        <a href="#faq" className={navLink}>
+          FAQ
+        </a>
         <ContactUsLink className={navLink}>Contact us</ContactUsLink>
       </nav>
     </header>

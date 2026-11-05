@@ -11,7 +11,11 @@ describe("Button", () => {
     expect(b.className).not.toMatch(/rounded-card/);
   });
   it("secondary is a jellyDeep text link with a 44px tap area and an arrow after the label", () => {
-    render(<Button variant="secondary" href="/pricing">See pricing</Button>);
+    render(
+      <Button variant="secondary" href="/pricing">
+        See pricing
+      </Button>,
+    );
     const a = screen.getByRole("link", { name: "See pricing" });
     expect(a).toHaveAttribute("href", "/pricing");
     expect(a.className).toMatch(/text-jellyDeep/);
@@ -45,7 +49,8 @@ describe("Button", () => {
     const b = screen.getByRole("button", { name: "Add business" });
     expect(b).toBeDisabled();
     const cls = b.className.split(" ");
-    for (const c of ["rounded-full", "h-12.5", "border-[1.5px]", "border-ink/14", "bg-white/55", "text-inkMuted"]) expect(cls).toContain(c);
+    for (const c of ["rounded-full", "h-12.5", "border-[1.5px]", "border-ink/14", "bg-white/55", "text-inkMuted"])
+      expect(cls).toContain(c);
     expect(cls).not.toContain("bg-jellyDeep");
     expect(cls).not.toContain("shadow-button");
     expect(screen.getByText("Add business").className).toBe("opacity-75");

@@ -31,7 +31,11 @@ function tuples(sql: string, table: string): string[][] {
   return block
     .split("\n")
     .slice(1)
-    .map((line) => [...line.matchAll(/'((?:[^']|'')*)'|(\bnull\b|\btrue\b|\bfalse\b|-?\d+(?:\.\d+)?)/g)].map((m) => (m[1] ?? m[2]).replace(/''/g, "'")));
+    .map((line) =>
+      [...line.matchAll(/'((?:[^']|'')*)'|(\bnull\b|\btrue\b|\bfalse\b|-?\d+(?:\.\d+)?)/g)].map((m) =>
+        (m[1] ?? m[2]).replace(/''/g, "'"),
+      ),
+    );
 }
 
 describe("supabase/seed.sql", () => {
@@ -88,7 +92,8 @@ describe("supabase/seed.sql", () => {
     for (const run of data.runs) {
       const as = data.answers.filter((a) => a.run_id === run.id);
       expect(as).toHaveLength(250);
-      for (const [engine, n] of Object.entries(RUNS_PER_ENGINE)) expect(as.filter((a) => a.engine === engine)).toHaveLength(25 * n);
+      for (const [engine, n] of Object.entries(RUNS_PER_ENGINE))
+        expect(as.filter((a) => a.engine === engine)).toHaveLength(25 * n);
     }
   });
 
@@ -101,7 +106,10 @@ describe("supabase/seed.sql", () => {
       expect(run.jobs_total).toBe(as.length);
       expect(run.jobs_total).toBe(run.jobs_ok + run.jobs_failed);
     }
-    expect(data.runs.map((r) => [r.jobs_ok, r.jobs_failed])).toEqual([[241, 9], [245, 5]]);
+    expect(data.runs.map((r) => [r.jobs_ok, r.jobs_failed])).toEqual([
+      [241, 9],
+      [245, 5],
+    ]);
   });
 
   it("failed and no_overview answers carry no mention data; no_overview is Google AI Overview only", () => {
@@ -121,7 +129,8 @@ describe("supabase/seed.sql", () => {
   });
 
   it("first_position points at Example Ramen House in brands", () => {
-    for (const a of data.answers.filter((x) => x.mentioned)) expect(a.brands![a.first_position! - 1].name).toBe(BUSINESS);
+    for (const a of data.answers.filter((x) => x.mentioned))
+      expect(a.brands![a.first_position! - 1].name).toBe(BUSINESS);
   });
 
   it("citations use only fake .test domains", () => {
@@ -129,13 +138,16 @@ describe("supabase/seed.sql", () => {
     expect(urls.length).toBeGreaterThan(0);
     expect(urls.filter((u) => !/^https:\/\/example-[a-z]+\.test\//.test(u))).toEqual([]);
     // The only other URL is the OpenAI bots doc quoted verbatim in R14's data_source.
-    const other = [...seed.matchAll(/https?:\/\/[^\s'")]+/g)].map((m) => m[0]).filter((u) => !/^https:\/\/example-[a-z]+\.test\//.test(u));
+    const other = [...seed.matchAll(/https?:\/\/[^\s'")]+/g)]
+      .map((m) => m[0])
+      .filter((u) => !/^https:\/\/example-[a-z]+\.test\//.test(u));
     expect([...new Set(other)]).toEqual(["https://platform.openai.com/docs/bots"]);
   });
 
   it("no real CSV restaurant name appears in seed.sql", () => {
     const text = seed.toLowerCase();
-    const word = (n: string) => new RegExp(`(^|[^a-z0-9])${n.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^a-z0-9]|$)`);
+    const word = (n: string) =>
+      new RegExp(`(^|[^a-z0-9])${n.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^a-z0-9]|$)`);
     const hits = irvineRestaurants.map((r) => r.name.trim()).filter((n) => n && word(n).test(text));
     expect(hits).toEqual([]);
   });
@@ -168,7 +180,9 @@ describe("supabase/seed.dev.sql", () => {
 
   it("skips permanently closed restaurants", () => {
     const closed = irvineRestaurants.filter((r) => r.google_status === "permanently closed").map((r) => r.name.trim());
-    const open = new Set(irvineRestaurants.filter((r) => r.google_status !== "permanently closed").map((r) => r.name.trim().toLowerCase()));
+    const open = new Set(
+      irvineRestaurants.filter((r) => r.google_status !== "permanently closed").map((r) => r.name.trim().toLowerCase()),
+    );
     const names = new Set(devCompetitors().map((c) => c.name.toLowerCase()));
     expect(closed.filter((n) => names.has(n.toLowerCase()) && !open.has(n.toLowerCase()))).toEqual([]);
   });

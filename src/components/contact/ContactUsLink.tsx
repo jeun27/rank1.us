@@ -4,7 +4,8 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent, type MouseEvent
 import { formCopy as c } from "@/components/forms/copy";
 import { ContactForm } from "./ContactForm";
 
-const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([tabindex="-1"]), select:not([disabled]), textarea:not([disabled]), iframe, [tabindex]:not([tabindex="-1"])';
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]):not([tabindex="-1"]), select:not([disabled]), textarea:not([disabled]), iframe, [tabindex]:not([tabindex="-1"])';
 
 // <ContactUsLink>Contact us</ContactUsLink>: opens the Contact us modal. Without JS it is a plain link to /contact.
 export function ContactUsLink({ children, className }: { children: ReactNode; className?: string }) {
@@ -29,7 +30,10 @@ export function ContactUsLink({ children, className }: { children: ReactNode; cl
         href="/contact"
         onClick={onClick}
         aria-haspopup="dialog"
-        className={className ?? "inline-flex min-h-11 items-center text-jellyDeep underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"}
+        className={
+          className ??
+          "inline-flex min-h-11 items-center text-jellyDeep underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+        }
       >
         {children}
       </a>
@@ -92,7 +96,15 @@ function ContactDialog({ onClose }: { onClose: () => void }) {
           aria-label={c.close}
           className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-h3 text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
         >
-          <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <svg
+            viewBox="0 0 16 16"
+            className="size-4"
+            aria-hidden="true"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          >
             <path d="M3 3l10 10M13 3L3 13" />
           </svg>
         </button>

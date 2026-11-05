@@ -17,7 +17,9 @@ const pct = (m: Metric) => (
     <span className="text-caption text-inkMuted">{`${m.numerator} of ${m.denominator}`}</span>
   </span>
 );
-const freshness = <Freshness checkedAt={exampleCheck.checkedAt} now={exampleCheck.now} answers={exampleCheck.answers} />;
+const freshness = (
+  <Freshness checkedAt={exampleCheck.checkedAt} now={exampleCheck.now} answers={exampleCheck.answers} />
+);
 
 const you = exampleLeaderboard.find((r) => r.you)!;
 
@@ -110,7 +112,9 @@ export function Screenshots() {
         ]}
       />
       <div className="mt-8">
-        <Button variant="secondary" href="#audit">Get my free audit</Button>
+        <Button variant="secondary" href="#audit">
+          Get my free audit
+        </Button>
       </div>
     </Section>
   );

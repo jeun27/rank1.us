@@ -22,7 +22,10 @@ export type FixRuleSeed = {
 // What each rule depends on that the docs mark UNVERIFIED. Any entry keeps the rule disabled.
 // R8 and R13 rely on the same 'site:' operator in a SERP keyword that R6 and R12 mark UNVERIFIED.
 const UNVERIFIED: Record<string, string[]> = {
-  R1: ["DataForSEO Maps SERP item field names UNVERIFIED", "DataForSEO Business Data Google My Business info endpoint UNVERIFIED"],
+  R1: [
+    "DataForSEO Maps SERP item field names UNVERIFIED",
+    "DataForSEO Business Data Google My Business info endpoint UNVERIFIED",
+  ],
   R2: ["GBP menu field UNVERIFIED"],
   R3: ["GBP photo fields UNVERIFIED", "Threshold UNVERIFIED"],
   R4: ["days without a new review UNVERIFIED", "last review date via DataForSEO Google Reviews UNVERIFIED"],

@@ -14,11 +14,25 @@ const sources = (dir: string): string[] =>
 describe("Tailwind theme matches docs/UI.md tokens", () => {
   it("has the exact UI.md color values", () => {
     expect(colors).toEqual({
-      paper: "#F7F4EE", ink: "#1E2320", inkMuted: "#5C625E", moss: "#2F6F4F", amber: "#D98E2B",
-      brick: "#B3443A", jelly: "#279EF2", jellyDeep: "#1A5FBF", border: "rgb(30 35 32 / 0.15)",
-      successBg: "#E6EFE9", errorBg: "#F7E6E3", warnBg: "#FBEFD9", warnText: "#8A5A12", infoBg: "#E3EEFB",
-      white: "#FFFFFF", jellyLoading: "#316FC5", fieldBorder: "rgb(30 35 32 / 0.5)",
-      auroraAmber: "#E8B85A", auroraTeal: "#5FB8B3",
+      paper: "#F7F4EE",
+      ink: "#1E2320",
+      inkMuted: "#5C625E",
+      moss: "#2F6F4F",
+      amber: "#D98E2B",
+      brick: "#B3443A",
+      jelly: "#279EF2",
+      jellyDeep: "#1A5FBF",
+      border: "rgb(30 35 32 / 0.15)",
+      successBg: "#E6EFE9",
+      errorBg: "#F7E6E3",
+      warnBg: "#FBEFD9",
+      warnText: "#8A5A12",
+      infoBg: "#E3EEFB",
+      white: "#FFFFFF",
+      jellyLoading: "#316FC5",
+      fieldBorder: "rgb(30 35 32 / 0.5)",
+      auroraAmber: "#E8B85A",
+      auroraTeal: "#5FB8B3",
     });
   });
 
@@ -58,7 +72,10 @@ describe("Tailwind theme matches docs/UI.md tokens", () => {
       return css.slice(m.index);
     });
     expect(gradients.sort()).toEqual(
-      ["linear-gradient(90deg, #E8B85A, #5FB8B3, #279EF2)", "linear-gradient(var(--color-white), var(--color-white))"].sort(),
+      [
+        "linear-gradient(90deg, #E8B85A, #5FB8B3, #279EF2)",
+        "linear-gradient(var(--color-white), var(--color-white))",
+      ].sort(),
     );
   });
 
@@ -66,7 +83,8 @@ describe("Tailwind theme matches docs/UI.md tokens", () => {
     for (const file of sources("src").filter((f) => !f.endsWith("globals.css") && !f.endsWith("tokens.ts"))) {
       const src = readFileSync(file, "utf8");
       expect(src, file).not.toMatch(/gradient\(|bg-(linear|radial|conic|gradient)|shadow-\[|box-shadow|boxShadow/);
-      for (const m of src.matchAll(/\bshadow-([\w-]+)/g)) expect(Object.keys(shadows), `${file}: ${m[0]}`).toContain(m[1]);
+      for (const m of src.matchAll(/\bshadow-([\w-]+)/g))
+        expect(Object.keys(shadows), `${file}: ${m[0]}`).toContain(m[1]);
       if (!file.endsWith("AuroraButton.tsx")) expect(src, file).not.toContain("aurora-ring");
     }
   });

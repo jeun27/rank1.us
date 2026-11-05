@@ -22,7 +22,11 @@ export function StickyCta() {
   }, []);
 
   return (
-    <div data-sticky-cta hidden={!show} className="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-paper px-5 py-3 md:hidden">
+    <div
+      data-sticky-cta
+      hidden={!show}
+      className="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-paper px-5 py-3 md:hidden"
+    >
       <Button href="#audit" className="w-full">
         Get my free audit
       </Button>

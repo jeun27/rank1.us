@@ -35,7 +35,10 @@ export function Table({
             {rows.map((row, i) => (
               <tr key={i}>
                 {columns.map((c) => (
-                  <td key={c.key} className={`border-b border-border px-3 py-3 ${c.numeric ? "text-right tabular-nums" : ""}`}>
+                  <td
+                    key={c.key}
+                    className={`border-b border-border px-3 py-3 ${c.numeric ? "text-right tabular-nums" : ""}`}
+                  >
                     {row[c.key]}
                   </td>
                 ))}

@@ -40,7 +40,13 @@ beforeEach(() => {
 // A fresh documentation-range IP per test keeps rate-limit counts apart.
 const newIp = () => `198.51.100.${Math.floor(Math.random() * 250) + 1}-${randomUUID().slice(0, 8)}`;
 const post = (handler: (r: Request) => Promise<Response>, ip: string, body: unknown) =>
-  handler(new Request("http://localhost/api", { method: "POST", headers: { "x-forwarded-for": ip }, body: JSON.stringify(body) }));
+  handler(
+    new Request("http://localhost/api", {
+      method: "POST",
+      headers: { "x-forwarded-for": ip },
+      body: JSON.stringify(body),
+    }),
+  );
 
 const contact = (tag: string) => ({
   name: "Ana Example",
@@ -63,13 +69,23 @@ describe("POST /api/contact (local Supabase)", () => {
     expect(res.status).toBe(200);
     const rows = await rowsFor(ip);
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ name: "Ana Example", company: "Example Ramen Co", industry: "Restaurant", industry_other: null, tier: "Agency bundle", emailed: true });
+    expect(rows[0]).toMatchObject({
+      name: "Ana Example",
+      company: "Example Ramen Co",
+      industry: "Restaurant",
+      industry_other: null,
+      tier: "Agency bundle",
+      emailed: true,
+    });
     expect(thirdParty).toEqual(["challenges.cloudflare.com", "api.resend.com"]);
   });
 
   it("stores industry Other with its text", async () => {
     const ip = newIp();
-    expect((await post(contactPOST, ip, { ...contact(randomUUID()), industry: "Other", industry_other: "Pool service" })).status).toBe(200);
+    expect(
+      (await post(contactPOST, ip, { ...contact(randomUUID()), industry: "Other", industry_other: "Pool service" }))
+        .status,
+    ).toBe(200);
     expect((await rowsFor(ip))[0]).toMatchObject({ industry: "Other", industry_other: "Pool service" });
   });
 
@@ -97,7 +113,15 @@ describe("POST /api/contact (local Supabase)", () => {
     must(
       await serviceClient()
         .from("contact_requests")
-        .insert([1, 2, 3].map(() => ({ name: "Old", email: "old@example.test", industry: "Restaurant", ip_hash: hashIp(ip), created_at: old }))),
+        .insert(
+          [1, 2, 3].map(() => ({
+            name: "Old",
+            email: "old@example.test",
+            industry: "Restaurant",
+            ip_hash: hashIp(ip),
+            created_at: old,
+          })),
+        ),
     );
     expect((await post(contactPOST, ip, contact(randomUUID()))).status).toBe(200);
   });
@@ -116,7 +140,12 @@ describe("POST /api/audit/request (local Supabase)", () => {
     vi.stubEnv("AUDIT_DAILY_LIMIT", String((count ?? 0) + 1000));
     const ip = newIp();
     const email = `${randomUUID()}@example.test`;
-    const res = await post(auditPOST, ip, { email, domain: "https://www.RamenHouse.com/menu", "cf-turnstile-response": "tok", website: "" });
+    const res = await post(auditPOST, ip, {
+      email,
+      domain: "https://www.RamenHouse.com/menu",
+      "cf-turnstile-response": "tok",
+      website: "",
+    });
     expect(res.status).toBe(202);
     expect(await res.json()).toEqual({ status: "queued" });
     const rows = must(await serviceClient().from("leads").select("*").eq("email", email));
@@ -128,10 +157,18 @@ describe("POST /api/audit/request (local Supabase)", () => {
   it("429 once today's leads reach AUDIT_DAILY_LIMIT", async () => {
     const midnight = new Date();
     midnight.setUTCHours(0, 0, 0, 0);
-    const { count } = await serviceClient().from("leads").select("id", { count: "exact", head: true }).gte("created_at", midnight.toISOString());
+    const { count } = await serviceClient()
+      .from("leads")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", midnight.toISOString());
     vi.stubEnv("AUDIT_DAILY_LIMIT", String(count ?? 0));
     const email = `${randomUUID()}@example.test`;
-    const res = await post(auditPOST, newIp(), { email, domain: "ramenhouse.com", "cf-turnstile-response": "tok", website: "" });
+    const res = await post(auditPOST, newIp(), {
+      email,
+      domain: "ramenhouse.com",
+      "cf-turnstile-response": "tok",
+      website: "",
+    });
     expect(res.status).toBe(429);
     expect(must(await serviceClient().from("leads").select("id").eq("email", email))).toHaveLength(0);
   });

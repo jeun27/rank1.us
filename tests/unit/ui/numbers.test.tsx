@@ -46,7 +46,10 @@ describe("Table", () => {
     render(
       <Table
         caption="Leaderboard"
-        columns={[{ key: "brand", header: "Brand" }, { key: "vis", header: "Visibility", numeric: true }]}
+        columns={[
+          { key: "brand", header: "Brand" },
+          { key: "vis", header: "Visibility", numeric: true },
+        ]}
         rows={[{ brand: "Example Ramen House", vis: "30%" }]}
         footnote="footnote here"
       />,

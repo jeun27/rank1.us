@@ -5,8 +5,19 @@ test("/dev/ui shows every component and state, accessibly", async ({ page }, inf
   await page.goto("/dev/ui");
   await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
   for (const name of [
-    "Button", "DomainField", "AuroraButton", "Card", "Badge", "Banner", "Table", "StatNumber", "ProgressBar",
-    "EmptyState", "LoadingState", "Freshness", "Final set",
+    "Button",
+    "DomainField",
+    "AuroraButton",
+    "Card",
+    "Badge",
+    "Banner",
+    "Table",
+    "StatNumber",
+    "ProgressBar",
+    "EmptyState",
+    "LoadingState",
+    "Freshness",
+    "Final set",
   ]) {
     await expect(page.getByRole("heading", { level: 2, name, exact: true })).toBeVisible();
   }
@@ -30,9 +41,9 @@ test("/dev/ui shows every component and state, accessibly", async ({ page }, inf
 
 test("tap targets are at least 44px tall", async ({ page }) => {
   await page.goto("/dev/ui");
-  const heights = await page.locator("main button, main a").evaluateAll((els) =>
-    els.map((e) => ({ text: e.textContent?.trim(), h: e.getBoundingClientRect().height })),
-  );
+  const heights = await page
+    .locator("main button, main a")
+    .evaluateAll((els) => els.map((e) => ({ text: e.textContent?.trim(), h: e.getBoundingClientRect().height })));
   expect(heights.filter((x) => x.h < 44)).toEqual([]);
 });
 
@@ -41,14 +52,17 @@ test("reduced motion stops every spinner and the Jelly squish", async ({ page })
   await page.goto("/dev/ui");
   const spinners = page.locator("[data-spinner]");
   expect(await spinners.count()).toBeGreaterThan(0);
-  const anims = await page.locator("[data-spinner], img.animate-squish").evaluateAll((els) =>
-    els.map((e) => getComputedStyle(e).animationName),
-  );
+  const anims = await page
+    .locator("[data-spinner], img.animate-squish")
+    .evaluateAll((els) => els.map((e) => getComputedStyle(e).animationName));
   expect(anims.length).toBeGreaterThan(await spinners.count());
   expect(anims.filter((a) => a !== "none")).toEqual([]);
 
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  const moving = await page.locator("[data-spinner]").first().evaluate((e) => getComputedStyle(e).animationName);
+  const moving = await page
+    .locator("[data-spinner]")
+    .first()
+    .evaluate((e) => getComputedStyle(e).animationName);
   expect(moving).not.toBe("none");
 });
 
@@ -75,14 +89,21 @@ test("Final set: pill field focus ring, aurora ring, loading blue, progress fill
   await expect(set.getByRole("button", { name: "Add business" })).toBeDisabled();
 
   const bar = set.getByRole("progressbar", { name: "120 of 250 answers" });
-  const [track, fill] = await bar.evaluate((e) => [e.getBoundingClientRect().width, e.firstElementChild!.getBoundingClientRect().width]);
+  const [track, fill] = await bar.evaluate((e) => [
+    e.getBoundingClientRect().width,
+    e.firstElementChild!.getBoundingClientRect().width,
+  ]);
   expect(Math.abs(fill / (track - 2) - 0.48)).toBeLessThan(0.01);
   await expect(set.getByText("48%", { exact: true })).toBeVisible();
 });
 
-test("the domain field keeps the placeholder readable: inline when wide, button below when narrow", async ({ page }, info) => {
+test("the domain field keeps the placeholder readable: inline when wide, button below when narrow", async ({
+  page,
+}, info) => {
   await page.goto("/dev/ui");
-  const section = page.locator("section", { has: page.getByRole("heading", { level: 2, name: "DomainField", exact: true }) });
+  const section = page.locator("section", {
+    has: page.getByRole("heading", { level: 2, name: "DomainField", exact: true }),
+  });
   const input = section.getByRole("textbox", { name: "Your domain" }).first();
   const button = section.getByRole("button", { name: "Get my free audit" }).first();
   const [i, b] = [(await input.boundingBox())!, (await button.boundingBox())!];
