@@ -197,6 +197,7 @@ Doc differences
 - Cache Components is on, so /signin reads its query inside Suspense (the frame prerenders).
 - Email links carry `via=email`, so a failed email link shows the link banner instead of the Google one.
 - `supabase/config.toml`: added `http://localhost:3000/**` to additional_redirect_urls so local email links can come back to localhost.
+
 ## Team workspace shell (frontend, branch feat/team-workspace, issue #10)
 Changed
 - /team: 3-pane team workspace like Profound's Wrenfield demo (sidebar 240px, context and document panes split 50/50 by a keyboard-resizable divider). Example data only (Example Ramen House seed), read-only. Off unless ENABLE_TEAM_WORKSPACE=true.
