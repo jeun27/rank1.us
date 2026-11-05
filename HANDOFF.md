@@ -69,3 +69,5 @@ Requests between agents (for example, a new field frontend needs from backend). 
   - `pruneEphemeral(serviceDb)` → { lookup_cache, rate_events } (deleted counts).
   - Both throw 42501 for non-service callers. Log the counts only.
   - Status: done.
+
+- 2026-11-05, data-pipeline -> backend: Step 13 weekly cron. The route calls two service-client wrappers (names/shape per your 0017; send the final names): `enqueueWeeklyRuns(serviceDb, weekStart: "YYYY-MM-DD")` → `{ enqueued: number; skipped: number; failed?: number }`, where weekStart is the America/Los_Angeles Monday of the current ISO week (the same for both Monday fires), and `pruneEphemeral(serviceDb)` → `{ lookup_cache: number; rate_events: number }`. Errors are thrown with the PG code; the route logs the code only. Status: done (src/lib/queries/weekly.ts: laWeekStart, enqueueWeeklyRuns, pruneEphemeral).

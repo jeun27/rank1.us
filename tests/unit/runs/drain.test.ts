@@ -37,6 +37,13 @@ describe("cronAuthorized", () => {
       expect(cronAuthorized(h, "s3cret-value-123456"), String(h)).toBe(false);
   });
 
+  it("compares in constant time: any header length is handled without throwing", () => {
+    const secret = "s3cret-value-123456";
+    for (const h of ["B", "Bearer ", `Bearer ${secret}${"x".repeat(500)}`, "é".repeat(40), ""])
+      expect(cronAuthorized(h, secret), h.slice(0, 20)).toBe(false);
+    expect(cronAuthorized(`Bearer ${secret}`, secret)).toBe(true);
+  });
+
   it("rejects everything when the secret is unset or blank", () => {
     for (const secret of [undefined, "", "   "]) {
       expect(cronAuthorized("Bearer ", secret)).toBe(false);

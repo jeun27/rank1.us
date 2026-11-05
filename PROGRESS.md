@@ -648,3 +648,22 @@ Changed
 - Queries: laWeekStart, enqueueWeeklyRuns, pruneEphemeral (src/lib/queries/weekly.ts).
 - Cleanup: removed the duplicate "QA #58 gallery fidelity" line under Step 12 (backend). The original under Step 10 (frontend) stays.
 - src/types/db.ts got the 0017 functions added by hand in the generator format.
+
+## Step 13 (data-pipeline): weekly cron route (branch feat/step13-weekly-cron)
+Step 13 built from ENG_HANDOFF_OVERNIGHT §6; Build Pack not readable; reconcile later.
+Lead decisions (Step 13 brief):
+- Vercel Cron is UTC, so /api/cron/weekly is scheduled "0 13,14 * * 1" and proceeds only when it's Monday 06:xx in America/Los_Angeles; the other fire is a no-op.
+- The same CRON_SECRET bearer check as run-jobs, in constant time.
+- Eligible = active businesses whose subscription is active/trialing, or DFY; skip one with a weekly run this LA ISO week or an open run. Idempotent.
+- The route only enqueues; the run-jobs cron drains.
+- Logs carry counts only. lookup_cache > 24 h and rate_events > 48 h are pruned on the same fire. No UI change, no new env.
+
+Changed
+- src/lib/runs/weekly.ts:
+  - isWeeklyWindow(now): LA weekday + hour via Intl, so no DST math of ours.
+  - The week key is backend's laWeekStart (src/lib/queries/weekly.ts), the same function enqueue_weekly_runs validates against, so there's one implementation; my DST tests cover it.
+  - runWeekly(deps): enqueue, then prune; prune runs even when enqueue failed (lead). One counts/PG-code log line. 500 bodies are {error: "enqueue_failed" | "prune_failed"} with no DB text.
+- src/lib/runs/drain.ts cronAuthorized: constant time, crypto.timingSafeEqual over SHA-256 digests (equal length). Shared by both cron routes (fixes the Step 6 QA note).
+- /api/cron/run-jobs 500: {error: "claim_failed"} with only the PG code logged (was `claim_jobs: <DB message>`). Test changed with reason: cron-route.test.ts expects the new body and checks that the log has no DB text; same strictness, new expected body (lead).
+- vercel.json crons adds {path: "/api/cron/weekly", schedule: "0 13,14 * * 1"}; vercel-config.test.ts pins both crons.
+- src/app/api/cron/weekly/route.ts (maxDuration 60): 401 unless authorized; outside the window → 200 {skipped: "outside_window"} without creating a DB client; inside → enqueueWeeklyRuns + pruneEphemeral (service client, backend #0017) via runWeekly.
