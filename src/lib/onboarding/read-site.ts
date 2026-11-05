@@ -32,7 +32,7 @@ export function siteHost(domain: string): string | null {
   )
     return null;
   if (/(^|\.)(localhost|local|internal|lan|home|corp|invalid)$/.test(host)) return null;
-  return host;
+  return host.replace(/^www\./, "");
 }
 
 // Loopback, private, link-local, CGNAT, multicast and reserved ranges (v4 and v6).

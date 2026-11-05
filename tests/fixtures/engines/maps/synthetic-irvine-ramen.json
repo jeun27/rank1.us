@@ -1,0 +1,1215 @@
+{
+  "_synthetic": "synthetic: Irvine ramen Maps results, Example brands and example.test domains only; one item has cid null; item shape from synthetic-maps-live-advanced.json",
+  "version": "0.1.20230705",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "time": "4.0977 sec.",
+  "cost": 0.002,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "synthetic-1",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "time": "4.0299 sec.",
+      "cost": 0.002,
+      "result_count": 1,
+      "path": [
+        "v3",
+        "serp",
+        "google",
+        "maps",
+        "live",
+        "advanced"
+      ],
+      "data": {
+        "api": "serp",
+        "function": "live",
+        "se": "google",
+        "se_type": "maps",
+        "language_code": "en",
+        "location_code": 2840,
+        "keyword": "ramen restaurant",
+        "depth": 3,
+        "device": "desktop",
+        "os": "windows"
+      },
+      "result": [
+        {
+          "keyword": "ramen restaurant",
+          "type": "maps",
+          "se_domain": "google.com",
+          "location_code": 2840,
+          "language_code": "en",
+          "check_url": "https://example-s1.test/page-2",
+          "datetime": "2023-08-02 12:55:43 +00:00",
+          "spell": null,
+          "refinement_chips": null,
+          "item_types": [
+            "maps_search"
+          ],
+          "se_results_count": 0,
+          "items_count": 8,
+          "items": [
+            {
+              "type": "maps_search",
+              "rank_group": 1,
+              "rank_absolute": 1,
+              "domain": "example-ramen-house.test",
+              "title": "Example Ramen House",
+              "original_title": null,
+              "url": "https://example-ramen-house.test/",
+              "contact_url": null,
+              "contributor_url": null,
+              "book_online_url": null,
+              "rating": {
+                "rating_type": "Max5",
+                "value": 4.6,
+                "votes_count": 1283,
+                "rating_max": null
+              },
+              "rating_distribution": {
+                "1": 4,
+                "2": 8,
+                "3": 51,
+                "4": 194,
+                "5": 1026
+              },
+              "snippet": "Example data text 17.",
+              "address": null,
+              "address_info": {
+                "borough": "Example data text 18.",
+                "address": null,
+                "city": null,
+                "zip": null,
+                "region": "Example data text 19.",
+                "country_code": "Example data text 20."
+              },
+              "place_id": "synthetic-21",
+              "phone": null,
+              "main_image": "https://example-s2.test/page-22",
+              "total_photos": 2501,
+              "category": "Ramen restaurant",
+              "additional_categories": [
+                "Example data text 24."
+              ],
+              "category_ids": [
+                "Example data text 25.",
+                "Example data text 26."
+              ],
+              "work_hours": {
+                "timetable": {
+                  "sunday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "monday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "tuesday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "wednesday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "thursday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "friday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "saturday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ]
+                },
+                "current_status": "Example data text 27."
+              },
+              "feature_id": "synthetic-28",
+              "cid": "9000000000000000001",
+              "latitude": 38.8924028,
+              "longitude": -77.0484139,
+              "is_claimed": false,
+              "local_justifications": null,
+              "is_directory_item": false,
+              "price_level": null,
+              "hotel_rating": null
+            },
+            {
+              "type": "maps_search",
+              "rank_group": 2,
+              "rank_absolute": 2,
+              "domain": "example-noodle-bar.test",
+              "title": "Example Noodle Bar",
+              "original_title": null,
+              "url": "https://example-noodle-bar.test/",
+              "contact_url": null,
+              "contributor_url": null,
+              "book_online_url": null,
+              "rating": {
+                "rating_type": "Max5",
+                "value": 4.4,
+                "votes_count": 1283,
+                "rating_max": null
+              },
+              "rating_distribution": {
+                "1": 4,
+                "2": 8,
+                "3": 51,
+                "4": 194,
+                "5": 1026
+              },
+              "snippet": "Example data text 17.",
+              "address": null,
+              "address_info": {
+                "borough": "Example data text 18.",
+                "address": null,
+                "city": null,
+                "zip": null,
+                "region": "Example data text 19.",
+                "country_code": "Example data text 20."
+              },
+              "place_id": "synthetic-21",
+              "phone": null,
+              "main_image": "https://example-s2.test/page-22",
+              "total_photos": 2501,
+              "category": "Ramen restaurant",
+              "additional_categories": [
+                "Example data text 24."
+              ],
+              "category_ids": [
+                "Example data text 25.",
+                "Example data text 26."
+              ],
+              "work_hours": {
+                "timetable": {
+                  "sunday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "monday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "tuesday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "wednesday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "thursday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "friday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "saturday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ]
+                },
+                "current_status": "Example data text 27."
+              },
+              "feature_id": "synthetic-28",
+              "cid": "9000000000000000002",
+              "latitude": 38.8924028,
+              "longitude": -77.0484139,
+              "is_claimed": false,
+              "local_justifications": null,
+              "is_directory_item": false,
+              "price_level": null,
+              "hotel_rating": null
+            },
+            {
+              "type": "maps_search",
+              "rank_group": 3,
+              "rank_absolute": 3,
+              "domain": null,
+              "title": "Example Izakaya",
+              "original_title": null,
+              "url": null,
+              "contact_url": null,
+              "contributor_url": null,
+              "book_online_url": null,
+              "rating": {
+                "rating_type": "Max5",
+                "value": 4.2,
+                "votes_count": 1283,
+                "rating_max": null
+              },
+              "rating_distribution": {
+                "1": 4,
+                "2": 8,
+                "3": 51,
+                "4": 194,
+                "5": 1026
+              },
+              "snippet": "Example data text 17.",
+              "address": null,
+              "address_info": {
+                "borough": "Example data text 18.",
+                "address": null,
+                "city": null,
+                "zip": null,
+                "region": "Example data text 19.",
+                "country_code": "Example data text 20."
+              },
+              "place_id": "synthetic-21",
+              "phone": null,
+              "main_image": "https://example-s2.test/page-22",
+              "total_photos": 2501,
+              "category": "Ramen restaurant",
+              "additional_categories": [
+                "Example data text 24."
+              ],
+              "category_ids": [
+                "Example data text 25.",
+                "Example data text 26."
+              ],
+              "work_hours": {
+                "timetable": {
+                  "sunday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "monday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "tuesday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "wednesday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "thursday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "friday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "saturday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ]
+                },
+                "current_status": "Example data text 27."
+              },
+              "feature_id": "synthetic-28",
+              "cid": "9000000000000000003",
+              "latitude": 38.8924028,
+              "longitude": -77.0484139,
+              "is_claimed": false,
+              "local_justifications": null,
+              "is_directory_item": false,
+              "price_level": null,
+              "hotel_rating": null
+            },
+            {
+              "type": "maps_search",
+              "rank_group": 4,
+              "rank_absolute": 4,
+              "domain": "example-nocid.test",
+              "title": "Example No-CID Noodles",
+              "original_title": null,
+              "url": "https://example-ramen-house.test/",
+              "contact_url": null,
+              "contributor_url": null,
+              "book_online_url": null,
+              "rating": {
+                "rating_type": "Max5",
+                "value": 4.6,
+                "votes_count": 1283,
+                "rating_max": null
+              },
+              "rating_distribution": {
+                "1": 4,
+                "2": 8,
+                "3": 51,
+                "4": 194,
+                "5": 1026
+              },
+              "snippet": "Example data text 17.",
+              "address": null,
+              "address_info": {
+                "borough": "Example data text 18.",
+                "address": null,
+                "city": null,
+                "zip": null,
+                "region": "Example data text 19.",
+                "country_code": "Example data text 20."
+              },
+              "place_id": "synthetic-21",
+              "phone": null,
+              "main_image": "https://example-s2.test/page-22",
+              "total_photos": 2501,
+              "category": "Ramen restaurant",
+              "additional_categories": [
+                "Example data text 24."
+              ],
+              "category_ids": [
+                "Example data text 25.",
+                "Example data text 26."
+              ],
+              "work_hours": {
+                "timetable": {
+                  "sunday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "monday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "tuesday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "wednesday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "thursday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "friday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "saturday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ]
+                },
+                "current_status": "Example data text 27."
+              },
+              "feature_id": "synthetic-28",
+              "cid": null,
+              "latitude": 38.8924028,
+              "longitude": -77.0484139,
+              "is_claimed": false,
+              "local_justifications": null,
+              "is_directory_item": false,
+              "price_level": null,
+              "hotel_rating": null
+            },
+            {
+              "type": "maps_search",
+              "rank_group": 4,
+              "rank_absolute": 4,
+              "domain": "www.example-tonkotsu.test",
+              "title": "Example Tonkotsu Co.",
+              "original_title": null,
+              "url": "https://www.example-tonkotsu.test/",
+              "contact_url": null,
+              "contributor_url": null,
+              "book_online_url": null,
+              "rating": {
+                "rating_type": "Max5",
+                "value": 4.5,
+                "votes_count": 1283,
+                "rating_max": null
+              },
+              "rating_distribution": {
+                "1": 4,
+                "2": 8,
+                "3": 51,
+                "4": 194,
+                "5": 1026
+              },
+              "snippet": "Example data text 17.",
+              "address": null,
+              "address_info": {
+                "borough": "Example data text 18.",
+                "address": null,
+                "city": null,
+                "zip": null,
+                "region": "Example data text 19.",
+                "country_code": "Example data text 20."
+              },
+              "place_id": "synthetic-21",
+              "phone": null,
+              "main_image": "https://example-s2.test/page-22",
+              "total_photos": 2501,
+              "category": "Ramen restaurant",
+              "additional_categories": [
+                "Example data text 24."
+              ],
+              "category_ids": [
+                "Example data text 25.",
+                "Example data text 26."
+              ],
+              "work_hours": {
+                "timetable": {
+                  "sunday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "monday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "tuesday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "wednesday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "thursday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "friday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "saturday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ]
+                },
+                "current_status": "Example data text 27."
+              },
+              "feature_id": "synthetic-28",
+              "cid": "9000000000000000004",
+              "latitude": 38.8924028,
+              "longitude": -77.0484139,
+              "is_claimed": false,
+              "local_justifications": null,
+              "is_directory_item": false,
+              "price_level": null,
+              "hotel_rating": null
+            },
+            {
+              "type": "maps_search",
+              "rank_group": 5,
+              "rank_absolute": 5,
+              "domain": "example-udon.test",
+              "title": "Example Udon House",
+              "original_title": null,
+              "url": "https://example-udon.test/",
+              "contact_url": null,
+              "contributor_url": null,
+              "book_online_url": null,
+              "rating": null,
+              "rating_distribution": {
+                "1": 4,
+                "2": 8,
+                "3": 51,
+                "4": 194,
+                "5": 1026
+              },
+              "snippet": "Example data text 17.",
+              "address": null,
+              "address_info": {
+                "borough": "Example data text 18.",
+                "address": null,
+                "city": null,
+                "zip": null,
+                "region": "Example data text 19.",
+                "country_code": "Example data text 20."
+              },
+              "place_id": "synthetic-21",
+              "phone": null,
+              "main_image": "https://example-s2.test/page-22",
+              "total_photos": 2501,
+              "category": "Ramen restaurant",
+              "additional_categories": [
+                "Example data text 24."
+              ],
+              "category_ids": [
+                "Example data text 25.",
+                "Example data text 26."
+              ],
+              "work_hours": {
+                "timetable": {
+                  "sunday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "monday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "tuesday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "wednesday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "thursday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "friday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "saturday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ]
+                },
+                "current_status": "Example data text 27."
+              },
+              "feature_id": "synthetic-28",
+              "cid": "9000000000000000005",
+              "latitude": 38.8924028,
+              "longitude": -77.0484139,
+              "is_claimed": false,
+              "local_justifications": null,
+              "is_directory_item": false,
+              "price_level": null,
+              "hotel_rating": null
+            },
+            {
+              "type": "maps_search",
+              "rank_group": 6,
+              "rank_absolute": 6,
+              "domain": "example-pho.test",
+              "title": "Example Pho Spot",
+              "original_title": null,
+              "url": "https://example-pho.test/",
+              "contact_url": null,
+              "contributor_url": null,
+              "book_online_url": null,
+              "rating": {
+                "rating_type": "Max5",
+                "value": 4.1,
+                "votes_count": 1283,
+                "rating_max": null
+              },
+              "rating_distribution": {
+                "1": 4,
+                "2": 8,
+                "3": 51,
+                "4": 194,
+                "5": 1026
+              },
+              "snippet": "Example data text 17.",
+              "address": null,
+              "address_info": {
+                "borough": "Example data text 18.",
+                "address": null,
+                "city": null,
+                "zip": null,
+                "region": "Example data text 19.",
+                "country_code": "Example data text 20."
+              },
+              "place_id": "synthetic-21",
+              "phone": null,
+              "main_image": "https://example-s2.test/page-22",
+              "total_photos": 2501,
+              "category": "Ramen restaurant",
+              "additional_categories": [
+                "Example data text 24."
+              ],
+              "category_ids": [
+                "Example data text 25.",
+                "Example data text 26."
+              ],
+              "work_hours": {
+                "timetable": {
+                  "sunday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "monday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "tuesday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "wednesday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "thursday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "friday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "saturday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ]
+                },
+                "current_status": "Example data text 27."
+              },
+              "feature_id": "synthetic-28",
+              "cid": "9000000000000000006",
+              "latitude": 38.8924028,
+              "longitude": -77.0484139,
+              "is_claimed": false,
+              "local_justifications": null,
+              "is_directory_item": false,
+              "price_level": null,
+              "hotel_rating": null
+            },
+            {
+              "type": "maps_search",
+              "rank_group": 7,
+              "rank_absolute": 7,
+              "domain": "example-soba.test",
+              "title": "Example Soba Stand",
+              "original_title": null,
+              "url": "https://example-soba.test/",
+              "contact_url": null,
+              "contributor_url": null,
+              "book_online_url": null,
+              "rating": {
+                "rating_type": "Max5",
+                "value": 4.0,
+                "votes_count": 1283,
+                "rating_max": null
+              },
+              "rating_distribution": {
+                "1": 4,
+                "2": 8,
+                "3": 51,
+                "4": 194,
+                "5": 1026
+              },
+              "snippet": "Example data text 17.",
+              "address": null,
+              "address_info": {
+                "borough": "Example data text 18.",
+                "address": null,
+                "city": null,
+                "zip": null,
+                "region": "Example data text 19.",
+                "country_code": "Example data text 20."
+              },
+              "place_id": "synthetic-21",
+              "phone": null,
+              "main_image": "https://example-s2.test/page-22",
+              "total_photos": 2501,
+              "category": "Ramen restaurant",
+              "additional_categories": [
+                "Example data text 24."
+              ],
+              "category_ids": [
+                "Example data text 25.",
+                "Example data text 26."
+              ],
+              "work_hours": {
+                "timetable": {
+                  "sunday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "monday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "tuesday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "wednesday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "thursday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "friday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "saturday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ]
+                },
+                "current_status": "Example data text 27."
+              },
+              "feature_id": "synthetic-28",
+              "cid": "9000000000000000007",
+              "latitude": 38.8924028,
+              "longitude": -77.0484139,
+              "is_claimed": false,
+              "local_justifications": null,
+              "is_directory_item": false,
+              "price_level": null,
+              "hotel_rating": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

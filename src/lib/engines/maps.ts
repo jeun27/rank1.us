@@ -1,5 +1,5 @@
 import { dfsLive } from "./dataforseo";
-import { COUNTRY_NAMES, EngineError, arr, isObj, num, stateName, str } from "./shared";
+import { COUNTRY_NAMES, EngineError, US_STATES, arr, isObj, num, str } from "./shared";
 import type { EngineDeps } from "./types";
 
 // One maps_search item, with the field names from the DataForSEO Maps SERP docs.
@@ -15,7 +15,7 @@ export type MapsRequest = { keyword: string; city: string; state: string; countr
 export async function mapsSearch(req: MapsRequest, deps: EngineDeps): Promise<MapsResult> {
   if (!deps.env.DATAFORSEO_LOGIN || !deps.env.DATAFORSEO_PASSWORD)
     return { status: "missing_keys", items: [], error: "missing keys: DATAFORSEO_LOGIN, DATAFORSEO_PASSWORD" };
-  const state = stateName(req.state);
+  const state = US_STATES[req.state.toUpperCase()];
   const country = COUNTRY_NAMES[(req.country ?? "US").toUpperCase()];
   if (!state || !country || !req.city.trim())
     return { status: "error", items: [], error: `cannot build a location for ${req.city}, ${req.state}` };
