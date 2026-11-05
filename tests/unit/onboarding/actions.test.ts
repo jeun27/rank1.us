@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const user = { current: null as { id: string } | null };
+const landing = { current: "onboarding" as string | null };
+vi.mock("@/lib/queries/auth", () => ({ getLanding: async () => landing.current }));
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({ auth: { getUser: async () => ({ data: { user: user.current } }) } }),
 }));
@@ -53,6 +55,7 @@ const input = {
 beforeEach(() => {
   vi.clearAllMocks();
   user.current = null;
+  landing.current = "onboarding";
 });
 
 describe("onboarding server actions", () => {
@@ -82,5 +85,14 @@ describe("onboarding server actions", () => {
     expect(createBusinessOnboarding).not.toHaveBeenCalled();
     await expect(finishAction(input)).rejects.toThrow("REDIRECT /app");
     expect(createBusinessOnboarding).toHaveBeenCalledWith(expect.anything(), input);
+  });
+
+  it.each(["team", "dfy_client", "dashboard"])("a %s user gets the fallbacks: no fetch, no Maps call", async (l) => {
+    user.current = { id: "u1" };
+    landing.current = l;
+    expect(await readSiteAction("exampleramen.test")).toEqual({ status: "unreadable" });
+    expect(await findCompetitorsAction(q)).toEqual({ status: "error", items: [] });
+    expect(readSite).not.toHaveBeenCalled();
+    expect(findLocalCompetitors).not.toHaveBeenCalled();
   });
 });
