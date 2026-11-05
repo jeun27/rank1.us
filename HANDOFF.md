@@ -78,6 +78,6 @@ Requests between agents (for example, a new field frontend needs from backend). 
     - `scheduleBusinessRemoval(serviceDb, businessId, periodEndIso)` after the Stripe Subscription Schedule is set. `cancelBusinessRemoval(serviceDb, businessId)`. `archiveScheduledBusinesses(serviceDb)` → count (safety net).
   - Member client:
     - `getBillingState(db)` → { workspaceId, status, seats, activeCount, hasCustomer, nextInvoiceAt, scheduledRemovals: { businessId, name, archiveAt }[] } | null.
-    - `listMyBusinesses(db)` → { id, name, archiveAt }[] for the switcher.
+    - `listMyBusinesses(db)` → { id, name, city, archiveAt }[] for the switcher.
     - `getCurrentBusiness(db, selectedId?)` honors the switcher's id when it's the caller's.
   - Status: done.
