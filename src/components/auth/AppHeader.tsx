@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { navLink } from "@/components/site/Header";
 import { Logo } from "@/components/ui/Logo";
 import { authCopy as c } from "@/lib/auth/copy";
@@ -16,11 +17,19 @@ export function AppHeader() {
 }
 
 // details/summary: opens without JS. Sign out is a POST, so a prefetch can't trigger it.
-export function AccountMenu() {
+export function AccountMenu({
+  summary = c.account,
+  summaryClassName = `${navLink} cursor-pointer list-none`,
+  popupClassName = "right-0 mt-1",
+}: {
+  summary?: ReactNode;
+  summaryClassName?: string;
+  popupClassName?: string;
+}) {
   return (
     <details className="relative">
-      <summary className={`${navLink} cursor-pointer list-none`}>{c.account}</summary>
-      <div className="absolute right-0 z-10 mt-1 min-w-40 rounded-card bg-white p-1 shadow-card">
+      <summary className={summaryClassName}>{summary}</summary>
+      <div className={`absolute z-10 min-w-40 rounded-card bg-raised p-1 shadow-card ${popupClassName}`}>
         <form action="/auth/signout" method="post">
           <button type="submit" className={`${navLink} w-full`}>
             {c.signOut}

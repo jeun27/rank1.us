@@ -4,6 +4,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { buildWorkspace } from "@/lib/queries/workspace";
 import { buildBrief, claudeUrl, contextFor } from "@/lib/workspace/context";
 import { exampleWorkspaceRows } from "@/app/team/example-data";
+import { newUser, openMagicLink } from "./helpers/auth";
 
 const NOW = new Date("2026-11-05T12:00:00Z");
 const view = buildWorkspace(exampleWorkspaceRows());
@@ -13,10 +14,13 @@ const BG = { light: "rgb(247, 244, 238)", dark: "rgb(11, 11, 12)" };
 
 const isMobile = (page: Page) => page.viewportSize()!.width < 768;
 
+// /team is for signed-in team users: sign one in through the emailed-link callback.
 async function open(page: Page, theme: (typeof THEMES)[number]) {
   await page.clock.setFixedTime(NOW);
   await page.emulateMedia({ colorScheme: theme });
-  await page.goto("/team");
+  const user = await newUser("team", "team");
+  await openMagicLink(page, user.email);
+  await expect(page).toHaveURL(/\/team$/);
   await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
 }
 
@@ -77,7 +81,8 @@ for (const theme of THEMES) {
 }
 
 test("/app is not the team workspace (reserved for owners); the team nav is dark in both themes", async ({ page }) => {
-  expect((await page.goto("/app"))?.status()).toBe(404);
+  await page.goto("/app");
+  expect(new URL(page.url()).pathname + new URL(page.url()).search).toBe("/signin?next=%2Fapp");
   for (const theme of THEMES) {
     await open(page, theme);
     await show(page, "Nav");
@@ -232,7 +237,8 @@ test("tap targets are at least 44px", async ({ page }) => {
 
 test("reduced motion turns pane and tab transitions off", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/team");
+  await openMagicLink(page, (await newUser("team", "team")).email);
+  await expect(page).toHaveURL(/\/team$/);
   const durations = await page.locator("[data-motion]").evaluateAll((els) =>
     els.map((e) => {
       const cs = getComputedStyle(e);

@@ -111,6 +111,8 @@ test("a seeded team user lands on /team with no self-serve workspace", async ({ 
   const user = await newUser("team", "team");
   await openMagicLink(page, user.email, "/app/billing");
   expect(new URL(page.url()).pathname).toBe("/team");
+  await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toBeVisible();
+  await expect(page.locator("nav")).toBeAttached();
   expect(await workspacesOwnedBy(user.id)).toEqual([]);
 });
 
@@ -147,4 +149,37 @@ test("sign out from the Account menu, then /app is closed again", async ({ page 
   await page.waitForURL(/\/signin$/);
   await page.goto("/app/onboarding");
   expect(path(page.url())).toBe("/signin?next=%2Fapp%2Fonboarding");
+});
+
+test("a team user signs out from the workspace sidebar", async ({ page }) => {
+  const user = await newUser("team-out", "team");
+  await openMagicLink(page, user.email);
+  if (page.viewportSize()!.width < 768) await page.getByRole("tab", { name: "Nav", exact: true }).click();
+  await page.locator("nav").getByText(c.account, { exact: true }).click();
+  await page.getByRole("button", { name: c.signOut }).click();
+  await page.waitForURL(/\/signin$/);
+  await page.goto("/team");
+  expect(path(page.url())).toBe("/signin?next=%2Fteam");
+});
+
+for (const [role, home] of [
+  [undefined, "/app/onboarding"],
+  ["dfy_client", "/client"],
+] as const) {
+  test(`a ${role ?? "self-serve"} user who opens /team is sent to ${home}`, async ({ page }) => {
+    const user = await newUser("not-team", role);
+    await openMagicLink(page, user.email);
+    await page.goto("/team");
+    // The role check streams inside Suspense, so the redirect lands just after the shell.
+    await expect(page).toHaveURL(new RegExp(`${home}$`));
+    await expect(page.locator("nav")).toHaveCount(0);
+  });
+}
+
+test("a signed-in owner gets the /app dashboard placeholder", async ({ page }) => {
+  const user = await newUser("owner");
+  await openMagicLink(page, user.email);
+  await page.goto("/app");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Dashboard");
+  await expectAxeClean(page);
 });

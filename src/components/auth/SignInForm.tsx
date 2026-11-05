@@ -19,15 +19,21 @@ const callback = (next: string | null, via?: "email") => {
 };
 
 // Auth serves raw JSON when a provider is off, so check first and show the banner instead.
-async function googleEnabled() {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/settings`, {
-      headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! },
+// One check per page load; a failed fetch isn't kept, so "Try again" really retries.
+let googleCheck: Promise<boolean> | undefined;
+function googleEnabled() {
+  googleCheck ??= fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/settings`, {
+    headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! },
+  })
+    .then(async (res) => {
+      if (!res.ok) throw new Error(`settings ${res.status}`);
+      return (await res.json()).external?.google === true;
+    })
+    .catch(() => {
+      googleCheck = undefined;
+      return false;
     });
-    return res.ok && (await res.json()).external?.google === true;
-  } catch {
-    return false;
-  }
+  return googleCheck;
 }
 
 export function SignInForm({ next, error }: { next: string | null; error?: "google" | "link" }) {

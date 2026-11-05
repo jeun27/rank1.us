@@ -169,13 +169,13 @@ Changed
 - `src/proxy.ts` (Next 16 renamed middleware.ts to proxy.ts) + `src/lib/supabase/middleware.ts`: refreshes the session with getClaims on every non-static request, keeps the no-store cache headers, and sends signed-out `/app`, `/team` and `/client` visitors to `/signin?next=<path>`.
 - `/signin`: "Continue with Google" (primary, full width) and an email magic link (secondary). Strings are in COPY.md "Auth (lead, 2026-11-05)".
 - `/auth/callback`: takes `?code` (Google and PKCE email links) or `?token_hash&type` (admin links and custom email templates). Then ensureSelfServeWorkspace → getLanding → team `/team`, dfy_client `/client`, onboarding `/app/onboarding`, dashboard `/app`. `next` is honored only when it's a same-origin path in the user's own area or a public page.
-- `POST /auth/signout` and the Account menu (details/summary, works without JS) on the /app and /client layouts.
+- `POST /auth/signout` and the Account menu (details/summary, works without JS) on the /app and /client headers and in #11's workspace sidebar (new `user` icon).
+- `/team` (#11's workspace): team role only. Signed out goes to /signin, and any other role goes to its own home. With ENABLE_TEAM_WORKSPACE off, a team user gets the placeholder.
 - Landing: "Start for $99/mo" → `/signin?next=/app/billing` (was a 404 to /sign-in). Header "Log in" → `/signin`. `/app/billing` is the paywall stub: the Pricing card, the button disabled, "Checkout isn't open yet."
-- Placeholders with one H1 + the Dashboard EmptyState: `/app/onboarding`, `/client`.
+- Placeholders with one H1 + the Dashboard EmptyState: `/app`, `/app/onboarding`, `/client`.
 - e2e (tests/e2e/auth.spec.ts) sign in through the admin generateLink API on the local stack (no Mailpit). The CI e2e job now starts lean Supabase, and playwright.config.ts reads the local keys from `supabase status`.
 
 Blocked/open
-- `/app` (dashboard placeholder) and the `/team` Account menu wait for PR #11 to move the team workspace from /app to /team.
 - Hosted Google provider is OFF. Until Jeun turns it on, the Google button shows the error banner (it checks /auth/v1/settings first, because Auth answers a disabled provider with raw JSON).
 - Auth e2e run on the local build only (they need the local service-role key). "Google works on preview" is a manual check after the steps below.
 
@@ -186,6 +186,11 @@ Google Cloud console steps (for Jeun, sign-in only, no GA4 scopes yet)
 4. Clients → Create client → Web application. Authorized JavaScript origins: `https://rank1.us`, `http://localhost:3000`. Authorized redirect URI: `https://yqllnopnwlqspnbqgwfh.supabase.co/auth/v1/callback`.
 5. Copy the client ID and secret into Supabase → Authentication → Sign In / Providers → Google, and enable it. Never put them in the repo or .env files.
 6. Check it: open a Vercel preview → Log in → Continue with Google → you land on /app/onboarding (new) or /app.
+
+Intended behavior changes (lead, 2026-11-05), not loosened tests
+- tests/e2e/team-workspace.spec.ts: `/app` returned 404 and now sends signed-out visitors to `/signin?next=%2Fapp`. Its `/team` visits now sign in a seeded team user first.
+- tests/unit/workspace/gate.test.ts → gate.test.tsx: with the flag off (the same 5 values) /team was a 404 and now shows the placeholder to a team user. "true" still renders the workspace.
+- tests/e2e/landing.spec.ts: "Start for $99/mo" pointed at `/sign-in` (a known 404) and now points at `/signin?next=/app/billing`.
 
 Doc differences
 - The brief says `middleware.ts`. Next 16 calls it `proxy.ts` (node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md), so that's the file.

@@ -56,6 +56,7 @@ Progress percentages ("48%") are computed from n of d, so they are not copy.
 | Magic-link button (secondary) | "Email me a sign-in link" |
 | Link sent | "Check your email. We sent a sign-in link to {email}." |
 | Link didn't send | "That link didn't send. Try again in a minute." |
+| Email link expired or already used | "That sign-in link expired. Enter your email for a new one." |
 | Account menu label and item | "Account", "Sign out" |
 | Landing header link to /signin | "Log in" |
 | /app/billing paywall stub: Pricing card copy, "Start for $99/mo" disabled, caption | "Checkout isn't open yet." |

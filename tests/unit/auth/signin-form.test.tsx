@@ -6,12 +6,14 @@ import { authCopy as c } from "@/lib/auth/copy";
 const auth = { signInWithOAuth: vi.fn(), signInWithOtp: vi.fn() };
 vi.mock("@/lib/supabase/client", () => ({ createClient: () => ({ auth }) }));
 
-const { SignInForm } = await import("@/components/auth/SignInForm");
+let SignInForm: typeof import("@/components/auth/SignInForm").SignInForm;
 
 const settings = (google: boolean) =>
   vi.fn().mockResolvedValue(new Response(JSON.stringify({ external: { google, email: true } })));
 
-beforeEach(() => {
+beforeEach(async () => {
+  vi.resetModules();
+  ({ SignInForm } = await import("@/components/auth/SignInForm"));
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "http://sb.test");
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon");
   auth.signInWithOAuth.mockReset().mockReturnValue(new Promise(() => {}));
@@ -42,6 +44,29 @@ describe("SignInForm", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(c.googleError);
     expect(auth.signInWithOAuth).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: c.google })).toBeEnabled();
+  });
+
+  it("shows no banner before the click, and checks Google's settings once per page load", async () => {
+    vi.stubGlobal("fetch", settings(false));
+    render(<SignInForm next={null} />);
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(fetch).not.toHaveBeenCalled();
+    const google = screen.getByRole("button", { name: c.google });
+    await userEvent.click(google);
+    await screen.findByRole("alert");
+    await userEvent.click(google);
+    await screen.findByRole("alert");
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("checks again after a failed settings fetch", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValueOnce(new Error("offline")).mockImplementation(settings(true)));
+    render(<SignInForm next={null} />);
+    await userEvent.click(screen.getByRole("button", { name: c.google }));
+    await screen.findByRole("alert");
+    await userEvent.click(screen.getByRole("button", { name: c.google }));
+    await waitFor(() => expect(auth.signInWithOAuth).toHaveBeenCalledTimes(1));
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 
   it("shows the Google banner when it came back from a failed callback", () => {
