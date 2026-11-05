@@ -648,6 +648,7 @@ Changed
 - Queries: laWeekStart, enqueueWeeklyRuns, pruneEphemeral (src/lib/queries/weekly.ts).
 - Cleanup: removed the duplicate "QA #58 gallery fidelity" line under Step 12 (backend). The original under Step 10 (frontend) stays.
 - src/types/db.ts got the 0017 functions added by hand in the generator format.
+
 ## Step 13 (data-pipeline): weekly cron route (branch feat/step13-weekly-cron)
 Step 13 built from ENG_HANDOFF_OVERNIGHT §6; Build Pack not readable; reconcile later.
 Lead decisions (Step 13 brief):
