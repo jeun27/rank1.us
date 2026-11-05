@@ -106,6 +106,7 @@ export const exampleQuestions: QuestionsWithLatestAnswers = {
                   domain: "example-reviews.test",
                   title: null,
                   position: 1,
+                  category: "review_directory" as const,
                 },
               ]
             : [],
