@@ -531,3 +531,17 @@ Changed
 - The copy templates are the SCHEMA §5b customer copy verbatim (a test reads docs/SCHEMA.md); detail is set only for fix.
 - Wiring (after #50): src/lib/fixes/service.ts reads fix_rules.enabled (service role) and uses listRunsNeedingFixChecks(db, 1) and recordFixResults. GET /api/cron/run-jobs runs it after the drain and notify, with time left = maxDuration (300 s) − elapsed since the request started, and returns `fixes`.
 - PROGRESS.md: the duplicate "## Step 9 (data-pipeline)" section on main (a merge leftover) is merged into one copy, with no line dropped.
+
+## Step 11 (backend): team read access to DFY clients (branch feat/step11-team-read, issue #54)
+- Step 11 built from ENG_HANDOFF_OVERNIGHT §3/§6 + issue #10; Build Pack not readable; reconcile later.
+- Lead decisions:
+  - /team keeps #11's 3-pane workspace on real data, behind ENABLE_TEAM_WORKSPACE (Production false). Access is role 'team' only.
+  - The team sees every DFY business across workspaces, never self-serve data, and reads through RLS (no service role in a page path).
+  - Nav: Dashboard, Questions, Competitors, Sources, Fix list, History.
+  - The Copy context brief uses stored values only. Open in Claude = exactly https://claude.ai. No LLM.
+  - O1 (lead): any team user writes fixes (status) and competitors of any DFY business. can_write_fixes / can_write_competitors = (self_serve and member) or (team and dfy). A dfy_client still never writes.
+- Migration 20261105000015 (+ .down.sql), additive and re-runnable:
+  - Helpers private.is_team_dfy_business / team_can_read_run / team_can_read_answer.
+  - Extra SELECT policies (*_team_read) on businesses, competitors, questions, runs (no free_audit), answers, citations, fixes and fix_checks, DFY only. Member and dfy_client policies are unchanged.
+  - Widened write helpers (O1). The rollback restores the membership-only helpers.
+- Query: listDfyBusinesses (src/lib/queries/team.ts). Every team-page query (getRunResults, getPreviousRun, listRunSummaries, getQuestionsWithLatestAnswers, listCompetitors, listFixes) is tested as a non-member team user. Tests: tests/db/team.test.ts.
