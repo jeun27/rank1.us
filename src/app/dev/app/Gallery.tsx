@@ -4,6 +4,7 @@ import { CompetitorsView } from "@/components/app/CompetitorsView";
 import { Dashboard } from "@/components/app/Dashboard";
 import { HistoryView } from "@/components/app/HistoryView";
 import { QuestionsView } from "@/components/app/QuestionsView";
+import { SourcesView } from "@/components/app/SourcesView";
 import { ErrorState, Skeleton } from "@/components/app/states";
 import {
   exampleBusiness,
@@ -16,7 +17,7 @@ import {
   exampleSuggestions,
   exampleTracked,
 } from "@/components/app/example-data";
-import { seriesFromSummaries } from "@/lib/metrics";
+import { computeSources, seriesFromSummaries } from "@/lib/metrics";
 
 const NOW = new Date("2026-11-05T14:30:00Z");
 const series = seriesFromSummaries(exampleRuns);
@@ -24,6 +25,7 @@ const none = { points: [], visible: false };
 const noop = async () => undefined;
 const actions = { add: noop, dismiss: noop };
 const results = "We couldn't load your results. Try again.";
+const fresh = { checkedAt: exampleQuestions.run!.finished_at, answers: 38, now: NOW };
 // Success = everything answered; partial = the 4b partial state of the same page.
 const allOk = {
   ...exampleQuestions,
@@ -86,6 +88,30 @@ export const STATES: Record<string, () => React.ReactNode> = {
   "questions-loading": () => <Skeleton title="Questions" />,
   "questions-error": () => <ErrorState title="Questions" message={results} reset={() => {}} />,
   "questions-empty": () => <QuestionsView data={{ run: null, questions: [] }} />,
+  "sources-success": () => (
+    <SourcesView sources={computeSources({ questions: exampleQuestions.questions })} location={undefined} {...fresh} />
+  ),
+  "sources-partial": () => {
+    const all = computeSources({ questions: exampleQuestions.questions });
+    const engines = all.engines.map((e) =>
+      e.engine === "perplexity" ? { ...e, links: 0, byCategory: e.byCategory.map((c) => ({ ...c, count: 0 })) } : e,
+    );
+    return <SourcesView sources={{ ...all, engines }} location={undefined} {...fresh} />;
+  },
+  "sources-location": () => {
+    const key = computeSources({ questions: exampleQuestions.questions }).locations[0].key;
+    return (
+      <SourcesView
+        sources={computeSources({ questions: exampleQuestions.questions, location: key })}
+        location={key}
+        {...fresh}
+        answers={19}
+      />
+    );
+  },
+  "sources-empty": () => <SourcesView sources={null} location={undefined} />,
+  "sources-loading": () => <Skeleton title="Sources" />,
+  "sources-error": () => <ErrorState title="Sources" message={results} reset={() => {}} />,
   "history-success": () => <HistoryView runs={allComplete} />,
   "history-partial": () => <HistoryView runs={[exampleFailedRun, ...exampleRuns]} />,
   "history-loading": () => <Skeleton title="History" />,

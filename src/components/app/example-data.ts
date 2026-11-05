@@ -98,8 +98,9 @@ export const exampleQuestions: QuestionsWithLatestAnswers = {
         location_supported:
           engine === "chatgpt" || engine === "gemini" ? ("fallback_country" as const) : ("exact" as const),
         checked_at: "2026-11-02T14:20:00Z",
-        citations:
-          i === 0
+        // A mix of categories so the Sources bars show stacked segments.
+        citations: [
+          ...(i === 0
             ? [
                 {
                   url: "https://example-reviews.test/irvine/ramen",
@@ -109,7 +110,48 @@ export const exampleQuestions: QuestionsWithLatestAnswers = {
                   category: "review_directory" as const,
                 },
               ]
-            : [],
+            : []),
+          ...(i === 1
+            ? [
+                {
+                  url: "https://example-forum.test/r/irvine",
+                  domain: "example-forum.test",
+                  title: null,
+                  position: 1,
+                  category: "reddit" as const,
+                },
+              ]
+            : []),
+          ...(i === 2 && engine !== "gemini"
+            ? [
+                {
+                  url: "https://example-blog.test/ramen-guide",
+                  domain: "example-blog.test",
+                  title: null,
+                  position: 1,
+                  category: "news_blog" as const,
+                },
+              ]
+            : []),
+          ...(i === 0 && engine === "google_aio"
+            ? [
+                {
+                  url: "https://example-video.test/watch/ramen",
+                  domain: "example-video.test",
+                  title: null,
+                  position: 2,
+                  category: "youtube" as const,
+                },
+                {
+                  url: "https://example-social.test/p/ramen",
+                  domain: "example-social.test",
+                  title: null,
+                  position: 3,
+                  category: "social" as const,
+                },
+              ]
+            : []),
+        ],
       })),
     ),
   })),

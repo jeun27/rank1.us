@@ -28,7 +28,7 @@ import {
 const now = new Date("2026-11-05T12:00:00Z");
 const series = seriesFromSummaries(exampleRuns);
 
-describe("AppNav (lead: only pages that exist)", () => {
+describe("AppNav (lead: only pages that exist; Step 9 adds Sources after Questions)", () => {
   it("lists Dashboard, Competitors, Questions, History, Billing and marks the current one", () => {
     path.current = "/app/competitors";
     render(<AppNav />);
@@ -41,6 +41,7 @@ describe("AppNav (lead: only pages that exist)", () => {
       ["Dashboard", "/app"],
       ["Competitors", "/app/competitors"],
       ["Questions", "/app/questions"],
+      ["Sources", "/app/sources"],
       ["History", "/app/history"],
       ["Billing", "/app/billing"],
     ]);

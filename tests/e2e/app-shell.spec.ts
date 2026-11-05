@@ -20,6 +20,12 @@ const STATES = [
   "questions-empty",
   "questions-loading",
   "questions-error",
+  "sources-success",
+  "sources-partial",
+  "sources-location",
+  "sources-empty",
+  "sources-loading",
+  "sources-error",
   "history-success",
   "history-partial",
   "history-empty",
@@ -57,6 +63,17 @@ test("questions drawer: keyboard opens it, Tab stays inside, Esc closes and focu
   await expect(row).toBeFocused();
 });
 
+test("sources: the location select is keyboard reachable and lists All locations first", async ({ page }) => {
+  await page.goto("/dev/app?state=sources-success");
+  const select = page.getByLabel("Location");
+  await select.focus();
+  await expect(select).toBeFocused();
+  await expect(select.locator("option").first()).toHaveText("All locations");
+  for (const a of await page.locator('main a[href^="https://"]').all())
+    await expect(a).toHaveAttribute("rel", "noopener noreferrer");
+  expect(await page.locator("main").textContent()).not.toMatch(/\d%/);
+});
+
 // PRODUCT.md rule 3: every number shows n + freshness; results are "API-measured, directional".
 test("rule 3 on Competitors (both widths) and History", async ({ page }) => {
   await page.goto("/dev/app?state=competitors-success");
@@ -69,10 +86,18 @@ test("rule 3 on Competitors (both widths) and History", async ({ page }) => {
   await expect(page.getByText(/Checked .* ago · \d+ answers · API-measured, directional/)).toBeVisible();
   await page.goto("/dev/app?state=history-success");
   await expect(page.getByText("API-measured, directional", { exact: true })).toBeVisible();
+  await page.goto("/dev/app?state=sources-success");
+  await expect(page.getByText(/Checked .* ago · \d+ answers · API-measured, directional/)).toBeVisible();
 });
 
 test("tap targets are at least 44px on every page", async ({ page }) => {
-  for (const state of ["dashboard-success", "competitors-success", "questions-success", "history-success"]) {
+  for (const state of [
+    "dashboard-success",
+    "competitors-success",
+    "questions-success",
+    "sources-success",
+    "history-success",
+  ]) {
     await page.goto(`/dev/app?state=${state}`);
     const small = await page
       .locator("main a:visible, main button:visible")

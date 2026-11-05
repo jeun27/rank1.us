@@ -445,20 +445,6 @@ Changed
 - src/lib/onboarding/suggest.ts suggestCompetitors({business, tracked, dismissed}, {store}): drops Maps items whose bare domain or normalized name (detectMentions' normalize) matches a tracked or dismissed competitor or the business; first of each domain/name kept; Maps order; ≤5. limited / missing_keys / error → no items. Never throws.
 - src/lib/metrics/series.ts seriesFromSummaries(summaries): takes listRunSummaries rows (RunSummary, #38) and passes their visibility Metric through. Returns {points: {runId, at, metric}[] oldest → newest, visible: ≥2}, keeping only complete/partial audit+weekly runs as a safety net. Callers use listRunSummaries(db, id, 8, ["complete", "partial"]), which filters before the limit.
 
-## Step 8 (frontend): self-serve shell and pages (branch feat/step8-shell, issue #37)
-- /app layout: AppNav (aria-label "App"), a left rail at md+ and a sideways-scrolling row on phones, with only the pages that exist (Dashboard, Competitors, Questions, History, Billing). Hidden on /app/onboarding.
-- Dashboard (lead):
-  - no business → the 4b empty + 'Add my business' → /app/onboarding;
-  - a business with no complete/partial run → paid "No weekly checks yet. Your first one runs Monday." or unpaid 'Start for $99/mo' → /app/billing (CurrentBusiness.paid, #38);
-  - otherwise hero + change + the partial warn badge, the 8-run line (hidden under 2 runs), per engine, leaderboard top 5 (visibility only, no SoV), and "What to fix next" (top 3 fixes, or the Fix list empty copy with no link).
-- Competitors: SoV only here, the leaderboard (You row first on phones), Suggested competitors (suggestCompetitors through the shared lookup store: 24 h cache + maps_lookup token) with Add / Not a competitor, and manual add. The business always comes from the session in the server actions.
-- Questions: read-only, with per-engine dots for the latest run, the failed '–' tooltip (lead copy), the location badge, and a modal drawer (focus trap, Esc, focus returns, noreferrer links). History: every audit/weekly run newest first, linking to /app/runs/[id] with Download CSV.
-- AuditView's Hero / EngineTable / Leaderboard are shared (exported). The onboarding lookup store moved to src/app/app/lookup-store.ts, so onboarding and Competitors share it.
-- The visibility line follows UI.md Chart (one jellyDeep 2px line) and the dataviz skill: no legend for one series, a hover tooltip with n, and an sr-only table.
-
-## Step 8 QA fix (frontend): rule 3 on Competitors and History (branch fix/step8-rule3, issue #37, QA #46)
-- PRODUCT.md rule 3: Competitors phone cards now show "{pct} (named in a of n answers)" like the desktop table. Competitors has the Freshness line ("Checked … ago · n answers · API-measured, directional") at both widths. History carries "API-measured, directional" once (its rows have their own dates).
-- A shared Measured component (src/components/app/Page.tsx) renders the Freshness line when there is one check time, and the label alone otherwise. Step 9's Sources page reuses it.
 ## Step 9 (data-pipeline): per-engine sources and location view (branch feat/step9-sources, issue #42)
 Step 9 built from ENG_HANDOFF_OVERNIGHT §6 + PRODUCT.md + docs/UI.md; Build Pack not readable; reconcile later.
 Lead decisions (Step 9 brief): /app/sources reads the latest complete/partial audit/weekly run. One card per engine with cited links by category (counts, never %), categories from citations.category only. Top domains ≤20. A location selector ("All locations" + each question target) filters the chart and the table. An engine's badge is "Country fallback" if any answer fell back. No SoV and no percentages on the page.
@@ -473,6 +459,32 @@ Changed
 - Labels match the Questions page badge (#40): "City", "State", "Country". Only when two targets share a level is the place added ("City · Irvine, CA"). An unknown location key → an empty result, never everything.
 - citations.category on getQuestionsWithLatestAnswers came from backend #43 (a57fbdf), merged into this branch.
 
+## Step 8 (frontend): self-serve shell and pages (branch feat/step8-shell, issue #37)
+- /app layout: AppNav (aria-label "App"), a left rail at md+ and a sideways-scrolling row on phones, with only the pages that exist (Dashboard, Competitors, Questions, History, Billing). Hidden on /app/onboarding.
+- Dashboard (lead):
+  - no business → the 4b empty + 'Add my business' → /app/onboarding;
+  - a business with no complete/partial run → paid "No weekly checks yet. Your first one runs Monday." or unpaid 'Start for $99/mo' → /app/billing (CurrentBusiness.paid, #38);
+  - otherwise hero + change + the partial warn badge, the 8-run line (hidden under 2 runs), per engine, leaderboard top 5 (visibility only, no SoV), and "What to fix next" (top 3 fixes, or the Fix list empty copy with no link).
+- Competitors: SoV only here, the leaderboard (You row first on phones), Suggested competitors (suggestCompetitors through the shared lookup store: 24 h cache + maps_lookup token) with Add / Not a competitor, and manual add. The business always comes from the session in the server actions.
+- Questions: read-only, with per-engine dots for the latest run, the failed '–' tooltip (lead copy), the location badge, and a modal drawer (focus trap, Esc, focus returns, noreferrer links). History: every audit/weekly run newest first, linking to /app/runs/[id] with Download CSV.
+- AuditView's Hero / EngineTable / Leaderboard are shared (exported). The onboarding lookup store moved to src/app/app/lookup-store.ts, so onboarding and Competitors share it.
+- The visibility line follows UI.md Chart (one jellyDeep 2px line) and the dataviz skill: no legend for one series, a hover tooltip with n, and an sr-only table.
+
+## Step 8 QA fix (frontend): rule 3 on Competitors and History (branch fix/step8-rule3, issue #37, QA #46)
+- PRODUCT.md rule 3: Competitors phone cards now show "{pct} (named in a of n answers)" like the desktop table. Competitors has the Freshness line ("Checked … ago · n answers · API-measured, directional") at both widths. History carries "API-measured, directional" once (its rows have their own dates).
+- A shared Measured component (src/components/app/Page.tsx) renders the Freshness line when there is one check time, and the label alone otherwise. Step 9's Sources page reuses it.
+## Step 9 (frontend): sources page with location view (branch feat/step9-sources-page, issue #42)
+Step 9 built from ENG_HANDOFF_OVERNIGHT §6 + PRODUCT.md + docs/UI.md; Build Pack not readable; reconcile later.
+- /app/sources (nav after Questions): the latest complete/partial run's cited links through computeSources (#44).
+  - A "Location" select ("All locations" + each target, locationLabel) in ?location=, filtered on the server.
+  - One card per engine with "{n} links", a stacked bar by category (counts only, no %), the "Exact" / "Country fallback" badge (greyed tooltip) and "No links cited by {Engine}".
+  - The top domains table (noopener noreferrer); empty / loading / error states.
+- Rule 3 (review on #45): the Freshness line ("Checked … ago · n answers · API-measured, directional") under the subtitle, through the shared Measured from #47. n = ok answers of the questions in the selected location.
+- The Questions location badge now uses locationLabel, so it and the selector can't disagree.
+- Category colors (lead Q3: O1; dataviz validator, paper surface, all pairs):
+  - Solid: Reddit jellyDeep, YouTube amber, Review sites jelly, News and blogs warnText. These four pass every pair.
+  - Striped (45° SVG texture; CSS gradients are aurora-only): Social jellyDeep, Other inkMuted (neutral). Texture tells them from the solid fills, and the two striped fills pass separation from each other (ΔE 16.8).
+  - Every segment's count is also shown as text under its bar.
 ## Step 10 (data-pipeline): site checks R10, R11, R14 and H1 (branch feat/step10-site-checks)
 Step 10 built from ENG_HANDOFF_OVERNIGHT §4/§6 + SCHEMA.md §5b; Build Pack not readable; A1–A6 seeded disabled; reconcile later.
 Lead decisions (Step 10 brief): detectors only for the enabled rules R10, R11, R14 and H1, using our own fetch, with no paid calls and no LLM. Detection runs once per paid run after it closes complete/partial, from the cron drain, never for free audits. No domain → every site rule is unchecked. fix = upsert, ok = auto-resolve, unchecked = leave as is. R14 fixes only for OAI-SearchBot and PerplexityBot; GPTBot and Google-Extended are info only.

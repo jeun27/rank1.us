@@ -64,3 +64,7 @@
 - [x] 1. /app nav (existing pages only) and full-width pages, light only.
 - [x] 2. Dashboard, Competitors (SoV only here), Questions (drawer), History: every UI.md 4b state, mobile included.
 - [x] 3. /dev/app gallery; e2e at 375 and 1280 (axe, keyboard, one H1, no side scroll, nav); visuals per state.
+
+## Step 9 (frontend): sources page with location view (issue #42)
+- [x] 1. /app/sources with per-engine category bars (counts only), top domains, location selector; nav after Questions.
+- [x] 2. Every UI.md 4b Sources state at 375 and 1280; gallery, e2e, visuals.
