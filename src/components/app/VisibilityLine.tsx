@@ -61,25 +61,28 @@ export function VisibilityLine({ points }: { points: SeriesPoint[] }) {
           <p className="text-inkMuted">{day(tip.at)}</p>
         </div>
       )}
-      <table className="sr-only">
-        <caption>{c.visibility}</caption>
-        <thead>
-          <tr>
-            <th scope="col">{c.checked}</th>
-            <th scope="col">{c.visibility}</th>
-            <th scope="col">{c.named}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {points.map((p) => (
-            <tr key={p.runId}>
-              <td>{day(p.at)}</td>
-              <td>{formatPercent(p.metric)}</td>
-              <td>{named(p)}</td>
+      {/* A table ignores sr-only's 1px width, so the wrapper is the one that is clipped. */}
+      <div className="sr-only">
+        <table>
+          <caption>{c.visibility}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{c.checked}</th>
+              <th scope="col">{c.visibility}</th>
+              <th scope="col">{c.named}</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {points.map((p) => (
+              <tr key={p.runId}>
+                <td>{day(p.at)}</td>
+                <td>{formatPercent(p.metric)}</td>
+                <td>{named(p)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

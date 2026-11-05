@@ -59,3 +59,8 @@
 - [x] 3. export.csv and export.png (next/og) for both, as no-store attachments.
 - [x] 4. /audit/*: no-referrer, noindex/nofollow, noreferrer cited links, no lead email.
 - [x] 5. /dev/audit gallery, e2e at 375 and 1280 (axe, keyboard), visuals per state.
+
+## Step 8 (frontend): self-serve shell and pages (issue #37)
+- [x] 1. /app nav (existing pages only) and full-width pages, light only.
+- [x] 2. Dashboard, Competitors (SoV only here), Questions (drawer), History: every UI.md 4b state, mobile included.
+- [x] 3. /dev/app gallery; e2e at 375 and 1280 (axe, keyboard, one H1, no side scroll, nav); visuals per state.

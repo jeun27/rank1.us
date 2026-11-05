@@ -434,3 +434,15 @@ Changed
 - /dev/audit?state=… shows every state with Example data (404 in production).
 - Real 404s: these pages stream inside Suspense, and notFound() there still sends a 200. So the proxy (src/lib/supabase/middleware.ts, the same pattern as /admin) rewrites to a 404 first. A run not readable by the visitor's session (RLS) or an unknown audit token (service role) gets the 404. The exports are route handlers and 404 on their own. The route is matched on the normalized path, but the token or run id comes from the raw path, because normalizePath lowercases and tokens are mixed-case base64url (review on #35).
 - Doc difference: citations.category is typed string in the result query and Category in computeMetrics. The loader casts it, because Step 6 stores only categorize() values.
+
+## Step 8 (frontend): self-serve shell and pages (branch feat/step8-shell, issue #37)
+Step 8 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
+- /app layout: AppNav (aria-label "App"), a left rail at md+ and a sideways-scrolling row on phones, with only the pages that exist (Dashboard, Competitors, Questions, History, Billing). Hidden on /app/onboarding.
+- Dashboard (lead):
+  - no business → the 4b empty + 'Add my business' → /app/onboarding;
+  - a business with no complete/partial run → paid "No weekly checks yet. Your first one runs Monday." or unpaid 'Start for $99/mo' → /app/billing (CurrentBusiness.paid, #38);
+  - otherwise hero + change + the partial warn badge, the 8-run line (hidden under 2 runs), per engine, leaderboard top 5 (visibility only, no SoV), and "What to fix next" (top 3 fixes, or the Fix list empty copy with no link).
+- Competitors: SoV only here, the leaderboard (You row first on phones), Suggested competitors (suggestCompetitors through the shared lookup store: 24 h cache + maps_lookup token) with Add / Not a competitor, and manual add. The business always comes from the session in the server actions.
+- Questions: read-only, with per-engine dots for the latest run, the failed '–' tooltip (lead copy), the location badge, and a modal drawer (focus trap, Esc, focus returns, noreferrer links). History: every audit/weekly run newest first, linking to /app/runs/[id] with Download CSV.
+- AuditView's Hero / EngineTable / Leaderboard are shared (exported). The onboarding lookup store moved to src/app/app/lookup-store.ts, so onboarding and Competitors share it.
+- The visibility line follows UI.md Chart (one jellyDeep 2px line) and the dataviz skill: no legend for one series, a hover tooltip with n, and an sr-only table.
