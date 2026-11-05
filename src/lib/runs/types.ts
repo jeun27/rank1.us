@@ -11,7 +11,8 @@ export type ClaimedJob = {
   run_index: 1 | 2 | 3;
   attempt: number;
   question: {
-    id: string;
+    // null for free-audit jobs, whose question lives only on the job.
+    id: string | null;
     text: string;
     location_level: LocationLevel;
     country: string;

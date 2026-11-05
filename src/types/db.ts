@@ -45,16 +45,23 @@ isOneToOne: false
                   ]
                 },"answers": {
                   Row: {
-                    "brands": Json | null,"checked_at": string,"cost_usd": number,"engine": string,"first_position": number | null,"id": string,"location_supported": string | null,"location_used": string | null,"mentioned": boolean | null,"question_id": string | null,"question_text_used": string,"raw": Json | null,"run_id": string,"run_index": number,"status": string,"text": string | null
+                    "brands": Json | null,"checked_at": string,"cost_usd": number,"engine": string,"first_position": number | null,"id": string,"job_id": string | null,"location_supported": string | null,"location_used": string | null,"mentioned": boolean | null,"question_id": string | null,"question_text_used": string,"raw": Json | null,"run_id": string,"run_index": number,"status": string,"text": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "brands"?: Json | null,"checked_at"?: string,"cost_usd"?: number,"engine": string,"first_position"?: number | null,"id"?: string,"location_supported"?: string | null,"location_used"?: string | null,"mentioned"?: boolean | null,"question_id"?: string | null,"question_text_used": string,"raw"?: Json | null,"run_id": string,"run_index": number,"status": string,"text"?: string | null
+                    "brands"?: Json | null,"checked_at"?: string,"cost_usd"?: number,"engine": string,"first_position"?: number | null,"id"?: string,"job_id"?: string | null,"location_supported"?: string | null,"location_used"?: string | null,"mentioned"?: boolean | null,"question_id"?: string | null,"question_text_used": string,"raw"?: Json | null,"run_id": string,"run_index": number,"status": string,"text"?: string | null
                   }
                   Update: {
-                    "brands"?: Json | null,"checked_at"?: string,"cost_usd"?: number,"engine"?: string,"first_position"?: number | null,"id"?: string,"location_supported"?: string | null,"location_used"?: string | null,"mentioned"?: boolean | null,"question_id"?: string | null,"question_text_used"?: string,"raw"?: Json | null,"run_id"?: string,"run_index"?: number,"status"?: string,"text"?: string | null
+                    "brands"?: Json | null,"checked_at"?: string,"cost_usd"?: number,"engine"?: string,"first_position"?: number | null,"id"?: string,"job_id"?: string | null,"location_supported"?: string | null,"location_used"?: string | null,"mentioned"?: boolean | null,"question_id"?: string | null,"question_text_used"?: string,"raw"?: Json | null,"run_id"?: string,"run_index"?: number,"status"?: string,"text"?: string | null
                   }
                   Relationships: [
+                    {
+      foreignKeyName: "answers_job_id_fkey"
+      columns: ["job_id"]
+isOneToOne: true
+      referencedRelation: "run_jobs"
+      referencedColumns: ["id"]
+    },
                     {
       foreignKeyName: "answers_question_id_fkey"
       columns: ["question_id"]
@@ -267,6 +274,32 @@ isOneToOne: false
       referencedColumns: ["key"]
     }
                   ]
+                },"free_audits": {
+                  Row: {
+                    "brands": Json,"city": string | null,"country": string,"created_at": string,"domain": string,"lead_id": string,"notified_at": string | null,"notify_attempts": number,"notify_sent": boolean | null,"run_id": string,"state": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "brands": Json,"city"?: string | null,"country": string,"created_at"?: string,"domain": string,"lead_id": string,"notified_at"?: string | null,"notify_attempts"?: number,"notify_sent"?: boolean | null,"run_id": string,"state"?: string | null
+                  }
+                  Update: {
+                    "brands"?: Json,"city"?: string | null,"country"?: string,"created_at"?: string,"domain"?: string,"lead_id"?: string,"notified_at"?: string | null,"notify_attempts"?: number,"notify_sent"?: boolean | null,"run_id"?: string,"state"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "free_audits_lead_id_fkey"
+      columns: ["lead_id"]
+isOneToOne: true
+      referencedRelation: "leads"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "free_audits_run_id_fkey"
+      columns: ["run_id"]
+isOneToOne: true
+      referencedRelation: "runs"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"google_tokens": {
                   Row: {
                     "business_id": string,"created_at": string,"refresh_token_enc": string,"scope": string | null
@@ -425,14 +458,14 @@ isOneToOne: false
                   ]
                 },"run_jobs": {
                   Row: {
-                    "attempts": number,"created_at": string,"engine": string,"id": string,"last_error": string | null,"locked_at": string | null,"question_id": string,"run_id": string,"run_index": number,"status": string
+                    "attempts": number,"city": string | null,"country": string | null,"created_at": string,"dfs_location_code": number | null,"engine": string,"id": string,"last_error": string | null,"location_level": string | null,"locked_at": string | null,"question_id": string | null,"question_text": string | null,"run_id": string,"run_index": number,"run_kind": string,"state": string | null,"status": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "attempts"?: number,"created_at"?: string,"engine": string,"id"?: string,"last_error"?: string | null,"locked_at"?: string | null,"question_id": string,"run_id": string,"run_index": number,"status"?: string
+                    "attempts"?: number,"city"?: string | null,"country"?: string | null,"created_at"?: string,"dfs_location_code"?: number | null,"engine": string,"id"?: string,"last_error"?: string | null,"location_level"?: string | null,"locked_at"?: string | null,"question_id"?: string | null,"question_text"?: string | null,"run_id": string,"run_index": number,"run_kind": string,"state"?: string | null,"status"?: string
                   }
                   Update: {
-                    "attempts"?: number,"created_at"?: string,"engine"?: string,"id"?: string,"last_error"?: string | null,"locked_at"?: string | null,"question_id"?: string,"run_id"?: string,"run_index"?: number,"status"?: string
+                    "attempts"?: number,"city"?: string | null,"country"?: string | null,"created_at"?: string,"dfs_location_code"?: number | null,"engine"?: string,"id"?: string,"last_error"?: string | null,"location_level"?: string | null,"locked_at"?: string | null,"question_id"?: string | null,"question_text"?: string | null,"run_id"?: string,"run_index"?: number,"run_kind"?: string,"state"?: string | null,"status"?: string
                   }
                   Relationships: [
                     {
@@ -447,6 +480,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "runs"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "run_jobs_run_kind_fkey"
+      columns: ["run_id","run_kind"]
+isOneToOne: false
+      referencedRelation: "runs"
+      referencedColumns: ["id","kind"]
     }
                   ]
                 },"runs": {
@@ -559,6 +598,9 @@ isOneToOne: false
                            },
 "create_dfy_client":
 { Args: { "p": Json }; Returns: Json
+                           },
+"create_free_audit":
+{ Args: { "p": Json }; Returns: string
                            },
 "create_run":
 { Args: { "p_business_id": string,"p_kind": string }; Returns: string
