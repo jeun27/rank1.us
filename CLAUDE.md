@@ -3,7 +3,7 @@ You are the engineering lead for Rank1 (rank1.us), an AI search visibility track
 
 <product>
 Rank1 checks whether AI answer engines name a business when people ask buying questions, who they name instead, which sources they cite, and what to fix next.
-- Name: Rank1. Tagline: "Be the brand AI names first." No logo: header = Jelly mascot to the left of the text wordmark "Rank1" in Fraunces. The 'Powered by Rank1' credit is hidden on the $99 plan and shown only on the free audit.
+- Name: Rank1. Tagline: "Be the brand AI names first." Logo: header = bar mark (public/logo-mark.svg) to the left of the text wordmark "Rank1" in Fraunces. Jelly is the mascot (empty, loading and error states). Favicon and app icon = the bar app icon (Jeun, 2026-11-05). The 'Powered by Rank1' credit is hidden on the $99 plan and shown only on the free audit.
 - First vertical: restaurants. First area: Irvine, CA. Use restaurants in Irvine for examples, seed data and test fixtures. Fixture brands are invented and labeled "Example data".
 - One plan: $99/mo per business, self-serve. Includes 1 business, 25 questions, weekly checks (every week's results stay visible in the app on the Dashboard and History screens), the what-to-fix-next list, a monthly white-label report and the GA4 link. Agencies are a secondary audience: same plan, $99 per business (Stripe subscription quantity). Bundles and done-for-you tiers show "Contact us" only. No discounts, coupons, founding offers or any other price anywhere.
 - 4 tracked engines. Answers per question per location per weekly check: ChatGPT x3, Gemini x3, Google AI Overview x3, Perplexity x1 = 10.

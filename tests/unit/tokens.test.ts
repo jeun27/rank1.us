@@ -10,7 +10,7 @@ describe("Tailwind theme matches docs/UI.md tokens", () => {
     expect(colors).toEqual({
       paper: "#F7F4EE", ink: "#1E2320", inkMuted: "#5C625E", moss: "#2F6F4F", amber: "#D98E2B",
       brick: "#B3443A", jelly: "#279EF2", jellyDeep: "#1A5FBF", border: "rgb(30 35 32 / 0.15)",
-      successBg: "#E6EFE9", errorBg: "#F6E4E1", warnBg: "#FBEFD9", warnText: "#8A5A12", infoBg: "#E3EEFB",
+      successBg: "#E6EFE9", errorBg: "#F7E6E3", warnBg: "#FBEFD9", warnText: "#8A5A12", infoBg: "#E3EEFB",
     });
   });
 

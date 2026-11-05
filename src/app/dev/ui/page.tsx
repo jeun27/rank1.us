@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Freshness } from "@/components/ui/Freshness";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { Logo } from "@/components/ui/Logo";
 import { StatNumber, formatPercent } from "@/components/ui/StatNumber";
 import { Table } from "@/components/ui/Table";
 import { exampleCheck, exampleLeaderboard, exampleNoAnswers, exampleVisibility } from "./example-data";
@@ -34,6 +35,22 @@ export default function DevUiPage() {
     <main className="mx-auto max-w-page px-5 py-12 md:px-8">
       <h1 className="font-display text-display font-semibold md:text-display-md">UI components</h1>
       <p className="mt-2 text-inkMuted">Every component and state from docs/UI.md. <Badge tone="info">Example data</Badge></p>
+
+      <Section name="Logo">
+        <Logo />
+        <div className="flex flex-wrap items-end gap-8">
+          {[24, 48, 96].map((h) => (
+            // eslint-disable-next-line @next/next/no-img-element -- show the raw public asset
+            <img key={h} src="/logo-mark.svg" alt={`Rank1 logo mark, ${h}px`} width={(h * 4) / 3} height={h} />
+          ))}
+        </div>
+        <div className="flex flex-wrap items-end gap-8">
+          {[32, 64, 180].map((h) => (
+            // eslint-disable-next-line @next/next/no-img-element -- show the raw public asset
+            <img key={h} src="/app-icon.svg" alt={`Rank1 app icon, ${h}px`} width={h} height={h} />
+          ))}
+        </div>
+      </Section>
 
       <Section name="Button">
         <div className="flex flex-wrap items-center gap-4">

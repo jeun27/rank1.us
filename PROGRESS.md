@@ -10,7 +10,7 @@ Changed
 - public/jelly.png: background removed from jelly-01-front.jpg (512 x 471). UI.md lists this as a step 2 task; done now because LoadingState and Banner need Jelly.
 
 Blocked
-- errorBg #F6E4E1 with brick #B3443A text is 4.495:1, below the 4.5:1 AA minimum (UI.md rounds it to 4.50). axe fails the error Banner and error Badge. Asked Jeun which token to change.
+- Nothing. errorBg changed to #F7E6E3 (brick text 4.57:1, approved).
 
 Doc differences
 - Next.js 16 ships its own AGENTS.md telling agents to read node_modules/next/dist/docs before writing code. Kept as is.
@@ -20,3 +20,4 @@ Doc differences
 - Percentages are rounded down (2 of 3 = 66%), so a stat is never shown higher than measured.
 - Jelly is a single raster with no separate eyes, so: no blink in the loading squish, no eye direction, no worried expression. All wait for jelly.svg.
 - /dev/ui is a gallery, so it shows several primary buttons and several Jellys. Real screens keep one of each.
+- Logo (Jeun, 2026-11-05): header = bar mark + "Rank1" wordmark, favicon = bar app icon instead of UI.md's Jelly drop. CLAUDE.md product bullet and UI.md Favicon row updated, Logo row added. Default Next.js favicon.ico removed.

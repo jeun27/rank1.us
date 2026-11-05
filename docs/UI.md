@@ -16,7 +16,7 @@ Source: field-notes-spec.md + UI/UX Page section 13. PAGE = from research #4. AD
 | jellyDeep | #1A5FBF | Primary button (white text), links, focus ring | PAGE |
 | border | ink 15%, 1px | Cards, tables, inputs | PAGE |
 | successBg | #E6EFE9 | Success badge/banner (moss text, 5.10:1) | ADOPTED |
-| errorBg | #F6E4E1 | Error banner (brick text, 4.50:1) | ADOPTED |
+| errorBg | #F7E6E3 | Error banner (brick text, 4.57:1) | ADOPTED |
 | warnBg / warnText | #FBEFD9 / #8A5A12 | 'Moved' badge (5.19:1) | ADOPTED |
 | infoBg | #E3EEFB | Info badge, 'You' row tag (jellyDeep text, 5.21:1) | ADOPTED |
 
@@ -50,6 +50,7 @@ Contrast: ink/paper 14.53, white/jellyDeep 6.12, jellyDeep/paper 5.57, moss/pape
 | Chart | Lines and bars only. In-app business line jellyDeep 2px; rival average ink 40% dashed 4/3; reports use the business color. No donut/Sankey/gauge/heatmap. | PAGE + ADOPTED |
 | Freshness | Caption inkMuted: 'Checked 14 h ago · 250 answers · API-measured, directional'. | PAGE + this pack |
 | Error banner | errorBg, brick text, 64px worried Jelly, one sentence + one fix action. | ADOPTED |
+| Logo | Bar mark (public/logo-mark.svg, currentColor, ink) left of the wordmark 'Rank1' in Fraunces 600 18px ink, 8px gap. App icon: public/app-icon.svg. | Jeun 2026-11-05 |
 | Spacing | 4-pt: 4 8 12 16 24 32 48 64 96. Sections 96 / 64 mobile. Max width 1120. Gutters 20 mobile / 32 desktop. | ADOPTED |
 | Breakpoints | sm 640, md 768, lg 1024 (container cap 1120). Stack below md. Tap targets >= 44px. Sticky mobile CTA bar. | PAGE |
 
@@ -63,7 +64,7 @@ Contrast: ink/paper 14.53, white/jellyDeep 6.12, jellyDeep/paper 5.57, moss/pape
 | Empty | 64-96px, eyes toward the button. |
 | Loading | Squish scaleY 0.95 -> 1.0, ~1.2 s loop with a blink; static under prefers-reduced-motion. |
 | Error | 64px worried, inside the errorBg banner (ADOPTED). |
-| Favicon | 32: blue drop #279EF2, two ink ovals, one white highlight. 16: eyes only, eyes >= 2px wide. |
+| Favicon | The bar app icon: ink #1E2320 rounded square, three paper #F7F4EE bars (src/app/icon.svg, drawn on a 32 grid so it stays sharp at 16 and 32; apple-icon.png 180). (changed by Jeun 2026-11-05) |
 | Footer credit | 12px flat Jelly + 'Powered by Rank1' (10px) ONLY on the free audit. Never on $99 plan reports. |
 | Alt | "Jelly, the Rank1 mascot: a glossy blue gummy blob with two oval eyes"; repeats alt="". |
 

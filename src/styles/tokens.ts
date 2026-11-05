@@ -12,7 +12,7 @@ export const colors = {
   jellyDeep: "#1A5FBF", // primary button (white text), links, focus ring
   border: "rgb(30 35 32 / 0.15)", // ink 15%, 1px: cards, tables, inputs
   successBg: "#E6EFE9", // success badge/banner (moss text)
-  errorBg: "#F6E4E1", // error banner (brick text)
+  errorBg: "#F7E6E3", // error banner (brick text)
   warnBg: "#FBEFD9", // "Moved" badge background
   warnText: "#8A5A12", // "Moved" badge text
   infoBg: "#E3EEFB", // info badge, "You" row tag (jellyDeep text)
