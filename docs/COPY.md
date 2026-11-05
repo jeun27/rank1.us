@@ -276,6 +276,17 @@ Copy in quotes is exact. Every number shows n + checked X ago. Results labeled A
 | Agency hint | Below list, caption: 'Need 10+ businesses or done-for-you? Contact us.' |
 | Mobile | Opens as a bottom sheet; rows 56px. |
 
+## Report (lead, 2026-11-05)
+
+Strings for the white-label monthly report PDF and email (Step 16). No product name or "Powered by" anywhere. The email From name is the business name. `{Business}` = businesses.name, `{Month YYYY}` = the report month ("October 2026"), `{n}` = the AI answers counted.
+
+| Where | String |
+|---|---|
+| Email subject | "{Business} AI visibility report, {Month YYYY}" |
+| Email body | "Your {Month YYYY} AI visibility report is attached." then a blank line, then "API-measured, directional. Based on {n} AI answers." |
+| PDF section headings | "AI visibility", "By engine", "Competitors", "Top sources", "What to fix next", "Weekly checks" |
+| PDF footer label | "API-measured, directional" |
+
 ## Engine location tooltip
 
 Greyed tooltip copy: "{Engine} can't target a city yet, so we check it for the whole country."

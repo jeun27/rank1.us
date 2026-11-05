@@ -748,3 +748,24 @@ Changed
   - Add/Remove failures reuse "We couldn't save that. Try again."; "We couldn't open billing…" is only for the Checkout/portal redirects (lead);
   - "Active"/"Paused" as screen-reader text are approved.
 - Stripe calls: data-pipeline's #73 helpers (src/lib/stripe: startCheckout, openPortal, addBusinessSeat, removeBusinessAtPeriodEnd) with the caller's own client. Checkout success/cancel and the portal return to NEXT_PUBLIC_SITE_URL/app/billing. The interim stand-in module is gone.
+
+## Step 16 (data-pipeline): white-label PDF and monthly send (branch feat/step16-report-pdf)
+- Step 16 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b; Build Pack not readable; reconcile later.
+
+Lead decisions (2026-11-05)
+- Reports go to businesses whose workspace is active/trialing, or DFY: one per business per LA calendar month, for the previous month. Idempotent (enqueue_monthly_reports, 0019).
+- /api/cron/monthly-report at "0 14,15 1 * *" UTC, gated to the 1st at 07:xx America/Los_Angeles. It only enqueues. The per-minute run-jobs drain renders and sends at most 2 reports per tick, each only with ≥60 s of maxDuration left.
+- Content is stored data only (no LLM): logo or name + month, visibility with n and the change vs the previous month's last run, per engine, top 5 competitors, top 10 sources, open fixes (title + detail), the month's weekly checks, the "API-measured, directional" label + freshness. The brand color is used for accents only and falls back to ink when it fails 4.5:1 on white.
+- White-label: no product name, logo or "Powered by" in the PDF (text and metadata) or the email. From = the business name at REPORT_FROM_EMAIL (existing env name).
+- Copy: subject, body and headings exactly as COPY.md "Report (lead, 2026-11-05)".
+- No GA4 section in the PDF, not even a placeholder, until Step 15 exists.
+- Logos: PNG/JPEG only. SVG is rejected, not sanitized (data-pipeline's call, approved).
+
+Changed
+- `@react-pdf/renderer` (INTEGRATIONS.md) renders src/lib/reports/document.tsx (Helvetica, A4; title/author/creator/producer = the business name).
+- src/lib/reports: month.ts (window + month label), contrast.ts (WCAG accent fallback), copy.ts, data.ts (buildReportData picks stored fields by name; monthRuns picks the month's runs by LA date), email.ts (Resend payload with the PDF attached; Idempotency-Key = report id), process.ts (processReports drain hook, runMonthly), service.ts (service wiring + sendTestReport).
+- Errors leave a report 'rendering'. claim_reports retries it after 10 minutes and marks it failed after 3 attempts, so a Resend or Storage hiccup never loses a month and Resend's idempotency key prevents a double send. No recipients → status generated (stored, nothing sent).
+- sendTestReport (for 'Send test to me'): last month's report to the signed-in user's own email only, read with the caller's client (RLS), never stored. The idempotency key dedupes double clicks within a minute.
+- run-jobs drains reports after the fix checks. vercel.json gains the monthly cron, and tests/unit/vercel-config.test.ts pins all 3 crons.
+- Logs carry counts and PG codes only.
+- Review (#77): the drain reads with the service client, which bypasses the DFY fix_list_visible rule. So the report loader applies it: a DFY business with the fix list hidden gets no "What to fix next" section (no heading, no placeholder). DFY visible and self-serve always show it. Tested on the rendered PDF and the email.

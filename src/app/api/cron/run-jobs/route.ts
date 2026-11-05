@@ -1,6 +1,7 @@
 import { notifyFreeAuditsWith } from "@/lib/audit/service";
 import { checkFixesWith } from "@/lib/fixes/service";
 import { claimJobs } from "@/lib/queries/run-jobs";
+import { processReportsWith } from "@/lib/reports/service";
 import { batchSize, cronAuthorized, drainJobs, processJob, serviceRunsDb } from "@/lib/runs";
 import { createServiceClient } from "@/lib/supabase/service";
 
@@ -23,8 +24,11 @@ export async function GET(req: Request) {
     // Then email free audits that finished (one per lead; failed runs are marked without an email).
     const notified = await notifyFreeAuditsWith(db);
     // Then at most one closed paid run's site checks, only with ≥60 s of maxDuration left (Step 10).
-    const fixes = await checkFixesWith(db, () => maxDuration * 1000 - (Date.now() - started));
-    return Response.json({ ...summary, notified, fixes });
+    const timeLeft = () => maxDuration * 1000 - (Date.now() - started);
+    const fixes = await checkFixesWith(db, timeLeft);
+    // Then at most 2 queued monthly reports, each only with ≥60 s left (Step 16).
+    const reports = await processReportsWith(db, timeLeft);
+    return Response.json({ ...summary, notified, fixes, reports });
   } catch (e) {
     // No DB error text in the body (Step 6 QA): a fixed label, with only the PG code logged.
     const code = typeof e === "object" && e && "code" in e ? String(e.code) : "error";
