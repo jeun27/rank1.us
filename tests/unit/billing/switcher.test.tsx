@@ -123,3 +123,20 @@ describe("BusinessSwitcher", () => {
     expect(p.actions.remove).toHaveBeenCalledWith("b2");
   });
 });
+
+// Lead: an Add or Remove failure is a save ("We couldn't save that. Try again."), not a billing redirect.
+describe("BusinessSwitcher failures", () => {
+  it.each([
+    ["add", "+ Add a business ($99/mo)", "Add business"],
+    ["remove", "More for Example Business 2", "Remove business"],
+  ] as const)("%s failure: 'We couldn't save that. Try again.'", async (kind, opener, confirm) => {
+    const p = props(2, { actions: actions({ [kind]: vi.fn(async () => ({ error: "failed" })) }) });
+    render(<BusinessSwitcher {...p} />);
+    await userEvent.click(screen.getByRole("button", { name: "Example Ramen House ▾" }));
+    await userEvent.click(screen.getByRole("button", { name: opener }));
+    if (kind === "remove") await userEvent.click(screen.getByRole("menuitem", { name: "Remove business" }));
+    await userEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: confirm }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("We couldn't save that. Try again.");
+    expect(screen.queryByText("We couldn't open billing. Try again in a minute.")).toBeNull();
+  });
+});
