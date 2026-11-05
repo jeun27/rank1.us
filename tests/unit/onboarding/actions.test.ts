@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const user = { current: null as { id: string } | null };
 const landing = { current: "onboarding" as string | null };
 vi.mock("@/lib/queries/auth", () => ({ getLanding: async () => landing.current }));
+const tokens = { left: 99 };
+vi.mock("@/lib/queries/rate-limits", () => ({ takeRateToken: vi.fn(async () => tokens.left-- > 0) }));
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({ auth: { getUser: async () => ({ data: { user: user.current } }) } }),
 }));
@@ -56,6 +58,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   user.current = null;
   landing.current = "onboarding";
+  tokens.left = 99;
 });
 
 describe("onboarding server actions", () => {
@@ -94,5 +97,16 @@ describe("onboarding server actions", () => {
     expect(await findCompetitorsAction(q)).toEqual({ status: "error", items: [] });
     expect(readSite).not.toHaveBeenCalled();
     expect(findLocalCompetitors).not.toHaveBeenCalled();
+  });
+
+  it("over the limit: the same fallbacks, and no fetch or Maps call", async () => {
+    user.current = { id: "u1" };
+    tokens.left = 0;
+    expect(await readSiteAction("exampleramen.test")).toEqual({ status: "unreadable" });
+    expect(await findCompetitorsAction(q)).toEqual({ status: "error", items: [] });
+    expect(readSite).not.toHaveBeenCalled();
+    expect(findLocalCompetitors).not.toHaveBeenCalled();
+    const { takeRateToken } = await import("@/lib/queries/rate-limits");
+    expect(vi.mocked(takeRateToken).mock.calls.map((c) => c[1])).toEqual(["read_site", "maps_lookup"]);
   });
 });

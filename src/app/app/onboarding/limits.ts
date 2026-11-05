@@ -1,22 +1,15 @@
 // Per-user limits on the onboarding lookups (lead, 2026-11-05): readSite fetches other sites and
-// Maps lookups are paid DataForSEO calls. Counters live server-side in onboarding_lookups.
+// Maps lookups are paid DataForSEO calls. Counters live server-side (rate_events, #24).
+import type { RateKind } from "@/lib/queries/rate-limits";
 const HOUR = 3_600_000;
-export const LIMITS = {
-  read_site: [{ max: 10, windowMs: HOUR }],
-  maps: [
-    { max: 5, windowMs: HOUR },
-    { max: 20, windowMs: 24 * HOUR },
-  ],
-} as const;
 export const CACHE_MS = 24 * HOUR;
 
-export type LookupKind = keyof typeof LIMITS;
-export type Limit = { max: number; windowMs: number };
-// One signed-in user's lookups: a 24 h result cache and rate tokens (rate_events, backend).
+export type LookupKind = RateKind;
+// One signed-in user's lookups. take() is take_rate_token, where the limits live
+// (read_site 10/h; maps_lookup 5/h and 20/24 h); cached/save are the 24 h result cache.
 export type LookupStore = {
   cached: (kind: LookupKind, key: string, maxAgeMs: number) => Promise<unknown>;
-  // True, and one event recorded, only when every window still has room.
-  take: (kind: LookupKind, limits: readonly Limit[]) => Promise<boolean>;
+  take: (kind: LookupKind) => Promise<boolean>;
   save: (kind: LookupKind, key: string, result: unknown) => Promise<void>;
 };
 
@@ -30,7 +23,7 @@ export async function withLimits<T>(
 ): Promise<T | "limited"> {
   const hit = await store.cached(kind, key, CACHE_MS);
   if (hit) return hit as T;
-  if (!(await store.take(kind, LIMITS[kind]))) return "limited";
+  if (!(await store.take(kind))) return "limited";
   const result = await run();
   if (cacheable(result)) await store.save(kind, key, result);
   return result;
