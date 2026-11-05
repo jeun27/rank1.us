@@ -8,6 +8,7 @@ import { readBody } from "@/lib/spam/readBody";
 import { verifyTurnstile } from "@/lib/spam/turnstile";
 import { TURNSTILE_FIELD, validateAudit } from "@/lib/spam/validate";
 import { createServiceClient } from "@/lib/supabase/service";
+import type { DbClient } from "@/lib/queries/client";
 
 // Runs on the Node.js runtime (the default). cacheComponents rejects the "runtime" segment config.
 
@@ -25,20 +26,27 @@ export async function POST(req: Request) {
   if (!(await verifyTurnstile(body[TURNSTILE_FIELD], ip)))
     return Response.json({ error: "turnstile" }, { status: 403 });
 
+  let db: DbClient;
+  let id: string;
   try {
-    const db = createServiceClient();
+    db = createServiceClient();
     if ((await countLeadsSince(db, utcDayStart(new Date()))) >= auditDailyLimit()) {
       return Response.json({ error: "rate_limited" }, { status: 429 });
     }
-    const id = await insertLead(db, {
+    id = await insertLead(db, {
       ...check.data,
       ip_hash: hashIp(ip),
       token: randomBytes(32).toString("base64url"),
     });
-    after(() => startFreeAuditWith(db, { id, domain: check.data.domain }));
   } catch {
     console.error("audit request: failed");
     return Response.json({ error: "server" }, { status: 500 });
+  }
+  // The lead is stored, so the answer is 202 either way. after() only works inside a Next request.
+  try {
+    after(() => startFreeAuditWith(db, { id, domain: check.data.domain }));
+  } catch {
+    console.error("audit request: free audit not scheduled");
   }
   return queued();
 }

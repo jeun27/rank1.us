@@ -386,6 +386,7 @@ UNVERIFIED
   - ClaimedJob.question.id is now string | null.
 - Tests: tests/db/free-audit.test.ts.
 - src/types/db.ts got the 0012 objects added by hand in the generator format (no local stack). Regenerate it with `pnpm db:types` when a stack is available.
+
 ## Step 7 (data-pipeline): metrics, CSV, free-audit pipeline (branch feat/step7-metrics)
 Step 7 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
 Lead decisions (Step 7 brief): a free audit has no business row; its brand list is a service-only snapshot reached by the lead token. Inputs are readSite → findLocalCompetitors → buildQuestions, with no LLM. AUDIT_DAILY_LIMIT caps leads, and the audit starts only after the lead row is stored. Paid-run metrics count only answers whose question still exists. One email per lead (idempotency key = lead id, from CONTACT_FROM_EMAIL). Metrics are pure TypeScript.
