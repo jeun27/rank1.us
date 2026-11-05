@@ -2,7 +2,14 @@ import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { ensureSelfServeWorkspace } from "@/lib/queries/auth";
-import { inviteClient, listClientUsers, removeClient, setFixListVisible, type InviteFn } from "@/lib/queries/clients";
+import {
+  inviteClient,
+  listClientUsers,
+  removeClient,
+  setFixListVisible,
+  type DeleteUserFn,
+  type InviteFn,
+} from "@/lib/queries/clients";
 import { createBusinessOnboarding, createDfyClient } from "@/lib/queries/onboarding";
 import { anonClient, must, newUser, serviceClient, type TestUser } from "./helpers";
 
@@ -111,6 +118,58 @@ describe("inviteClient", () => {
         members: must(await s.from("workspace_members").select("workspace_id, role").eq("user_id", id)),
       }).toEqual(before);
     }
+  });
+
+  it("a failed grant deletes the just-invited user and returns error, so a retry starts clean", async () => {
+    const address = email("client-grant-fails");
+    const deleted: string[] = [];
+    const recordDelete: DeleteUserFn = async (userId) => {
+      deleted.push(userId);
+      const { error } = await serviceClient().auth.admin.deleteUser(userId);
+      if (error) throw error;
+    };
+    // The invitee ends up in another workspace before the grant, so grant_dfy_client refuses (22023).
+    const inviteThenConflict: InviteFn = async (e, r) => {
+      const { userId } = await fakeInvite(e, r);
+      must(
+        await serviceClient()
+          .from("workspace_members")
+          .insert({ workspace_id: otherDfy.workspaceId, user_id: userId, role: "member" }),
+      );
+      return { userId };
+    };
+    expect(
+      await inviteClient(
+        serviceClient(),
+        { email: address, businessId: dfy.businessId },
+        inviteThenConflict,
+        recordDelete,
+      ),
+    ).toEqual({ status: "error" });
+    expect(deleted).toHaveLength(1);
+    expect(await userIdOf(address)).toBeUndefined();
+    expect(must(await serviceClient().from("workspace_members").select("user_id").eq("user_id", deleted[0]))).toEqual(
+      [],
+    );
+
+    expect(await inviteClient(serviceClient(), { email: address, businessId: dfy.businessId }, fakeInvite)).toEqual({
+      status: "invited",
+    });
+    const id = (await userIdOf(address))!;
+    expect(must(await serviceClient().from("workspace_members").select("workspace_id").eq("user_id", id))).toEqual([
+      { workspace_id: dfy.workspaceId },
+    ]);
+  });
+
+  it("a failed invite returns error and creates nothing", async () => {
+    const address = email("client-invite-fails");
+    const failing: InviteFn = async () => {
+      throw new Error("Invite failed (500)");
+    };
+    expect(await inviteClient(serviceClient(), { email: address, businessId: dfy.businessId }, failing)).toEqual({
+      status: "error",
+    });
+    expect(await userIdOf(address)).toBeUndefined();
   });
 
   it("rejects an invalid email, and a self-serve business (22023)", async () => {

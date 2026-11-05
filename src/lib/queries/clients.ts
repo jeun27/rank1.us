@@ -3,12 +3,22 @@ import type { DbClient } from "./client";
 
 // DFY client invites (Step 12). Server only. Never log or echo client emails: status codes only.
 
-export type InviteStatus = "invited" | "existing_account" | "already_invited" | "invalid_email";
+// error: the invite or the grant failed; nothing is left behind, so a retry starts clean.
+export type InviteStatus = "invited" | "existing_account" | "already_invited" | "invalid_email" | "error";
 
 // Sends the Supabase Auth invite email and returns the new user's id.
 export type InviteFn = (email: string, redirectTo: string) => Promise<{ userId: string }>;
+// Deletes an auth user (used to undo an invite whose grant failed).
+export type DeleteUserFn = (userId: string) => Promise<void>;
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const adminDelete =
+  (serviceDb: DbClient): DeleteUserFn =>
+  async (userId) => {
+    const { error } = await serviceDb.auth.admin.deleteUser(userId);
+    if (error) throw new Error(`Delete failed (${error.status ?? "error"})`);
+  };
 
 const adminInvite =
   (serviceDb: DbClient): InviteFn =>
@@ -18,13 +28,14 @@ const adminInvite =
     return { userId: data.user.id };
   };
 
-// Service client only, after the server action checked the caller is team and the business is DFY.
-// An email with any Rank1 account is refused (one business per client user in v1), so an existing
-// account never changes. Only a new email gets the invite, then the dfy_client role + membership.
+// Service client only, after the team + DFY check. Any existing Rank1 account is refused (one business
+// per client user in v1). A new email gets the invite, then the dfy_client role + membership; if the
+// grant fails, the just-invited user is deleted so no role-less account is left behind.
 export async function inviteClient(
   serviceDb: DbClient,
   { email, businessId }: { email: string; businessId: string },
   invite: InviteFn = adminInvite(serviceDb),
+  deleteUser: DeleteUserFn = adminDelete(serviceDb),
 ): Promise<{ status: InviteStatus }> {
   const normalized = email.trim().toLowerCase();
   if (!EMAIL.test(normalized) || normalized.length > 254) return { status: "invalid_email" };
@@ -39,12 +50,20 @@ export async function inviteClient(
 
   const site = process.env.NEXT_PUBLIC_SITE_URL;
   if (!site) throw new Error("NEXT_PUBLIC_SITE_URL is not set");
-  const { userId } = await invite(normalized, `${site.replace(/\/$/, "")}/auth/callback`);
+  let userId: string;
+  try {
+    ({ userId } = await invite(normalized, `${site.replace(/\/$/, "")}/auth/callback`));
+  } catch {
+    return { status: "error" };
+  }
   const { error: grantError } = await serviceDb.rpc("grant_dfy_client", {
     p_user_id: userId,
     p_business_id: businessId,
   });
-  if (grantError) throw grantError;
+  if (grantError) {
+    await deleteUser(userId);
+    return { status: "error" };
+  }
   return { status: "invited" };
 }
 
