@@ -1,6 +1,8 @@
 import { formatAge } from "@/components/ui/Freshness";
 import { formatPercent } from "@/components/ui/StatNumber";
-import { ENGINES, ENGINE_LABEL, type WorkspaceView } from "@/lib/queries/workspace";
+import { sourcesCopy } from "@/components/app/sources-copy";
+import type { Metrics, Sources } from "@/lib/metrics";
+import { ENGINES, ENGINE_LABEL, type Engine, type WorkspaceView } from "@/lib/queries/workspace";
 import type { Metric } from "@/types/metrics";
 
 export const SECTIONS = [
@@ -197,9 +199,185 @@ export function buildBrief(ctx: Context, now: Date, prompt = ""): string {
   return lines.join("\n");
 }
 
-// claude.ai has no documented prefill; ?q= is the known form. Long briefs go by clipboard only.
-export const CLAUDE_Q_MAX = 6000;
-export function claudeUrl(brief: string): string {
-  const q = encodeURIComponent(brief);
-  return q.length > CLAUDE_Q_MAX ? "https://claude.ai/new" : `https://claude.ai/new?q=${q}`;
+// Open in Claude opens exactly this (Step 11): no ?q= prefill and no data in the URL. The brief goes by
+// clipboard only (ContextPane copies it first).
+export const CLAUDE_URL = "https://claude.ai";
+
+// ---- Real-data brief (Step 11) ----------------------------------------------------------------------
+
+export type ContextInput = {
+  business: { name: string; city: string | null; state: string | null };
+  // computeMetrics over the latest complete/partial run (with the previous run), or null before a run.
+  metrics: Metrics | null;
+  sources: Sources | null;
+  fixes: {
+    ranked: { title: string; detail: string | null }[];
+    tidyUps: { title: string; detail: string | null }[];
+  } | null;
+  questions: {
+    id: string;
+    text: string;
+    answers: {
+      engine: Engine;
+      status: "ok" | "failed" | "no_overview";
+      mentioned: boolean | null;
+      location_supported: "exact" | "fallback_country" | null;
+      citations: { url: string; domain: string; title: string | null }[];
+    }[];
+  }[];
+  // listRunSummaries rows, newest first.
+  checks: { id: string; status: string; started_at: string | null; finished_at: string | null; visibility: Metric }[];
+};
+
+export type ContextSelection = Selection;
+
+export const LIST_MAX = 10;
+export const QUESTIONS_MAX = 25;
+export const BRIEF_MAX = 12_000;
+const LABEL = "API-measured, directional";
+const CATEGORY = sourcesCopy.categories as Record<string, string>;
+
+const share = (m: Metric) => (m.denominator ? visibilityText(m) : "no answers yet");
+const capped = <T>(items: T[], max: number, line: (x: T) => string) => [
+  ...items.slice(0, max).map(line),
+  ...(items.length > max ? [`- …and ${items.length - max} more`] : []),
+];
+
+// A stored-data brief for Copy context: only named fields of query/metrics output are read (never raw,
+// cost, why_note, evidence, emails or tokens), every % carries its n, and the header carries freshness
+// and the label. Output depends only on the input, the selection and `now`.
+export function buildContextMarkdown(input: ContextInput, sel: ContextSelection, now: Date, prompt = ""): string {
+  const { business, metrics, sources } = input;
+  const place = [business.city, business.state].filter(Boolean).join(", ");
+  const at = (iso: string | null, n: number) =>
+    iso ? `Checked ${formatAge(new Date(iso), now)} ago · ${n} answers · ${LABEL}` : LABEL;
+
+  const prev = input.checks.find((c, i) => i > 0 && (c.status === "complete" || c.status === "partial"));
+  const visibility = (): string[] => {
+    if (!metrics) return ["- Visibility: no answers yet"];
+    const change = pointsChange(metrics.visibility, prev?.visibility);
+    const fallback = new Set(sources?.engines.filter((e) => e.locationSupport === "fallback").map((e) => e.engine));
+    return [
+      `- Visibility: ${share(metrics.visibility)}`,
+      ...(change ? [`- Change: ${change}`] : []),
+      ...ENGINES.flatMap((e) => [
+        `- ${ENGINE_LABEL[e]}: ${share(metrics.visibility.byEngine[e])}`,
+        ...(fallback.has(e) ? [`  ${fallbackNote(ENGINE_LABEL[e])}`] : []),
+      ]),
+    ];
+  };
+  const leader = (r: Metrics["leaderboard"][number]) =>
+    `- ${r.name}${r.kind === "business" ? " (you)" : ""}: ${share(r.metric)}${r.change !== null ? `, ${r.change > 0 ? "+" : ""}${r.change} pts` : ""}${r.tooFew ? ", too few answers" : ""}`;
+  const domainLine = (d: Sources["topDomains"][number]) =>
+    `- ${d.domain} (${CATEGORY[d.category] ?? CATEGORY.other}): ${linksText(d.links)} · ${d.engines.map((e) => ENGINE_LABEL[e]).join(", ")}`;
+  const fixLine = (f: { title: string; detail: string | null }) => `- ${f.title}${f.detail ? `: ${f.detail}` : ""}`;
+  const notNamed = input.questions
+    .map((q) => ({ q, ok: q.answers.filter((a) => a.status === "ok") }))
+    .filter(({ ok }) => ok.length > 0 && ok.every((a) => a.mentioned !== true));
+
+  const sections: { title: string; lines: string[]; keep?: boolean }[] = [];
+  let title = business.name;
+  let header = at(metrics?.freshness ?? null, metrics?.visibility.denominator ?? 0);
+  const links: { title: string; url: string }[] = [];
+
+  if (sel.kind === "question") {
+    const q = input.questions.find((x) => x.id === sel.id);
+    title = q?.text ?? business.name;
+    const ok = q?.answers.filter((a) => a.status === "ok") ?? [];
+    sections.push({
+      title: "Visibility",
+      keep: true,
+      lines: [
+        `- Visibility: ${share({ value: null, numerator: ok.filter((a) => a.mentioned).length, denominator: ok.length })}`,
+        ...ENGINES.flatMap((e) => {
+          const on = ok.filter((a) => a.engine === e);
+          const fb = q?.answers.some((a) => a.engine === e && a.location_supported === "fallback_country");
+          return [
+            `- ${ENGINE_LABEL[e]}: ${share({ value: null, numerator: on.filter((a) => a.mentioned).length, denominator: on.length })}`,
+            ...(fb ? [`  ${fallbackNote(ENGINE_LABEL[e])}`] : []),
+          ];
+        }),
+      ],
+    });
+    for (const a of ok) for (const c of a.citations) links.push({ title: c.title ?? c.domain, url: c.url });
+  } else if (sel.kind === "competitor") {
+    const rows = metrics?.leaderboard ?? [];
+    const row = rows.find((r) => r.name === sel.name);
+    const you = rows.find((r) => r.kind === "business");
+    title = sel.name;
+    sections.push({
+      title: "Leaderboard",
+      keep: true,
+      lines: [row, ...(row?.kind === "business" ? [] : [you])].filter((r) => !!r).map((r) => leader(r!)),
+    });
+  } else if (sel.kind === "domain") {
+    const d = sources?.topDomains.find((x) => x.domain === sel.domain);
+    title = sel.domain;
+    sections.push({ title: "Top sources", keep: true, lines: d ? [domainLine(d)] : ["- No cited links yet"] });
+  } else if (sel.kind === "check") {
+    const c = input.checks.find((x) => x.id === sel.runId);
+    const i = c ? input.checks.indexOf(c) : -1;
+    title = c?.finished_at ? formatDate(c.finished_at) : business.name;
+    header = at(c?.finished_at ?? null, c?.visibility.denominator ?? 0);
+    const change = c ? pointsChange(c.visibility, input.checks[i + 1]?.visibility) : null;
+    sections.push({
+      title: "Visibility",
+      keep: true,
+      lines: c
+        ? [`- Visibility: ${share(c.visibility)}`, ...(change ? [`- Change: ${change}`] : [])]
+        : ["- Visibility: no answers yet"],
+    });
+  } else {
+    const s = sel.section;
+    const all = s === "dashboard";
+    if (all || s === "questions") sections.push({ title: "Visibility", keep: true, lines: visibility() });
+    if (all || s === "competitors")
+      sections.push({ title: "Leaderboard", lines: capped(metrics?.leaderboard ?? [], LIST_MAX, leader) });
+    if (all || s === "sources")
+      sections.push({ title: "Top sources", lines: capped(sources?.topDomains ?? [], LIST_MAX, domainLine) });
+    if (all || s === "fixes") {
+      const open = [...(input.fixes?.ranked ?? []), ...(input.fixes?.tidyUps ?? [])];
+      sections.push({
+        title: "Open fixes",
+        lines: open.length ? capped(open, LIST_MAX, fixLine) : [`- ${EMPTY.fixes}`],
+      });
+    }
+    if (all || s === "questions")
+      sections.push({
+        title: `Questions where ${business.name} wasn't named`,
+        lines: capped(notNamed, QUESTIONS_MAX, ({ q, ok }) => `- ${q.text} (named in 0 of ${ok.length} answers)`),
+      });
+    if (s === "history")
+      sections.push({
+        title: "History",
+        lines: capped(input.checks, LIST_MAX, (c) => {
+          const i = input.checks.indexOf(c);
+          const change = pointsChange(c.visibility, input.checks[i + 1]?.visibility);
+          return `- ${c.finished_at ? formatDate(c.finished_at) : c.status}: ${share(c.visibility)}${change ? `, ${change}` : ""}`;
+        }),
+      });
+    if (s !== "dashboard") title = SECTION_LABEL[s];
+  }
+
+  const render = (secs: typeof sections) => {
+    const out = [`# ${title}`, "", [business.name, place].filter(Boolean).join(" · "), header, ""];
+    for (const sec of secs) if (sec.lines.length) out.push(`## ${sec.title}`, "", ...sec.lines, "");
+    if (links.length) out.push("## Sources", "", ...capped(links, LIST_MAX, (l) => `- ${l.title}: ${l.url}`), "");
+    const p = prompt.trim();
+    if (p) out.push("## Prompt template", "", p, "");
+    return out.join("\n");
+  };
+  // Over the cap, drop the lowest sections first; the header and kept (visibility) sections stay.
+  let secs = sections;
+  let md = render(secs);
+  while (md.length > BRIEF_MAX) {
+    const drop = secs
+      .map((x, i) => (x.keep ? -1 : i))
+      .filter((i) => i >= 0)
+      .pop();
+    if (drop === undefined) break;
+    secs = secs.filter((_, i) => i !== drop);
+    md = render(secs);
+  }
+  return md.length > BRIEF_MAX ? md.slice(0, BRIEF_MAX) : md;
 }

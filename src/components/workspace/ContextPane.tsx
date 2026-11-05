@@ -8,7 +8,7 @@ import type { WorkspaceView } from "@/lib/queries/workspace";
 import {
   SECTION_LABEL,
   buildBrief,
-  claudeUrl,
+  CLAUDE_URL,
   contextFor,
   formatDate,
   linksText,
@@ -168,7 +168,7 @@ export function ContextPane({
             Copy context
           </Button>
           <a
-            href={now ? claudeUrl(brief) : "https://claude.ai/new"}
+            href={CLAUDE_URL}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => copy("Brief copied. Paste it in Claude if the box is empty.")}

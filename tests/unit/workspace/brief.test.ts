@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildWorkspace } from "@/lib/queries/workspace";
-import { buildBrief, claudeUrl, CLAUDE_Q_MAX, contextFor, SECTIONS, type Selection } from "@/lib/workspace/context";
+import { buildBrief, CLAUDE_URL, contextFor, SECTIONS, type Selection } from "@/lib/workspace/context";
 import { exampleWorkspaceRows } from "@/app/team/example-data";
 
 const view = buildWorkspace(exampleWorkspaceRows());
@@ -109,12 +109,8 @@ describe("buildBrief", () => {
   });
 });
 
-describe("claudeUrl", () => {
-  it("prefills claude.ai/new with ?q=", () => {
-    expect(claudeUrl("# Hi & bye")).toBe("https://claude.ai/new?q=%23%20Hi%20%26%20bye");
-  });
-
-  it("drops the prefill when the brief is too long; the clipboard still has it", () => {
-    expect(claudeUrl("x".repeat(CLAUDE_Q_MAX + 1))).toBe("https://claude.ai/new");
+describe("Open in Claude", () => {
+  it("is exactly https://claude.ai: no ?q= prefill and no data in the URL (Step 11)", () => {
+    expect(CLAUDE_URL).toBe("https://claude.ai");
   });
 });
