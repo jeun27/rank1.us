@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+/* Colors: docs/UI.md tokens only (src/styles/tokens.ts). Tailwind's default palette is removed. */
+@theme {
+  --color-*: initial;
+  --color-paper: #F7F4EE;
+  --color-ink: #1E2320;
+  --color-inkMuted: #5C625E;
+  --color-moss: #2F6F4F;
+  --color-amber: #D98E2B;
+  --color-brick: #B3443A;
+  --color-jelly: #279EF2;
+  --color-jellyDeep: #1A5FBF;
+  --color-border: rgb(30 35 32 / 0.15);
+  --color-successBg: #E6EFE9;
+  --color-errorBg: #F7E6E3;
+  --color-warnBg: #FBEFD9;
+  --color-warnText: #8A5A12;
+  --color-infoBg: #E3EEFB;
+  --color-white: #FFFFFF;
+}
+
+@theme inline {
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-public-sans), system-ui, sans-serif;
+}
+
+@theme {
+  --text-display: 40px;
+  --text-display--line-height: 44px;
+  --text-display-md: 56px;
+  --text-display-md--line-height: 60px;
+  --text-h2: 28px;
+  --text-h2--line-height: 34px;
+  --text-h2-md: 36px;
+  --text-h2-md--line-height: 42px;
+  --text-h3: 20px;
+  --text-h3--line-height: 26px;
+  --text-hero: 48px;
+  --text-hero--line-height: 52px;
+  --text-body: 16px;
+  --text-body--line-height: 24px;
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 28px;
+  --text-ui: 15px;
+  --text-ui--line-height: 20px;
+  --text-caption: 13px;
+  --text-caption--line-height: 18px;
+  --text-micro: 10px;
+  --text-micro--line-height: 14px;
+  --text-wordmark: 18px;
+
+  --radius-card: 8px;
+  --container-page: 1120px;
+
+  /* Jelly loading squish: scaleY 0.95 -> 1.0, ~1.2 s loop. */
+  --animate-squish: squish 1.2s ease-in-out infinite;
+  @keyframes squish {
+    0%, 100% { transform: scaleY(1); }
+    50% { transform: scaleY(0.95); }
+  }
+}
