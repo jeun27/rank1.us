@@ -16,12 +16,13 @@ describe("FixList (UI.md 4b Fix list)", () => {
   });
 
   it("success: ranked cards in order with title and detail; affected answers only when known; no size", () => {
-    render(<FixList {...base} onStatus={vi.fn()} />);
-    const ranked = screen.getByRole("list", { name: "What to fix next" });
-    const cards = within(ranked).getAllByRole("listitem");
+    // Site rules have no answer count; an answer rule (A1–A6, later) does.
+    const ranked = [exampleFixes[0], { ...exampleFixes[1], affected_answers: 12 }, exampleFixes[2]];
+    render(<FixList {...base} ranked={ranked} onStatus={vi.fn()} />);
+    const cards = within(screen.getByRole("list", { name: "What to fix next" })).getAllByRole("listitem");
     expect(cards.map((c) => within(c).getByRole("heading").textContent)).toEqual(exampleFixes.map((f) => f.title));
     expect(
-      within(cards[2]).getByText("Your robots.txt blocks OAI-SearchBot from /menu. Check if you meant to."),
+      within(cards[0]).getByText("Your robots.txt blocks OAI-SearchBot from /menu. Check if you meant to."),
     ).toBeInTheDocument();
     expect(within(cards[1]).getByText(/12 affected answers/)).toBeInTheDocument();
     expect(within(cards[0]).queryByText(/affected answers/)).not.toBeInTheDocument();
@@ -47,7 +48,7 @@ describe("FixList (UI.md 4b Fix list)", () => {
         .map((o) => o.textContent),
     ).toEqual(["To do", "Doing", "Done"]);
     await userEvent.selectOptions(selects[1], "done");
-    expect(onStatus).toHaveBeenCalledWith("f2", "done");
+    expect(onStatus).toHaveBeenCalledWith(exampleFixes[1].id, "done");
   });
 
   it("a failed status change shows the banner and puts the old value back", async () => {
