@@ -1,60 +1,81 @@
 # QA
 
-## Step 2: Public site, contact, legal, audit request
+## Step 2: Public site, contact, legal, audit request (re-run)
 
-Checked 2026-11-05 on commit 6b4c633 (branch step-2 = step2-landing dbda4b3 + step2-forms 4137697, on main 712c38f). Build, test and test:db ran in the agent sandbox (lean local Supabase, stopped afterwards). Preview e2e and probes ran on the Mac from a temporary detached worktree of 6b4c633.
-Preview: https://rank1-gcdz3j051-bryan-flowhighlevels-projects.vercel.app (redeploy of rank1-e7nsor67i, the step-2 6b4c633 build, so it has IP_HASH_SALT, AUDIT_DAILY_LIMIT=20 and the Turnstile test keys; no Supabase or Resend env).
+Checked 2026-11-05 on commit 61e708d (branch step-2). It adds these since the first QA run (8b51609): the tablist labelled by its H2 (e32ca86), a clean /api/contact 500 (ba87fae), migration 20261105000007 for industry and fix-list visibility (6954380), and the Industry field (61e708d). Build, test and test:db ran in the agent sandbox (lean local Supabase, stopped afterwards). Preview e2e, probes and screenshots ran on the Mac from a temporary detached worktree of 61e708d.
+Preview: https://rank1-bhrtg4v85-bryan-flowhighlevels-projects.vercel.app (git ref step-2, sha 61e708d, built 08:48 UTC, after the preview env updates at 08:32-08:39 UTC).
 
-Result: FAIL. 1 blocking problem, listed at the end.
+Result: PASS. No blocking problems. The first run's blocker ("Example screens" aria-label) is fixed.
 
 ### Commands
 
 | Command | Result |
 |---|---|
-| `pnpm test` | PASS. 18 files, 155 tests passed |
-| `pnpm test:db` | PASS. 6 files, 166 tests passed (incl. tests/db/forms.test.ts) |
+| `pnpm test` | PASS. 19 files, 163 tests passed |
+| `pnpm test:db` | PASS. 7 files, 183 tests passed |
 | `pnpm typecheck` | PASS. exit 0 |
 | `pnpm lint` | PASS. exit 0 |
-| `pnpm e2e` (sandbox, `.next` deleted, fresh build) | PASS. 77 passed, 1 skipped (client-secrets runs on desktop only, by design) |
-| `E2E_BASE_URL=<preview> pnpm e2e` | PASS. 76 passed, 2 skipped (client-secrets skips on a deployed URL, by design) |
+| `pnpm e2e` (sandbox, `.next` deleted, fresh build) | PASS. 83 passed, 1 skipped (client-secrets runs on desktop only, by design) |
+| `E2E_BASE_URL=<preview> pnpm e2e` | PASS. 82 passed, 2 skipped (client-secrets skips on a deployed URL, by design) |
 
 ### TASKS.md step 2
 
 | # | Check | Result | Evidence |
 |---|---|---|---|
-| 1 | `/` from UI.md 4a: 9 sections in order, header, footer, meta; social proof behind SHOW_SOCIAL_PROOF=false | PASS | landing.spec.ts:18 (one H1, sections in order, social proof hidden) passed local and preview; page.tsx:22 renders SocialProof only when `SHOW_SOCIAL_PROOF === "true"`; .env.example:27 `SHOW_SOCIAL_PROOF=false` |
-| 2 | Only the existing Jelly asset | PASS | the only Jelly reference in src is `/jelly.png` (src/components/ui/Jelly.tsx:8); public/ has jelly.png and no other Jelly file |
-| 3 | /privacy and /terms placeholders, [LEGAL REVIEW NEEDED]; Privacy names Google sign-in, GA4 read-only, deletion on request | PASS | legal.spec.ts:25 passed; privacy page has "Google sign-in", "read-only access (the analytics.readonly scope)" and "Deleting your data" via Contact us; no DO NOT USE item on either page (grep: 0 matches) |
-| 4 | /contact page + modal; tiers Agency bundle, Done-for-you (custom), Other, no $ | PASS | validate.ts:4 TIERS; contact.spec.ts passed (page, modal focus trap, Esc, no-JS fallback) |
-| 5 | POST /api/contact: honeypot, Turnstile, 3 per IP hash per hour, contact_requests row, Resend email from env, no hard-coded address | PASS | route order validate, honeypot, Turnstile, rate limit, store, email (contact/route.ts); CONTACT_LIMIT 3 per rolling hour (rateLimit.ts); tests/db/forms.test.ts and tests/unit/api/routes.test.ts passed; from/to only from CONTACT_FROM_EMAIL / CONTACT_TO_EMAIL (resend.ts) |
-| 6 | Free-audit CTA posts to /api/audit/request (stub) | PASS | landing.spec.ts:206 and audit-form.spec.ts passed; route stores a lead and returns 202 |
-| 7 | Final set is the source of truth; weekly checks + monthly report wording everywhere | PASS | cadence grep: HowItWorks "every week" + "monthly report", Features "every weekly check kept in History" + "monthly", Pricing "every week" + "monthly report"; no "daily" in customer copy |
-| 8 | All green locally; preview builds and e2e passes | PASS | commands above |
+| 1 | `/` from UI.md 4a: 9 sections, header, footer, meta; social proof behind SHOW_SOCIAL_PROOF=false | PASS | landing.spec.ts passed local and preview; page.tsx renders SocialProof only when `SHOW_SOCIAL_PROOF === "true"`; .env.example `SHOW_SOCIAL_PROOF=false` |
+| 2 | Only the existing Jelly asset | PASS | the only Jelly reference in src is `/jelly.png` (Jelly.tsx:8) |
+| 3 | /privacy and /terms placeholders; Privacy names Google sign-in, GA4 read-only, deletion on request | PASS | legal.spec.ts passed; no DO NOT USE item (grep: 0) |
+| 4 | /contact + modal; tiers with no $ | PASS | contact.spec.ts passed; tiers Agency bundle, Done-for-you (custom), Other |
+| 5 | /api/contact: honeypot, Turnstile, 3/IP hash/hour, contact_requests row, Resend from env, no hard-coded address | PASS | tests/db/forms.test.ts (incl. "stores industry Other with its text") and routes.test.ts passed; email text has `Industry: Restaurant` / `Industry: Other – Pool service` (resend.test.ts, routes.test.ts) |
+| 6 | Audit CTA posts to /api/audit/request | PASS | landing.spec.ts and audit-form.spec.ts passed |
+| 7 | Final set source of truth; weekly checks + monthly report wording | PASS | cadence grep unchanged since the first run: "every week", "every weekly check kept in History", "monthly report"; no "daily" |
+| 8 | All green locally; preview builds; e2e passes on it | PASS | commands above |
+
+### Jeun's ENG_HANDOFF locks
+
+| Lock | Result | Evidence |
+|---|---|---|
+| Industry list is exactly the 6 | PASS | INDUSTRIES = Restaurant, HVAC, Plumbing, Roofing, Pest control, Other (src/lib/queries/contactRequests.ts:7); DB check constraint has the same 6 (migration 0007); preview /contact options: "Pick your industry." + the 6, at 375 and 1280 |
+| No dental | PASS | grep -i dental in src: 0. Preview POST with industry "Dental": 400 `{"errors":["industry"]}` |
+| No $ on the form | PASS | preview /contact main text contains no "$" (375 and 1280); contact.spec.ts asserts the same on /contact and the modal |
+| Industry in the email body | PASS | resend.ts plain text adds `Industry: <value>` and `Industry: Other – <text>`; resend.test.ts asserts exact text and no html body |
+| Other text optional, max 60, only with Other | PASS | preview POST: HVAC + text 400 `industry_other`, Other + 61 chars 400 `industry_other`, no industry 400 `industry`; DB constraints in 0007 |
+| Fix list visible per service | PASS | step2-migration.test.ts: self-serve member sees fixes; dfy member sees none until the service role sets fix_list_visible; service role always sees them; owners cannot set service or fix_list_visible on insert or update |
+| Audit cap 5 on preview | NOT VERIFIABLE | AUDIT_DAILY_LIMIT is a sensitive Vercel env (value unreadable through the API). It was updated 08:39 UTC, before the 08:48 build. The cap can't be exercised on the preview without Supabase. Not blocking: it's config, not code |
+
+### Migration 20261105000007
+
+| Check | Result | Evidence |
+|---|---|---|
+| Rollback round-trip, 7 migrations | PASS | migrations.test.ts "rollbacks undo everything in reverse order, and the migrations re-apply after" passed. Manual psql run: after db reset, 22 tables, 4 new columns, 25 policies, 11 private functions; after the 7 .down.sql in reverse, 0, 0, 0, 0; after re-applying the 7 migrations, back to 22, 4, 25, 11 |
+| Fix-list RLS in test:db | PASS | 6 cases in step2-migration.test.ts passed; rls.test.ts cross-workspace fixes read, insert, update, delete still denied |
+| service and fix_list_visible are service-role only | PASS | 0007 revokes table grants and re-grants INSERT/UPDATE on every other column only; owner insert/update tests passed |
+
+### Tests diff since 8b51609
+
+PASS. No assertion removed or loosened. Every changed line adds the industry field to a fixture or expectation (forms.test.ts, rls.test.ts, routes.test.ts, resend.test.ts, validate.test.ts), or extends a list (contact.spec.ts invalid-field loop now includes Industry). `landing.test.tsx` passes the new `labelledBy` prop. New: step2-migration.test.ts, missing-env.test.ts, industry e2e on /contact and the modal, an aria-label/title/alt check against COPY.md.
+routes.test.ts:11 now mocks `@/lib/queries/contactRequests` as `{ ...real, ...q }`. All 3 query functions the route calls are still replaced by `q` mocks. The real exports kept are only INDUSTRIES, INDUSTRY_OTHER_MAX and types, which validate.ts imports. Harmless.
 
 ### Standing checks
 
 | Check | Result | Evidence |
 |---|---|---|
-| Unmocked API on the preview fails cleanly | PASS | /api/audit/request (valid body + Turnstile test token): 500 `{"error":"server"}`. /api/contact (same): 500 with an empty body. No token: 403 `{"error":"turnstile"}` on both. Empty body: 400 field list. No stack trace, file path or secret in any response. Real browser on preview /contact (Turnstile test widget, no mocks): POST 500, form shows the Banner "That didn't send. Try again in a minute." |
-| Visible strings on /, /contact and the modal are in COPY.md | FAIL | Script read every visible text node, placeholder, aria-label and option (fixture `data-computed` values skipped) and compared them to COPY.md. /contact: 0 missing. Modal: 0 missing. /: 1 missing, the tablist accessible name "Example screens" (src/components/site/ScreenshotTabs.tsx:21). landing.spec.ts:39 only reads visible text, so it misses aria-labels |
-| Legal pages: no DO NOT USE items | PASS | grep of privacy, terms and LegalPlaceholder: 0 matches |
-| Only price is $99; tiers have no $ | PASS | every `$<digits>` in src is `$99` (7 hits); no discount, coupon, founding or trial wording |
+| Unmocked API on the preview fails cleanly | PASS | /api/contact with a valid body + Turnstile test token: 500 `{"error":"server"}` (was an empty 500). /api/audit/request: 500 `{"error":"server"}`. No token: 403 `{"error":"turnstile"}`. No stack, path or secret in any response |
+| Visible strings on /, /contact and the modal in COPY.md | PASS | Script compared every visible text node, placeholder, aria-label and option to COPY.md: 0 missing on /, /contact and the modal. The old "Example screens" is gone |
+| Legal pages: no DO NOT USE items | PASS | grep: 0 |
+| Only price $99; tiers and industry have no $ | PASS | every `$<digits>` in src is `$99` |
 | SHOW_SOCIAL_PROOF off by default | PASS | see item 1 |
 | Jelly only public/jelly.png | PASS | see item 2 |
-| One jellyDeep primary per viewport | PASS | landing.spec.ts:120 passed local and preview |
-| 375px no horizontal scroll except the comparison table | PASS | landing.spec.ts:157 passed; preview scrollWidth 375 at 375px, 1280 at 1280px |
-| Sticky bar never covers the footer | PASS | landing.spec.ts:100 and :138 passed local and preview |
-| Axe on every page | PASS | axe on /, /contact, /privacy, /terms and the open modal: 0 violations; e2e axe checks passed |
-| No secrets in .next/static | PASS | 24 files: no `sk_`, `whsec_`, `service_role`, `sb_secret_`, JWT, `pplx-`, `re_`, `GOCSPX-`, Turnstile test secret or e2e canary salt; no server-only env name; client-secrets.spec.ts passed |
-| No hard-coded email address in src | PASS | grep for `@` in src: the only address is "you@ramenhouse.com" inside the approved COPY.md error string "Add a valid email, like you@ramenhouse.com" (forms/copy.ts:22). Nothing sends to it |
+| One jellyDeep primary per viewport; 375px scroll only in the comparison table; sticky bar clear of the footer | PASS | landing.spec.ts passed local and preview; preview scrollWidth 375 / 1280 on / and /contact |
+| Axe on every page | PASS | /, /contact, /privacy, /terms and the open modal: 0 violations; e2e axe checks passed, incl. /contact and the modal with Other picked |
+| No secrets in .next/static | PASS | 24 files: no secret patterns, Turnstile test secret, canary salt or server-only env names |
+| No hard-coded email in src | PASS | only "you@ramenhouse.com" inside the approved COPY.md email error (forms/copy.ts:26) |
 
-Screenshots (preview, full page): docs/qa/landing-after-375.png, docs/qa/landing-after-1280.png
-
-Not blocking: /api/contact creates the service client outside its try block (src/app/api/contact/route.ts:24), so a missing Supabase env becomes an uncaught 500 with an empty body. /api/audit/request returns `{"error":"server"}` in the same case. Nothing leaks and the form shows its error, but the two routes differ.
+Screenshots (preview, full page): docs/qa/landing-after-375.png, docs/qa/landing-after-1280.png, docs/qa/contact-industry-375.png, docs/qa/contact-industry-1280.png (Other picked, fake data "Ana Example", "Pool service")
 
 ### Blocking problems
 
-1. src/components/site/ScreenshotTabs.tsx:21: `aria-label="Example screens"` is a customer-facing (screen-reader) string that is not in docs/COPY.md. Add it to COPY.md, or label the tablist with an existing string such as the H2 "What you see on Monday." via aria-labelledby.
+None.
 
 ## Components v2: Final set
 
