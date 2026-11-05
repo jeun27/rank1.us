@@ -135,6 +135,8 @@ test("a DFY client with only an audit run shows its numbers in the panes and the
   ).toBeVisible();
   await page.getByRole("button", { name: "Copy context" }).click();
   const brief = await page.evaluate(() => navigator.clipboard.readText());
-  expect(brief).toContain("1 of 2 answers");
-  expect(brief).not.toContain("no answers yet");
+  // The overall and Perplexity lines carry the audit's numbers; engines with no answers say so.
+  expect(brief).toMatch(/^- Visibility: .*1 of 2 answers/m);
+  expect(brief).toMatch(/^- Perplexity: .*1 of 2 answers/m);
+  expect(brief).not.toContain("- Visibility: no answers yet");
 });
