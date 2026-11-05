@@ -319,3 +319,4 @@ Changed
 
 UNVERIFIED
 - The category domain lists and the mention stoplist are ours, not from any docs. The editorial vs listing split follows fix rules R12 vs R6/R7.
+- Ownership (lead, 2026-11-05): data-pipeline also owns the cron route and vercel.json crons. src/lib/runs/drain.ts: cronAuthorized (exact `Bearer ${CRON_SECRET}`, unset or blank secret → reject, per the Vercel Cron docs "Securing cron jobs"), batchSize (RUN_JOBS_BATCH, default 20, max 100), drainJobs (claims 5 at a time, processes each chunk in parallel, stops at the batch, an empty queue, or a 150 s budget, since live calls run up to ~130 s). vercel.json crons: /api/cron/run-jobs every minute. The team is on Vercel Pro; crons run on production only, which updates only at release.

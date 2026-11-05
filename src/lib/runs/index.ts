@@ -9,3 +9,4 @@ export {
 export { detectMentions, normalize, type TrackedBrand, type BrandMention, type Mentions } from "./mentions";
 export { categorize, type Category } from "./categorize";
 export { normalizeUrl, toStoredCitations, type StoredCitation } from "./citations";
+export { drainJobs, cronAuthorized, batchSize, CHUNK, type DrainSummary } from "./drain";
