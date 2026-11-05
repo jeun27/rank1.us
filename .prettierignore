@@ -3,3 +3,7 @@ supabase/seed.sql
 src/types/db.ts
 docs/qa/*.png
 tests/fixtures/*.csv
+# Markdown is spec text (docs/PRODUCT.md is word for word); table padding makes it unreadable.
+*.md
+# Must match docs/UI.md tokens text exactly (tokens.test.ts); Prettier lowercases hex.
+src/app/globals.css
