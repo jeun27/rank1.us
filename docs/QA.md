@@ -1,6 +1,6 @@
 # QA
 
-## Step 9: Source chart + location view
+## Step 9: Source chart + location view (re-run)
 
 Checked 2026-11-05 on main at b2cd487:
 - #43 (4feb18b): sources fields
@@ -11,7 +11,17 @@ The sandbox Docker disk is full, so there was no local Supabase. test-db and e2e
 Preview: https://rank1-f4wuxktlf-bryan-flowhighlevels-projects.vercel.app (sha 0fe54a3, READY).
 Sources: Jeun's ENG_HANDOFF_OVERNIGHT §6 Step 9, the lead's brief (rank1-step9.md), docs/UI.md 4b "Sources" row and the engine × location table, AEO.md.
 
-Result: FAIL. 1 blocking problem: the location selector doesn't work without JavaScript. Listed at the end.
+Result: PASS. The first run's blocker (the location selector needed JavaScript) is fixed by #52 (merged as 0016dc0). No blocking problems.
+
+Re-run 2026-11-05 on #52's preview at ace6e22, whose tree is identical to main 0016dc0: https://rank1-qbnaw3ds9-bryan-flowhighlevels-projects.vercel.app
+
+| Check | Result | Evidence |
+|---|---|---|
+| Selector is a GET form (JS off) | PASS | 375 and 1280 with JavaScript disabled, /dev/app?state=sources-form: the server HTML has `<form method="get">` with `<select name="location">` (All locations + 2 targets), a hidden state field and a "Show" submit button. src/components/app/LocationSelect.tsx is a plain form (no onChange navigation). The form sits in /dev/app's hidden streaming template without JS (the known non-blocking note) |
+| Show submits and keeps the choice (JS on) | PASS | 375 and 1280: picking "City" and pressing Show loads ?state=sources-form&location=city:US\|CA\|Irvine with that option still selected. Show is 44 px tall. e2e "sources location form: Show submits ?location= and the choice is kept; All locations clears it" passed on both viewports |
+| Filter result | PASS | All locations: 6 / 4 / 10 / 2 links; City or Country: 3 / 2 / 5 / 1 links; an unknown key (bogus:key): no links, "No links cited by …". The real /app/sources computes the measured n from the filtered ok answers (src/app/app/sources/page.tsx). The gallery's fixed `answers: 38` is dev-only |
+| axe, no side scroll | PASS | 0 violations at 375 and 1280 before and after submitting; scrollWidth equals the viewport |
+| Preview e2e (0016dc0 tests) | PASS | 200 passed, 70 skipped (local-stack tests), 0 failed |
 
 ### Commands
 
@@ -31,7 +41,7 @@ Result: FAIL. 1 blocking problem: the location selector doesn't work without Jav
 | Per-engine cards with "{n} links", counts only, categories only from citations.category, "No links cited by {Engine}" at 0 | PASS | preview: 4 cards ("6 links", "4 links", "10 links", "2 links"), 0 matches for a % at either width. sources-partial shows "No links cited by Perplexity". computeSources reads citations.category only (null/unknown → Other); unit "counts links of ok answers only; failed and no_overview add nothing", "an engine with no links → links 0", "a null or unknown category counts as other" |
 | Exact / Country fallback badge with the greyed tooltip copy | PASS | preview: "Exact" and "Country fallback" badges; 2 fallback badges carry title "{Engine} can't target a city yet, so we check it for the whole country." (UI.md copy). Unit "badge: any fallback → fallback; all exact → exact; nothing ran → null" |
 | Top domains ≤ 20 with noopener noreferrer | PASS | preview: every domain link has rel="noopener noreferrer". TOP_DOMAINS = 20; unit "top domains cap at 20", "sorted by links then domain" |
-| Location selector: works without JS | FAIL | Blocker 1 |
+| Location selector: works without JS | PASS (re-run) | GET form + Show button since #52; see the re-run table |
 | Location selector: unknown key → empty, not everything | PASS | computeSources and src/app/app/sources/page.tsx filter by the exact key; unit "location filter narrows chart and table; an unknown key gives nothing" |
 | Palette: tokens only, no status colors; validator output in #45's body | PASS | SourcesView.tsx COLOR uses `var(--color-…)` tokens only (jellyDeep, amber, jelly, warnText, plus striped jellyDeep and inkMuted); moss and brick are not used. #45's body has the dataviz validator output (`--pairs all` on paper: lightness, chroma, CVD and normal-vision PASS, a contrast WARN relieved by visible counts + table, inkMuted's chroma FAIL by design for the neutral Other) and the lead's Q3/O1 choice |
 | computeSources unit tests: failed/no_overview excluded, deleted question, ordering | PASS (one gap) | failed/no_overview and ordering (fixed engine and category order, top domains by links then domain, locations city → state → country) are covered. No explicit deleted-question test, but it holds by construction: computeSources only sees questions from the `questions` table (getQuestionsWithLatestAnswers), so a deleted question's answers (question_id null) never attach |
@@ -41,9 +51,15 @@ Not blocking:
 - No explicit deleted-question unit test for computeSources (see above).
 - With JavaScript off, /dev/app renders a blank page: its content is in hidden streaming templates that need JS to show. The signed-in /app/sources can't be checked from here without a hosted login, but it uses the same Suspense streaming.
 
+First-run blocker (b2cd487):
+
+| Blocker | Result | Evidence |
+|---|---|---|
+| The location selector changed the page only via onChange → window.location.assign, with no name, form or submit (src/components/app/LocationSelect.tsx:14-21) | FIXED by #52 (0016dc0) | re-run table above |
+
 ### Blocking problems
 
-1. The location selector doesn't work without JavaScript, and the brief asks that it does. src/components/app/LocationSelect.tsx:14-21: the `<select>` changes the page only through `onChange` → `window.location.assign`. It has no `name`, it isn't inside a `<form method="get">`, and there's no submit button or `<noscript>` fallback. The server already filters on `?location=` (src/app/app/sources/page.tsx:15-19), so a GET form (name="location" plus a submit button, auto-submitted with JS) would make it work.
+None.
 
 ## Step 8: Self-serve shell (Dashboard, Competitors, Questions, History) (re-run)
 
