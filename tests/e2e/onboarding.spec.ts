@@ -94,6 +94,8 @@ test("keyboard only: the domain step submits with Enter and focus lands on the n
   test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
   const user = await newUser("onboarding-keys");
   await openMagicLink(page, user.email);
+  // Typing before hydration would submit the plain form and reload; wait for the client form.
+  await page.waitForLoadState("networkidle");
   await page.getByLabel("Your domain").focus();
   await page.keyboard.type("exampleramen");
   await page.keyboard.press("Enter");
