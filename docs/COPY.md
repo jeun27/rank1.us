@@ -123,6 +123,22 @@ Strings for the /team team workspace shell (ENG_HANDOFF_STEP2 §3). Nav labels a
 | Client switcher (Step 11) | "Client" (label), "Show" (submit) |
 | No DFY clients (Step 11) | "No clients yet." |
 
+## Client invites (lead, 2026-11-05)
+
+Step 12. The team's Clients tab in /team, and the DFY client dashboard (/client).
+
+| Where | String |
+|---|---|
+| Context pane button and tab | "Clients" |
+| Invite form | "Invite client" (heading), "Email" (label), "Send invite" (submit); an invalid email reuses the forms' email error |
+| After Send invite | "Invite sent to {email}.", "This email already has a Rank1 account.", "Already invited." |
+| Invite failed (retry is safe) | reuses "That didn't send. Try again in a minute." |
+| Per client user | "Remove access" |
+| Fix list toggle | "Show fix list to client" |
+| Remove access or toggle failed | reuses "We couldn't save that. Try again." |
+| /client, access removed | "Nothing tracked yet." (no button) |
+| /client, no run yet | reuses "No weekly checks yet. Your first one runs Monday." |
+
 ## Admin (lead, 2026-11-05)
 
 Strings for /admin/test, the founder-only engine test page (Step 4). Anyone else gets a 404, so there is no not-allowed copy.

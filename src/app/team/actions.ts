@@ -8,6 +8,9 @@ import { addCompetitor, dismissSuggestion, listCompetitors, type CompetitorInput
 import { listDfyBusinesses } from "@/lib/queries/team";
 import type { DbClient } from "@/lib/queries/client";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
+import { getLanding } from "@/lib/queries/auth";
+import { inviteClient, removeClient, setFixListVisible, type InviteStatus } from "@/lib/queries/clients";
 
 // Team writes for a DFY client. The browser names the client, so it must be one the caller can read
 // as DFY; the RPCs and RLS check the role again.
@@ -43,4 +46,45 @@ export async function teamSuggestions(businessId: string): Promise<LocalCompetit
   if (!business || !userId) return [];
   const known = await listCompetitors(db, business.id);
   return (await suggestCompetitors({ business, ...known }, { store: storeFor({ db, userId }) })).items;
+}
+
+// Step 12: client users of a DFY client. The caller must be team (my_landing) and the business a DFY
+// client they can read; invites and removals then run with the service role (server only).
+async function teamDfy(businessId: string) {
+  const db = await createClient();
+  if ((await getLanding(db)) !== "team") return null;
+  return (await listDfyBusinesses(db)).some((b) => b.id === businessId) ? db : null;
+}
+
+export async function inviteTeamClient(businessId: string, email: string): Promise<{ status: InviteStatus }> {
+  if (!(await teamDfy(businessId))) return { status: "error" };
+  try {
+    const result = await inviteClient(createServiceClient(), { email, businessId });
+    if (result.status === "invited") revalidatePath("/team");
+    return result;
+  } catch {
+    // Status codes only: never log or echo the email.
+    return { status: "error" };
+  }
+}
+
+export async function removeTeamClient(businessId: string, userId: string) {
+  if (!(await teamDfy(businessId))) return { error: "not_found" };
+  try {
+    await removeClient(createServiceClient(), { userId, businessId });
+  } catch (e) {
+    return { error: (e as { code?: string }).code ?? "failed" };
+  }
+  revalidatePath("/team");
+}
+
+export async function setTeamFixListVisible(businessId: string, visible: boolean) {
+  const db = await teamDfy(businessId);
+  if (!db) return { error: "not_found" };
+  try {
+    await setFixListVisible(db, businessId, visible);
+  } catch (e) {
+    return { error: (e as { code?: string }).code ?? "failed" };
+  }
+  revalidatePath("/team");
 }

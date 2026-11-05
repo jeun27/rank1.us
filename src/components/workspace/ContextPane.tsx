@@ -97,12 +97,14 @@ export function ContextPane({
   selection,
   now,
   onSelect,
+  onClients,
 }: {
   view: WorkspaceView;
   section: Section;
   selection: Selection;
   now: Date | null;
   onSelect: (s: Selection) => void;
+  onClients?: () => void;
 }) {
   const [prompt, setPrompt] = useState("");
   const [status, setStatus] = useState("");
@@ -135,6 +137,18 @@ export function ContextPane({
         {!team?.input && <Badge tone="info">Example data</Badge>}
       </header>
       {team && <ClientSwitcher team={team} />}
+      {team?.clients && onClients && (
+        <div className="px-4 pb-3">
+          <button
+            type="button"
+            onClick={onClients}
+            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-fieldBorder bg-white px-4 text-ui font-semibold hover:bg-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+          >
+            <Icon name="users" className="size-4" />
+            Clients
+          </button>
+        </div>
+      )}
 
       <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
         <section className="rounded-card border border-border bg-paper p-4">

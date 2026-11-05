@@ -309,3 +309,20 @@ test("the gallery's Fix list is the shared FixList with a Status select per fix"
   await expect(page.locator("nav").getByRole("button", { name: "Experiments", exact: true })).toHaveCount(0);
   await axeClean(page);
 });
+
+for (const theme of THEMES)
+  test(`Clients tab ${theme}: opens from the context pane, axe clean, the invite form works by keyboard`, async ({
+    page,
+  }) => {
+    await open(page, theme);
+    await show(page, "Context");
+    await page.getByRole("button", { name: "Clients", exact: true }).click();
+    await show(page, "Document");
+    const panel = page.getByRole("tabpanel");
+    await expect(panel.getByRole("heading", { level: 2, name: "Clients" })).toBeVisible();
+    await expect(panel.getByRole("checkbox", { name: "Show fix list to client" })).toBeVisible();
+    await panel.getByLabel("Email").fill("new@exampleramen.test");
+    await page.keyboard.press("Enter");
+    await expect(panel.getByRole("status")).toHaveText("Invite sent to new@exampleramen.test.");
+    await axeClean(page);
+  });

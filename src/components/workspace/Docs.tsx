@@ -26,6 +26,7 @@ import {
 } from "@/lib/workspace/context";
 import type { DocSel } from "./DocPane";
 import { NAV_SECTIONS, SECTION_ICON } from "./Sidebar";
+import { ClientsPanel } from "./ClientsPanel";
 import { useTeam, type TeamExtras } from "./team";
 
 const D = ({ children }: { children: ReactNode }) => <span data-computed>{children}</span>;
@@ -133,6 +134,27 @@ function CompetitorTools({ team }: { team: TeamExtras }) {
       )}
       <AddCompetitorForm add={actions.add} />
     </>
+  );
+}
+
+// Step 12: the Clients tab of the selected DFY client (team only).
+function ClientsDoc({ view, now }: { view: WorkspaceView; now: Date | null }) {
+  const team = useTeam();
+  if (!team?.clients) return null;
+  const { businessId: b, actions: a } = team;
+  return (
+    <Doc title="Clients" view={view} now={now}>
+      <ClientsPanel
+        key={b}
+        users={team.clients.users}
+        fixListVisible={team.clients.fixListVisible}
+        actions={{
+          invite: (email) => a.invite(b, email),
+          remove: (userId) => a.removeClient(b, userId),
+          setVisible: (v) => a.setFixListVisible(b, v),
+        }}
+      />
+    </Doc>
   );
 }
 
@@ -374,6 +396,7 @@ export function DocView({
   onPick: (s: Selection) => void;
 }) {
   if (sel.kind === "new") return <NewTab onPick={onPick} />;
+  if (sel.kind === "clients") return <ClientsDoc view={view} now={now} />;
   const title = contextFor(view, sel).title;
   return (
     <Doc title={title} view={view} now={now}>
