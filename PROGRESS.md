@@ -417,6 +417,7 @@ Changed
   - add_competitor / dismiss_competitor: invoker RPCs with a per-business lock. They match by domain, else name, un-hide on re-add, are idempotent on dismiss, and validate with 22023.
 - Queries (src/lib/queries/shell.ts): getCurrentBusiness (self_serve only), listRunSummaries, getTopFixes, getQuestionsWithLatestAnswers, listCompetitors, addCompetitor, dismissSuggestion. Tests: tests/db/shell.test.ts, including the parity test against computeMetrics.
 - src/types/db.ts got the 0013 objects added by hand in the generator format (no local stack). Regenerate it with `pnpm db:types` when a stack is available.
+
 ## Step 8 (data-pipeline): competitor suggestions and visibility series (branch feat/step8-suggestions)
 Step 8 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
 Lead decisions (Step 8 brief): suggested competitors = findLocalCompetitors for the business cuisine/city (existing cache + maps_lookup token) minus tracked and dismissed; keys missing → nothing shown. The 8-run line = the latest 8 complete/partial audit+weekly runs; fewer than 2 → hidden. Free audits never appear in /app.
