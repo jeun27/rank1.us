@@ -7,34 +7,45 @@ import { supabaseEnv } from "./env";
 import { createServiceClient } from "./service";
 
 // The run and audit pages stream, so a run or token that doesn't exist must 404 here, before
-// the page sends a 200. Paid runs are checked with the visitor's session (RLS), tokens with the
-// service role (leads has no reader). Exports are route handlers and 404 on their own.
-const RUN_PAGE = /^\/app\/runs\/([^/]+)$/;
-const AUDIT_PAGE = /^\/audit\/([^/]+)$/;
-async function missingResult(path: string, supabase: ReturnType<typeof createServerClient>, signedIn: boolean) {
-  const run = RUN_PAGE.exec(path);
-  if (run && signedIn) {
+// the page sends a 200 (notFound() in Suspense can't). The route is matched on the normalized
+// path; the key comes from the raw one, because normalizePath lowercases and tokens are mixed-case.
+export function resultTarget(pathname: string): { kind: "run" | "audit"; key: string } | null {
+  const path = normalizePath(pathname);
+  const kind =
+    path && /^\/app\/runs\/[^/]+$/.test(path) ? "run" : path && /^\/audit\/[^/]+$/.test(path) ? "audit" : null;
+  if (!kind) return null;
+  const raw = pathname.split("/").filter(Boolean).at(-1)!;
+  try {
+    return { kind, key: decodeURIComponent(raw) };
+  } catch {
+    return null;
+  }
+}
+
+// Paid runs are checked with the visitor's session (RLS), tokens with the service role (leads has
+// no reader). Exports are route handlers and 404 on their own.
+async function missingResult(pathname: string, supabase: ReturnType<typeof createServerClient>, signedIn: boolean) {
+  const target = resultTarget(pathname);
+  if (target?.kind === "run" && signedIn) {
     const { data, error } = await supabase
       .from("runs")
       .select("id")
-      .eq("id", decodeURIComponent(run[1]))
+      .eq("id", target.key)
       .in("kind", ["audit", "weekly"])
       .maybeSingle();
     return Boolean(error) || !data;
   }
-  const audit = AUDIT_PAGE.exec(path);
-  if (audit) {
+  if (target?.kind === "audit") {
     const { data, error } = await createServiceClient()
       .from("leads")
       .select("run_id")
-      .eq("token", decodeURIComponent(audit[1]))
+      .eq("token", target.key)
       .maybeSingle();
     return Boolean(error) || !data?.run_id;
   }
   return false;
 }
 
-// Refreshes the session cookie on every request and sends signed-out visitors of /app, /team and /client to /signin.
 export async function updateSession(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const env = supabaseEnv();
@@ -72,7 +83,7 @@ export async function updateSession(request: NextRequest) {
 
   // getClaims verifies the JWT; nothing may run between createServerClient and this call.
   const { data } = await supabase.auth.getClaims();
-  if ((admin && !isFounder(data?.claims?.email)) || (await missingResult(path, supabase, Boolean(data?.claims)))) {
+  if ((admin && !isFounder(data?.claims?.email)) || (await missingResult(pathname, supabase, Boolean(data?.claims)))) {
     const hidden = notFound();
     response.cookies.getAll().forEach((c) => hidden.cookies.set(c));
     response = hidden;
