@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isAdminPath, isFounder } from "@/lib/admin/is-founder";
 import { isProtected, signInPath } from "@/lib/auth/next";
+import { normalizePath } from "@/lib/auth/path";
 import { supabaseEnv } from "./env";
 
 // Refreshes the session cookie on every request and sends signed-out visitors of /app, /team and /client to /signin.
@@ -10,10 +11,15 @@ export async function updateSession(request: NextRequest) {
   const env = supabaseEnv();
   // /admin is founder-only: a real 404 for everyone else, before the page streams a 200.
   const notFound = () => NextResponse.rewrite(new URL("/404", request.url), { status: 404 });
+  // Checks run on the normalized path, so %61dmin, admin%2Ftest, //admin or /./app can't slip past them.
+  const path = normalizePath(pathname);
+  if (path === null) return notFound();
+  const admin = isAdminPath(path);
+  const gated = isProtected(path);
   // Supabase not connected: public pages still work, app areas stay closed.
-  if (!env && isAdminPath(pathname)) return notFound();
+  if (!env && admin) return notFound();
   if (!env)
-    return isProtected(pathname)
+    return gated
       ? NextResponse.redirect(new URL(signInPath(pathname, search), request.url))
       : NextResponse.next({ request });
 
@@ -37,11 +43,11 @@ export async function updateSession(request: NextRequest) {
 
   // getClaims verifies the JWT; nothing may run between createServerClient and this call.
   const { data } = await supabase.auth.getClaims();
-  if (isAdminPath(pathname) && !isFounder(data?.claims?.email)) {
+  if (admin && !isFounder(data?.claims?.email)) {
     const hidden = notFound();
     response.cookies.getAll().forEach((c) => hidden.cookies.set(c));
     response = hidden;
-  } else if (!data?.claims && isProtected(pathname)) {
+  } else if (!data?.claims && gated) {
     const redirect = NextResponse.redirect(new URL(signInPath(pathname, search), request.url));
     response.cookies.getAll().forEach((c) => redirect.cookies.set(c));
     response = redirect;

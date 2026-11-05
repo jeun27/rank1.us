@@ -37,6 +37,14 @@ test("signed out: /admin/test is a 404", async ({ page }) => {
   await expect(page.getByRole("heading", { name: c.title })).toHaveCount(0);
 });
 
+for (const encoded of ["/%61dmin/test", "/admin%2Ftest"]) {
+  test(`signed out: encoded ${encoded} is a 404 too`, async ({ page }) => {
+    const res = await page.goto(encoded);
+    expect(res?.status()).toBe(404);
+    await expect(page.getByRole("heading", { name: c.title })).toHaveCount(0);
+  });
+}
+
 test("another signed-in user gets a 404", async ({ page }) => {
   const u = await newUser("not-founder");
   await openMagicLink(page, u.email);
