@@ -26,6 +26,28 @@ Source: field-notes-spec.md + UI/UX Page section 13. PAGE = from research #4. AD
 
 Contrast: ink/paper 14.53, white/jellyDeep 6.12, jellyDeep/paper 5.57, moss/paper 5.45, ink/amber 5.97, brick/paper 5.03. Never: white on jelly (2.89), jelly text on paper (2.64), amber text on paper (2.44). Light mode only. (Final set, Jeun 2026-11-05): white/jellyLoading 4.99, brick/white 5.52, jellyDeep/white 6.12, inkMuted/white 6.24, jellyDeep/infoBg 5.21, fieldBorder/white 3.18. Disabled pill text is inkMuted at 75% opacity (3.45:1); WCAG 1.4.3 exempts disabled controls, so it must be a real `<button disabled>`. The aurora ring is decorative (stops 1.84-2.89 on white); the button is identified by its jellyDeep label.
 
+## Team workspace dark theme (ENG_HANDOFF_STEP2 §3, lead 2026-11-05)
+
+/app only, set by `data-theme="dark"` (toggle in the sidebar, defaults to the system setting, saved in localStorage). Same token names as the light set, so every component switches with it. `raised` is new in both themes: selected rows, active tab, composer (light #FFFFFF).
+
+| Token | Dark value | Contrast |
+|---|---|---|
+| paper (sidebar, page) | #0B0B0C | |
+| white (panes, cards) | #121214 | |
+| raised | #1E1E21 | |
+| ink | #F2EFE9 | 16.30 on white, 14.49 on raised |
+| inkMuted | #A9A9AE | 8.00 on white, 7.11 on raised |
+| amber (accent, may be text in dark) | #D98E2B | 7.00 on white, 6.22 on raised |
+| jellyDeep (links, focus, primary button with white text) | #7AAEF5 | 8.20 on white; white on it 8.20 |
+| jellyLoading | #9DC2F7 | white on it 10.24 |
+| moss / successBg | #5FBF8E / #173626 | 8.31 on white; 5.86 on successBg |
+| brick / errorBg | #F08A7E / #3B1D1A | 7.70 on white; 6.28 on errorBg |
+| warnText / warnBg | #E8B45F / #3A2A12 | 7.32 |
+| infoBg | #17263D | jellyDeep on it 6.66 |
+| border (decorative dividers) | #3A3A3F | |
+| fieldBorder | #707077 | 3.81 on white, 4.00 on paper |
+| jelly, auroraAmber, auroraTeal | unchanged | never text |
+
 ## Shape, shadow and gradient tokens (Final set, Jeun 2026-11-05)
 
 | Token | Value | Use |

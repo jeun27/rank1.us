@@ -22,6 +22,7 @@
   --color-fieldBorder: rgb(30 35 32 / 0.5);
   --color-auroraAmber: #E8B85A;
   --color-auroraTeal: #5FB8B3;
+  --color-raised: #FFFFFF;
 }
 
 @theme inline {
@@ -80,6 +81,40 @@
    gradient border-box gives a 2px gradient edge that follows the pill radius. */
 :root {
   --aurora: linear-gradient(90deg, #E8B85A, #5FB8B3, #279EF2);
+}
+
+/* Team workspace dark theme (src/styles/tokens.ts darkColors). Set by /app's theme toggle only. */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --color-paper: #0B0B0C;
+  --color-ink: #F2EFE9;
+  --color-inkMuted: #A9A9AE;
+  --color-moss: #5FBF8E;
+  --color-amber: #D98E2B;
+  --color-brick: #F08A7E;
+  --color-jelly: #279EF2;
+  --color-jellyDeep: #7AAEF5;
+  --color-border: #3A3A3F;
+  --color-successBg: #173626;
+  --color-errorBg: #3B1D1A;
+  --color-warnBg: #3A2A12;
+  --color-warnText: #E8B45F;
+  --color-infoBg: #17263D;
+  --color-white: #121214;
+  --color-jellyLoading: #9DC2F7;
+  --color-fieldBorder: #707077;
+  --color-auroraAmber: #E8B85A;
+  --color-auroraTeal: #5FB8B3;
+  --color-raised: #1E1E21;
+}
+
+/* Pane open/close and tab switch: 150-200ms, off for reduced motion. */
+@theme {
+  --animate-fade-in: fade-in 150ms ease-out;
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
 }
 
 @utility aurora-ring {

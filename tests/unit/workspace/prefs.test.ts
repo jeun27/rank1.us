@@ -1,16 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_PREFS, PREFS_KEY, readPrefs, resolveTheme, themeScript, writePrefs } from "@/lib/workspace/prefs";
 
+// jsdom has no matchMedia.
 const mockSystem = (dark: boolean) =>
-  vi
-    .spyOn(window, "matchMedia")
-    .mockImplementation(
-      (q: string) => ({ matches: dark && q === "(prefers-color-scheme: dark)", media: q }) as MediaQueryList,
-    );
+  vi.stubGlobal("matchMedia", (q: string) => ({ matches: dark && q === "(prefers-color-scheme: dark)", media: q }));
 
 beforeEach(() => localStorage.clear());
 afterEach(() => {
-  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   delete document.documentElement.dataset.theme;
 });
 

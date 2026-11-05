@@ -22,6 +22,33 @@ export const colors = {
   fieldBorder: "rgb(30 35 32 / 0.5)", // ink 50%: domain field edge (3.18:1 on white)
   auroraAmber: "#E8B85A", // aurora ring stop only. Never text
   auroraTeal: "#5FB8B3", // aurora ring stop only. Never text
+  // Team workspace (lead, 2026-11-05)
+  raised: "#FFFFFF", // selected rows, active tab, composer
+} as const;
+
+// Team workspace dark theme ([data-theme="dark"], ENG_HANDOFF_STEP2 §3). Same names, so every component
+// switches with the theme. AA on white (#121214): ink 16.30, inkMuted 8.00, jellyDeep 8.20, amber 7.00.
+export const darkColors = {
+  paper: "#0B0B0C",
+  ink: "#F2EFE9",
+  inkMuted: "#A9A9AE",
+  moss: "#5FBF8E",
+  amber: "#D98E2B",
+  brick: "#F08A7E",
+  jelly: "#279EF2",
+  jellyDeep: "#7AAEF5",
+  border: "#3A3A3F",
+  successBg: "#173626",
+  errorBg: "#3B1D1A",
+  warnBg: "#3A2A12",
+  warnText: "#E8B45F",
+  infoBg: "#17263D",
+  white: "#121214",
+  jellyLoading: "#9DC2F7",
+  fieldBorder: "#707077",
+  auroraAmber: "#E8B85A",
+  auroraTeal: "#5FB8B3",
+  raised: "#1E1E21",
 } as const;
 
 // [font-size px, line-height px]; mobile -> md+ where UI.md gives two sizes.

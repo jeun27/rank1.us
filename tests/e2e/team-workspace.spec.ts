@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { buildWorkspace } from "@/lib/queries/workspace";
@@ -24,7 +25,13 @@ async function show(page: Page, pane: "Nav" | "Context" | "Document") {
   if (isMobile(page)) await page.getByRole("tab", { name: pane, exact: true }).click();
 }
 
+// The first match is the section nav; Recents can repeat a name below it.
+const navTo = (page: Page, name: string) =>
+  page.locator("nav").getByRole("button", { name, exact: true }).first().click();
+
 const axeClean = async (page: Page) => {
+  // Let the 150ms pane fade finish so contrast is measured at full opacity.
+  await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== "running"));
   const axe = await new AxeBuilder({ page }).analyze();
   expect(axe.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(", ")}`)).toEqual([]);
 };
@@ -59,7 +66,7 @@ for (const theme of THEMES) {
 
     // A question with its answers and cited sources, open in the document pane.
     await show(page, "Nav");
-    await page.locator("nav").getByRole("button", { name: "Questions", exact: true }).click();
+    await navTo(page, "Questions");
     await show(page, "Context");
     await page.locator("main").getByRole("button", { name: view.questions[0].text }).click();
     await show(page, "Document");
@@ -109,7 +116,7 @@ test("document tabs: roving focus, Home/End, Delete closes, +, expand and split,
   await open(page, "light");
   await show(page, "Nav");
   for (const name of ["Competitors", "Sources"]) {
-    await page.locator("nav").getByRole("button", { name, exact: true }).click();
+    await navTo(page, name);
     await show(page, "Nav");
   }
   await show(page, "Document");
@@ -134,12 +141,13 @@ test("document tabs: roving focus, Home/End, Delete closes, +, expand and split,
   await expect(tabs).toHaveText(["Dashboard", "Competitors"]);
   await expect(tabs.nth(1)).toBeFocused();
 
-  await page.getByRole("button", { name: "Close tab" }).first().click();
-  await expect(tabs).toHaveText(["Competitors"]);
+  // Close tab closes the active tab (Competitors).
+  await page.getByRole("button", { name: "Close tab" }).click();
+  await expect(tabs).toHaveText(["Dashboard"]);
   await page.getByRole("button", { name: "New tab" }).click();
-  await expect(tabs).toHaveText(["Competitors", "New tab"]);
+  await expect(tabs).toHaveText(["Dashboard", "New tab"]);
   await page.getByRole("tabpanel").getByRole("button", { name: "History" }).click();
-  await expect(tabs).toHaveText(["Competitors", "History"]);
+  await expect(tabs).toHaveText(["Dashboard", "History"]);
 
   if (!isMobile(page)) {
     const split = page.getByRole("button", { name: "Split" });
@@ -177,14 +185,16 @@ test("theme toggle, split ratio and sidebar collapse persist across reloads", as
   await expect(sep).toHaveAttribute("aria-valuenow", "70");
   await page.keyboard.press("ArrowLeft");
   await expect(sep).toHaveAttribute("aria-valuenow", "65");
-  const main = await page.locator("main").boundingBox();
-  const aside = await page.locator("aside").boundingBox();
-  expect(Math.round((main!.width / (main!.width + aside!.width)) * 100)).toBeGreaterThanOrEqual(64);
+  const share = async () => {
+    const [m, a] = [await page.locator("main").boundingBox(), await page.locator("aside").boundingBox()];
+    return Math.round((m!.width / (m!.width + a!.width)) * 100);
+  };
+  await expect.poll(share).toBe(65);
 
   const collapse = page.getByRole("button", { name: "Collapse sidebar" });
   await collapse.click();
   await expect(collapse).toHaveAttribute("aria-expanded", "false");
-  expect((await page.locator("nav").boundingBox())!.width).toBeLessThanOrEqual(64);
+  await expect.poll(async () => (await page.locator("nav").boundingBox())!.width).toBeLessThanOrEqual(64);
 
   await page.emulateMedia({ colorScheme: "light" });
   await page.reload();
@@ -211,9 +221,64 @@ test("tap targets are at least 44px", async ({ page }) => {
 test("reduced motion turns pane and tab transitions off", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/app");
-  const durations = await page
-    .locator("[data-motion]")
-    .evaluateAll((els) => els.map((e) => getComputedStyle(e).transitionDuration + getComputedStyle(e).animationName));
+  const durations = await page.locator("[data-motion]").evaluateAll((els) =>
+    els.map((e) => {
+      const cs = getComputedStyle(e);
+      return `${cs.transitionProperty === "none" ? "none" : cs.transitionDuration} ${cs.animationName}`;
+    }),
+  );
   expect(durations.length).toBeGreaterThan(0);
-  for (const d of durations) expect(d).toMatch(/^0s(, 0s)*none$/);
+  for (const d of durations) expect(d).toMatch(/^(none|0s(, 0s)*) none$/);
+});
+
+const norm = (s: string) =>
+  s.replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, " ").trim().replace(/\.$/, "").toLowerCase();
+const COPY = norm(readFileSync("docs/COPY.md", "utf8").replace(/\\\|/g, "|"));
+
+test("every visible string, aria-label and title is in docs/COPY.md (data excluded)", async ({ page }) => {
+  await open(page, "light");
+  const seen = new Set<string>();
+  const collect = async () => {
+    const found = await page.evaluate(() => {
+      const out: string[] = [];
+      const walk = (n: Node) => {
+        if (n.nodeType === Node.TEXT_NODE) {
+          const el = n.parentElement!;
+          if (n.textContent!.trim() && !el.closest("[data-computed]") && el.checkVisibility()) out.push(n.textContent!);
+          return;
+        }
+        n.childNodes.forEach(walk);
+      };
+      walk(document.body);
+      for (const el of document.querySelectorAll("[aria-label], [title]"))
+        for (const a of ["aria-label", "title"])
+          if (el.getAttribute(a) && !el.closest("[data-computed]")) out.push(el.getAttribute(a)!);
+      return out;
+    });
+    found.forEach((t) => seen.add(norm(t)));
+  };
+  for (const name of [
+    "Dashboard",
+    "Questions",
+    "Competitors",
+    "Sources",
+    "Fix list",
+    "Experiments",
+    "Reports",
+    "History",
+    "Settings",
+  ]) {
+    await show(page, "Nav");
+    await navTo(page, name);
+    await collect();
+    await show(page, "Document");
+    await collect();
+  }
+  await page.getByRole("button", { name: "New tab" }).click();
+  await collect();
+  expect(seen.size).toBeGreaterThan(30);
+  // Whole words or phrases only, so a short label can't pass by sitting inside a longer word.
+  const inCopy = (v: string) =>
+    new RegExp(`(^|[^a-z0-9])${v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^a-z0-9]|$)`).test(COPY);
+  expect([...seen].filter((v) => v && !inCopy(v))).toEqual([]);
 });
