@@ -1,6 +1,5 @@
 import { ContactUsLink } from "@/components/contact/ContactUsLink";
 import { Button } from "@/components/ui/Button";
-import { navLink } from "./Header";
 import { Section } from "./Section";
 
 const includes = [
@@ -14,7 +13,7 @@ const includes = [
 
 const contact = (
   <>
-    <ContactUsLink className={`${navLink} px-0 text-jellyDeep underline`}>Contact us</ContactUsLink>
+    <ContactUsLink>Contact us</ContactUsLink>
     {"."}
   </>
 );
