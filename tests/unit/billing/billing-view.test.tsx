@@ -54,12 +54,18 @@ describe("BillingView (/app/billing)", () => {
     expect(a.portal).toHaveBeenCalledTimes(1);
   });
 
-  it("unpaid: the failed banner and 'Update card', no Past due badge", () => {
-    render(<BillingView billing={{ ...paid, status: "unpaid" }} actions={actions()} />);
-    expect(screen.getByText("Your last payment failed. Weekly checks are paused.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Update card" })).toBeInTheDocument();
-    expect(screen.queryByText("Past due")).toBeNull();
-  });
+  // Lead (Q1): every failed-payment status keeps the plan with the "Past due" badge and 'Manage billing'.
+  it.each(["unpaid", "incomplete", "incomplete_expired"] as const)(
+    "%s: the failed banner, 'Update card', the plan with the 'Past due' badge and 'Manage billing'",
+    (status) => {
+      render(<BillingView billing={{ ...paid, status }} actions={actions()} />);
+      expect(screen.getByText("Your last payment failed. Weekly checks are paused.")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Update card" })).toBeInTheDocument();
+      expect(screen.getByText("Past due")).toBeInTheDocument();
+      expect(screen.getByText("2 businesses x $99 = $198/mo")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Manage billing" })).toBeInTheDocument();
+    },
+  );
 
   it.each(["incomplete", "incomplete_expired", "past_due", "unpaid"] as const)(
     "%s: never a second Checkout; 'Update card' opens the portal",
