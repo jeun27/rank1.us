@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { buildWorkspace } from "@/lib/queries/workspace";
-import { buildBrief, claudeUrl, contextFor } from "@/lib/workspace/context";
+import { buildBrief, CLAUDE_URL, contextFor } from "@/lib/workspace/context";
 import { exampleWorkspaceRows } from "@/app/team/example-data";
 import { newUser, openMagicLink } from "./helpers/auth";
 
@@ -109,11 +109,12 @@ test("Copy context writes the dashboard brief Markdown; Open in Claude copies it
 
   await page.evaluate(() => navigator.clipboard.writeText(""));
   const link = page.getByRole("link", { name: "Open in Claude" });
-  await expect(link).toHaveAttribute("href", claudeUrl(dashboardBrief));
+  // Exactly https://claude.ai: no ?q= prefill and no data in the URL (Step 11).
+  await expect(link).toHaveAttribute("href", CLAUDE_URL);
   await expect(link).toHaveAttribute("target", "_blank");
   await context.route("https://claude.ai/**", (r) => r.fulfill({ body: "ok" }));
   const [popup] = await Promise.all([context.waitForEvent("page"), link.click()]);
-  expect(popup.url()).toBe(claudeUrl(dashboardBrief));
+  expect(popup.url()).toBe("https://claude.ai/");
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(dashboardBrief);
   await expect(page.getByRole("status")).toHaveText("Brief copied. Paste it in Claude if the box is empty.");
 });
