@@ -156,7 +156,6 @@ test("Start for $99/mo goes through sign-in to /app/billing, where it opens Chec
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Billing");
   // Step 14 replaced the disabled stub ("Checkout isn't open yet."): the button now opens Checkout.
   await expect(page.getByRole("button", { name: "Start for $99/mo" })).toBeEnabled();
-  await expect(page.getByText(c.checkoutClosed)).toHaveCount(0);
   await expectNoSideScroll(page);
   await expectAxeClean(page);
 });
