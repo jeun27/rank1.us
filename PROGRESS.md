@@ -102,5 +102,55 @@ Changed test assertions (old → new; none removed)
 - e2e dev-ui-example-data: Example data label list adds DomainField, ProgressBar, Final set.
 - New tests: tests/unit/ui/final-set.test.tsx (DomainField 4 states, AuroraButton, ProgressBar math and 0/0, Freshness clock); e2e reduced motion, Final set computed styles (focus ring, aurora, #316FC5, 48% fill), narrow/wide field layout.
 
+## Step 2a: landing page (branch step2-landing)
+Changed
+- `/` is the full landing page: header, the 9 sections in docs/UI.md 4a order, footer and a sticky mobile CTA. Components are in src/components/site; fixtures are in src/components/site/example-data.ts.
+- The hero card numbers are computed from fixtures (55 of 160 = 34% floor; 45 of 160 last week, so +6 pts). The screenshot tabs are static mocks built from StatNumber/Table/Freshness and fixtures.
+- Social proof renders only when SHOW_SOCIAL_PROOF === "true" (read at build time; the page is static).
+- Tests: tests/unit/site/landing.test.tsx and tests/e2e/landing.spec.ts. Screenshots: docs/qa/landing-before-{375,1280}.png, docs/qa/landing-after-{375,1280}.png.
+
+Doc differences / decisions
+- Lead 2026-11-05 (G1): feature card bodies render COPY.md's exact phrases as bullet lists. FAQ answers are the exact phrases, capitalized with a closing period. No other words change.
+- Lead 2026-11-05 (G2): mock panel headers were added to COPY.md under "Mock panel headers (lead, 2026-11-05)".
+- Lead 2026-11-05 (G3): the comparison corner cell is an empty <td>, and row labels are <th scope="row">.
+- Feature cards have no section H2 in COPY.md, so the section is labeled "Features" for screen readers only and each card title is an H2.
+- The sticky bar's bottom padding (80px below md) is always reserved instead of only while the bar shows. This avoids a layout jump when the bar toggles and keeps the footer clear either way.
+- The COPY.md e2e check compares lowercased text with curly quotes straightened and a trailing period ignored. Fixture values (brands, numbers, questions) are marked data-computed and skipped.
+
+Known gaps
+- "Start for $99/mo" links to /sign-in, which doesn't exist yet (auth step).
+- OG image is [PLACEHOLDER], so og:image is omitted until a real image exists.
+- Merged origin/step2-forms (366ebf4). #audit renders AuditRequestForm, and every Contact us link is a ContactUsLink. The e2e tests mock /api/audit/request. step2-forms (4137697) is now merged into step-2, so the /api routes, /contact, /privacy and /terms are included.
+
+## Step 2b (billing-auth): forms, contact, legal pages (branch step2-forms)
+Changed
+- AuditRequestForm (src/components/forms) and ContactUsLink + ContactForm (src/components/contact). The modal is a native `<dialog>` with a Tab trap, Esc to close and focus back on the link. It is full screen below md, and without JS the link goes to /contact.
+- POST /api/contact runs validate, honeypot (200, nothing stored), Turnstile siteverify with remoteip, then 3 per IP hash per rolling hour counted from contact_requests (429 on the 4th). It then inserts the row and sends through Resend, and sets emailed=true only after Resend returns 2xx. A Resend failure keeps the row and returns 502.
+- POST /api/audit/request (stub) runs the same validation, honeypot and Turnstile. AUDIT_DAILY_LIMIT caps leads per UTC day across all visitors (lead, 2026-11-05: spend cap, no per-IP limit). It inserts a leads row (normalized domain, ip_hash, random token) and returns 202 `{ status: "queued" }`.
+- /contact, /privacy and /terms (placeholders marked [LEGAL REVIEW NEEDED], with a last-updated date). /dev/forms previews AuditRequestForm on the ink band until the landing page hosts it (hidden in production like /dev/ui).
+- Queries: insertContactRequest, countRecentContactRequests, markContactRequestEmailed (contactRequests.ts), insertLead, countLeadsSince (leads.ts). src/lib/supabase/service.ts holds the service-role client.
+- New env name: IP_HASH_SALT (.env.example). The e2e build gets Cloudflare's public Turnstile test keys and a canary salt (playwright.config.ts webServer.env). tests/e2e/client-secrets.spec.ts greps .next/static for server-only names and values.
+- Vitest aliases `server-only` to an empty stub (tests/stubs) so tests can import route handlers.
+
+Doc differences
+- Next 16 with cacheComponents rejects `export const runtime = "nodejs"`, so the routes rely on the default Node.js runtime (comment in each route).
+- Brick field-error text fails contrast on the ink band. In AuditRequestForm the inline error is paper colored (the band's text color), the input keeps the 2px brick edge as an extra cue, and aria-invalid + aria-describedby carry the meaning, so color is not the only signal. The Banner stays white/brick (lead OK, 2026-11-05).
+- DomainField is unchanged (lead). AuditRequestForm uses its pill look through PillField with plain inputs and the "final" Button.
+- Validation is hand-rolled (src/lib/spam/validate.ts), shared by the browser and the routes. No new dependency.
+- Company is optional in the Contact form (contact_requests.company is nullable) and has no error: the input caps it at 100 characters and the server cuts anything longer. Name, Email, Tier and Message are required.
+- Form strings live in src/components/forms/copy.ts. tests/unit/forms/copy.test.ts fails on any [PLACEHOLDER] there, and on any string that is not in docs/COPY.md.
+
+## Step 2 (backend): industry + fix list visibility migration
+Changed
+- Migration 20261105000007 (+ .down.sql). contact_requests gets `industry` (NOT NULL; one of Restaurant, HVAC, Plumbing, Roofing, Pest control, Other; the 'Other' backfill default is dropped) and `industry_other` (max 60 chars, only allowed with Other). businesses gets `service` ('self_serve' default | 'dfy') and `fix_list_visible` (default false).
+- service and fix_list_visible are service-role only. businesses now has explicit column grants for INSERT and UPDATE, like the workspaces billing fields, so any new businesses column must be added to those grants to be member-writable.
+- fixes SELECT for members = member AND (service = 'self_serve' OR fix_list_visible). The old FOR ALL policy is split into select/insert/update/delete, because a FOR ALL policy also grants SELECT. fix_rules_public is unchanged.
+- insertContactRequest takes ContactRequestInsert: industry is one of INDUSTRIES, and industry_other is only allowed with "Other". INDUSTRIES and INDUSTRY_OTHER_MAX are exported from src/lib/queries/contactRequests.ts.
+- Tests: tests/db/step2-migration.test.ts. The rls.test.ts contact_requests fixture now sets industry.
+
+Blocked/open
+- A staff role arrives with the team UX step. Until then "the team always sees the fix list" means the Rank1 team reads through the service role / admin path.
+- POST /api/contact and the Contact form must send industry (+ industry_other). Until they do, the route fails typecheck and every contact insert hits the NOT NULL check (HANDOFF.md).
+
 ## Release gate (PR #5)
 - Merged is not live (Jeun 2026-11-05): main deploys are disabled in vercel.json; releases are tagged and deployed on request.

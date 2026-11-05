@@ -23,7 +23,7 @@ beforeAll(async () => {
   must(await s.from("question_templates").insert({ short_form: "best {cuisine} in {city}", long_form: "Where is the best {cuisine} in {city}?" }));
   must(await s.from("local_places").insert({ city: "Irvine", state: "CA", name: "Example Park", kind: "landmark" }));
   must(await s.from("leads").insert({ email: "lead@example.test", token: crypto.randomUUID() }));
-  must(await s.from("contact_requests").insert({ name: "Example", email: "contact@example.test" }));
+  must(await s.from("contact_requests").insert({ name: "Example", email: "contact@example.test", industry: "Restaurant" }));
   must(await s.from("stripe_events").insert({ event_id: `evt_${crypto.randomUUID()}`, type: "checkout.session.completed" }));
 
   // free_audit runs: one with no business, one pointing at A's business. Neither is member-readable.

@@ -22,6 +22,30 @@ Every customer-facing string Rank1 may use, copied verbatim from build pack sect
 
 Progress percentages ("48%") are computed from n of d, so they are not copy.
 
+### Forms (lead, 2026-11-05)
+
+| Where | String |
+|---|---|
+| Contact field labels | "Name", "Email", "Company", "Tier", "Message" |
+| Contact submit (idle form of 'Sending…') | "Send" |
+| /contact H1 and modal title | "Contact us" |
+| Contact tier options (no dollar amounts) | "Agency bundle", "Done-for-you (custom)", "Other" |
+| Audit form labels | "Email", "Your domain" (no email placeholder) |
+| Audit domain placeholder | "yourbusiness.com" |
+| Audit success | "Got it. We'll email your audit to {email}." |
+| Email error (both forms) | "Add a valid email, like you@ramenhouse.com" |
+| Contact name error | "Add your name" |
+| Contact message error | "Add a message" |
+| Contact tier placeholder option and tier error | "Choose one" |
+| Contact company | Optional, no error string |
+| Audit Banner error | "That didn't send. Try again in a minute." |
+| Audit daily-cap 429 | "Free audits are full for today. Try again tomorrow." (a per-request 429 keeps "Too many tries. Try again in an hour.") |
+| Contact modal close button (aria-label) | "Close" |
+| Contact industry label (Jeun #22) | "Industry" |
+| Contact industry options (Jeun #22, no dollar amounts) | "Restaurant", "HVAC", "Plumbing", "Roofing", "Pest control", "Other" |
+| Contact industry empty option and error (Jeun #22) | "Pick your industry." |
+| Contact industry "Other" text label, optional, max 60 characters (Jeun #22) | "Your industry (optional)" |
+
 | Jelly | Rule |
 |---|---|
 | Footer credit | 12px flat Jelly + 'Powered by Rank1' (10px) ONLY on the free audit. Never on $99 plan reports. |
@@ -47,6 +71,20 @@ Progress percentages ("48%") are computed from n of d, so they are not copy.
 - Mobile: hero and cards stack below md; comparison scrolls with the Rank1 column pinned; sticky bottom 'Get my free audit' bar after the hero; final-CTA Jelly hidden.
 - Accessibility: landmarks, one H1, ordered headings, AA contrast, visible focus, tablist with arrow keys, labeled inputs with error text, prefers-reduced-motion.
 - Never echo rank1.so's tagline. No competitor names. No stats on the landing page beyond Example data.
+
+## Mock panel headers (lead, 2026-11-05)
+
+Table headers in the landing page's "What you see on Monday." mock panels. The panels carry the label "Example data".
+
+| String |
+|---|
+| "Business" |
+| "Visibility" |
+| "Change" |
+| "Question" |
+| "Engine" |
+| "Named" |
+| "Example data" |
 
 # 4b. App screens: every state
 

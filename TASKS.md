@@ -24,3 +24,13 @@
 - [x] supabase/seed.sql: templates verbatim, Irvine places, fix_rules R1-R15 + H1, Example Agency / Example Ramen House with 25 questions, 5 competitors, 2 weekly runs x 250 answers, citations on fake domains.
 - [x] supabase/seed.dev.sql + `pnpm db:seed:dev`: CSV restaurants as hidden suggested competitors, clusters as unverified landmarks, no runs.
 - [x] Tests: seed applies on db reset, templates verbatim, Example-only brands, 25 active questions, jobs counts = answer rows, visibility excludes failed/no_overview, no real names in seed.sql/runs/answers, seed.dev.sql creates zero runs.
+
+## Step 2: Public site, contact, legal, audit request (acceptance)
+- [ ] 1. `/` is built from docs/UI.md "Landing page" with the exact copy in docs/COPY.md: 9 sections in order, a header (bar logo + "Rank1" wordmark), the footer and meta tags. Social proof sits behind SHOW_SOCIAL_PROOF=false.
+- [ ] 2. Jelly: only the existing jelly asset. No new variants (worried, sleepy, SVG). Empty, loading and error states use the single existing Jelly.
+- [ ] 3. /privacy and /terms are plain-language placeholders marked [LEGAL REVIEW NEEDED]. Privacy names Google sign-in, GA4 read-only access and data deletion on request.
+- [ ] 4. Contact us has a /contact page and a modal. The tier select offers Agency bundle, Done-for-you (custom) and Other, with NO dollar amounts.
+- [ ] 5. POST /api/contact: honeypot, Cloudflare Turnstile, a rate limit of 3 per IP hash per hour, a row stored in contact_requests, and an email through Resend to CONTACT_TO_EMAIL from CONTACT_FROM_EMAIL. No address is hard-coded.
+- [ ] 6. The free-audit CTA posts to /api/audit/request (a stub; step 7 runs the audit).
+- [ ] 7. The Final Button Set (PR #3) is the source of truth for every component. The copy says weekly checks + monthly report everywhere.
+- [ ] 8. pnpm test, pnpm test:db, typecheck, lint and pnpm e2e are green locally. The Vercel preview builds, and the e2e passes on it.
