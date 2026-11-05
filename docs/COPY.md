@@ -48,6 +48,20 @@ Progress percentages ("48%") are computed from n of d, so they are not copy.
 - Accessibility: landmarks, one H1, ordered headings, AA contrast, visible focus, tablist with arrow keys, labeled inputs with error text, prefers-reduced-motion.
 - Never echo rank1.so's tagline. No competitor names. No stats on the landing page beyond Example data.
 
+## Mock panel headers (lead, 2026-11-05)
+
+Table headers in the landing page's "What you see on Monday." mock panels. The panels carry the label "Example data".
+
+| String |
+|---|
+| "Business" |
+| "Visibility" |
+| "Change" |
+| "Question" |
+| "Engine" |
+| "Named" |
+| "Example data" |
+
 # 4b. App screens: every state
 
 Copy in quotes is exact. Every number shows n + checked X ago. Results labeled API-measured, directional.

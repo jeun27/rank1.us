@@ -101,3 +101,23 @@ Changed test assertions (old → new; none removed)
 - e2e dev-ui: heading list adds DomainField, AuroraButton, ProgressBar, Final set; heading lookup is now `exact: true` ("Button" also matched "AuroraButton").
 - e2e dev-ui-example-data: Example data label list adds DomainField, ProgressBar, Final set.
 - New tests: tests/unit/ui/final-set.test.tsx (DomainField 4 states, AuroraButton, ProgressBar math and 0/0, Freshness clock); e2e reduced motion, Final set computed styles (focus ring, aurora, #316FC5, 48% fill), narrow/wide field layout.
+
+## Step 2a: landing page (branch step2-landing)
+Changed
+- `/` is the full landing page: header, the 9 sections in docs/UI.md 4a order, footer and a sticky mobile CTA. Components are in src/components/site; fixtures are in src/components/site/example-data.ts.
+- The hero card numbers are computed from fixtures (55 of 160 = 34% floor; 45 of 160 last week, so +6 pts). The screenshot tabs are static mocks built from StatNumber/Table/Freshness and fixtures.
+- Social proof renders only when SHOW_SOCIAL_PROOF === "true" (read at build time; the page is static).
+- Tests: tests/unit/site/landing.test.tsx and tests/e2e/landing.spec.ts. Screenshots: docs/qa/landing-before-{375,1280}.png, docs/qa/landing-after-{375,1280}.png.
+
+Doc differences / decisions
+- Lead 2026-11-05 (G1): feature card bodies render COPY.md's exact phrases as bullet lists. FAQ answers are the exact phrases, capitalized with a closing period. No other words change.
+- Lead 2026-11-05 (G2): mock panel headers were added to COPY.md under "Mock panel headers (lead, 2026-11-05)".
+- Lead 2026-11-05 (G3): the comparison corner cell is an empty <td>, and row labels are <th scope="row">.
+- Feature cards have no section H2 in COPY.md, so the section is labeled "Features" for screen readers only and each card title is an H2.
+- The sticky bar's bottom padding (80px below md) is always reserved instead of only while the bar shows. This avoids a layout jump when the bar toggles and keeps the footer clear either way.
+- The COPY.md e2e check compares lowercased text with curly quotes straightened and a trailing period ignored. Fixture values (brands, numbers, questions) are marked data-computed and skipped.
+
+Known gaps
+- "Start for $99/mo" links to /sign-in, which doesn't exist yet (auth step).
+- OG image is [PLACEHOLDER], so og:image is omitted until a real image exists.
+- The audit form is a `<div data-slot="audit-form" />` placeholder and the Contact us links are plain href="/contact" until step2-forms lands. /privacy and /terms come from step2-forms.
