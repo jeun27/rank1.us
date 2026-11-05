@@ -472,3 +472,20 @@ Changed
   - locations from questions with answers: key `level:country|state|city` (fields above the level dropped).
 - Labels match the Questions page badge (#40): "City", "State", "Country". Only when two targets share a level is the place added ("City · Irvine, CA"). An unknown location key → an empty result, never everything.
 - citations.category on getQuestionsWithLatestAnswers came from backend #43 (a57fbdf), merged into this branch.
+
+## Step 10 (data-pipeline): site checks R10, R11, R14 and H1 (branch feat/step10-site-checks)
+Step 10 built from ENG_HANDOFF_OVERNIGHT §4/§6 + SCHEMA.md §5b; Build Pack not readable; A1–A6 seeded disabled; reconcile later.
+Lead decisions (Step 10 brief): detectors only for the enabled rules R10, R11, R14 and H1, using our own fetch, with no paid calls and no LLM. Detection runs once per paid run after it closes complete/partial, from the cron drain, never for free audits. No domain → every site rule is unchecked. fix = upsert, ok = auto-resolve, unchecked = leave as is. R14 fixes only for OAI-SearchBot and PerplexityBot; GPTBot and Google-Extended are info only.
+- Time budget (lead): at most 1 run per cron tick, a 45 s crawl budget, started only with ≥60 s left of the cron route's maxDuration (300 s).
+- R10 no-menu case: reconcile with Build Pack. No menu page, or an ambiguous HTML menu (<5 prices and <3 images) → unchecked, reason menu_not_found / menu_ambiguous. No new copy.
+
+Changed
+- src/lib/onboarding/read-site.ts: createSiteFetcher(domain, {maxRequests, budgetMs}), readSite's guarded fetcher (SSRF/DNS guard, same-site redirects, 1 MB, 10 s, Rank1 UA, robots obeyed), plus page caching, a request/time budget, the final page URL, and robots status ok | missing | error. robotsAllows(text, path, agent = "rank1"). readSite now uses the fetcher, with the same behavior.
+- src/lib/fixes:
+  - R10 (menu link by text/href, else /menu; PDF/image by href or content-type; ≥5 prices = a text menu);
+  - R11 (dish names = text before the first price; ≤20 same-site pages; covered = in H1–H3 or FAQ text incl. FAQPage/Question/Answer JSON-LD; first 5 uncovered in the copy);
+  - R14 (each bot's group else *, "/" and "/menu");
+  - H1 (Restaurant / FoodEstablishment family / Menu JSON-LD or hasMenu on home + menu);
+  - evaluateFixes (R10, R11, R14, H1 order; unchecked reasons no_domain, robots_disallowed, site_unreachable, robots_unreachable, menu_not_found, menu_ambiguous, no_html_menu, error);
+  - checkFixesForOneRun (cron.ts).
+- The copy templates are the SCHEMA §5b customer copy verbatim (a test reads docs/SCHEMA.md); detail is set only for fix.
