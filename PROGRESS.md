@@ -536,6 +536,7 @@ Changed
 - claudeUrl and CLAUDE_Q_MAX are removed and CLAUDE_URL = "https://claude.ai" replaces them. ContextPane's href uses it (its onClick still copies the brief first). The team e2e now asserts the exact URL.
 - Tests changed, with reason: tests/unit/workspace/brief.test.ts's two claudeUrl ?q= prefill tests are replaced by one asserting CLAUDE_URL === "https://claude.ai" (lead, Step 11: the prefill is removed). tests/e2e/team-workspace.spec.ts asserts the href is exactly CLAUDE_URL and the popup is https://claude.ai/ (routed, never reaches the real site).
 - Removed two unused imports in tests/unit/fixes/rules.test.ts (lint warnings from Step 10).
+
 ## Step 11 (backend): team read access to DFY clients (branch feat/step11-team-read, issue #54)
 - Step 11 built from ENG_HANDOFF_OVERNIGHT §3/§6 + issue #10; Build Pack not readable; reconcile later.
 - Lead decisions:
@@ -571,6 +572,20 @@ Changed
 - Lead copy: "No clients yet." (no add-client UI in /team), "Client"; the Open in Claude toast is now "Brief copied. Paste it in Claude."
 - #11's Example workspace moved to the /dev/team gallery (404 in production, no sign-in); team-workspace.spec runs there. tests/e2e/team-real.spec.ts covers the real /team (seeded DFY + self-serve businesses).
 - No LLM SDK: tests/unit/engines/no-llm-sdk.test.ts already guards the repo.
+
+## Step 12 (backend): client invites and fix list visibility (branch feat/step12-client-invites, issue #59)
+- Step 12 built from ENG_HANDOFF_OVERNIGHT §3/§6 + Step 3 routing; Build Pack not readable; reconcile later.
+- Lead decisions:
+  - No invites table. A team user invites by email for a DFY business (Supabase Auth admin invite, redirectTo NEXT_PUBLIC_SITE_URL/auth/callback), then the service role grants dfy_client + workspace membership.
+  - Any existing Rank1 account is refused ("This email already has a Rank1 account."), and this business's client gets "Already invited.".
+  - One business per client user (lead, 2026-11-05); reconcile with Build Pack. An existing client of another DFY business counts as an existing account.
+  - Remove access drops the membership and keeps the role. The fix list toggle is team-only.
+  - /client is read-only. Emails never go in logs or error messages, only status codes.
+- Migration 20261105000016 (+ .down.sql), additive and re-runnable:
+  - Service only: client_invite_status, grant_dfy_client (idempotent; refuses team users, members of other workspaces and non-DFY businesses) and revoke_dfy_client (never an owner).
+  - Team only: set_fix_list_visible and list_client_users (emails for team only).
+- Queries (server only, src/lib/queries/clients.ts): inviteClient (injectable invite fn; CI has no mail server), removeClient, listClientUsers, setFixListVisible. Tests: tests/db/clients.test.ts.
+- src/types/db.ts got the 0016 functions added by hand in the generator format. Regenerate it with `pnpm db:types` when a stack is available.
 
 ## Step 11 QA fix (frontend): Vercel preview toolbar in the no-model-calls check (branch fix/step11-preview-toolbar, issue #54, QA #62)
 

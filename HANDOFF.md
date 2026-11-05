@@ -57,3 +57,9 @@ Requests between agents (for example, a new field frontend needs from backend). 
   - For a selected DFY business, a team user (even a non-member) can use the existing queries as-is: getRunResults, getPreviousRun, listRunSummaries, getQuestionsWithLatestAnswers, listCompetitors, listFixes.
   - Team writes: setFixStatus, addCompetitor, dismissSuggestion (lead O1).
   - Status: done.
+- 2026-11-05, backend -> frontend: Step 12 on feat/step12-client-invites (src/lib/queries/clients.ts, server only).
+  - `inviteClient(serviceDb, { email, businessId })` → { status: "invited" | "existing_account" | "already_invited" | "invalid_email" | "error" }. error = the invite or grant failed and nothing was left behind (show a retryable error). Call it from a server action AFTER checking the caller is team and the business is DFY. Map existing_account → "This email already has a Rank1 account.", already_invited → "Already invited.", invited → "Invite sent to {email}.".
+  - `removeClient(serviceDb, { userId, businessId })` → boolean (also after the team check).
+  - Team client: `listClientUsers(db, businessId)` → { user_id, email, added_at, signed_in }[] and `setFixListVisible(db, businessId, visible)`. Both throw 42501 for non-team callers or self-serve businesses.
+  - Lead: never log or echo the email.
+  - Status: done.
