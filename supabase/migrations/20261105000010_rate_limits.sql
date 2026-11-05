@@ -43,6 +43,19 @@ begin
 end;
 $$;
 
+-- 24 h cache of onboarding lookup results, so repeating a lookup (Back/Next) costs no token.
+-- Service role only: users must not forge cached results. One row per user, kind and key.
+create table public.lookup_cache (
+  user_id uuid not null references auth.users (id) on delete cascade,
+  kind text not null check (kind in ('read_site', 'maps_lookup')),
+  key text not null,
+  result jsonb not null,
+  created_at timestamptz not null default now(),
+  primary key (user_id, kind, key)
+);
+alter table public.lookup_cache enable row level security;
+revoke all on table public.lookup_cache from anon, authenticated;
+
 -- Supabase grants EXECUTE on new public functions to anon by default.
 revoke all on function public.take_rate_token(text) from public, anon;
 grant execute on function public.take_rate_token(text) to authenticated;

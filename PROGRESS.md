@@ -272,6 +272,7 @@ Review follow-ups (lead, 2026-11-05)
 
 ## Step 5 (backend): per-user rate limits for onboarding lookups (branch feat/step5-rate-limits, issue #18)
 - Migration 20261105000010 (+ .down.sql). `rate_events` (user_id, kind read_site | maps_lookup, created_at) has RLS on and no policies. `take_rate_token(kind)` is SECURITY DEFINER with the limits fixed in SQL so callers can't raise them: read_site 10 per hour, maps_lookup 5 per hour and 20 per 24 hours. It takes a per-user, per-kind advisory lock, prunes that user's events of the kind older than 24 h, and records one event only when allowed. An unknown kind raises 22023. No user returns false. EXECUTE is for authenticated only.
+- `lookup_cache` (user_id, kind, key, result jsonb, created_at; PK user_id+kind+key) is service-role only (RLS on, no policies, revoked from anon/authenticated). It's the 24 h result cache, so repeating a lookup (Back/Next) takes no token. Queries on the service client: getCachedLookup(db, userId, kind, key, maxAgeSeconds), and putCachedLookup(db, row) as an upsert that restarts the age (src/lib/queries/lookup-cache.ts).
 - Query: takeRateToken(db, kind) in src/lib/queries/rate-limits.ts. Tests: tests/db/rate-limits.test.ts.
 - src/types/db.ts got rate_events and take_rate_token added by hand in the generator format (no local stack, disk full). Regenerate it with `pnpm db:types` in the next DB PR.
 
