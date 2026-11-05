@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  MAX_BYTES,
   USER_AGENT,
   isPrivateAddress,
   matchCuisine,
@@ -146,6 +147,55 @@ describe("readSite", () => {
   });
 });
 
+describe("readSite body cap (1 MB)", () => {
+  // An endless HTML stream in 64 KB chunks; counts how many chunks were pulled.
+  function endless() {
+    let pulls = 0;
+    const chunk = new TextEncoder().encode(`<p>${"ramen ".repeat(10_900)}</p>`);
+    const body = new ReadableStream<Uint8Array>({
+      pull(c) {
+        pulls++;
+        c.enqueue(chunk);
+      },
+    });
+    return { body, pulls: () => pulls, chunk: chunk.byteLength };
+  }
+  const fetchWith = (make: () => Response) => ({
+    fetch: vi.fn<typeof globalThis.fetch>(async (input) =>
+      String(input).endsWith("/robots.txt") ? new Response("", { status: 404 }) : make(),
+    ),
+    lookup: async () => [{ address: "93.184.216.34" }],
+    timeoutMs: 2_000,
+  });
+
+  it("stops reading a stream once it passes 1 MB and counts the page as unreadable", async () => {
+    const s = endless();
+    const d = fetchWith(() => new Response(s.body, { headers: { "content-type": "text/html" } }));
+    expect(await readSite("example-ramen-house.test", d)).toEqual({ status: "unreadable" });
+    expect(s.pulls() * s.chunk).toBeGreaterThan(MAX_BYTES);
+    expect(s.pulls() * s.chunk).toBeLessThan(MAX_BYTES + 4 * s.chunk);
+  });
+
+  it("refuses a Content-Length over 1 MB without reading the body", async () => {
+    const s = endless();
+    const d = fetchWith(
+      () => new Response(s.body, { headers: { "content-type": "text/html", "content-length": String(MAX_BYTES + 1) } }),
+    );
+    expect(await readSite("example-ramen-house.test", d)).toEqual({ status: "unreadable" });
+    expect(s.pulls()).toBeLessThanOrEqual(1);
+  });
+
+  it("reads a page just under the cap", async () => {
+    const html = `<title>Example Ramen House</title><p>${"x".repeat(MAX_BYTES - 100)}</p>`;
+    const d = fetchWith(() => new Response(html, { headers: { "content-type": "text/html" } }));
+    expect(await readSite("example-ramen-house.test", d)).toEqual({
+      status: "ok",
+      name: "Example Ramen House",
+      cuisine: "ramen",
+    });
+  });
+});
+
 describe("helpers", () => {
   it("siteHost keeps public hostnames only", () => {
     expect(siteHost("Example-Ramen-House.test")).toBe("example-ramen-house.test");
@@ -167,7 +217,25 @@ describe("helpers", () => {
       "::ffff:10.0.0.1",
     ])
       expect(isPrivateAddress(ip), ip).toBe(true);
-    for (const ip of ["93.184.216.34", "8.8.8.8", "2606:4700::1111"]) expect(isPrivateAddress(ip), ip).toBe(false);
+    for (const ip of ["93.184.216.34", "8.8.8.8", "2606:4700::1111", "::ffff:8.8.8.8", "::ffff:808:808"])
+      expect(isPrivateAddress(ip), ip).toBe(false);
+  });
+
+  it("isPrivateAddress also covers hex v4-mapped, NAT64, 192.0.0.0/24, docs v6 and junk", () => {
+    for (const ip of [
+      "::ffff:7f00:1",
+      "::ffff:a00:1",
+      "0:0:0:0:0:ffff:c0a8:1",
+      "64:ff9b::a00:1",
+      "64:ff9b::808:808",
+      "192.0.0.8",
+      "2001:db8::1",
+      "::",
+      "[::1]",
+      "fe80::1%eth0",
+      "not-an-ip",
+    ])
+      expect(isPrivateAddress(ip), ip).toBe(true);
   });
 
   it("matchCuisine counts whole words, ignores scripts upstream, and breaks ties by list order", () => {
