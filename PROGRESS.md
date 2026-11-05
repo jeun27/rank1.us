@@ -176,6 +176,8 @@ Changed
 - "Continue with Google" is the AuroraButton (UI.md "Aurora button": the one gradient, Google sign-in only), including 'Opening Google…'. The magic-link submit stays secondary (QA, PR #17).
 - `/auth/callback` and `POST /auth/signout` redirect to `/signin?error=config` instead of an empty 500 when the Supabase env is missing. /signin then shows "Sign-in isn't available right now. Try again in a few minutes." (lead, COPY.md Auth).
 - Local-stack e2e (10 in auth.spec.ts, all of team-workspace.spec.ts) skip when E2E_BASE_URL is set ("needs local Supabase", same pattern as client-secrets.spec.ts). The 10 public auth checks still run on a preview (QA, PR #17).
+- `POST /auth/next` has the same same-origin check as sign out (shared `isSameOrigin`), so another site can't plant a next for the user.
+- `/auth/callback` rejects `type=invite` on purpose. Step 12 (client invites) adds invite links and must add `invite` to EMAIL_TYPES then (lead, 2026-11-05).
 - `POST /auth/signout` accepts only same-origin requests (Sec-Fetch-Site, or else Origin), so another site's form can't sign a user out.
 - `/team` (#11's workspace): team role only. Signed out goes to /signin, and any other role goes to its own home. With ENABLE_TEAM_WORKSPACE off, a team user gets the placeholder.
 - Landing: "Start for $99/mo" → `/signin?next=/app/billing` (was a 404 to /sign-in). Header "Log in" → `/signin`. `/app/billing` is the paywall stub: the Pricing card, the button disabled, "Checkout isn't open yet."

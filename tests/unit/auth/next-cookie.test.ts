@@ -4,10 +4,43 @@ import { NEXT_COOKIE } from "@/lib/auth/next";
 
 const { POST } = await import("@/app/auth/next/route");
 
-const post = (body: unknown, url = "http://localhost:3000/auth/next") =>
-  POST(new NextRequest(url, { method: "POST", body: JSON.stringify(body) }));
+const post = (body: unknown, url = "http://localhost:3000/auth/next", headers: Record<string, string> = {}) =>
+  POST(
+    new NextRequest(url, {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: { "sec-fetch-site": "same-origin", ...headers },
+    }),
+  );
 
 describe("POST /auth/next", () => {
+  it.each([
+    { "sec-fetch-site": "cross-site", origin: "https://evil.test" },
+    { "sec-fetch-site": "same-site", origin: "https://www.localhost:3000" },
+  ])("refuses a cross-site request (%o) and sets no cookie", async (h) => {
+    const res = await post({ next: "/app/billing" }, undefined, h);
+    expect(res.status).toBe(403);
+    expect(res.cookies.get(NEXT_COOKIE)).toBeUndefined();
+  });
+
+  it("accepts a matching Origin when Sec-Fetch-Site is absent", async () => {
+    const res = await POST(
+      new NextRequest("http://localhost:3000/auth/next", {
+        method: "POST",
+        body: JSON.stringify({ next: "/app" }),
+        headers: { origin: "http://localhost:3000" },
+      }),
+    );
+    expect(res.status).toBe(204);
+  });
+
+  it("refuses a request with neither header", async () => {
+    const res = await POST(
+      new NextRequest("http://localhost:3000/auth/next", { method: "POST", body: JSON.stringify({ next: "/app" }) }),
+    );
+    expect(res.status).toBe(403);
+  });
+
   it("keeps a safe next in a short-lived httpOnly Lax cookie scoped to /auth", async () => {
     const res = await post({ next: "/app/billing" });
     expect(res.status).toBe(204);
