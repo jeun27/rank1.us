@@ -427,6 +427,7 @@ Lead decisions (Step 8 brief): suggested competitors = findLocalCompetitors for 
 Changed
 - src/lib/onboarding/suggest.ts suggestCompetitors({business, tracked, dismissed}, {store}): drops Maps items whose bare domain or normalized name (detectMentions' normalize) matches a tracked or dismissed competitor or the business; first of each domain/name kept; Maps order; ≤5. limited / missing_keys / error → no items. Never throws.
 - src/lib/metrics/series.ts seriesFromSummaries(summaries): {points: {runId, at, metric: Metric}[] oldest → newest, visible: ≥2}.
+- src/lib/metrics/series.ts seriesFromSummaries(summaries): takes listRunSummaries rows (RunSummary, #38) and passes their visibility Metric through. Returns {points: {runId, at, metric}[] oldest → newest, visible: ≥2}, keeping only complete/partial audit+weekly runs as a safety net. Callers use listRunSummaries(db, id, 8, ["complete", "partial"]), which filters before the limit.
 
 ## Step 7 (frontend): audit progress, results and exports (branch feat/step7-audit, issue #33)
 - /app/runs/[runId] (members, through RLS getRunResults) and /audit/[token] (service role, getFreeAuditByToken) share AuditView: UI.md 4b Audit progress and Audit results. The free page adds the 'Start for $99/mo' card and the Powered by Rank1 credit; the paid page never shows the credit.
@@ -436,16 +437,6 @@ Changed
 - /dev/audit?state=… shows every state with Example data (404 in production).
 - Real 404s: these pages stream inside Suspense, and notFound() there still sends a 200. So the proxy (src/lib/supabase/middleware.ts, the same pattern as /admin) rewrites to a 404 first. A run not readable by the visitor's session (RLS) or an unknown audit token (service role) gets the 404. The exports are route handlers and 404 on their own. The route is matched on the normalized path, but the token or run id comes from the raw path, because normalizePath lowercases and tokens are mixed-case base64url (review on #35).
 - Doc difference: citations.category is typed string in the result query and Category in computeMetrics. The loader casts it, because Step 6 stores only categorize() values.
-
-## Step 8 (data-pipeline): competitor suggestions and visibility series (branch feat/step8-suggestions)
-Step 8 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
-Lead decisions (Step 8 brief): suggested competitors = findLocalCompetitors for the business cuisine/city (existing cache + maps_lookup token) minus tracked and dismissed; keys missing → nothing shown. The 8-run line = the latest 8 complete/partial audit+weekly runs; fewer than 2 → hidden. Free audits never appear in /app.
-- One paid lookup serves both (lead, 2026-11-05): the 24 h cache holds the full Maps list (≤20, Maps order), keyed cuisine|city|state|domain with no limit in the key. src/lib/onboarding/lookup.ts lookupCompetitors does that. Onboarding's findCompetitorsAction shows the first 5, as before. findLocalCompetitors takes an optional `limit` (default 5, unchanged). withLimits moved from src/app/app/onboarding/limits.ts to src/lib/onboarding/limits.ts, and the old path re-exports it.
-- Test changed, with reason: tests/unit/onboarding/actions.test.ts now expects findLocalCompetitors to be called with `{ ...q, limit: 20 }` (was `q`), because onboarding's lookup fills the shared cache. A new test checks onboarding still returns only the top 5 while the cache keeps all of them.
-
-Changed
-- src/lib/onboarding/suggest.ts suggestCompetitors({business, tracked, dismissed}, {store}): drops Maps items whose bare domain or normalized name (detectMentions' normalize) matches a tracked or dismissed competitor or the business; first of each domain/name kept; Maps order; ≤5. limited / missing_keys / error → no items. Never throws.
-- src/lib/metrics/series.ts seriesFromSummaries(summaries): takes listRunSummaries rows (RunSummary, #38) and passes their visibility Metric through. Returns {points: {runId, at, metric}[] oldest → newest, visible: ≥2}, keeping only complete/partial audit+weekly runs as a safety net. Callers use listRunSummaries(db, id, 8, ["complete", "partial"]), which filters before the limit.
 
 ## Step 9 (data-pipeline): per-engine sources and location view (branch feat/step9-sources, issue #42)
 Step 9 built from ENG_HANDOFF_OVERNIGHT §6 + PRODUCT.md + docs/UI.md; Build Pack not readable; reconcile later.
@@ -532,6 +523,14 @@ Changed
 - Wiring (after #50): src/lib/fixes/service.ts reads fix_rules.enabled (service role) and uses listRunsNeedingFixChecks(db, 1) and recordFixResults. GET /api/cron/run-jobs runs it after the drain and notify, with time left = maxDuration (300 s) − elapsed since the request started, and returns `fixes`.
 - PROGRESS.md: the duplicate "## Step 9 (data-pipeline)" section on main (a merge leftover) is merged into one copy, with no line dropped.
 
+## Step 10 (frontend): What to fix next page (branch feat/step10-fixes-page, issue #48)
+
+- Built from ENG_HANDOFF_OVERNIGHT §4/§6 and SCHEMA.md §5b. The Build Pack wasn't readable, so reconcile later. A1–A6 stay seeded disabled.
+- /app/fixes: listFixes → ranked (S→L, ranked server-side), Tidy-ups (hygiene, h2 + h3 cards), and "We couldn’t check this yet." rows from backend's unchecked {rule_key, title}. "Listing and site checks need your website URL" shows when the business has no domain.
+- Status select (To do / Doing / Done) via setFixStatusAction → set_fix_status. Every self-serve member may write, and RLS checks again. On error the value reverts and a Banner shows "We couldn't save that. Try again." (that copy is awaiting the lead's OK). Done removes the fix (only open fixes are listed).
+- The shared FixList (src/components/fixes) is reused by Steps 11/12. There, canWrite={false} renders a read-only status badge.
+- Rule 3: a Measured line (latest run, ok answers) under the H1.
+- Nav: "What to fix next" after Sources. The Dashboard section heading links to /app/fixes (top 3 from getTopFixes, same ranking).
 ## Step 11 (data-pipeline): context brief from stored data (branch feat/step11-context)
 Step 11 built from ENG_HANDOFF_OVERNIGHT §3/§6 + issue #10; Build Pack not readable; reconcile later.
 Lead decisions (Step 11 brief): no in-app AI. Copy context = a Markdown brief of stored numbers and texts for the selected item, each with n + freshness and "API-measured, directional": business, latest visibility (overall + per engine), leaderboard, top sources, open fixes (title + detail), and questions where the business wasn't named. Never why_note, raw, cost, vendor stats, lead emails or tokens. Open in Claude opens exactly https://claude.ai after copying the brief; no ?q= and no data in the URL.
