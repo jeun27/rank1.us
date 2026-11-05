@@ -24,7 +24,8 @@ export type EngineAnswer = {
   error?: string;
 };
 
-// Reads DATAFORSEO_LOGIN, DATAFORSEO_PASSWORD, PERPLEXITY_API_KEY and PERPLEXITY_MODEL.
+// Reads DATAFORSEO_LOGIN, DATAFORSEO_PASSWORD, PERPLEXITY_API_KEY, PERPLEXITY_MODEL and the
+// DATAFORSEO_API_URL / PERPLEXITY_API_URL overrides (e2e points them at a local fake).
 export type EngineEnv = Record<string, string | undefined>;
 
 export type EngineDeps = {

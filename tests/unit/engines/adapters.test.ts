@@ -204,3 +204,35 @@ describe("Perplexity (Agent API)", () => {
     expect(basic).toMatchObject({ status: "ok", citations: [], costUsd: 0.00452 });
   });
 });
+
+describe("state codes and API URL overrides", () => {
+  const pdoc = fixture("perplexity/docs-quickstart-web-search.json");
+
+  it("an unknown state code is not sent: Perplexity falls back, AIO fails", async () => {
+    const location = { level: "city" as const, country: "US", state: "Calif", city: "Irvine" };
+    const f = fakeFetch(pdoc);
+    const a = await runEngine("perplexity", { question: "q", location }, { fetch: f, env: KEYS, now: NOW });
+    expect(sentBody(f).tools[0].user_location).toEqual({ country: "US" });
+    expect(a.locationSupported).toBe("fallback_country");
+    const aio = await runEngine(
+      "google_aio",
+      { question: "q", location },
+      { fetch: fakeFetch({}), env: KEYS, now: NOW },
+    );
+    expect(aio.status).toBe("failed");
+  });
+
+  it("DATAFORSEO_API_URL and PERPLEXITY_API_URL replace the base URLs", async () => {
+    const env = {
+      ...KEYS,
+      DATAFORSEO_API_URL: "http://127.0.0.1:4599/v3",
+      PERPLEXITY_API_URL: "http://127.0.0.1:4599/pplx",
+    };
+    const d = fakeFetch(fixture("gemini/docs-live-advanced.json"));
+    await runEngine("gemini", irvine("country"), { fetch: d, env, now: NOW });
+    expect(d.mock.calls[0][0]).toBe("http://127.0.0.1:4599/v3/ai_optimization/gemini/llm_scraper/live/advanced");
+    const p = fakeFetch(pdoc);
+    await runEngine("perplexity", irvine("country"), { fetch: p, env, now: NOW });
+    expect(p.mock.calls[0][0]).toBe("http://127.0.0.1:4599/pplx");
+  });
+});

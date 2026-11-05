@@ -43,7 +43,7 @@ export const perplexity: Adapter = (req, deps) => {
       };
       const json = await postJson(
         deps,
-        PERPLEXITY_URL,
+        deps.env.PERPLEXITY_API_URL || PERPLEXITY_URL,
         { Authorization: `Bearer ${key}` },
         body,
         PERPLEXITY_TIMEOUT_MS,

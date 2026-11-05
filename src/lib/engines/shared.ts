@@ -58,7 +58,8 @@ export const US_STATES: Record<string, string> = {
   WY: "Wyoming",
 };
 
-export const stateName = (state?: string) => (state ? (US_STATES[state.toUpperCase()] ?? state) : undefined);
+// Unknown codes return undefined, so the caller falls back instead of sending a guess.
+export const stateName = (state?: string) => (state ? US_STATES[state.toUpperCase()] : undefined);
 
 export class EngineError extends Error {
   constructor(
