@@ -166,6 +166,8 @@ Strings for the run results page (/app/runs/[runId]) and the free audit (/audit/
 
 The free-audit completion email (Step 7). Sent once per lead when its run ends complete or partial; a failed run sends nothing.
 
+| Where | String |
+|---|---|
 | Subject | "Your Rank1 audit is ready" |
 | Body | "Your free audit for {domain} is ready: {link}\n\nAPI-measured, directional. Results are based on {n} AI answers." |
 | {link} | NEXT_PUBLIC_SITE_URL + /audit/{token} |
