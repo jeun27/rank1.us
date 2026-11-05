@@ -1,5 +1,61 @@
 # QA
 
+## Step 3: Sign in + role routing
+
+Checked 2026-11-05 on PR #14 (feat/step3-auth) at d7a54b0, its newest head. d7a54b0 is 69b8c47 plus one PROGRESS.md line and a stricter area-gate test: the signed-out case now runs for /app, /team and /client instead of /client only. PR #13 is merged on main as 889bcdb. Local checks ran in the agent sandbox with lean local Supabase (stopped afterwards). Preview checks ran on the Mac from a temporary detached worktree of d7a54b0 (removed afterwards).
+Preview: https://rank1-ln005pqji-bryan-flowhighlevels-projects.vercel.app (git ref feat/step3-auth, sha d7a54b0, READY; hosted Supabase env from the Vercel integration).
+TASKS.md has no Step 3 acceptance section, so the items below are the lead's list from ENG_HANDOFF_OVERNIGHT §6.
+
+Result: FAIL. 2 blocking problems, listed at the end. Item 8 is partly verified and needs access, see below.
+
+### Commands
+
+| Command | Result |
+|---|---|
+| `pnpm test` | PASS. 32 files, 333 tests passed |
+| `pnpm test:db` | PASS. 9 files, 198 tests passed |
+| `pnpm typecheck`, `pnpm lint`, `pnpm format:check` | PASS. exit 0 |
+| `pnpm e2e` (sandbox, local Supabase, fresh build) | PASS. 150 passed, 2 skipped (client-secrets runs on desktop only, by design) |
+| `E2E_BASE_URL=<preview> pnpm e2e` | FAIL. 102 passed, 47 failed, 3 skipped. All 47 failures are the same error, "Local Supabase is not running (missing API_URL)" (tests/e2e/helpers/auth.ts:9). Every test that signs a user in through the local service-role key fails instead of skipping on a deployed URL (tests/e2e/auth.spec.ts, tests/e2e/team-workspace.spec.ts). All other tests pass |
+
+### Acceptance
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| 1 | Supabase Auth, Google primary + magic link secondary, @supabase/ssr; proxy protects /app/**, /team/**, /client/** | PASS | src/proxy.ts + src/lib/supabase/middleware.ts (createServerClient, getClaims); signed-out visits redirect on local and preview (item 6) |
+| 2 | First self-serve sign-in: exactly one workspace + owner membership; team/dfy_client get none | PASS | Browser run on the local stack: new self-serve user has 1 membership ("owner"), still 1 after a second sign-in. team and dfy_client have 0 after two sign-ins. test:db and auth.spec.ts:93/110/119 passed locally |
+| 3 | Routing: team → /team, dfy_client → /client, owner/member → /app/onboarding with no business, else /app; sign out from the Account menu | PASS | Landed: owner without business /app/onboarding, owner with business /app, member of a workspace with a business /app, team /team, dfy_client /client. Sign out from the Account menu goes to /signin, then /app goes to /signin?next=%2Fapp |
+| 4 | /signin matches UI.md "Sign in": 'Opening Google…', error banner, single column on mobile, copy in COPY.md | FAIL | Loading label, error banner and single column all match (Google button 303px = full content width at 375). Every visible string, aria-label, title and alt on /signin, its two error states, /app, /app/onboarding, /app/billing, /client and the Account menu is in COPY.md. But the Google button is the jellyDeep primary Button, not the Aurora button. Blocker 1 |
+| 5 | "Start for $99/mo" and header "Log in" go to real routes; /signin → /app/billing paywall stub; no 404 | PASS | preview `/` links: `/signin` and `/signin?next=/app/billing`; /signin 200; /app/billing loads for an owner (H1 "Billing", disabled "Start for $99/mo", "Checkout isn't open yet.") |
+| 6 | Signed-out /app, /team, /client → /signin (e2e) | PASS | preview: /app, /app/billing, /app/onboarding, /team, /client all 307 to `/signin?next=<path>`; e2e passed locally |
+| 7 | Google OFF on hosted: banner path; flow works with a stub | PASS (expected gap) | preview: /auth/v1/settings says google=false, and clicking "Continue with Google" shows "Google sign-in didn't finish. Try again, or use an email link." in role=alert. Stubbed Google e2e (auth.spec.ts:41) passed local and preview. Expected gap: real Google pending Jeun's OAuth client |
+| 8 | Magic link works for real on the preview | PARTLY VERIFIED | Send: on the preview, the form sent a link to Resend's test sink delivered@resend.dev (nobody receives it). Hosted Auth answered POST /auth/v1/otp 200, and the form showed "Check your email. We sent a sign-in link to delivered@resend.dev." Verify: the preview's /auth/callback with a bad token_hash goes to /signin?error=link, so hosted verifyOtp is wired. Not done: opening a real hosted link. That needs the hosted service-role key for admin generateLink, which exists only as a sensitive Vercel env (not readable), or a mailbox I control |
+
+### Extra checks
+
+| Check | Result | Evidence |
+|---|---|---|
+| No Supabase env: public pages 200, protected pages redirect | PASS | Sandbox build and start with no Supabase env: /, /contact, /privacy, /terms, /signin 200; /app, /app/billing, /app/onboarding, /team, /client 307 to /signin?next=… |
+| Role gates, every role × area | PASS | Final page after the in-stream redirect settles (local stack). Signed out: all 5 areas go to /signin?next=. Owner/member: /app, /app/onboarding, /app/billing open; /team and /client go to their home. team: every /app* and /client go to /team. dfy_client: every /app* and /team go to /client. Raw HTML for a wrong-role request has none of the protected area's content |
+| Sign out is same-origin only | PASS | local and preview: GET 405; POST with Sec-Fetch-Site cross-site 403, same-site 403, none 403; no Sec-Fetch-Site + foreign Origin 403; no headers 403; same-origin 303 to /signin |
+| axe at 375 and 1280 | PASS | 0 violations on /signin, /signin?error=google, /signin?error=link, /, /app/onboarding, /app, /app/billing, /client and the open Account menu, at both widths; scrollWidth equals the viewport everywhere |
+| No secrets in .next/static | PASS | Local build with local Supabase keys (28 files): the service-role value and JWT secret are absent; no server-only env name; the only pattern hit is supabase-js's own `startsWith("sb_secret_")` key-type check; the anon key is present, as expected |
+| "Visuals for <sha>" comment matches the head | PASS | newest PR #14 comment is "Visuals for d7a54b0", and the head is d7a54b0 |
+| Changed and removed tests | PASS | team-gate.test.tsx was added and removed inside this PR, and area-gate.test.tsx covers every role × area. gate.test.ts → gate.test.tsx, team-workspace.spec.ts and landing.spec.ts change only for the lead-approved behavior listed in PROGRESS.md (404s became the sign-in flow). d7a54b0 widens a test, it doesn't loosen one |
+
+Not blocking:
+- Without Supabase env, POST /auth/signout and GET /auth/callback return an empty 500 (createClient at src/app/auth/signout/route.ts:11 and src/app/auth/callback/route.ts:20). No leak, and both work on the preview.
+- A wrong-role page answers 200 and redirects in the stream, because AreaGate is inside Suspense. No protected content is sent.
+- A self-serve owner with no business can open /app directly (the Dashboard placeholder). Post-login routing still sends them to /app/onboarding.
+- Can't check from here whether the hosted Auth redirect-URL allow-list includes preview domains. Without that entry, emailed links would fall back to the Site URL.
+
+### Blocking problems
+
+1. src/components/auth/SignInForm.tsx:84: "Continue with Google" is the jellyDeep primary `Button`. docs/UI.md:91 and docs/PRODUCT.md (design) make the aurora ring the Google sign-in button, and the Final set shows "Opening Google…" as the Aurora pill. AuroraButton (src/components/ui/AuroraButton.tsx) is unused outside /dev/ui. COPY.md's "Google button (primary)" names the role, not the style. If the lead decides the jellyDeep pill is intended, record that in UI.md and this item passes.
+2. `pnpm e2e` against the preview is red: 47 failures, all "Local Supabase is not running" from tests/e2e/helpers/auth.ts:9. The local-stack tests in tests/e2e/auth.spec.ts and tests/e2e/team-workspace.spec.ts need a `test.skip(Boolean(process.env.E2E_BASE_URL), …)`, as in tests/e2e/client-secrets.spec.ts:32, or a hosted test path.
+
+Needs access, not a code fix: item 8's last step (open a real hosted magic link on the preview). It needs the hosted service-role key in ~/Desktop/rank1.us/.env.local for one admin generateLink call, or the lead running that call.
+
 ## Step 2: Public site, contact, legal, audit request (re-run)
 
 Checked 2026-11-05 on commit 61e708d (branch step-2). It adds these since the first QA run (8b51609): the tablist labelled by its H2 (e32ca86), a clean /api/contact 500 (ba87fae), migration 20261105000007 for industry and fix-list visibility (6954380), and the Industry field (61e708d). Build, test and test:db ran in the agent sandbox (lean local Supabase, stopped afterwards). Preview e2e, probes and screenshots ran on the Mac from a temporary detached worktree of 61e708d.
