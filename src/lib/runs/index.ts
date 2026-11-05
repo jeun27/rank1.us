@@ -4,4 +4,4 @@ export { categorize, type Category } from "./categorize";
 export { normalizeUrl, toStoredCitations, type StoredCitation } from "./citations";
 export { drainJobs, cronAuthorized, batchSize, CHUNK, type DrainSummary } from "./drain";
 export type * from "./types";
-export { isWeeklyWindow, laWeekStart, runWeekly, WEEKLY_SCHEDULE, WEEKLY_TZ, type WeeklyDeps } from "./weekly";
+export { isWeeklyWindow, runWeekly, WEEKLY_SCHEDULE, WEEKLY_TZ, type WeeklyDeps } from "./weekly";

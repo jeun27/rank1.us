@@ -1,3 +1,5 @@
+import { laWeekStart, type EnqueueResult, type PruneResult } from "@/lib/queries/weekly";
+
 // The weekly check runs Monday 06:00 America/Los_Angeles (handoff §6). Vercel Cron is UTC, so the route is
 // scheduled at 13:00 and 14:00 UTC on Mondays and only the fire that lands at 06:xx LA time proceeds.
 export const WEEKLY_TZ = "America/Los_Angeles";
@@ -9,16 +11,13 @@ function laParts(now: Date) {
     new Intl.DateTimeFormat("en-US", {
       timeZone: WEEKLY_TZ,
       weekday: "short",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
       hour: "2-digit",
       hourCycle: "h23",
     })
       .formatToParts(now)
       .map((p) => [p.type, p.value]),
   );
-  return { weekday: parts.weekday, hour: Number(parts.hour), date: `${parts.year}-${parts.month}-${parts.day}` };
+  return { weekday: parts.weekday, hour: Number(parts.hour) };
 }
 
 // True only on a Monday between 06:00 and 06:59 in Los Angeles (Intl handles PDT/PST).
@@ -26,18 +25,6 @@ export function isWeeklyWindow(now: Date): boolean {
   const p = laParts(now);
   return p.weekday === "Mon" && p.hour === WEEKLY_HOUR;
 }
-
-// The LA date of the Monday that starts now's ISO week ("YYYY-MM-DD"): the per-week idempotency key.
-export function laWeekStart(now: Date): string {
-  const { date } = laParts(now);
-  const d = new Date(`${date}T00:00:00Z`);
-  const back = (d.getUTCDay() + 6) % 7; // Monday = 0
-  d.setUTCDate(d.getUTCDate() - back);
-  return d.toISOString().slice(0, 10);
-}
-
-export type EnqueueResult = { enqueued: number; skipped: number; failed?: number };
-export type PruneResult = { lookup_cache: number; rate_events: number };
 
 export type WeeklyDeps = {
   enqueue: (weekStart: string) => Promise<EnqueueResult>;
@@ -75,7 +62,7 @@ export async function runWeekly(deps: WeeklyDeps): Promise<WeeklyOutcome> {
   log(
     `weekly ${weekStart}: ` +
       (e
-        ? `enqueued=${e.enqueued} skipped=${e.skipped} failed=${e.failed ?? 0}`
+        ? `enqueued=${e.enqueued} skipped=${e.skipped} failed=${e.failed}`
         : `enqueue_error=${codeOf((enq as { reason: unknown }).reason)}`) +
       " " +
       (p

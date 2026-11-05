@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { isWeeklyWindow, laWeekStart, runWeekly, type WeeklyDeps } from "@/lib/runs/weekly";
+import { laWeekStart } from "@/lib/queries/weekly";
+import { isWeeklyWindow, runWeekly, type WeeklyDeps } from "@/lib/runs/weekly";
 
 const at = (iso: string) => new Date(iso);
 
@@ -49,7 +50,7 @@ describe("laWeekStart", () => {
 describe("runWeekly", () => {
   const MONDAY = () => at("2026-11-02T14:00:00Z");
   const base = () => ({
-    enqueue: vi.fn<WeeklyDeps["enqueue"]>(async () => ({ enqueued: 3, skipped: 2 })),
+    enqueue: vi.fn<WeeklyDeps["enqueue"]>(async () => ({ enqueued: 3, skipped: 2, failed: 0 })),
     prune: vi.fn<WeeklyDeps["prune"]>(async () => ({ lookup_cache: 7, rate_events: 40 })),
     now: MONDAY,
     log: vi.fn<(l: string) => void>(),
@@ -67,7 +68,13 @@ describe("runWeekly", () => {
     const d = deps();
     expect(await runWeekly(d)).toEqual({
       status: 200,
-      body: { week_start: "2026-11-02", enqueued: 3, skipped: 2, pruned: { lookup_cache: 7, rate_events: 40 } },
+      body: {
+        week_start: "2026-11-02",
+        enqueued: 3,
+        skipped: 2,
+        failed: 0,
+        pruned: { lookup_cache: 7, rate_events: 40 },
+      },
     });
     expect(d.enqueue).toHaveBeenCalledWith("2026-11-02");
     expect(d.log).toHaveBeenCalledWith(
