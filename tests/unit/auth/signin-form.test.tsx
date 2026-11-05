@@ -104,10 +104,18 @@ describe("SignInForm", () => {
     await userEvent.type(screen.getByLabelText(c.emailLabel), "you@ramenhouse.com");
     await userEvent.click(screen.getByRole("button", { name: c.sendLink }));
     expect(await screen.findByRole("status")).toHaveTextContent(c.linkSent("you@ramenhouse.com"));
+    // The link must work in any browser, so next rides in a server-set cookie, not the URL.
     expect(auth.signInWithOtp).toHaveBeenCalledWith({
       email: "you@ramenhouse.com",
-      options: { emailRedirectTo: `${location.origin}/auth/callback?next=%2Fapp%2Fbilling&via=email` },
+      options: { emailRedirectTo: `${location.origin}/auth/callback` },
     });
+    expect(fetch).toHaveBeenCalledWith("/auth/next", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ next: "/app/billing" }),
+    });
+    const order = vi.mocked(fetch).mock.invocationCallOrder[0];
+    expect(order).toBeLessThan(auth.signInWithOtp.mock.invocationCallOrder[0]);
   });
 
   it("shows the send error when the link didn't send", async () => {

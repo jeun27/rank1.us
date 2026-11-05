@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { authCopy as c } from "@/lib/auth/copy";
 import { expectAxeClean, expectNoSideScroll } from "./helpers/forms";
-import { newUser, openMagicLink, workspacesOwnedBy } from "./helpers/auth";
+import { admin, newUser, openMagicLink, workspacesOwnedBy } from "./helpers/auth";
 
 const path = (url: string) => {
   const u = new URL(url);
@@ -70,7 +70,7 @@ test("magic-link form: sends with a callback that carries next, then says where 
   await expect(page.getByRole("main").getByRole("status")).toHaveText(c.linkSent("you@ramenhouse.com"));
   expect(sent).toHaveLength(1);
   expect(sent[0].body.email).toBe("you@ramenhouse.com");
-  expect(path(sent[0].url.searchParams.get("redirect_to")!)).toBe("/auth/callback?next=%2Fapp%2Fbilling&via=email");
+  expect(path(sent[0].url.searchParams.get("redirect_to")!)).toBe("/auth/callback");
   await expectAxeClean(page);
 });
 
@@ -82,6 +82,13 @@ test("magic-link form: a failed send shows the error, a bad email shows the fiel
   await page.getByLabel(c.emailLabel).fill("you@ramenhouse.com");
   await page.getByRole("button", { name: c.sendLink }).click();
   await expect(page.getByRole("main").getByRole("alert")).toHaveText(c.sendError);
+});
+
+test("a callback with no code and no token_hash shows the link banner, not the Google one", async ({ page }) => {
+  // What an implicit-flow link looks like to the server: the tokens sit in the #fragment.
+  await page.goto("/auth/callback#access_token=x&type=signup");
+  expect(path(page.url())).toBe("/signin?error=link");
+  await expect(page.getByRole("main").getByRole("alert")).toHaveText(c.linkExpired);
 });
 
 test("an expired email link comes back to /signin with the link banner", async ({ page }) => {
@@ -218,4 +225,44 @@ test("a cross-site sign-out post is refused and the session stays", async ({ pag
   expect(res.status()).toBe(403);
   await page.goto("/app/onboarding");
   expect(new URL(page.url()).pathname).toBe("/app/onboarding");
+});
+
+test("the email link opened in another browser still lands on next, from the cookie the form set", async ({
+  page,
+  browser,
+}) => {
+  test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
+  await page.route("**/auth/v1/otp**", (r) => r.fulfill({ json: {} }));
+  const user = await newUser("cookie-next");
+  await page.goto("/signin?next=/app/billing");
+  await page.getByLabel(c.emailLabel).fill(user.email);
+  await page.getByRole("button", { name: c.sendLink }).click();
+  await expect(page.getByRole("main").getByRole("status")).toHaveText(c.linkSent(user.email));
+  const next = (await page.context().cookies()).find((k) => k.name === "rank1_next");
+  expect(next).toMatchObject({ value: "/app/billing", httpOnly: true, sameSite: "Lax", path: "/auth" });
+
+  // Same browser: next comes from the cookie, and the cookie is used up.
+  await openMagicLink(page, user.email);
+  expect(new URL(page.url()).pathname).toBe("/app/billing");
+  expect((await page.context().cookies()).find((k) => k.name === "rank1_next")).toBeUndefined();
+
+  // Another browser has no cookie and no PKCE verifier; the token_hash link still signs in.
+  const other = await (await browser.newContext()).newPage();
+  await openMagicLink(other, user.email);
+  expect(new URL(other.url()).pathname).toBe("/app/onboarding");
+  await other.context().close();
+});
+
+test("a confirm-signup token_hash link signs a new user in", async ({ page }) => {
+  test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
+  const email = `signup-${crypto.randomUUID()}@example.test`;
+  const { data, error } = await admin().auth.admin.generateLink({
+    type: "signup",
+    email,
+    password: crypto.randomUUID(),
+  });
+  if (error) throw error;
+  await page.goto(`/auth/callback?token_hash=${data.properties.hashed_token}&type=signup`);
+  expect(new URL(page.url()).pathname).toBe("/app/onboarding");
+  expect(await workspacesOwnedBy(data.user.id)).toHaveLength(1);
 });

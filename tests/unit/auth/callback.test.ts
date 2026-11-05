@@ -12,8 +12,10 @@ vi.mock("@/lib/queries/auth", () => ({
 
 const { GET } = await import("@/app/auth/callback/route");
 
-const call = async (qs: string) => {
-  const res = await GET(new NextRequest(`http://localhost:3000/auth/callback${qs}`));
+const call = async (qs: string, cookie?: string) => {
+  const res = await GET(
+    new NextRequest(`http://localhost:3000/auth/callback${qs}`, { headers: cookie ? { cookie } : {} }),
+  );
   expect(res.status).toBe(307);
   const loc = new URL(res.headers.get("location")!);
   expect(loc.origin).toBe("http://localhost:3000");
@@ -75,12 +77,44 @@ describe("/auth/callback", () => {
     expect(ensureSelfServeWorkspace).not.toHaveBeenCalled();
   });
 
-  it("sends an email-link failure back with the link error", async () => {
-    auth.exchangeCodeForSession.mockResolvedValue({ error: new Error("expired") });
-    expect(await call("?code=abc&via=email")).toBe("/signin?error=link");
+  it.each(["magiclink", "signup", "email"])("verifies a token_hash link of type %s", async (type) => {
+    expect(await call(`?token_hash=th&type=${type}`)).toBe("/app/onboarding");
+    expect(auth.verifyOtp).toHaveBeenCalledWith({ token_hash: "th", type });
+  });
+
+  it("sends an expired or used email link back with the link error", async () => {
     auth.verifyOtp.mockResolvedValue({ error: new Error("expired") });
     expect(await call("?token_hash=th&type=magiclink")).toBe("/signin?error=link");
-    expect(await call("?token_hash=th&type=bogus")).toBe("/signin?error=link");
+  });
+
+  it.each(["?token_hash=th&type=bogus", "?token_hash=th&type=invite", "?token_hash=th", "?type=magiclink"])(
+    "rejects %s with the link error, without verifying",
+    async (qs) => {
+      expect(await call(qs)).toBe("/signin?error=link");
+      expect(auth.verifyOtp).not.toHaveBeenCalled();
+    },
+  );
+
+  it("shows the link banner, never the Google one, when there is no code and no token_hash", async () => {
+    // e.g. an old implicit-flow link: the tokens are in the #fragment, which never reaches the server.
+    expect(await call("")).toBe("/signin?error=link");
+    expect(await call("?next=%2Fapp%2Fbilling")).toBe("/signin?error=link&next=%2Fapp%2Fbilling");
+  });
+
+  it("takes next from the sign-in cookie for email links, and clears it", async () => {
+    const res = await GET(
+      new NextRequest("http://localhost:3000/auth/callback?token_hash=th&type=magiclink", {
+        headers: { cookie: "rank1_next=%2Fapp%2Fbilling" },
+      }),
+    );
+    expect(new URL(res.headers.get("location")!).pathname).toBe("/app/billing");
+    const cleared = res.cookies.get("rank1_next");
+    expect(cleared?.value).toBe("");
+    expect(cleared?.path).toBe("/auth");
+  });
+
+  it("ignores an unsafe next in the cookie", async () => {
+    expect(await call("?token_hash=th&type=magiclink", "rank1_next=%2F%2Fevil.com")).toBe("/app/onboarding");
   });
 
   it("does not leave the user stranded when the workspace call fails", async () => {
