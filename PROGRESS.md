@@ -269,6 +269,16 @@ Review follow-ups (lead, 2026-11-05)
 - Business domain is required (lead): onboarding is domain-first ("Add your domain and I'll find the questions"), and readSite needs it. Competitor domain is optional, because Maps results can lack a website: missing, null or blank is stored as NULL and validated only when present.
 - Open: src/types/db.ts got the two 0009 functions added by hand in the generator format, because the pod disk was full and no local stack could run. Regenerate it with `pnpm db:types` in the next DB PR when a stack is available.
 - Open (Step 11/12 decision): a DFY workspace is owned by the team member who created it, so only that member (and anyone added to workspace_members) reaches it through RLS. Whether every team user sees every DFY client is still to decide.
+## Step 4 (data-pipeline): /admin/test founder engine test page (branch feat/admin-engine-test, refs #15)
+Changed
+- /admin/test: form (engine, question, location level; Irvine, CA) that calls runEngine server-side through a server action and shows status, answer, cited links, location and cost. Raw vendor JSON stays on the server. Copy from docs/COPY.md "Admin (lead, 2026-11-05)". Run test is disabled while engine keys are missing.
+- Gate: proxy (src/lib/supabase/middleware.ts) rewrites /admin/** to a 404 for anyone whose verified email isn't FOUNDER_EMAIL, unset included, so the status is a real 404. The page and its server action also call requireFounder() (getUser() via the Step 3 server client) and notFound().
+- Engines: DATAFORSEO_API_URL / PERPLEXITY_API_URL optional base-URL overrides (e2e points them at tests/e2e/helpers/fake-engines.mjs, which serves the fixtures). stateName() returns undefined for unknown state codes (reviewer note on #16), so Perplexity falls back and AIO fails instead of sending a guess.
+
+Doc differences
+- Next 16 streams pages with a 200 first, so notFound() inside the page can't set a 404 status (node_modules/next/dist/docs, loading.md "Status codes"). The real 404 comes from Proxy, as those docs recommend. The page sets `instant = false` because it reads the session at request time.
+- e2e signs the founder in with magic links. Only one link per user is valid, and both viewport projects sign in at once, so the founder test retries up to 5 times.
+- QA (#22) fix: the proxy matched the raw pathname, so /%61dmin/test and /admin%2Ftest reached the page (soft 404 with status 200). The proxy now matches a normalized path (src/lib/auth/path.ts): segments percent-decoded up to 3 times and re-split on decoded slashes/backslashes, empty and "." segments dropped, ".." resolved, lowercased. Malformed encoding → 404. The same check covers Step 3's /app, /team and /client sign-in redirect.
 
 ## Step 5 (data-pipeline): Maps competitors, readSite, question suggestions (branch feat/step5-onboarding-engines, issue #18)
 Step 5 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
