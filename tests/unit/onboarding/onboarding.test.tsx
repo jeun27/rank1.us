@@ -24,8 +24,10 @@ const five = [
 
 function setup(over: Partial<{ site: SiteRead; search: CompetitorSearch; finish: OnboardingActions["finish"] }> = {}) {
   const actions: OnboardingActions = {
-    readSite: vi.fn(async () => over.site ?? { status: "ok", name: "Example Ramen House", cuisine: "ramen" }),
-    findCompetitors: vi.fn(async () => over.search ?? { status: "ok", items: five }),
+    readSite: vi.fn(
+      async (): Promise<SiteRead> => over.site ?? { status: "ok", name: "Example Ramen House", cuisine: "ramen" },
+    ),
+    findCompetitors: vi.fn(async (): Promise<CompetitorSearch> => over.search ?? { status: "ok", items: five }),
     finish: vi.fn(over.finish ?? (async () => undefined)),
   };
   render(<Onboarding places={places} cuisines={cuisines} actions={actions} />);
