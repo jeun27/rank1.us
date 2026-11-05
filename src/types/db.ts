@@ -470,14 +470,14 @@ isOneToOne: false
                   ]
                 },"reports": {
                   Row: {
-                    "business_id": string,"id": string,"pdf_path": string | null,"period_end": string,"period_start": string,"sent_at": string | null,"sent_to": (string)[],"status": string | null
+                    "attempts": number,"business_id": string,"id": string,"last_error": string | null,"locked_at": string | null,"pdf_path": string | null,"period_end": string,"period_start": string,"sent_at": string | null,"sent_to": (string)[],"status": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "business_id": string,"id"?: string,"pdf_path"?: string | null,"period_end": string,"period_start": string,"sent_at"?: string | null,"sent_to"?: (string)[],"status"?: string | null
+                    "attempts"?: number,"business_id": string,"id"?: string,"last_error"?: string | null,"locked_at"?: string | null,"pdf_path"?: string | null,"period_end": string,"period_start": string,"sent_at"?: string | null,"sent_to"?: (string)[],"status"?: string | null
                   }
                   Update: {
-                    "business_id"?: string,"id"?: string,"pdf_path"?: string | null,"period_end"?: string,"period_start"?: string,"sent_at"?: string | null,"sent_to"?: (string)[],"status"?: string | null
+                    "attempts"?: number,"business_id"?: string,"id"?: string,"last_error"?: string | null,"locked_at"?: string | null,"pdf_path"?: string | null,"period_end"?: string,"period_start"?: string,"sent_at"?: string | null,"sent_to"?: (string)[],"status"?: string | null
                   }
                   Relationships: [
                     {
@@ -631,10 +631,16 @@ isOneToOne: false
 "archive_scheduled_businesses":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
+"can_write_business":
+{ Args: { "p_business_id": string }; Returns: boolean
+                           },
 "cancel_business_removal":
 { Args: { "p_business_id": string }; Returns: undefined
                            },
 "claim_jobs":
+{ Args: { "p_limit": number }; Returns: Json[]
+                           },
+"claim_reports":
 { Args: { "p_limit": number }; Returns: Json[]
                            },
 "client_invite_status":
@@ -655,6 +661,9 @@ isOneToOne: false
 "dismiss_competitor":
 { Args: { "p": Json,"p_business_id": string }; Returns: string
                            },
+"enqueue_monthly_reports":
+{ Args: { "p_month": string }; Returns: Json
+                           },
 "enqueue_weekly_runs":
 { Args: { "p_week_start": string }; Returns: Json
                            },
@@ -663,6 +672,9 @@ isOneToOne: false
                            },
 "finish_job":
 { Args: { "p_answer": Json,"p_citations": Json,"p_job_id": string }; Returns: undefined
+                           },
+"finish_report":
+{ Args: { "p_error": string | null,"p_pdf_path": string | null,"p_report_id": string,"p_sent_to": string[] | null,"p_status": string }; Returns: boolean
                            },
 "grant_dfy_client":
 { Args: { "p_business_id": string,"p_user_id": string }; Returns: string
