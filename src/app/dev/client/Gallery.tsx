@@ -24,6 +24,7 @@ const STATES: Record<string, () => ReactNode> = {
   fixes: () => view({ fixes }),
   partial: () => view({ latest: examplePartial, runs: [exampleFailedRun, ...exampleRuns] }),
   "no-run": () => view({ latest: null, runs: [] }),
+  "no-run-fixes": () => view({ latest: null, runs: [], fixes }),
   removed: () => view({ business: null, latest: null, runs: [] }),
   loading: () => <Skeleton title="Dashboard" />,
   error: () => <ErrorState title="Dashboard" message="We couldn't load your results. Try again." reset={() => {}} />,

@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { expectAxeClean, expectNoSideScroll } from "./helpers/forms";
 
 // Step 12: the DFY client dashboard on Example data (/dev/client, 404 in production). Light only.
-const STATES = ["success", "fixes", "partial", "no-run", "removed", "loading", "error"] as const;
+const STATES = ["success", "fixes", "partial", "no-run", "no-run-fixes", "removed", "loading", "error"] as const;
 
 for (const state of STATES)
   test(`/dev/client ${state}: one H1, axe clean, no side scroll`, async ({ page }) => {
