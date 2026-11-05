@@ -1,10 +1,38 @@
+import { execSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { dbUrl, PUBLIC_TABLES, resetDb, waitForSchema } from "./helpers";
+import { apiUrl, dbUrl, serviceClient } from "./helpers";
 
-const TABLES = [...PUBLIC_TABLES].sort();
+const TABLES = [
+  "workspaces",
+  "workspace_members",
+  "businesses",
+  "competitors",
+  "questions",
+  "runs",
+  "answers",
+  "citations",
+  "domain_categories",
+  "fix_rules",
+  "question_templates",
+  "local_places",
+  "listing_snapshots",
+  "fixes",
+  "experiments",
+  "experiment_questions",
+  "google_tokens",
+  "ai_traffic",
+  "reports",
+  "leads",
+  "contact_requests",
+  "stripe_events",
+  "user_roles",
+  "rate_events",
+  "lookup_cache",
+  "run_jobs",
+].sort();
 
 const dir = (sub: string) => join(process.cwd(), "supabase", sub);
 const sqlFiles = (sub: string) =>
@@ -22,8 +50,39 @@ async function publicTables() {
   return rows;
 }
 
+// db reset restarts the API containers; wait until auth and PostgREST answer again.
+async function waitForApi() {
+  for (let i = 0; i < 60; i++) {
+    try {
+      const [auth, rest] = await Promise.all([fetch(`${apiUrl()}/auth/v1/health`), fetch(`${apiUrl()}/rest/v1/`)]);
+      if (auth.status < 500 && rest.status < 500) return;
+    } catch {}
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+  throw new Error("Supabase API did not come back after db reset");
+}
+
+// `notify pgrst, 'reload schema'` is asynchronous: wait until PostgREST serves every table again,
+// so the next test file doesn't hit a stale schema cache ("Could not find the table ...").
+async function waitForSchema() {
+  for (let i = 0; i < 60; i++) {
+    const results = await Promise.all(
+      TABLES.map((t) =>
+        serviceClient()
+          .from(t as never)
+          .select("*", { head: true })
+          .limit(1),
+      ),
+    );
+    if (results.every((r) => !r.error)) return;
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  throw new Error("PostgREST did not reload the schema after the rollback round-trip");
+}
+
 beforeAll(async () => {
-  await resetDb();
+  execSync("pnpm exec supabase db reset", { stdio: "pipe" });
+  await waitForApi();
   pg = new Client({ connectionString: dbUrl() });
   await pg.connect();
 }, 300_000);

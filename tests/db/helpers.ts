@@ -170,65 +170,15 @@ export async function makeWorkspace(owner: TestUser): Promise<Fixture> {
   };
 }
 
-// Every table in the public schema. migrations.test.ts checks this is complete.
-export const PUBLIC_TABLES = [
-  "workspaces",
-  "workspace_members",
-  "businesses",
-  "competitors",
-  "questions",
-  "runs",
-  "answers",
-  "citations",
-  "domain_categories",
-  "fix_rules",
-  "question_templates",
-  "local_places",
-  "listing_snapshots",
-  "fixes",
-  "experiments",
-  "experiment_questions",
-  "google_tokens",
-  "ai_traffic",
-  "reports",
-  "leads",
-  "contact_requests",
-  "stripe_events",
-  "user_roles",
-  "rate_events",
-  "lookup_cache",
-  "run_jobs",
-] as const;
-
-// PostgREST reloads its schema cache asynchronously after DDL, and answers before it has.
-// Wait until every public table answers, or fail loudly after 30 s.
-export async function waitForSchema() {
-  let last = "";
-  for (let i = 0; i < 120; i++) {
-    try {
-      const results = await Promise.all(
-        PUBLIC_TABLES.map((t) => serviceClient().from(t).select("*", { head: true }).limit(1)),
-      );
-      const failed = results.find((r) => r.error || r.status !== 200);
-      if (!failed) return;
-      last = `${failed.status} ${failed.error?.message ?? ""}`;
-    } catch (e) {
-      last = String(e);
-    }
-    await new Promise((r) => setTimeout(r, 250));
-  }
-  throw new Error(`PostgREST did not serve every public table within 30 s (last: ${last})`);
-}
-
 // `supabase db reset` re-applies migrations and supabase/seed.sql, then restarts the API containers.
 export async function resetDb() {
   execSync("pnpm exec supabase db reset", { stdio: "pipe" });
   for (let i = 0; i < 60; i++) {
     try {
-      const auth = await fetch(`${apiUrl()}/auth/v1/health`);
-      if (auth.status === 200) return waitForSchema();
+      const [auth, rest] = await Promise.all([fetch(`${apiUrl()}/auth/v1/health`), fetch(`${apiUrl()}/rest/v1/`)]);
+      if (auth.status < 500 && rest.status < 500) return;
     } catch {}
     await new Promise((r) => setTimeout(r, 1000));
   }
-  throw new Error("Supabase Auth did not come back after db reset");
+  throw new Error("Supabase API did not come back after db reset");
 }
