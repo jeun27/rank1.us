@@ -10,8 +10,9 @@ import type { SubscriptionStatus } from "@/lib/queries/billing";
 import { billingCopy as c } from "./copy";
 
 export type BillingStatus = SubscriptionStatus | null;
-// No live Stripe subscription: the only states that may start a Checkout (lead, #74 review).
-export const NO_SUBSCRIPTION: ReadonlySet<BillingStatus> = new Set([null, "canceled", "incomplete_expired"]);
+// Only these may start a Checkout (lead, #74): any other status has a subscription, and a Checkout would
+// create a second one. Those go to the Customer Portal.
+export const NO_SUBSCRIPTION: ReadonlySet<BillingStatus> = new Set([null, "canceled"]);
 export type BillingState = { status: BillingStatus; seats: number; nextInvoiceAt: string | null };
 type Open = () => Promise<{ error: string } | undefined | void>;
 
@@ -36,8 +37,9 @@ export function BillingView({
   };
   const { status } = billing;
   const subscribed = !NO_SUBSCRIPTION.has(status);
-  // incomplete: the first payment failed or needs action; past_due/unpaid: a renewal failed.
-  const paymentFailed = status === "past_due" || status === "unpaid" || status === "incomplete";
+  // incomplete(_expired): the first payment failed or needs action; past_due/unpaid: a renewal failed.
+  const paymentFailed =
+    status === "past_due" || status === "unpaid" || status === "incomplete" || status === "incomplete_expired";
 
   return (
     <Page title={c.title}>
@@ -59,6 +61,7 @@ export function BillingView({
             <p className="flex items-center gap-2 text-caption font-semibold text-inkMuted">
               {c.plan}
               {status === "past_due" && <Badge tone="warn">{c.pastDue}</Badge>}
+              {status === "paused" && <Badge tone="warn">{c.paused}</Badge>}
             </p>
             <p data-computed className="font-display text-h3 font-semibold tabular-nums">
               {c.planLine(billing.seats)}

@@ -154,7 +154,7 @@ test("Start for $99/mo goes through sign-in to /app/billing, where it opens Chec
   await openMagicLink(page, user.email, "/app/billing");
   expect(new URL(page.url()).pathname).toBe("/app/billing");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Billing");
-  // Step 14 replaced the disabled stub ("Checkout isn't open yet."): the button now opens Checkout.
+  // Step 14 replaced the disabled paywall stub: the button now opens Checkout.
   await expect(page.getByRole("button", { name: "Start for $99/mo" })).toBeEnabled();
   await expectNoSideScroll(page);
   await expectAxeClean(page);
