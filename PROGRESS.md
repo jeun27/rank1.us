@@ -512,6 +512,7 @@ Step 9 built from ENG_HANDOFF_OVERNIGHT §6 + PRODUCT.md + docs/UI.md; Build Pac
   - Solid: Reddit jellyDeep, YouTube amber, Review sites jelly, News and blogs warnText. These four pass every pair.
   - Striped (45° SVG texture; CSS gradients are aurora-only): Social jellyDeep, Other inkMuted (neutral). Texture tells them from the solid fills, and the two striped fills pass separation from each other (ΔE 16.8).
   - Every segment's count is also shown as text under its bar.
+
 ## Step 10 (data-pipeline): site checks R10, R11, R14 and H1 (branch feat/step10-site-checks)
 Step 10 built from ENG_HANDOFF_OVERNIGHT §4/§6 + SCHEMA.md §5b; Build Pack not readable; A1–A6 seeded disabled; reconcile later.
 Lead decisions (Step 10 brief): detectors only for the enabled rules R10, R11, R14 and H1, using our own fetch, with no paid calls and no LLM. Detection runs once per paid run after it closes complete/partial, from the cron drain, never for free audits. No domain → every site rule is unchecked. fix = upsert, ok = auto-resolve, unchecked = leave as is. R14 fixes only for OAI-SearchBot and PerplexityBot; GPTBot and Google-Extended are info only.
@@ -545,3 +546,12 @@ Changed
   - Extra SELECT policies (*_team_read) on businesses, competitors, questions, runs (no free_audit), answers, citations, fixes and fix_checks, DFY only. Member and dfy_client policies are unchanged.
   - Widened write helpers (O1). The rollback restores the membership-only helpers.
 - Query: listDfyBusinesses (src/lib/queries/team.ts). Every team-page query (getRunResults, getPreviousRun, listRunSummaries, getQuestionsWithLatestAnswers, listCompetitors, listFixes) is tested as a non-member team user. Tests: tests/db/team.test.ts.
+
+## Step 10 (frontend): What to fix next page (branch feat/step10-fixes-page, issue #48)
+
+- Built from ENG_HANDOFF_OVERNIGHT §4/§6 and SCHEMA.md §5b. The Build Pack wasn't readable, so reconcile later. A1–A6 stay seeded disabled.
+- /app/fixes: listFixes → ranked (S→L, ranked server-side), Tidy-ups (hygiene, h2 + h3 cards), and "We couldn’t check this yet." rows from backend's unchecked {rule_key, title}. "Listing and site checks need your website URL" shows when the business has no domain.
+- Status select (To do / Doing / Done) via setFixStatusAction → set_fix_status. Every self-serve member may write, and RLS checks again. On error the value reverts and a Banner shows "We couldn't save that. Try again." (that copy is awaiting the lead's OK). Done removes the fix (only open fixes are listed).
+- The shared FixList (src/components/fixes) is reused by Steps 11/12. There, canWrite={false} renders a read-only status badge.
+- Rule 3: a Measured line (latest run, ok answers) under the H1.
+- Nav: "What to fix next" after Sources. The Dashboard section heading links to /app/fixes (top 3 from getTopFixes, same ranking).

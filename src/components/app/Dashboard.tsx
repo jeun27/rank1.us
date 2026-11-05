@@ -67,7 +67,7 @@ export function Dashboard({
       <Section title={c.competitors}>
         <Leaderboard metrics={latest.metrics} top={5} change={false} />
       </Section>
-      <Section title={c.fixNext}>
+      <Section title={c.fixNext} href="/app/fixes">
         {fixes.length ? (
           <ol className="flex flex-col divide-y divide-border border-y border-border">
             {fixes.map((f) => (

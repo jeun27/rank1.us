@@ -1,5 +1,55 @@
 # QA
 
+## Step 10: What to fix next (role-gated)
+
+Checked 2026-11-05 on main at 11a5303:
+- #50 (ebb004b): fix results and status
+- #51 (59e2a42): site checks R10, R11, R14 and H1
+- #53 (11a5303): what to fix next
+
+The sandbox Docker disk is full, so there was no local Supabase. test-db and e2e come from CI on main's push of 11a5303 (run 42073956031). Unit, typecheck, lint, format and build ran locally in the sandbox, plus a local production build for the /dev/app gallery checks (the Mac was briefly offline). Preview e2e ran from the Mac on #53's preview at cf07774, whose tree is identical to 11a5303. No live paid calls, fixture sites only.
+Preview: https://rank1-bvxxerqea-bryan-flowhighlevels-projects.vercel.app (sha cf07774, READY).
+Sources: Jeun's ENG_HANDOFF_OVERNIGHT §4/§6 Step 10, the lead's brief (rank1-step10.md), docs/SCHEMA.md §5b R10/R11/R14/H1, docs/UI.md 4b "Fix list" row.
+
+Result: PASS. No blocking problems.
+
+### Commands
+
+| Command | Result |
+|---|---|
+| `pnpm test` (sandbox, 11a5303) | PASS. 73 files, 909 tests passed |
+| `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build` (sandbox) | PASS |
+| CI on main push 11a5303 | PASS. test-db 15 files / 318 tests; e2e 284 passed, 2 skipped; test, typecheck, lint, format green |
+| `E2E_BASE_URL=<preview> pnpm e2e` (11a5303 tests) | PASS. 214 passed, 72 skipped (local-stack tests), 0 failed. /dev/app fixes-{success, partial, readonly, empty, loading, error}: one H1, axe clean, no side scroll at 375 and 1280 |
+
+### Checks
+
+| Check | Result | Evidence |
+|---|---|---|
+| Only R10, R11, R14 and H1 have detectors; A1–A6 seeded disabled; disabled rules never produce fixes | PASS | src/lib/fixes has r10-menu, r11-dishes, r14-robots and h1-schema only. Migration 0014 inserts A1–A6 with enabled=false and a PENDING placeholder (on conflict do nothing). record_fix_results refuses any rule that isn't enabled ("Unknown or disabled rule", 22023). cron.test "only rules enabled in fix_rules right now are evaluated and recorded" |
+| Detection: fix / ok / unchecked per rule; filled copy matches SCHEMA exactly | PASS | src/lib/fixes/types.ts templates are SCHEMA §5b's customer copy, verbatim for R10, R11, R14 and H1 (my diff against SCHEMA.md, plus rules.test "templates are the SCHEMA.md §5b customer copy, verbatim"). rules.test covers: a good site ok on all four; no domain → all unchecked; unreachable site → unchecked; robots disallowing Rank1 → page rules unchecked; R10 ok, fix, menu_not_found, menu_ambiguous; R11 fix up to 5 dishes, ok via a heading or FAQ, no_html_menu; R14 missing robots → ok, unreachable → unchecked; H1 ok vs fix with the exact tidy-up copy |
+| R14 fixes only for OAI-SearchBot / PerplexityBot | PASS | r14-robots.ts FIX_BOTS = OAI-SearchBot, PerplexityBot; INFO_BOTS = GPTBot, Google-Extended (info only); paths / and /menu. rules.test "GPTBot and Google-Extended blocks are info only, never a fix", "a search bot's own Allow group beats a * Disallow" |
+| No paid calls; every request to the business host | PASS | rules.test "never calls a paid API: every request goes to the business host"; fetcher.test "refuses other hosts". It reuses readSite's guarded fetcher (SSRF guard, size cap, timeout, robots) |
+| Budget: ≤ 23 requests / 45 s; 1 run per tick with ≥ 60 s left | PASS | evaluate.ts MAX_REQUESTS = 3 + 20 = 23, BUDGET_MS = 45 000; cron.ts MIN_TIME_LEFT_MS = 60 000, one run per tick. fetcher.test "stops at maxRequests (robots counts as one)", "stops once the time budget is spent"; R11 "crawls at most max_pages"; cron.test "skips with less than 60 s left" |
+| Failures still record fix_checks | PASS | cron.test "an evaluate error records every enabled rule as unchecked", "a failing record retries once with every enabled rule unchecked 'error', no new crawl", "both records failing → error, logged without PII, never thrown". db "lists closed paid runs until recorded (all-unchecked counts as recorded)" |
+| Role gate: team + self_serve read/write; dfy_client reads only with fix_list_visible, never writes; why_note never readable | PASS | CI db fixes.test.ts "self-serve members read and write", "team members read and write a dfy business's fix list while it is hidden from the client", "a dfy_client reads only when fix_list_visible is on, and never writes", "a non-member gets nothing", "why_note is never readable by signed-in users, and never in the fix list", "members cannot write fix_checks directly"; record_fix_results refuses signed-in users (42501) |
+| Page: ranked by size (no size shown) | PASS | listFixes / openFixes sort with `bySize` (S → S-M → M → M-L → L, then rule key). db shell.test "returns open fixes ranked by size then rule key, never tidy-ups or why_note". Gallery at both widths: no size label shown |
+| Tidy-ups only H1 | PASS | openFixes splits by the hygiene group (H1); unit "H1 only under Tidy-ups, never in the ranked list"; gallery shows a "Tidy-ups" section after the ranked list |
+| "We couldn’t check this yet." rows; no-URL note; empty copy | PASS | gallery fixes-partial: 2 rows "We couldn’t check this yet." and the note "Listing and site checks need your website URL" once; fixes-empty: "Nothing to fix yet. Run your first check." (UI.md 4b) |
+| Status control for writers only; error banner | PASS | gallery: 4 labelled Status selects on fixes-success, 0 on fixes-readonly; set_fix_status checks can_write_fixes. Unit "a failed status change shows the banner and puts the old value back"; fixes-error shows the 4b banner "We couldn't load your results. Try again." |
+| No 'Start a before/after test' | PASS | absent from every fixes state; unit "empty: … no 'Start a before/after test' (Step 17)" |
+| Measured n equals the Dashboard's | PASS | src/app/app/fixes/page.tsx uses `runMeasured(runs[0])` from loadShell's latest complete/partial run, the run the Dashboard uses. Its n is the run summary, proven equal to computeMetrics by the Step 8 parity test |
+| Dashboard top 3 excludes H1 and links to /app/fixes | PASS | getTopFixes = openFixes().ranked (never tidy-ups); db "never tidy-ups or why_note, at most the limit"; dashboard-success has a link to /app/fixes; nav has "What to fix next" after Sources |
+| No internal text | PASS | no why_note, PENDING, vendor names or data_source on any gallery state |
+
+Not blocking (dev gallery only):
+- /dev/app fixes states use invented "Example data: …" titles and details instead of the SCHEMA copy that detectors write, and list R10 (M-L), R11 (L), R14 (S) in that order rather than ranked by size. The real page shows detector text and sorts by size (tests above), so only the Visuals don't match production.
+- The fixes gallery's Measured line uses a fixed `answers: 38`, while the Dashboard gallery shows 240. On the real pages both come from the same latest run.
+
+### Blocking problems
+
+None.
+
 ## Step 9: Source chart + location view (re-run)
 
 Checked 2026-11-05 on main at b2cd487:
