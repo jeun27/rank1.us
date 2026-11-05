@@ -52,3 +52,10 @@
 - [ ] 5. Finish setup calls createBusinessOnboarding, then /app (waits on feat/step5-onboarding-db).
 - [ ] 6. Site read and Maps lookup through readSite / findLocalCompetitors (waits on feat/step5-onboarding-engines).
 - [ ] 7. e2e at 375 and 1280 (axe, keyboard, sign in to DB rows) green in CI; visuals for each state.
+
+## Step 7 (frontend): audit progress, results and exports (issue #33)
+- [x] 1. /app/runs/[runId] (member only) and /audit/[token] (unknown token 404), with Audit progress (polling every 5 s) and Audit results per UI.md 4b.
+- [x] 2. Free page: paywall card to /signin?next=/app/billing and the Powered by Rank1 credit; never on paid.
+- [x] 3. export.csv and export.png (next/og) for both, as no-store attachments.
+- [x] 4. /audit/*: no-referrer, noindex/nofollow, noreferrer cited links, no lead email.
+- [x] 5. /dev/audit gallery, e2e at 375 and 1280 (axe, keyboard), visuals per state.

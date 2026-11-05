@@ -386,3 +386,12 @@ UNVERIFIED
   - ClaimedJob.question.id is now string | null.
 - Tests: tests/db/free-audit.test.ts.
 - src/types/db.ts got the 0012 objects added by hand in the generator format (no local stack). Regenerate it with `pnpm db:types` when a stack is available.
+
+## Step 7 (frontend): audit progress, results and exports (branch feat/step7-audit, issue #33)
+Step 7 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
+- /app/runs/[runId] (members, through RLS getRunResults) and /audit/[token] (service role, getFreeAuditByToken) share AuditView: UI.md 4b Audit progress and Audit results. The free page adds the 'Start for $99/mo' card and the Powered by Rank1 credit; the paid page never shows the credit.
+- Per-engine progress comes from run.jobs_total (3q/3q/3q/q) and the answers so far (lead: run_jobs has no member read path). While a run is queued or running, the page refreshes every 5 s.
+- Exports: export.csv (toCsv) and export.png (next/og, 1200×630) under both routes, with Content-Disposition attachment, Cache-Control no-store, noindex and a [a-z0-9.-] filename. An unknown run or token is a 404.
+- Token privacy (lead): /audit/* sends Referrer-Policy: no-referrer and X-Robots-Tag: noindex, nofollow (next.config headers), the page has robots noindex,nofollow, cited links use rel="noopener noreferrer", and the lead email is never rendered.
+- /dev/audit?state=… shows every state with Example data (404 in production).
+- Doc difference: citations.category is typed string in the result query and Category in computeMetrics. The loader casts it, because Step 6 stores only categorize() values.
