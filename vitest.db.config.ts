@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import { execSync } from "node:child_process";
 import { defineConfig } from "vitest/config";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -16,6 +17,8 @@ function localSupabaseEnv(): Record<string, string> {
 
 export default defineConfig({
   plugins: [tsconfigPaths()],
+  // "server-only" throws outside a React Server build; tests import server modules directly.
+  resolve: { alias: { "server-only": resolve("tests/stubs/server-only.ts") } },
   test: {
     environment: "node",
     include: ["tests/db/**/*.test.ts"],
