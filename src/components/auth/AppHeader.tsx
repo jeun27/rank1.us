@@ -4,14 +4,18 @@ import { navLink } from "@/components/site/Header";
 import { Logo } from "@/components/ui/Logo";
 import { authCopy as c } from "@/lib/auth/copy";
 
-// Signed-in header for /app and /client: logo home link + the Account menu.
-export function AppHeader() {
+// Signed-in header for /app and /client: logo home link, the /app Business switcher (left of the
+// account menu, UI.md), and the Account menu.
+export function AppHeader({ switcher }: { switcher?: ReactNode }) {
   return (
-    <header className="mx-auto flex max-w-page items-center justify-between px-5 py-3 md:px-8">
+    <header className="mx-auto flex max-w-page items-center justify-between gap-3 px-5 py-3 md:px-8">
       <Link href="/" className={navLink} aria-label="Rank1">
         <Logo />
       </Link>
-      <AccountMenu />
+      <div className="flex min-w-0 items-center gap-2">
+        {switcher}
+        <AccountMenu />
+      </div>
     </header>
   );
 }

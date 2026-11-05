@@ -1,23 +1,22 @@
 import type { Metadata } from "next";
-import { Placeholder } from "@/components/auth/Placeholder";
-import { PricingCard } from "@/components/site/Pricing";
-import { Button } from "@/components/ui/Button";
-import { authCopy as c } from "@/lib/auth/copy";
+import { connection } from "next/server";
+import { BillingView, type BillingStatus } from "@/components/billing/BillingView";
+import { getBillingState } from "@/lib/queries/billing";
+import { createClient } from "@/lib/supabase/server";
+import { checkoutAction, portalAction } from "./actions";
 
 export const metadata: Metadata = { title: "Billing - Rank1", robots: { index: false } };
 
-// Paywall stub until Step 14 opens Stripe Checkout.
-export default function BillingPage() {
+// UI.md 4b Billing. State is the webhook's (stored on the workspace), never the Checkout success URL.
+export default async function BillingPage() {
+  await connection();
+  const billing = await getBillingState(await createClient());
+  // "paused" isn't a UI.md state: shown as no plan until the lead says otherwise.
+  const status = (billing?.status === "paused" ? null : (billing?.status ?? null)) as BillingStatus;
   return (
-    <Placeholder title="Billing">
-      <PricingCard>
-        <Button disabled aria-describedby="checkout-closed">
-          Start for $99/mo
-        </Button>
-        <p id="checkout-closed" className="text-caption text-inkMuted">
-          {c.checkoutClosed}
-        </p>
-      </PricingCard>
-    </Placeholder>
+    <BillingView
+      billing={{ status, seats: billing?.seats ?? 0, nextInvoiceAt: billing?.nextInvoiceAt ?? null }}
+      actions={{ checkout: checkoutAction, portal: portalAction }}
+    />
   );
 }
