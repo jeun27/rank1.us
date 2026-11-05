@@ -234,7 +234,7 @@ describe("question deleted mid-run", () => {
     await finishJob(s, goneJobs[0].job_id, ok(true), []);
     expect(await runOf(runId)).toMatchObject({ jobs_total: 20, jobs_ok: 6, status: "running" });
 
-    must(await s.from("questions").delete().eq("id", gone));
+    must(await s.from("questions").delete().eq("id", gone!));
     expect(await runOf(runId)).toMatchObject({ jobs_total: 10, jobs_ok: 5, jobs_failed: 0, status: "running" });
     await finishJob(s, goneJobs[1].job_id, ok(true), []);
 
@@ -257,7 +257,7 @@ describe("question deleted mid-run", () => {
     for (const job of jobs.filter((j) => j.question.id === keep)) await finishJob(s, job.job_id, ok(true), []);
     expect((await runOf(runId)).status).toBe("running");
 
-    must(await s.from("questions").delete().eq("id", gone));
+    must(await s.from("questions").delete().eq("id", gone!));
     const run = await runOf(runId);
     expect(run).toMatchObject({ jobs_total: 10, jobs_ok: 10, status: "complete" });
     expect(run.finished_at).not.toBeNull();
