@@ -4,9 +4,9 @@ import type { DbClient } from "./client";
 
 export type RunKind = "audit" | "weekly";
 
-// Starts a run for a business (member's client or the service client). Returns the run id.
-// Errors: 42501 not allowed, P0402 subscription required, P0409 a run is already in progress,
-// 22023 bad kind, archived business or no active questions.
+// Starts a run. Members: audit only, one per business per 24 h; the service role: audit or weekly.
+// Errors: 42501 not allowed, P0402 subscription required, P0409 run in progress, P0429 audit limit,
+// 22023 bad kind, archived business or no active questions. Returns the run id.
 export async function createRun(db: DbClient, businessId: string, kind: RunKind): Promise<string> {
   const { data, error } = await db.rpc("create_run", { p_business_id: businessId, p_kind: kind });
   if (error) throw error;

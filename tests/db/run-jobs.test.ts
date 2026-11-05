@@ -139,7 +139,7 @@ describe("create_run", () => {
 
   it("allows trialing workspaces and the service role", async () => {
     const trial = await business("run-trial", 1, { paid: "trialing" });
-    await createRun(trial.user.db, trial.businessId, "weekly");
+    await createRun(trial.user.db, trial.businessId, "audit");
     const other = await business("run-service", 2);
     const runId = await createRun(serviceClient(), other.businessId, "weekly");
     expect(await jobsOf(runId)).toHaveLength(20);
@@ -166,7 +166,8 @@ describe("create_run", () => {
   it("refuses a second run while one is queued or running (P0409)", async () => {
     const { user, businessId } = await business("run-twice", 1);
     await createRun(user.db, businessId, "audit");
-    await expect(createRun(user.db, businessId, "weekly")).rejects.toMatchObject({ code: "P0409" });
+    await expect(createRun(user.db, businessId, "audit")).rejects.toMatchObject({ code: "P0409" });
+    await expect(createRun(serviceClient(), businessId, "weekly")).rejects.toMatchObject({ code: "P0409" });
   });
 
   it("refuses free_audit, an unknown kind, no active questions and archived businesses (22023)", async () => {
@@ -180,6 +181,87 @@ describe("create_run", () => {
       await serviceClient().from("businesses").update({ archived_at: new Date().toISOString() }).eq("id", businessId),
     );
     await expect(createRun(user.db, businessId, "audit")).rejects.toMatchObject({ code: "22023" });
+  });
+});
+
+describe("member spend cap", () => {
+  const close = async (runId: string, patch: Record<string, unknown> = {}) =>
+    must(
+      await serviceClient()
+        .from("runs")
+        .update({ status: "complete", ...patch })
+        .eq("id", runId),
+    );
+
+  it("weekly runs are service role only", async () => {
+    const { user, businessId } = await business("cap-weekly", 1);
+    await expect(createRun(user.db, businessId, "weekly")).rejects.toMatchObject({ code: "42501" });
+    expect(await jobsOf(await createRun(serviceClient(), businessId, "weekly"))).toHaveLength(10);
+  });
+
+  it("a member gets one audit per business per rolling 24 h (P0429); the service role is not capped", async () => {
+    const { user, businessId } = await business("cap-audit", 1);
+    const first = await createRun(user.db, businessId, "audit");
+    await close(first);
+    await expect(createRun(user.db, businessId, "audit")).rejects.toMatchObject({ code: "P0429" });
+    const byService = await createRun(serviceClient(), businessId, "audit");
+    await close(byService);
+    await expect(createRun(user.db, businessId, "audit")).rejects.toMatchObject({ code: "P0429" });
+  });
+
+  it("a failed audit does not count, and the cap resets after 24 h", async () => {
+    const { user, businessId } = await business("cap-reset", 1);
+    const failedRun = await createRun(user.db, businessId, "audit");
+    await close(failedRun, { status: "failed" });
+    const second = await createRun(user.db, businessId, "audit");
+    await close(second, { started_at: new Date(Date.now() - 25 * 3600 * 1000).toISOString() });
+    await createRun(user.db, businessId, "audit");
+  });
+});
+
+describe("question deleted mid-run", () => {
+  it("drops its jobs from the run, which still finishes with the right totals", async () => {
+    const { user, businessId } = await business("delete-mid", 2);
+    await drain();
+    const runId = await createRun(user.db, businessId, "audit");
+    const jobs = (await drain()).filter((j) => j.run_id === runId);
+    const [keep, gone] = [...new Set(jobs.map((j) => j.question.id))];
+    const keepJobs = jobs.filter((j) => j.question.id === keep);
+    const goneJobs = jobs.filter((j) => j.question.id === gone);
+    const s = serviceClient();
+
+    for (const job of keepJobs.slice(0, 5)) await finishJob(s, job.job_id, ok(true), []);
+    await finishJob(s, goneJobs[0].job_id, ok(true), []);
+    expect(await runOf(runId)).toMatchObject({ jobs_total: 20, jobs_ok: 6, status: "running" });
+
+    must(await s.from("questions").delete().eq("id", gone));
+    expect(await runOf(runId)).toMatchObject({ jobs_total: 10, jobs_ok: 5, jobs_failed: 0, status: "running" });
+    await finishJob(s, goneJobs[1].job_id, ok(true), []);
+
+    for (const job of keepJobs.slice(5)) await finishJob(s, job.job_id, ok(false), []);
+    const run = await runOf(runId);
+    expect(run).toMatchObject({ jobs_total: 10, jobs_ok: 10, jobs_failed: 0, status: "complete" });
+    expect(run.finished_at).not.toBeNull();
+    expect(await jobsOf(runId)).toHaveLength(10);
+
+    await createRun(s, businessId, "weekly");
+  });
+
+  it("closes the run at once when the deleted question held the last open jobs", async () => {
+    const { user, businessId } = await business("delete-last", 2);
+    await drain();
+    const runId = await createRun(user.db, businessId, "audit");
+    const jobs = (await drain()).filter((j) => j.run_id === runId);
+    const [keep, gone] = [...new Set(jobs.map((j) => j.question.id))];
+    const s = serviceClient();
+    for (const job of jobs.filter((j) => j.question.id === keep)) await finishJob(s, job.job_id, ok(true), []);
+    expect((await runOf(runId)).status).toBe("running");
+
+    must(await s.from("questions").delete().eq("id", gone));
+    const run = await runOf(runId);
+    expect(run).toMatchObject({ jobs_total: 10, jobs_ok: 10, status: "complete" });
+    expect(run.finished_at).not.toBeNull();
+    await createRun(s, businessId, "weekly");
   });
 });
 

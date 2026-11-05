@@ -23,10 +23,12 @@ revoke all on table public.run_jobs from anon, authenticated;
 create unique index citations_answer_id_url_key on public.citations (answer_id, url);
 
 -- Starts a run: 10 jobs per active question (ChatGPT x3, Gemini x3, Google AIO x3, Perplexity x1).
--- Paid workspaces (active/trialing) or DFY businesses only, one queued/running run per business.
+-- Paid or DFY only, one open run per business. Weekly runs are service role only (Step 13 cron);
+-- members may start one audit per business per rolling 24 h (a failed run doesn't count).
 create function public.create_run(p_business_id uuid, p_kind text) returns uuid
 language plpgsql security definer set search_path = '' as $$
 declare
+  is_service boolean := coalesce(auth.role(), '') = 'service_role';
   b public.businesses;
   sub text;
   n int;
@@ -36,7 +38,7 @@ begin
     raise exception 'Run kind must be audit or weekly' using errcode = 'invalid_parameter_value';
   end if;
   select * into b from public.businesses where id = p_business_id for update;
-  if not found or (coalesce(auth.role(), '') <> 'service_role' and not private.is_business_member(b.id)) then
+  if not found or (not is_service and (p_kind <> 'audit' or not private.is_business_member(b.id))) then
     raise exception 'Not allowed to start a run for this business' using errcode = 'insufficient_privilege';
   end if;
   if b.archived_at is not null then
@@ -48,6 +50,12 @@ begin
   end if;
   if exists (select 1 from public.runs where business_id = b.id and status in ('queued', 'running')) then
     raise exception 'run_in_progress' using errcode = 'P0409';
+  end if;
+  if not is_service and exists (
+    select 1 from public.runs
+    where business_id = b.id and kind = 'audit' and status <> 'failed' and started_at > now() - interval '24 hours'
+  ) then
+    raise exception 'audit_limit' using errcode = 'P0429';
   end if;
   select count(*) into n from public.questions where business_id = b.id and active;
   if n = 0 then
@@ -67,8 +75,39 @@ begin
 end;
 $$;
 
--- Stores one job's answer (and citations), sets the job's final status, then recomputes the
--- run's counts and status from its answers. The run row lock serializes recomputes per run.
+-- Recomputes a run from the jobs that still exist and their answers, so a question deleted
+-- mid-run (its jobs cascade away) can't leave the run open. Locks the run row first.
+create function private.recompute_run(p_run_id uuid) returns void
+language plpgsql security definer set search_path = '' as $$
+declare
+  total int;
+  open_n int;
+  ok_n int;
+  fail_n int;
+  cost numeric;
+begin
+  perform 1 from public.runs where id = p_run_id for update;
+  select count(*), count(*) filter (where j.status in ('queued', 'running')),
+         count(*) filter (where a.status in ('ok', 'no_overview')), count(*) filter (where a.status = 'failed'),
+         coalesce(sum(a.cost_usd), 0)
+  into total, open_n, ok_n, fail_n, cost
+  from public.run_jobs j
+  left join public.answers a
+    on a.run_id = j.run_id and a.question_id = j.question_id and a.engine = j.engine and a.run_index = j.run_index
+  where j.run_id = p_run_id;
+  update public.runs
+  set jobs_total = total, jobs_ok = ok_n, jobs_failed = fail_n, cost_usd = cost,
+      status = case when open_n > 0 then case when status = 'queued' and ok_n + fail_n = 0 then 'queued' else 'running' end
+                    when ok_n = 0 then 'failed'
+                    when fail_n = 0 then 'complete'
+                    else 'partial' end,
+      finished_at = case when open_n = 0 then coalesce(finished_at, now()) end
+  where id = p_run_id;
+end;
+$$;
+
+-- Stores one job's answer (and citations), sets the job's final status and recomputes the run.
+-- A missing job (its question was deleted mid-run) or a finished one is a no-op.
 create function private.complete_job(p_job_id uuid, p_answer jsonb, p_citations jsonb, p_final text)
 returns void
 language plpgsql security definer set search_path = '' as $$
@@ -77,15 +116,9 @@ declare
   q public.questions;
   st text := p_answer ->> 'status';
   aid uuid;
-  ok_n int;
-  fail_n int;
-  cost numeric;
 begin
   select * into j from public.run_jobs where id = p_job_id for update;
-  if not found then
-    raise exception 'Unknown job %', p_job_id using errcode = 'invalid_parameter_value';
-  end if;
-  if j.status in ('done', 'failed') then
+  if not found or j.status in ('done', 'failed') then
     return;
   end if;
   if st is null or st not in ('ok', 'failed', 'no_overview') then
@@ -117,22 +150,11 @@ begin
       last_error = case when st = 'failed' then left(p_answer ->> 'error', 1000) else last_error end
   where id = j.id;
 
-  select count(*) filter (where status in ('ok', 'no_overview')), count(*) filter (where status = 'failed'),
-         coalesce(sum(cost_usd), 0)
-  into ok_n, fail_n, cost
-  from public.answers where run_id = j.run_id;
-  update public.runs
-  set jobs_ok = ok_n, jobs_failed = fail_n, cost_usd = cost,
-      status = case when ok_n + fail_n < jobs_total then 'running'
-                    when fail_n = 0 then 'complete'
-                    when ok_n = 0 then 'failed'
-                    else 'partial' end,
-      finished_at = case when ok_n + fail_n >= jobs_total then coalesce(finished_at, now()) end
-  where id = j.run_id;
+  perform private.recompute_run(j.run_id);
 end;
 $$;
 
--- Worker result for one claimed job. Idempotent: a job that is already done is left alone.
+-- Worker result for one claimed job. Idempotent: a finished or deleted job is left alone.
 create function public.finish_job(p_job_id uuid, p_answer jsonb, p_citations jsonb) returns void
 language sql security definer set search_path = '' as $$
   select private.complete_job(p_job_id, p_answer, p_citations, 'done');
@@ -201,9 +223,27 @@ begin
 end;
 $$;
 
+-- Jobs deleted with their question: recompute each affected run once per statement.
+create function private.recompute_runs_after_job_delete() returns trigger
+language plpgsql security definer set search_path = '' as $$
+declare
+  r uuid;
+begin
+  for r in select distinct run_id from gone loop
+    perform private.recompute_run(r);
+  end loop;
+  return null;
+end;
+$$;
+create trigger run_jobs_recompute_after_delete
+  after delete on public.run_jobs
+  referencing old table as gone
+  for each statement execute function private.recompute_runs_after_job_delete();
+
 -- Supabase grants EXECUTE on new public functions to anon by default. The worker functions are
 -- service role only; create_run is also for signed-in members.
 revoke all on function public.create_run(uuid, text), public.finish_job(uuid, jsonb, jsonb),
   public.job_error(uuid, text), public.claim_jobs(int) from public, anon, authenticated;
 grant execute on function public.create_run(uuid, text) to authenticated;
-revoke all on function private.complete_job(uuid, jsonb, jsonb, text) from public;
+revoke all on function private.complete_job(uuid, jsonb, jsonb, text), private.recompute_run(uuid),
+  private.recompute_runs_after_job_delete() from public;
