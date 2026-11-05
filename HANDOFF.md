@@ -63,3 +63,9 @@ Requests between agents (for example, a new field frontend needs from backend). 
   - Team client: `listClientUsers(db, businessId)` → { user_id, email, added_at, signed_in }[] and `setFixListVisible(db, businessId, visible)`. Both throw 42501 for non-team callers or self-serve businesses.
   - Lead: never log or echo the email.
   - Status: done.
+- 2026-11-05, backend -> data-pipeline: Step 13 on feat/step13-weekly-enqueue (src/lib/queries/weekly.ts, service client).
+  - `laWeekStart(now?)` → "YYYY-MM-DD", the LA Monday of now's week.
+  - `enqueueWeeklyRuns(serviceDb, laWeekStart(now))` → { enqueued, skipped, failed }. Idempotent. 22023 if weekStart isn't the current LA week's Monday.
+  - `pruneEphemeral(serviceDb)` → { lookup_cache, rate_events } (deleted counts).
+  - Both throw 42501 for non-service callers. Log the counts only.
+  - Status: done.

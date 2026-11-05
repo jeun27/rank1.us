@@ -604,7 +604,6 @@ Changed
   - Team only: set_fix_list_visible and list_client_users (emails for team only).
 - Queries (server only, src/lib/queries/clients.ts): inviteClient (injectable invite fn; CI has no mail server), removeClient, listClientUsers, setFixListVisible. Tests: tests/db/clients.test.ts.
 - src/types/db.ts got the 0016 functions added by hand in the generator format. Regenerate it with `pnpm db:types` when a stack is available.
-- QA #58 gallery fidelity (#57): the /dev/app fixes fixtures use the fix_rules titles and §5b copy filled for a made-up site, in bySize order (R14, R10, R11), with no answer count for site rules. The fixes states take n from the Dashboard gallery metrics (240). tests/unit/fixes/example-data.test.ts checks titles against seed.sql, details against COPY, and the order.
 
 ## Step 12 (frontend): DFY client dashboard and invites (branch feat/step12-client, issue #59)
 
@@ -634,3 +633,18 @@ Changed
 - Empty states: no business → "Nothing tracked yet." (no button); no run → "No weekly checks yet. Your first one runs Monday.". Plus loading and error.
 - Gallery: /dev/client (success, fixes, partial, no-run, removed, loading, error); the /dev/team gallery gains the Clients tab.
 - DB e2e: tests/e2e/client-invite.spec.ts. An admin invite link + grant_dfy_client (what inviteClient does, without mail) → /client; no fixes until the toggle; existing account and Already invited; Remove access → "Nothing tracked yet."
+
+## Step 13 (backend): weekly run enqueue and cache pruning (branch feat/step13-weekly-enqueue, issue #67)
+- Step 13 built from ENG_HANDOFF_OVERNIGHT §6; Build Pack not readable; reconcile later.
+- Lead decisions:
+  - /api/cron/weekly at "0 13,14 * * 1" UTC, which proceeds only on Monday 06:xx America/Los_Angeles (DST-safe), with a constant-time CRON_SECRET check.
+  - Eligible = active business + (active/trialing subscription or service 'dfy'). Skip it if it already has a weekly run this ISO week (LA) or an open run.
+  - Enqueue only: the run-jobs cron drains. Counts-only logs.
+  - Prune lookup_cache > 24 h and rate_events > 48 h on the same fire. No UI change and no new env.
+  - No unique index (lead): the business row lock plus create_run's one-open-run rule keep it idempotent.
+- Migration 20261105000017 (+ .down.sql), service only:
+  - enqueue_weekly_runs(week_start) → {enqueued, skipped, failed}. week_start must be the current LA week's Monday. Each business runs in its own subtransaction, so one failure never aborts the rest, and no active questions = skipped.
+  - prune_ephemeral() → {lookup_cache, rate_events}.
+- Queries: laWeekStart, enqueueWeeklyRuns, pruneEphemeral (src/lib/queries/weekly.ts).
+- Cleanup: removed the duplicate "QA #58 gallery fidelity" line under Step 12 (backend). The original under Step 10 (frontend) stays.
+- src/types/db.ts got the 0017 functions added by hand in the generator format.
