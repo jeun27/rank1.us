@@ -41,7 +41,7 @@ begin
   if coalesce(p ->> 'event_id', '') = '' or coalesce(p ->> 'event_type', '') = '' or created is null then
     raise exception 'event_id, event_type and event_created are required' using errcode = 'invalid_parameter_value';
   end if;
-  if st is null or st not in ('active', 'trialing', 'past_due', 'canceled', 'unpaid', 'incomplete', 'incomplete_expired') then
+  if st is null or st not in ('active', 'trialing', 'past_due', 'canceled', 'unpaid', 'incomplete', 'incomplete_expired', 'paused') then
     raise exception 'Unknown subscription status' using errcode = 'invalid_parameter_value';
   end if;
   if (p ->> 'quantity') is not null and (p ->> 'quantity')::int < 0 then
