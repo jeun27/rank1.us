@@ -46,6 +46,7 @@ async function missingResult(pathname: string, supabase: ReturnType<typeof creat
   return false;
 }
 
+// Refreshes the session cookie on every request and sends signed-out visitors of /app, /team and /client to /signin.
 export async function updateSession(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const env = supabaseEnv();
