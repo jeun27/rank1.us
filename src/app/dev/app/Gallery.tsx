@@ -5,6 +5,8 @@ import { HistoryView } from "@/components/app/HistoryView";
 import { QuestionsView } from "@/components/app/QuestionsView";
 import { SourcesView } from "@/components/app/SourcesView";
 import { latestMeasured, Measured, Page } from "@/components/app/Page";
+import { BillingView } from "@/components/billing/BillingView";
+import { BusinessSwitcher, type SwitcherBusiness } from "@/components/billing/BusinessSwitcher";
 import { FixList } from "@/components/fixes/FixList";
 import { exampleFixes as fixes, exampleTidyUps, exampleUnchecked } from "@/components/fixes/example-data";
 import { ErrorState, Skeleton } from "@/components/app/states";
@@ -146,7 +148,44 @@ export const STATES: Record<string, () => React.ReactNode> = {
   "history-error": () => (
     <ErrorState title="History" message="We couldn't load your history. Try again." reset={() => {}} />
   ),
+  "billing-unpaid": () => <BillingView billing={{ status: null, seats: 0, nextInvoiceAt: null }} actions={billing} />,
+  "billing-paid": () => <BillingView billing={paidPlan} actions={billing} />,
+  "billing-past-due": () => <BillingView billing={{ ...paidPlan, status: "past_due" }} actions={billing} />,
+  "billing-failed": () => <BillingView billing={{ ...paidPlan, status: "unpaid" }} actions={billing} />,
+  "billing-incomplete": () => <BillingView billing={{ ...paidPlan, status: "incomplete" }} actions={billing} />,
+  "billing-paused": () => <BillingView billing={{ ...paidPlan, status: "paused" }} actions={billing} />,
+  "billing-loading": () => <Skeleton title="Billing" />,
+  "billing-error": () => <ErrorState title="Billing" message={results} reset={() => {}} />,
+  "switcher-one": () => <WithSwitcher businesses={switcherBusinesses.slice(0, 1)} />,
+  "switcher-many": () => <WithSwitcher businesses={switcherBusinesses} />,
 };
+
+// Example data: invented businesses and a paid plan. The switcher writes nothing here.
+const billing = { checkout: noop, portal: noop };
+const paidPlan = { status: "active" as const, seats: 3, nextInvoiceAt: "2026-12-01T00:00:00Z" };
+const switcherBusinesses: SwitcherBusiness[] = [
+  { id: "b1", name: "Example Ramen House", city: "Irvine", visibility: exampleRuns[0].visibility, active: true },
+  { id: "b2", name: "Example Taco Stand", city: "Tustin", visibility: exampleRuns[1].visibility, active: true },
+  { id: "b3", name: "Example Pho Spot", city: "Costa Mesa", visibility: null, active: false },
+];
+function WithSwitcher({ businesses }: { businesses: SwitcherBusiness[] }) {
+  return (
+    <div className="flex w-full flex-col">
+      <header className="flex items-center gap-3 px-5 py-3 md:px-8">
+        <BusinessSwitcher
+          businesses={businesses}
+          currentId="b1"
+          seats={businesses.length}
+          periodEnd="2026-12-01T00:00:00Z"
+          actions={{ select: noop, add: noop, remove: noop, seats: async () => businesses.length }}
+        />
+      </header>
+      <Page title="Dashboard">
+        <p className="text-ui">{"Example data."}</p>
+      </Page>
+    </div>
+  );
+}
 
 export function Gallery({ state = "dashboard-success", location: picked }: { state?: string; location?: string }) {
   // The location form round trip (QA #49): the form submits back here with ?location=.

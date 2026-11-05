@@ -708,3 +708,24 @@ Changed
   - A live key or a missing secret → 500 {error: "not_configured"}.
 - src/lib/stripe/service.ts (server-only): startCheckout(callerDb, quantity, urls), addBusinessSeat(callerDb), removeBusinessAtPeriodEnd(callerDb, businessId), openPortal(callerDb, returnUrl). Review (#73): each takes the caller's own client and derives the workspace from getBillingState(callerDb). Removal first checks the business is in listMyBusinesses(callerDb) (RLS), before any Stripe call or schedule_business_removal, so no cross-tenant archive. Stripe ids are read with the service client and never sent to the browser.
 - Stripe's `paused` subscription status is in 0018's SubscriptionStatus (backend added it), so a paused subscription applies instead of failing with 22023.
+
+## Step 14 (frontend): billing page and business switcher (branch feat/step14-billing-ui)
+
+- Step 14 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b. The Build Pack isn't readable, so reconcile later.
+- Lead decisions: hosted Checkout and Customer Portal (server actions redirect; no publishable key); quantity = active self-serve businesses; the webhook is the source of truth; amounts in the UI are only the UI.md x $99 math.
+- BillingView: no plan (null/canceled/incomplete) → the Pricing card + 'Start for $99/mo' (Checkout); past_due → the failed banner + 'Update card' (portal) + the "Past due" badge; unpaid → the failed banner + 'Update card'; active/trialing → "Plan", "{n} businesses x $99 = ${n×99}/mo", "Next invoice {date}", 'Manage billing' (portal, spinner while opening). Plus loading and error.
+- BusinessSwitcher (header): the name only with 1 business. Otherwise:
+  - a popover (bottom sheet on phones, 56px rows): name, city, '34% · 250 answers', and a moss/brick status dot with "Active"/"Paused" for screen readers;
+  - max height 360, search over 8;
+  - '+ Add a business ($99/mo)' and the agency caption;
+  - "More for {name}" → 'Remove business'.
+  The Add and Remove dialogs use the exact UI.md text (Dialog: focus in, Tab trapped, Esc, focus returns).
+- Add: actions.add (quantity +1 with default proration, or Checkout when unpaid). Then it polls seats every 2 s until seats_quantity rises → /app/onboarding. After 30 s it keeps "Adding your business…" with "Try again" and no error (lead).
+- Lead copy in COPY.md "Billing (lead, 2026-11-05)".
+- Wiring:
+  - /app/billing reads getBillingState (#72); Checkout is offered only without a live subscription (null, canceled, incomplete_expired); incomplete, past_due and unpaid show the failed banner + 'Update card' (portal), paused shows the plan + 'Manage billing', and the server actions never start a second Checkout (lead, #74 review);
+  - the header switcher (HeaderSwitcher in the /app layout) reads listMyBusinesses (name, city) + each business's latest run summary;
+  - the cookie rank1_business (httpOnly, path /app) is set by selectBusinessAction after checking listMyBusinesses, and getCurrentBusiness(db, cookie) honors it in loadShell and the competitor actions;
+  - Add/Remove failures reuse "We couldn't save that. Try again."; "We couldn't open billing…" is only for the Checkout/portal redirects (lead);
+  - "Active"/"Paused" as screen-reader text are approved.
+- Stripe calls: data-pipeline's #73 helpers (src/lib/stripe: startCheckout, openPortal, addBusinessSeat, removeBusinessAtPeriodEnd) with the caller's own client. Checkout success/cancel and the portal return to NEXT_PUBLIC_SITE_URL/app/billing. The interim stand-in module is gone.

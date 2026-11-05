@@ -139,6 +139,22 @@ Step 12. The team's Clients tab in /team, and the DFY client dashboard (/client)
 | /client, access removed | "Nothing tracked yet." (no button) |
 | /client, no run yet | reuses "No weekly checks yet. Your first one runs Monday." |
 
+## Billing (lead, 2026-11-05)
+
+Step 14. /app/billing and the header Business switcher. The UI.md 4b "Billing + switcher" and "Business switcher" strings are used as written. Amounts are only the x $99 math.
+
+| Where | String |
+|---|---|
+| Dialogs (Add, Remove) | "Cancel" |
+| Switcher row menu (label) | "More for {name}" |
+| Switcher search (more than 8 businesses) | "Search businesses" |
+| Switcher status dot (screen readers) | "Active", "Paused" (UI.md: moss active, brick paused) |
+| Billing, past due | "Past due" (warn badge) |
+| Billing, paid | "Plan", "{n} businesses x $99 = ${n x 99}/mo" ("1 business" in the singular), "Next invoice {date}" |
+| While an added business waits for its seat | "Adding your business…" (after 30 s it stays, with "Try again"; no error) |
+| Checkout or portal redirect failed | "We couldn't open billing. Try again in a minute." |
+| Add or Remove business failed | reuses "We couldn't save that. Try again." |
+
 ## Admin (lead, 2026-11-05)
 
 Strings for /admin/test, the founder-only engine test page (Step 4). Anyone else gets a 404, so there is no not-allowed copy.
