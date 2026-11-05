@@ -9,7 +9,7 @@ const base = () => ({
     async () => sub({ quantity: 3 }) as unknown as Stripe.Subscription,
   ),
   applySubscription: vi.fn<WebhookDeps["applySubscription"]>(async () => "applied"),
-  recordEvent: vi.fn<WebhookDeps["recordEvent"]>(async () => "applied"),
+  recordEvent: vi.fn<WebhookDeps["recordEvent"]>(async () => true),
   log: vi.fn<(l: string) => void>(),
 });
 const deps = (p: Partial<ReturnType<typeof base>> = {}) => ({ ...base(), ...p });
@@ -48,12 +48,12 @@ describe("event mapping", () => {
       expect(d.applySubscription).toHaveBeenCalledWith({
         event_id: "evt_example_9",
         event_type: type,
-        event_created: 1764547300,
+        event_created: "2025-12-01T00:01:40.000Z",
         customer_id: "cus_example_1",
         subscription_id: "sub_example_1",
         status: type.endsWith("deleted") ? "canceled" : "past_due",
         quantity: 4,
-        current_period_end: 1767225600,
+        current_period_end: "2026-01-01T00:00:00.000Z",
       });
     },
   );
@@ -89,6 +89,12 @@ describe("event mapping", () => {
       expect(d.applySubscription).not.toHaveBeenCalled();
     },
   );
+
+  it("a repeated ack-only event → 200 duplicate", async () => {
+    const d = deps({ recordEvent: vi.fn(async () => false) });
+    const { r } = await send(event("invoice.paid", { id: "in_example_1", object: "invoice" }), d);
+    expect(r).toEqual({ status: 200, body: { received: "duplicate" } });
+  });
 
   it("an unknown event → 200 ignored, nothing called", async () => {
     const { r, d } = await send(event("customer.created", { id: "cus_example_1", object: "customer" }));

@@ -78,14 +78,14 @@ isOneToOne: false
                   ]
                 },"businesses": {
                   Row: {
-                    "aliases": (string)[],"archived_at": string | null,"brand_color": string | null,"city": string,"country": string,"created_at": string,"cuisine": string | null,"domain": string | null,"fix_list_visible": boolean,"ga4_property_id": string | null,"id": string,"logo_path": string | null,"name": string,"report_recipients": (string)[],"service": string,"state": string,"vertical": string,"workspace_id": string
+                    "aliases": (string)[],"archive_at": string | null,"archived_at": string | null,"brand_color": string | null,"city": string,"country": string,"created_at": string,"cuisine": string | null,"domain": string | null,"fix_list_visible": boolean,"ga4_property_id": string | null,"id": string,"logo_path": string | null,"name": string,"report_recipients": (string)[],"service": string,"state": string,"vertical": string,"workspace_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "aliases"?: (string)[],"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"name": string,"report_recipients"?: (string)[],"service"?: string,"state"?: string,"vertical"?: string,"workspace_id": string
+                    "aliases"?: (string)[],"archive_at"?: string | null,"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"name": string,"report_recipients"?: (string)[],"service"?: string,"state"?: string,"vertical"?: string,"workspace_id": string
                   }
                   Update: {
-                    "aliases"?: (string)[],"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"name"?: string,"report_recipients"?: (string)[],"service"?: string,"state"?: string,"vertical"?: string,"workspace_id"?: string
+                    "aliases"?: (string)[],"archive_at"?: string | null,"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"name"?: string,"report_recipients"?: (string)[],"service"?: string,"state"?: string,"vertical"?: string,"workspace_id"?: string
                   }
                   Relationships: [
                     {
@@ -590,14 +590,14 @@ isOneToOne: false
                   ]
                 },"workspaces": {
                   Row: {
-                    "created_at": string,"id": string,"name": string,"owner_id": string,"seats_quantity": number,"stripe_customer_id": string | null,"stripe_subscription_id": string | null,"subscription_status": string | null
+                    "created_at": string,"id": string,"name": string,"owner_id": string,"seats_quantity": number,"stripe_current_period_end": string | null,"stripe_customer_id": string | null,"stripe_event_at": string | null,"stripe_subscription_id": string | null,"subscription_status": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"id"?: string,"name": string,"owner_id": string,"seats_quantity"?: number,"stripe_customer_id"?: string | null,"stripe_subscription_id"?: string | null,"subscription_status"?: string | null
+                    "created_at"?: string,"id"?: string,"name": string,"owner_id": string,"seats_quantity"?: number,"stripe_current_period_end"?: string | null,"stripe_customer_id"?: string | null,"stripe_event_at"?: string | null,"stripe_subscription_id"?: string | null,"subscription_status"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"id"?: string,"name"?: string,"owner_id"?: string,"seats_quantity"?: number,"stripe_customer_id"?: string | null,"stripe_subscription_id"?: string | null,"subscription_status"?: string | null
+                    "created_at"?: string,"id"?: string,"name"?: string,"owner_id"?: string,"seats_quantity"?: number,"stripe_current_period_end"?: string | null,"stripe_customer_id"?: string | null,"stripe_event_at"?: string | null,"stripe_subscription_id"?: string | null,"subscription_status"?: string | null
                   }
                   Relationships: [
                     
@@ -624,6 +624,15 @@ isOneToOne: false
           Functions: {
             "add_competitor":
 { Args: { "p": Json,"p_business_id": string }; Returns: string
+                           },
+"apply_stripe_subscription":
+{ Args: { "p": Json }; Returns: string
+                           },
+"archive_scheduled_businesses":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
+"cancel_business_removal":
+{ Args: { "p_business_id": string }; Returns: undefined
                            },
 "claim_jobs":
 { Args: { "p_limit": number }; Returns: Json[]
@@ -670,6 +679,9 @@ isOneToOne: false
 "prune_ephemeral":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"record_stripe_event":
+{ Args: { "p_event_id": string,"p_type": string }; Returns: boolean
+                           },
 "record_fix_results":
 { Args: { "p_business_id": string,"p_results": Json,"p_run_id": string }; Returns: undefined
                            },
@@ -681,6 +693,9 @@ isOneToOne: false
                            },
 "runs_needing_fix_checks":
 { Args: { "p_limit"?: number }; Returns: { "business_id": string,"domain": string | null,"run_id": string }[]
+                           },
+"schedule_business_removal":
+{ Args: { "p_at": string,"p_business_id": string }; Returns: undefined
                            },
 "set_fix_list_visible":
 { Args: { "p_business_id": string,"p_visible": boolean }; Returns: undefined

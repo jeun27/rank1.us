@@ -591,20 +591,6 @@ Changed
 
 - tests/e2e/team-workspace.spec.ts "nothing calls a model": on deployed previews (E2E_BASE_URL set) the exact host vercel.live is ignored, because Vercel injects its preview toolbar (vercel.live/_next-live/feedback/feedback.js) into every preview page. Every other host still fails the test, and it now also asserts that no request goes to api.anthropic.com, api.openai.com, generativelanguage.googleapis.com or api.perplexity.ai.
 
-## Step 12 (backend): client invites and fix list visibility (branch feat/step12-client-invites, issue #59)
-- Step 12 built from ENG_HANDOFF_OVERNIGHT §3/§6 + Step 3 routing; Build Pack not readable; reconcile later.
-- Lead decisions:
-  - No invites table. A team user invites by email for a DFY business (Supabase Auth admin invite, redirectTo NEXT_PUBLIC_SITE_URL/auth/callback), then the service role grants dfy_client + workspace membership.
-  - Any existing Rank1 account is refused ("This email already has a Rank1 account."), and this business's client gets "Already invited.".
-  - One business per client user (lead, 2026-11-05); reconcile with Build Pack. An existing client of another DFY business counts as an existing account.
-  - Remove access drops the membership and keeps the role. The fix list toggle is team-only.
-  - /client is read-only. Emails never go in logs or error messages, only status codes.
-- Migration 20261105000016 (+ .down.sql), additive and re-runnable:
-  - Service only: client_invite_status, grant_dfy_client (idempotent; refuses team users, members of other workspaces and non-DFY businesses) and revoke_dfy_client (never an owner).
-  - Team only: set_fix_list_visible and list_client_users (emails for team only).
-- Queries (server only, src/lib/queries/clients.ts): inviteClient (injectable invite fn; CI has no mail server), removeClient, listClientUsers, setFixListVisible. Tests: tests/db/clients.test.ts.
-- src/types/db.ts got the 0016 functions added by hand in the generator format. Regenerate it with `pnpm db:types` when a stack is available.
-
 ## Step 12 (frontend): DFY client dashboard and invites (branch feat/step12-client, issue #59)
 
 - Step 12 built from ENG_HANDOFF_OVERNIGHT §3/§6 + Step 3 routing. The Build Pack isn't readable, so reconcile later.
@@ -668,6 +654,24 @@ Changed
 - vercel.json crons adds {path: "/api/cron/weekly", schedule: "0 13,14 * * 1"}; vercel-config.test.ts pins both crons.
 - src/app/api/cron/weekly/route.ts (maxDuration 60): 401 unless authorized; outside the window → 200 {skipped: "outside_window"} without creating a DB client; inside → enqueueWeeklyRuns + pruneEphemeral (service client, backend #0017) via runWeekly.
 
+## Step 14 (backend): stripe subscription state (branch feat/step14-stripe-state, issue #71)
+- Step 14 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b; Build Pack not readable; reconcile later.
+- Lead decisions:
+  - Hosted Checkout (no publishable key) with quantity = active self-serve businesses (min 1). DFY never counts or sees billing.
+  - The webhook is the source of truth: signature check, then the stripe_events idempotency, then a service-only update.
+  - Add = quantity +1 with Stripe's default proration. Remove = quantity −1 at period end through a Subscription Schedule (phase 1: current quantity until current_period_end, phase 2: quantity − 1; data-pipeline implements it), and the business is archived at the period end.
+  - Manage billing = Customer Portal. The switcher picks the current business (default oldest). Weekly checks pause unless active/trialing.
+  - While a removal is scheduled, the business still counts as active until archive_at. At renewal the archive happens first, then seats.
+- Migration 20261105000018 (+ .down.sql), additive:
+  - workspaces.stripe_current_period_end / stripe_event_at and businesses.archive_at. All are service-write only, like the billing fields.
+  - apply_stripe_subscription(p): one transaction. It records the event (duplicate → no-op), then finds the workspace by customer id or client_reference_id, ignores stale events, archives due removals and only then sets ids/status/seats/period end.
+  - record_stripe_event. schedule_business_removal / cancel_business_removal / archive_scheduled_businesses. All service only, self-serve only (DFY untouched).
+- Queries (src/lib/queries/billing.ts):
+  - getBillingState, listMyBusinesses (member client).
+  - applyStripeSubscription, recordStripeEvent, scheduleBusinessRemoval, cancelBusinessRemoval, archiveScheduledBusinesses (service client).
+  - getCurrentBusiness(db, selectedId?) honors a selected id that's one of the caller's active self-serve businesses, else the oldest.
+- Cleanup: merged the doubled "## Step 12 (backend)" section (the second copy was fully contained in the first; no line lost).
+- src/types/db.ts got the 0018 columns and functions added by hand in the generator format.
 ## Step 14 (data-pipeline): checkout, webhook and portal (branch feat/step14-billing)
 Step 14 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b; Build Pack not readable; reconcile later.
 Lead decisions (Step 14 brief):
@@ -694,3 +698,8 @@ Changed
   - applied/duplicate/stale/not_found → 200 (logged); an RPC error → 500 "apply_failed" so Stripe retries.
   - Logs: event type, id and outcome only.
 - .env.example: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY marked UNUSED (hosted Checkout).
+- Wiring (after #72):
+  - POST /api/stripe/webhook reads req.text() and verifies with stripe.webhooks.constructEvent + STRIPE_WEBHOOK_SECRET. It calls applyStripeSubscription / recordStripeEvent (service client). Unix times are converted to ISO for the RPC.
+  - A live key or a missing secret → 500 {error: "not_configured"}.
+- src/lib/stripe/service.ts (server-only; frontend's server actions pass the workspaceId from getBillingState): startCheckout, addBusinessSeat, removeBusinessAtPeriodEnd (the Stripe schedule, then scheduleBusinessRemoval at the period end), openPortal. Stripe ids are read with the service client and never sent to the browser.
+- Open: Stripe has a `paused` subscription status that 0018's SubscriptionStatus lacks; asked backend (no paused flow in v1).
