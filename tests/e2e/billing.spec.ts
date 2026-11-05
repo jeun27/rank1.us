@@ -7,6 +7,8 @@ const STATES = [
   "billing-paid",
   "billing-past-due",
   "billing-failed",
+  "billing-incomplete",
+  "billing-paused",
   "billing-loading",
   "billing-error",
   "switcher-one",

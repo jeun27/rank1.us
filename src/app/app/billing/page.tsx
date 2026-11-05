@@ -11,8 +11,7 @@ export const metadata: Metadata = { title: "Billing - Rank1", robots: { index: f
 export default async function BillingPage() {
   await connection();
   const billing = await getBillingState(await createClient());
-  // "paused" isn't a UI.md state: shown as no plan until the lead says otherwise.
-  const status = (billing?.status === "paused" ? null : (billing?.status ?? null)) as BillingStatus;
+  const status: BillingStatus = billing?.status ?? null;
   return (
     <BillingView
       billing={{ status, seats: billing?.seats ?? 0, nextInvoiceAt: billing?.nextInvoiceAt ?? null }}

@@ -723,7 +723,7 @@ Changed
 - Add: actions.add (quantity +1 with default proration, or Checkout when unpaid). Then it polls seats every 2 s until seats_quantity rises → /app/onboarding. After 30 s it keeps "Adding your business…" with "Try again" and no error (lead).
 - Lead copy in COPY.md "Billing (lead, 2026-11-05)".
 - Wiring:
-  - /app/billing reads getBillingState (#72); "paused" (a Stripe status UI.md doesn't name) shows as no plan, pending the lead;
+  - /app/billing reads getBillingState (#72); Checkout is offered only without a live subscription (null, canceled, incomplete_expired); incomplete, past_due and unpaid show the failed banner + 'Update card' (portal), paused shows the plan + 'Manage billing', and the server actions never start a second Checkout (lead, #74 review);
   - the header switcher (HeaderSwitcher in the /app layout) reads listMyBusinesses (name, city) + each business's latest run summary;
   - the cookie rank1_business (httpOnly, path /app) is set by selectBusinessAction after checking listMyBusinesses, and getCurrentBusiness(db, cookie) honors it in loadShell and the competitor actions;
   - Add/Remove failures reuse "We couldn't save that. Try again."; "We couldn't open billing…" is only for the Checkout/portal redirects (lead);

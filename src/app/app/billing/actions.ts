@@ -7,7 +7,9 @@ import { addBusinessSeat, openPortal, removeBusinessAtPeriodEnd, startCheckout }
 import { createClient } from "@/lib/supabase/server";
 import { BUSINESS_COOKIE } from "../current";
 
-const PAID = new Set(["active", "trialing", "past_due", "unpaid"]);
+// Checkout only without a live subscription (null, canceled, incomplete_expired); every other status goes
+// to the portal or adds a seat, never a second Checkout (lead, #74 review).
+const NO_SUBSCRIPTION = new Set<string | null>([null, "canceled", "incomplete_expired"]);
 
 // The caller's own client: data-pipeline's helpers find the workspace from it (RLS). Stripe redirects
 // happen outside try, since redirect() throws by design. Errors return codes only (nothing logged).
@@ -31,6 +33,7 @@ async function goToCheckout(quantity: number) {
 export async function checkoutAction() {
   const billing = await getBillingState(await createClient());
   if (!billing) return { error: "no_workspace" };
+  if (!NO_SUBSCRIPTION.has(billing.status)) return portalAction();
   return goToCheckout(billing.activeCount);
 }
 
@@ -50,7 +53,7 @@ export async function addBusinessAction() {
   const db = await createClient();
   const billing = await getBillingState(db);
   if (!billing) return { error: "no_workspace" };
-  if (!billing.status || !PAID.has(billing.status)) return goToCheckout(billing.activeCount + 1);
+  if (NO_SUBSCRIPTION.has(billing.status)) return goToCheckout(billing.activeCount + 1);
   try {
     await addBusinessSeat(db);
   } catch {

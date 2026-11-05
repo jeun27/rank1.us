@@ -152,6 +152,8 @@ export const STATES: Record<string, () => React.ReactNode> = {
   "billing-paid": () => <BillingView billing={paidPlan} actions={billing} />,
   "billing-past-due": () => <BillingView billing={{ ...paidPlan, status: "past_due" }} actions={billing} />,
   "billing-failed": () => <BillingView billing={{ ...paidPlan, status: "unpaid" }} actions={billing} />,
+  "billing-incomplete": () => <BillingView billing={{ ...paidPlan, status: "incomplete" }} actions={billing} />,
+  "billing-paused": () => <BillingView billing={{ ...paidPlan, status: "paused" }} actions={billing} />,
   "billing-loading": () => <Skeleton title="Billing" />,
   "billing-error": () => <ErrorState title="Billing" message={results} reset={() => {}} />,
   "switcher-one": () => <WithSwitcher businesses={switcherBusinesses.slice(0, 1)} />,
