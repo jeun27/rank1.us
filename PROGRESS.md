@@ -394,4 +394,5 @@ Step 7 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; r
 - Exports: export.csv (toCsv) and export.png (next/og, 1200×630) under both routes, with Content-Disposition attachment, Cache-Control no-store, noindex and a [a-z0-9.-] filename. An unknown run or token is a 404.
 - Token privacy (lead): /audit/* sends Referrer-Policy: no-referrer and X-Robots-Tag: noindex, nofollow (next.config headers), the page has robots noindex,nofollow, cited links use rel="noopener noreferrer", and the lead email is never rendered.
 - /dev/audit?state=… shows every state with Example data (404 in production).
+- Real 404s: these pages stream inside Suspense, and notFound() there still sends a 200. So the proxy (src/lib/supabase/middleware.ts, the same pattern as /admin) rewrites to a 404 first. A run not readable by the visitor's session (RLS) or an unknown audit token (service role) gets the 404. The exports are route handlers and 404 on their own.
 - Doc difference: citations.category is typed string in the result query and Category in computeMetrics. The loader casts it, because Step 6 stores only categorize() values.
