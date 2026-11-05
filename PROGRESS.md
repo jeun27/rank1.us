@@ -427,6 +427,7 @@ Lead decisions (Step 8 brief): suggested competitors = findLocalCompetitors for 
 Changed
 - src/lib/onboarding/suggest.ts suggestCompetitors({business, tracked, dismissed}, {store}): drops Maps items whose bare domain or normalized name (detectMentions' normalize) matches a tracked or dismissed competitor or the business; first of each domain/name kept; Maps order; ≤5. limited / missing_keys / error → no items. Never throws.
 - src/lib/metrics/series.ts seriesFromSummaries(summaries): {points: {runId, at, metric: Metric}[] oldest → newest, visible: ≥2}.
+
 ## Step 7 (frontend): audit progress, results and exports (branch feat/step7-audit, issue #33)
 - /app/runs/[runId] (members, through RLS getRunResults) and /audit/[token] (service role, getFreeAuditByToken) share AuditView: UI.md 4b Audit progress and Audit results. The free page adds the 'Start for $99/mo' card and the Powered by Rank1 credit; the paid page never shows the credit.
 - Per-engine progress comes from run.jobs_total (3q/3q/3q/q) and the answers so far (lead: run_jobs has no member read path). While a run is queued or running, the page refreshes every 5 s.
@@ -435,6 +436,7 @@ Changed
 - /dev/audit?state=… shows every state with Example data (404 in production).
 - Real 404s: these pages stream inside Suspense, and notFound() there still sends a 200. So the proxy (src/lib/supabase/middleware.ts, the same pattern as /admin) rewrites to a 404 first. A run not readable by the visitor's session (RLS) or an unknown audit token (service role) gets the 404. The exports are route handlers and 404 on their own. The route is matched on the normalized path, but the token or run id comes from the raw path, because normalizePath lowercases and tokens are mixed-case base64url (review on #35).
 - Doc difference: citations.category is typed string in the result query and Category in computeMetrics. The loader casts it, because Step 6 stores only categorize() values.
+
 ## Step 8 (data-pipeline): competitor suggestions and visibility series (branch feat/step8-suggestions)
 Step 8 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
 Lead decisions (Step 8 brief): suggested competitors = findLocalCompetitors for the business cuisine/city (existing cache + maps_lookup token) minus tracked and dismissed; keys missing → nothing shown. The 8-run line = the latest 8 complete/partial audit+weekly runs; fewer than 2 → hidden. Free audits never appear in /app.
@@ -473,6 +475,30 @@ Changed
 ## Step 8 QA fix (frontend): rule 3 on Competitors and History (branch fix/step8-rule3, issue #37, QA #46)
 - PRODUCT.md rule 3: Competitors phone cards now show "{pct} (named in a of n answers)" like the desktop table. Competitors has the Freshness line ("Checked … ago · n answers · API-measured, directional") at both widths. History carries "API-measured, directional" once (its rows have their own dates).
 - A shared Measured component (src/components/app/Page.tsx) renders the Freshness line when there is one check time, and the label alone otherwise. Step 9's Sources page reuses it.
+
+## Step 10 (backend): fix results and status (branch feat/step10-fix-results, issue #48)
+- Step 10 built from ENG_HANDOFF_OVERNIGHT §4/§6 + SCHEMA.md §5b; Build Pack not readable; A1–A6 seeded disabled; reconcile later.
+- Lead decisions:
+  - Detectors exist only for the enabled rules R10, R11, R14, H1 (own fetch, no paid calls).
+  - A1–A6 are disabled placeholders ('PENDING: Build Pack Step 10', never rendered).
+  - Detection runs once per paid run that closes complete/partial, never for free audits. The data-pipeline always records all 4 enabled rules (unchecked on any internal error), so a run is never retried forever.
+  - fix → upsert the open fix. ok → auto-resolve. unchecked → leave the fix ("We couldn't check this yet.").
+  - Ranking by size S → L, then rule key. H1 appears only under Tidy-ups, never in the Dashboard top 3. affected_answers is null for site rules.
+  - Status is writable by self-serve members + team. A dfy_client never writes.
+  - listFixes returns open fixes only. Marking a fix done hides it, and if the next run still detects it, a fresh todo comes back.
+- Migration 20261105000014 (+ .down.sql), additive and re-runnable:
+  - A1–A6 rows (grp answers, enabled false, ai_lever true, unverified = ['PENDING: Build Pack Step 10']).
+  - fixes.affected_answers is nullable with no default.
+  - Unique open fix per (business, rule).
+  - fix_checks(run, business, rule, result): RLS read = can_see_fix_list. It's the once-per-run marker, so there's no runs.fixes_checked_at.
+  - record_fix_results: service only, one transaction, a no-op for an already-recorded run, 22023 for a bad run or rule.
+  - runs_needing_fix_checks: service only. set_fix_status: invoker, can_write_fixes, 42501/22023.
+- Queries: listFixes / setFixStatus / recordFixResults / listRunsNeedingFixChecks (src/lib/queries/fixes.ts). getTopFixes now uses the same ranking and skips tidy-ups, and TopFix.affected_answers is number | null.
+- Test changes from lead decisions:
+  - tests/db/seed.test.ts expects 22 fix_rules with A1–A6 disabled (was "no A rules", 16).
+  - The shell getTopFixes test uses one fix per rule and size ranking (was affected_answers order).
+  - onboarding.test's team-added fix uses R2 (one open fix per rule).
+- src/types/db.ts got the 0014 objects added by hand in the generator format. Regenerate it with `pnpm db:types` when a stack is available.
 ## Step 9 (frontend): sources page with location view (branch feat/step9-sources-page, issue #42)
 Step 9 built from ENG_HANDOFF_OVERNIGHT §6 + PRODUCT.md + docs/UI.md; Build Pack not readable; reconcile later.
 - /app/sources (nav after Questions): the latest complete/partial run's cited links through computeSources (#44).
@@ -502,3 +528,5 @@ Changed
   - checkFixesForOneRun (cron.ts): always records every enabled rule per run (an evaluate error → unchecked rows, reason error), so with backend's fix_checks marker no run is retried every tick.
 - Re-crawl guards (lead, 2026-11-05): (1) the enabled rules are read from fix_rules at run time (service role), and only those are evaluated and recorded; the R11 crawl is skipped when R11 is off. (2) If record_fix_results fails (e.g. 22023 after a rule was disabled), it retries once in the same tick with every enabled rule unchecked 'error' and no new crawl, so the run gets marked.
 - The copy templates are the SCHEMA §5b customer copy verbatim (a test reads docs/SCHEMA.md); detail is set only for fix.
+- Wiring (after #50): src/lib/fixes/service.ts reads fix_rules.enabled (service role) and uses listRunsNeedingFixChecks(db, 1) and recordFixResults. GET /api/cron/run-jobs runs it after the drain and notify, with time left = maxDuration (300 s) − elapsed since the request started, and returns `fixes`.
+- PROGRESS.md: the duplicate "## Step 9 (data-pipeline)" section on main (a merge leftover) is merged into one copy, with no line dropped.

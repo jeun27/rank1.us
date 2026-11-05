@@ -9,6 +9,9 @@ const runEngine = vi.hoisted(() => vi.fn());
 const NOTIFIED = { sent: 0, failedRuns: 0, sendErrors: 0, skipped: false };
 const notify = vi.hoisted(() => ({ notifyFreeAuditsWith: vi.fn(), startFreeAuditWith: vi.fn() }));
 vi.mock("@/lib/audit/service", () => notify);
+const FIXES = { checked: null, skipped: "none" };
+const fixes = vi.hoisted(() => ({ checkFixesWith: vi.fn() }));
+vi.mock("@/lib/fixes/service", () => fixes);
 vi.mock("@/lib/engines", async (real) => ({ ...(await real<object>()), runEngine }));
 
 const { GET } = await import("@/app/api/cron/run-jobs/route");
@@ -40,6 +43,7 @@ beforeEach(() => {
   vi.stubEnv("RUN_JOBS_BATCH", "");
   for (const f of Object.values(q)) f.mockReset();
   notify.notifyFreeAuditsWith.mockReset().mockResolvedValue(NOTIFIED);
+  fixes.checkFixesWith.mockReset().mockResolvedValue(FIXES);
   runEngine.mockReset().mockResolvedValue({
     status: "ok",
     text: "Example Ramen House is great.",
@@ -82,6 +86,7 @@ describe("GET /api/cron/run-jobs", () => {
       unfinished: 0,
       stopped: "batch",
       notified: NOTIFIED,
+      fixes: FIXES,
     });
     expect(q.claimJobs.mock.calls.map((c) => c[1])).toEqual([5, 5, 5, 5]);
     expect(q.finishJob).toHaveBeenCalledTimes(20);
@@ -97,6 +102,7 @@ describe("GET /api/cron/run-jobs", () => {
       unfinished: 0,
       stopped: "empty",
       notified: NOTIFIED,
+      fixes: FIXES,
     });
     expect(q.claimJobs.mock.calls.map((c) => c[1])).toEqual([5, 5]);
   });
@@ -127,6 +133,7 @@ describe("GET /api/cron/run-jobs", () => {
       unfinished: 0,
       stopped: "budget",
       notified: NOTIFIED,
+      fixes: FIXES,
     });
     expect(q.claimJobs).toHaveBeenCalledTimes(1);
     vi.restoreAllMocks();
@@ -141,6 +148,7 @@ describe("GET /api/cron/run-jobs", () => {
       unfinished: 1,
       stopped: "empty",
       notified: NOTIFIED,
+      fixes: FIXES,
     });
     expect(q.recordJobError).toHaveBeenCalledWith(expect.anything(), "job-1", "finish_job: deadlock detected");
   });
@@ -153,9 +161,39 @@ describe("GET /api/cron/run-jobs", () => {
     expect(notify.notifyFreeAuditsWith).toHaveBeenCalledTimes(1);
   });
 
-  it("never notifies on a 401", async () => {
+  it("never notifies or runs fix checks on a 401", async () => {
     await call("Bearer nope");
     expect(notify.notifyFreeAuditsWith).not.toHaveBeenCalled();
+    expect(fixes.checkFixesWith).not.toHaveBeenCalled();
+  });
+
+  it("runs fix checks after the drain and notify, passing the time left of maxDuration (300 s)", async () => {
+    q.claimJobs.mockResolvedValue([]);
+    fixes.checkFixesWith.mockImplementation(async (_db: unknown, timeLeftMs: () => number) => {
+      const left = timeLeftMs();
+      expect(left).toBeGreaterThan(299_000);
+      expect(left).toBeLessThanOrEqual(300_000);
+      return { checked: "run-9" };
+    });
+    const body = await (await call(`Bearer ${SECRET}`)).json();
+    expect(body.fixes).toEqual({ checked: "run-9" });
+    const order = [
+      notify.notifyFreeAuditsWith.mock.invocationCallOrder[0],
+      fixes.checkFixesWith.mock.invocationCallOrder[0],
+    ];
+    expect(order[0]).toBeLessThan(order[1]);
+  });
+
+  it("time left shrinks with the drain: a long drain leaves under 60 s", async () => {
+    let t = 1_000_000;
+    vi.spyOn(Date, "now").mockImplementation(() => t);
+    q.claimJobs.mockImplementation(async () => {
+      t += 250_000;
+      return [];
+    });
+    fixes.checkFixesWith.mockImplementation(async (_db: unknown, timeLeftMs: () => number) => ({ left: timeLeftMs() }));
+    expect((await (await call(`Bearer ${SECRET}`)).json()).fixes).toEqual({ left: 50_000 });
+    vi.restoreAllMocks();
   });
 
   it("claim_jobs failing → 500 with a short error, nothing thrown", async () => {

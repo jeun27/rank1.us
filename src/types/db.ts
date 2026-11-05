@@ -216,6 +216,38 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"fix_checks": {
+                  Row: {
+                    "business_id": string,"created_at": string,"result": string,"rule_key": string,"run_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "business_id": string,"created_at"?: string,"result": string,"rule_key": string,"run_id": string
+                  }
+                  Update: {
+                    "business_id"?: string,"created_at"?: string,"result"?: string,"rule_key"?: string,"run_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fix_checks_business_id_fkey"
+      columns: ["business_id"]
+isOneToOne: false
+      referencedRelation: "businesses"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fix_checks_rule_key_fkey"
+      columns: ["rule_key"]
+isOneToOne: false
+      referencedRelation: "fix_rules"
+      referencedColumns: ["key"]
+    },{
+      foreignKeyName: "fix_checks_run_id_fkey"
+      columns: ["run_id"]
+isOneToOne: false
+      referencedRelation: "runs"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"fix_rules": {
                   Row: {
                     "ai_lever": boolean,"cadence": string,"customer_copy": string,"data_source": string | null,"detection": string | null,"enabled": boolean,"grp": string,"key": string,"size": string,"threshold": Json | null,"title": string,"unverified": (string)[],"why_note": string | null
@@ -232,14 +264,14 @@ isOneToOne: false
                   ]
                 },"fixes": {
                   Row: {
-                    "affected_answers": number,"business_id": string,"detail": string | null,"evidence": Json | null,"first_seen_run": string | null,"id": string,"last_seen_run": string | null,"rule_key": string,"size": string,"status": string,"title": string
+                    "affected_answers": number | null,"business_id": string,"detail": string | null,"evidence": Json | null,"first_seen_run": string | null,"id": string,"last_seen_run": string | null,"rule_key": string,"size": string,"status": string,"title": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "affected_answers"?: number,"business_id": string,"detail"?: string | null,"evidence"?: Json | null,"first_seen_run"?: string | null,"id"?: string,"last_seen_run"?: string | null,"rule_key": string,"size": string,"status"?: string,"title": string
+                    "affected_answers"?: number | null,"business_id": string,"detail"?: string | null,"evidence"?: Json | null,"first_seen_run"?: string | null,"id"?: string,"last_seen_run"?: string | null,"rule_key": string,"size": string,"status"?: string,"title": string
                   }
                   Update: {
-                    "affected_answers"?: number,"business_id"?: string,"detail"?: string | null,"evidence"?: Json | null,"first_seen_run"?: string | null,"id"?: string,"last_seen_run"?: string | null,"rule_key"?: string,"size"?: string,"status"?: string,"title"?: string
+                    "affected_answers"?: number | null,"business_id"?: string,"detail"?: string | null,"evidence"?: Json | null,"first_seen_run"?: string | null,"id"?: string,"last_seen_run"?: string | null,"rule_key"?: string,"size"?: string,"status"?: string,"title"?: string
                   }
                   Relationships: [
                     {
@@ -623,8 +655,17 @@ isOneToOne: false
 "my_landing":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
+"record_fix_results":
+{ Args: { "p_business_id": string,"p_results": Json,"p_run_id": string }; Returns: undefined
+                           },
 "run_summaries":
 { Args: { "p_business_id": string,"p_limit"?: number,"p_statuses"?: string[] }; Returns: { "finished_at": string | null,"jobs_failed": number,"jobs_ok": number,"jobs_total": number,"kind": string,"n": number,"named": number,"per_engine": Json,"run_id": string,"started_at": string | null,"status": string }[]
+                           },
+"runs_needing_fix_checks":
+{ Args: { "p_limit"?: number }; Returns: { "business_id": string,"domain": string | null,"run_id": string }[]
+                           },
+"set_fix_status":
+{ Args: { "p_fix_id": string,"p_status": string }; Returns: undefined
                            },
 "take_rate_token":
 { Args: { "p_kind": string }; Returns: boolean
