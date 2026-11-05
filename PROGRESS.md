@@ -271,6 +271,6 @@ Review follow-ups (lead, 2026-11-05)
 - Open (Step 11/12 decision): a DFY workspace is owned by the team member who created it, so only that member (and anyone added to workspace_members) reaches it through RLS. Whether every team user sees every DFY client is still to decide.
 
 ## Step 5 (backend): per-user rate limits for onboarding lookups (branch feat/step5-rate-limits, issue #18)
-- Migration 20261105000010 (+ .down.sql). `rate_events` (user_id, kind read_site | maps_lookup, created_at) has RLS on and no policies. `take_rate_token(kind, max, window)` is SECURITY DEFINER and takes a per-user, per-kind advisory lock. It returns true and records one event when the caller had fewer than max events in the window. It returns false otherwise, or with no user. EXECUTE is for authenticated only.
-- Query: takeRateToken(db, kind, max, windowSeconds) in src/lib/queries/rate-limits.ts. Tests: tests/db/rate-limits.test.ts.
+- Migration 20261105000010 (+ .down.sql). `rate_events` (user_id, kind read_site | maps_lookup, created_at) has RLS on and no policies. `take_rate_token(kind)` is SECURITY DEFINER with the limits fixed in SQL so callers can't raise them: read_site 10 per hour, maps_lookup 5 per hour and 20 per 24 hours. It takes a per-user, per-kind advisory lock, prunes that user's events of the kind older than 24 h, and records one event only when allowed. An unknown kind raises 22023. No user returns false. EXECUTE is for authenticated only.
+- Query: takeRateToken(db, kind) in src/lib/queries/rate-limits.ts. Tests: tests/db/rate-limits.test.ts.
 - src/types/db.ts got rate_events and take_rate_token added by hand in the generator format (no local stack, disk full). Regenerate it with `pnpm db:types` in the next DB PR.

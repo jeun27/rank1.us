@@ -524,7 +524,7 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: string
                            },
 "take_rate_token":
-{ Args: { "p_kind": string,"p_max": number,"p_window": unknown }; Returns: boolean
+{ Args: { "p_kind": string }; Returns: boolean
                            }
           }
           Enums: {
