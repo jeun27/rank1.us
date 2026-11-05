@@ -667,3 +667,30 @@ Changed
 - /api/cron/run-jobs 500: {error: "claim_failed"} with only the PG code logged (was `claim_jobs: <DB message>`). Test changed with reason: cron-route.test.ts expects the new body and checks that the log has no DB text; same strictness, new expected body (lead).
 - vercel.json crons adds {path: "/api/cron/weekly", schedule: "0 13,14 * * 1"}; vercel-config.test.ts pins both crons.
 - src/app/api/cron/weekly/route.ts (maxDuration 60): 401 unless authorized; outside the window → 200 {skipped: "outside_window"} without creating a DB client; inside → enqueueWeeklyRuns + pruneEphemeral (service client, backend #0017) via runWeekly.
+
+## Step 14 (data-pipeline): checkout, webhook and portal (branch feat/step14-billing)
+Step 14 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b; Build Pack not readable; reconcile later.
+Lead decisions (Step 14 brief):
+- Stripe test mode only, one $99 Price, quantity = active self-serve businesses (minimum 1); DFY never counts.
+- Hosted Checkout (no publishable key).
+- The webhook is the source of truth (signature over the raw body, idempotent via stripe_events, never trust success_url).
+- Add = quantity +1 with Stripe's default proration (INTEGRATIONS.md "confirm": kept default). Remove = quantity −1 at period end, then the business is archived.
+- Manage billing = Customer Portal.
+
+Changed
+- `stripe` (official SDK, 23.1.0) added; it is not an LLM SDK.
+- src/lib/stripe/client.ts: stripeClient with apiVersion pinned to the SDK's ("2026-10-28.endive"); assertTestMode refuses sk_live_/rk_live_ and a missing key before any call.
+- src/lib/stripe/billing.ts:
+  - createCheckoutSession (subscription mode, the price × quantity ≥ 1, client_reference_id = workspace, a stored customer reused);
+  - updateQuantity (+1, default proration; raises an attached removal schedule's phases too);
+  - scheduleRemoval;
+  - createPortalSession.
+- Removal mechanism: a Subscription Schedule (from_subscription, or the attached one). Phases [current, quantity N, until the item's current_period_end; next, quantity N−1, one month], end_behavior release. A second removal lowers the next phase again; it never goes below 1. In this API version current_period_end is on the subscription item, so that's where it's read.
+- src/lib/stripe/webhook.ts handleStripeWebhook (bad/missing/stale signature → 400):
+  - customer.subscription.* → apply_stripe_subscription {event_id, event_type, event_created, customer_id, subscription_id, status, quantity, current_period_end};
+  - checkout.session.completed → retrieves the subscription, then the same call with client_reference_id;
+  - invoice.paid / payment_failed → record_stripe_event only;
+  - unknown → 200 ignored.
+  - applied/duplicate/stale/not_found → 200 (logged); an RPC error → 500 "apply_failed" so Stripe retries.
+  - Logs: event type, id and outcome only.
+- .env.example: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY marked UNUSED (hosted Checkout).
