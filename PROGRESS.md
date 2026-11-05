@@ -572,6 +572,10 @@ Changed
 - #11's Example workspace moved to the /dev/team gallery (404 in production, no sign-in); team-workspace.spec runs there. tests/e2e/team-real.spec.ts covers the real /team (seeded DFY + self-serve businesses).
 - No LLM SDK: tests/unit/engines/no-llm-sdk.test.ts already guards the repo.
 
+## Step 11 QA fix (frontend): Vercel preview toolbar in the no-model-calls check (branch fix/step11-preview-toolbar, issue #54, QA #62)
+
+- tests/e2e/team-workspace.spec.ts "nothing calls a model": on deployed previews (E2E_BASE_URL set) the exact host vercel.live is ignored, because Vercel injects its preview toolbar (vercel.live/_next-live/feedback/feedback.js) into every preview page. Every other host still fails the test, and it now also asserts that no request goes to api.anthropic.com, api.openai.com, generativelanguage.googleapis.com or api.perplexity.ai.
+
 ## Step 12 (backend): client invites and fix list visibility (branch feat/step12-client-invites, issue #59)
 - Step 12 built from ENG_HANDOFF_OVERNIGHT §3/§6 + Step 3 routing; Build Pack not readable; reconcile later.
 - Lead decisions:
