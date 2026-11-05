@@ -715,6 +715,9 @@ isOneToOne: false
 "set_fix_status":
 { Args: { "p_fix_id": string,"p_status": string }; Returns: undefined
                            },
+"set_report_settings":
+{ Args: { "p_brand_color": string | null,"p_business_id": string,"p_report_recipients": string[] }; Returns: undefined
+                           },
 "take_rate_token":
 { Args: { "p_kind": string }; Returns: boolean
                            }

@@ -2,9 +2,11 @@ import { beforeAll, describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { ensureSelfServeWorkspace } from "@/lib/queries/auth";
 import { createBusinessOnboarding, createDfyClient } from "@/lib/queries/onboarding";
+import { setReportSettings } from "@/lib/queries/reports";
 import { must, newUser, serviceClient, type TestUser } from "./helpers";
 
-// Step 16 businesses write gate: self-serve members, or the team on DFY; a dfy_client never writes.
+// Step 16 businesses write gate: RLS writes for self-serve members only; the team changes a DFY
+// business only through definer RPCs; a dfy_client never writes; id/workspace_id/service are service-only.
 const loose = (db: unknown) => db as SupabaseClient;
 const business = {
   name: "Example Ramen House",
@@ -95,13 +97,74 @@ describe("businesses write gate", () => {
     expect(insert.error?.code).toBe("42501");
   });
 
-  it("a team user (not a member) updates a DFY business, but never a self-serve one", async () => {
-    must(await team.db.from("businesses").update({ brand_color: "#112233" }).eq("id", dfy.businessId));
-    expect((await row(dfy.businessId)).brand_color).toBe("#112233");
+  it("the team can't edit, move or delete a DFY business directly, only set report settings via the RPC", async () => {
+    const before = await row(dfy.businessId);
+    const direct = await team.db
+      .from("businesses")
+      .update({ brand_color: "#112233" })
+      .eq("id", dfy.businessId)
+      .select();
+    expect(direct.data ?? []).toEqual([]);
+    const move = await loose(team.db)
+      .from("businesses")
+      .update({ workspace_id: ownerWorkspace })
+      .eq("id", dfy.businessId);
+    expect(move.error?.code).toBe("42501");
+    const del = await team.db.from("businesses").delete().eq("id", dfy.businessId).select();
+    expect(del.data ?? []).toEqual([]);
+    expect(await row(dfy.businessId)).toEqual(before);
+    expect(
+      must(await serviceClient().from("businesses").select("workspace_id").eq("id", dfy.businessId).single())
+        .workspace_id,
+    ).toBe(dfy.workspaceId);
+
+    await setReportSettings(team.db, dfy.businessId, {
+      brand_color: "#112233",
+      report_recipients: ["Client@Example.test"],
+    });
+    expect(
+      must(
+        await serviceClient()
+          .from("businesses")
+          .select("brand_color, report_recipients")
+          .eq("id", dfy.businessId)
+          .single(),
+      ),
+    ).toEqual({
+      brand_color: "#112233",
+      report_recipients: ["client@example.test"],
+    });
+  });
+
+  it("the team never changes a self-serve business", async () => {
     const before = await row(ownerBusiness);
     const update = await team.db.from("businesses").update({ name: "Team was here" }).eq("id", ownerBusiness).select();
     expect(update.data ?? []).toEqual([]);
+    await expect(setReportSettings(team.db, ownerBusiness, { brand_color: "#000000" })).rejects.toMatchObject({
+      code: "42501",
+    });
     expect(await row(ownerBusiness)).toEqual(before);
+  });
+
+  it("a self-serve member can't change workspace_id, service or id", async () => {
+    const other = await newUser("bw-other");
+    const otherWorkspace = (await ensureSelfServeWorkspace(other.db))!;
+    for (const patch of [{ workspace_id: otherWorkspace }, { service: "dfy" }, { id: crypto.randomUUID() }]) {
+      const { error } = await loose(owner.db).from("businesses").update(patch).eq("id", ownerBusiness);
+      expect(error?.code, JSON.stringify(Object.keys(patch))).toBe("42501");
+    }
+    expect(
+      must(await serviceClient().from("businesses").select("workspace_id, service").eq("id", ownerBusiness).single()),
+    ).toEqual({
+      workspace_id: ownerWorkspace,
+      service: "self_serve",
+    });
+  });
+
+  it("a dfy_client can't set report settings through the RPC either", async () => {
+    await expect(setReportSettings(client.db, dfy.businessId, { brand_color: "#000000" })).rejects.toMatchObject({
+      code: "42501",
+    });
   });
 
   it("a stranger changes nothing", async () => {
