@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildWorkspace } from "@/lib/queries/workspace";
 import { buildBrief, claudeUrl, CLAUDE_Q_MAX, contextFor, SECTIONS, type Selection } from "@/lib/workspace/context";
-import { exampleWorkspaceRows } from "@/app/app/example-data";
+import { exampleWorkspaceRows } from "@/app/team/example-data";
 
 const view = buildWorkspace(exampleWorkspaceRows());
 const now = new Date("2026-11-05T12:00:00Z");

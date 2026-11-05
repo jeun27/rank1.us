@@ -8,17 +8,17 @@ vi.mock("next/navigation", () => ({
 
 afterEach(() => vi.unstubAllEnvs());
 
-describe("/app is behind ENABLE_TEAM_WORKSPACE", () => {
+describe("/team is behind ENABLE_TEAM_WORKSPACE", () => {
   it.each([undefined, "", "false", "1", "TRUE"])("404s when the flag is %s", async (value) => {
     vi.stubEnv("ENABLE_TEAM_WORKSPACE", value);
-    const { default: AppPage } = await import("@/app/app/page");
-    expect(() => AppPage()).toThrow("NEXT_NOT_FOUND");
+    const { default: TeamPage } = await import("@/app/team/page");
+    expect(() => TeamPage()).toThrow("NEXT_NOT_FOUND");
   });
 
   it('renders when the flag is "true"', async () => {
     vi.stubEnv("ENABLE_TEAM_WORKSPACE", "true");
-    const { default: AppPage } = await import("@/app/app/page");
-    expect(AppPage()).toBeTruthy();
+    const { default: TeamPage } = await import("@/app/team/page");
+    expect(TeamPage()).toBeTruthy();
   });
 
   it(".env.example lists the flag, off by default", async () => {

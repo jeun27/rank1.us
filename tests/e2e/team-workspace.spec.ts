@@ -3,7 +3,7 @@ import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { buildWorkspace } from "@/lib/queries/workspace";
 import { buildBrief, claudeUrl, contextFor } from "@/lib/workspace/context";
-import { exampleWorkspaceRows } from "@/app/app/example-data";
+import { exampleWorkspaceRows } from "@/app/team/example-data";
 
 const NOW = new Date("2026-11-05T12:00:00Z");
 const view = buildWorkspace(exampleWorkspaceRows());
@@ -16,7 +16,7 @@ const isMobile = (page: Page) => page.viewportSize()!.width < 768;
 async function open(page: Page, theme: (typeof THEMES)[number]) {
   await page.clock.setFixedTime(NOW);
   await page.emulateMedia({ colorScheme: theme });
-  await page.goto("/app");
+  await page.goto("/team");
   await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
 }
 
@@ -37,7 +37,7 @@ const axeClean = async (page: Page) => {
 };
 
 for (const theme of THEMES) {
-  test(`/app ${theme}: 3 landmarks, one H1, Example data, axe clean`, async ({ page }, info) => {
+  test(`/team ${theme}: 3 landmarks, one H1, Example data, axe clean`, async ({ page }, info) => {
     await open(page, theme);
     expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe(BG[theme]);
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
@@ -62,7 +62,7 @@ for (const theme of THEMES) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
       page.viewportSize()!.width,
     );
-    await page.screenshot({ path: `test-results/screenshots/app-${theme}-${info.project.name}.png` });
+    await page.screenshot({ path: `test-results/screenshots/team-${theme}-${info.project.name}.png` });
 
     // A question with its answers and cited sources, open in the document pane.
     await show(page, "Nav");
@@ -72,9 +72,21 @@ for (const theme of THEMES) {
     await show(page, "Document");
     await expect(page.getByRole("tabpanel").getByRole("heading", { name: view.questions[0].text })).toBeVisible();
     await axeClean(page);
-    await page.screenshot({ path: `test-results/screenshots/app-${theme}-question-${info.project.name}.png` });
+    await page.screenshot({ path: `test-results/screenshots/team-${theme}-question-${info.project.name}.png` });
   });
 }
+
+test("/app is not the team workspace (reserved for owners); the team nav is dark in both themes", async ({ page }) => {
+  expect((await page.goto("/app"))?.status()).toBe(404);
+  for (const theme of THEMES) {
+    await open(page, theme);
+    await show(page, "Nav");
+    const nav = page.locator("nav");
+    await expect(nav).toHaveAttribute("data-theme", "dark");
+    expect(await nav.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(BG.dark);
+    expect(await nav.evaluate((el) => getComputedStyle(el).color)).toBe("rgb(242, 239, 233)");
+  }
+});
 
 test("Copy context writes the dashboard brief Markdown; Open in Claude copies it and opens ?q=", async ({
   page,
@@ -220,7 +232,7 @@ test("tap targets are at least 44px", async ({ page }) => {
 
 test("reduced motion turns pane and tab transitions off", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/app");
+  await page.goto("/team");
   const durations = await page.locator("[data-motion]").evaluateAll((els) =>
     els.map((e) => {
       const cs = getComputedStyle(e);

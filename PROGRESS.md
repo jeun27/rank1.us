@@ -158,9 +158,9 @@ Blocked/open
 
 ## Team workspace shell (frontend, branch feat/team-workspace, issue #10)
 Changed
-- /app: 3-pane team workspace like Profound's Wrenfield demo (sidebar 240px, context and document panes split 50/50 by a keyboard-resizable divider). Example data only (Example Ramen House seed), read-only. Off unless ENABLE_TEAM_WORKSPACE=true.
-- src/lib/queries/workspace.ts: getWorkspaceRows (read-only, takes a DbClient) and buildWorkspace (every count from stored answers and citations). tests/db/workspace.test.ts checks the DB rows build the same view as /app's Example data.
-- scripts/seed/data.ts: the pure part of scripts/seed/generate.ts (no file reads), so /app can import the seed rows. seed.sql and seed.dev.sql are unchanged (seed.test.ts still passes).
+- /team: 3-pane team workspace like Profound's Wrenfield demo (sidebar 240px, context and document panes split 50/50 by a keyboard-resizable divider). Example data only (Example Ramen House seed), read-only. Off unless ENABLE_TEAM_WORKSPACE=true.
+- src/lib/queries/workspace.ts: getWorkspaceRows (read-only, takes a DbClient) and buildWorkspace (every count from stored answers and citations). tests/db/workspace.test.ts checks the DB rows build the same view as /team's Example data.
+- scripts/seed/data.ts: the pure part of scripts/seed/generate.ts (no file reads), so /team can import the seed rows. seed.sql and seed.dev.sql are unchanged (seed.test.ts still passes).
 - Dark theme tokens (src/styles/tokens.ts darkColors, globals.css [data-theme="dark"]). Same token names, so the Final set components switch with it. New token `raised` (selected rows, active tab, composer).
 - src/lib/workspace/context.ts: per-selection facts and the Markdown brief. src/lib/workspace/prefs.ts: theme, split and collapse in localStorage key rank1.workspace.
 
@@ -168,7 +168,7 @@ Blocked
 - Nothing. Preview needs ENABLE_TEAM_WORKSPACE=true set in Vercel (Preview environment) by the lead.
 
 Doc differences
-- docs/PRODUCT.md and CLAUDE.md say "dark mode: not in v1" and UI.md says "Light mode only". Jeun's later lock (ENG_HANDOFF_STEP2 §3) makes the team workspace light + dark. Dark applies only through data-theme set on /app; the rest of the site stays light, and there is still no prefers-color-scheme CSS.
+- docs/PRODUCT.md and CLAUDE.md say "dark mode: not in v1" and UI.md says "Light mode only". Jeun's later lock (ENG_HANDOFF_STEP2 §3) makes the team workspace light + dark. Dark applies only through data-theme set on /team; the rest of the site stays light, and there is still no prefers-color-scheme CSS.
 - "Open in Claude": claude.ai has no documented prefill parameter. `https://claude.ai/new?q=<brief>` is the known form, but one report says it no longer prefills, and claude.ai blocks headless checks behind a Cloudflare challenge, so it is unverified. The button copies the brief to the clipboard first, then opens ?q= (no ?q= when the encoded brief is over 6000 characters), and says "Brief copied. Paste it in Claude if the box is empty."
 - Fix list, Experiments and Reports show their 4b empty states: the seed has no fixes, experiments or reports (fixes come from the fix_rules engine later). The Reports document previews the dashboard summary.
 - The business switcher shows the name only: UI.md hides the switcher while the workspace has 1 business.

@@ -36,7 +36,7 @@
 - [ ] 8. pnpm test, pnpm test:db, typecheck, lint and pnpm e2e are green locally. The Vercel preview builds, and the e2e passes on it.
 
 ## Team workspace: Profound-style 3-pane shell (issue #10)
-- [x] 1. /app behind ENABLE_TEAM_WORKSPACE=true (404 otherwise), in .env.example.
+- [x] 1. /team behind ENABLE_TEAM_WORKSPACE=true (404 otherwise), in .env.example.
 - [x] 2. Sidebar: business name, Workspace | Analytics, the 9 screens, Recents, help, theme toggle, collapse.
 - [x] 3. Context pane: stored facts with sample size + freshness + "API-measured, directional"; Copy context (Markdown brief) and Open in Claude. No model calls.
 - [x] 4. Document pane: tabs that close, add, expand and split; roving tablist, Delete, Esc.

@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { buildWorkspace, getWorkspaceRows } from "@/lib/queries/workspace";
-import { exampleWorkspaceRows } from "@/app/app/example-data";
+import { exampleWorkspaceRows } from "@/app/team/example-data";
 import { IDS } from "../../scripts/seed/data";
 import { makeWorkspace, newUser, resetDb, serviceClient } from "./helpers";
 
@@ -10,7 +10,7 @@ beforeAll(resetDb);
 const byId = <T extends { id: string }>(xs: T[]) => [...xs].sort((a, b) => a.id.localeCompare(b.id));
 
 describe("getWorkspaceRows", () => {
-  it("reads the seeded Example Ramen House exactly as /app's Example data shows it", async () => {
+  it("reads the seeded Example Ramen House exactly as /team's Example data shows it", async () => {
     const rows = await getWorkspaceRows(serviceClient(), IDS.business);
     const fromDb = buildWorkspace(rows!);
     const example = buildWorkspace(exampleWorkspaceRows());

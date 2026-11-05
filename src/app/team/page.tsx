@@ -8,7 +8,7 @@ import { exampleWorkspaceRows } from "./example-data";
 export const metadata: Metadata = { title: "Rank1", robots: { index: false } };
 
 // Team workspace, read-only Example data until sign-in exists. Off unless ENABLE_TEAM_WORKSPACE=true.
-export default function AppPage() {
+export default function TeamPage() {
   if (process.env.ENABLE_TEAM_WORKSPACE !== "true") notFound();
   const view = buildWorkspace(exampleWorkspaceRows());
   return (

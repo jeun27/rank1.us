@@ -83,7 +83,7 @@
   --aurora: linear-gradient(90deg, #E8B85A, #5FB8B3, #279EF2);
 }
 
-/* Team workspace dark theme (src/styles/tokens.ts darkColors). Set by /app's theme toggle only. */
+/* Team workspace dark theme (src/styles/tokens.ts darkColors). Set by /team's theme toggle only. */
 [data-theme="dark"] {
   color-scheme: dark;
   --color-paper: #0B0B0C;

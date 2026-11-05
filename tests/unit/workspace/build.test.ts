@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildWorkspace, ENGINES } from "@/lib/queries/workspace";
-import { exampleWorkspaceRows } from "@/app/app/example-data";
+import { exampleWorkspaceRows } from "@/app/team/example-data";
 import { BUSINESS, COMPETITORS, seedData } from "../../../scripts/seed/generate";
 
 const rows = exampleWorkspaceRows();

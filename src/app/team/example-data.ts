@@ -1,5 +1,5 @@
 // Example data: the Example Ramen House seed (supabase/seed.sql), as the rows getWorkspaceRows would read.
-// /app shows this read-only until sign-in exists.
+// /team shows this read-only until sign-in exists.
 import type { WorkspaceRows } from "@/lib/queries/workspace";
 import { BUSINESS, COMPETITORS, IDS, cityLevel, seedRows } from "../../../scripts/seed/data";
 

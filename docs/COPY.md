@@ -88,7 +88,7 @@ Table headers in the landing page's "What you see on Monday." mock panels. The p
 
 ## Team workspace (lead, 2026-11-05)
 
-Strings for the /app team workspace shell (ENG_HANDOFF_STEP2 §3). Nav labels are the 4b screen names; data in the panes is Example data.
+Strings for the /team team workspace shell (ENG_HANDOFF_STEP2 §3). Nav labels are the 4b screen names; data in the panes is Example data.
 
 | Where | String |
 |---|---|

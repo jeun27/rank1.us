@@ -28,7 +28,7 @@ Contrast: ink/paper 14.53, white/jellyDeep 6.12, jellyDeep/paper 5.57, moss/pape
 
 ## Team workspace dark theme (ENG_HANDOFF_STEP2 §3, lead 2026-11-05)
 
-/app only, set by `data-theme="dark"` (toggle in the sidebar, defaults to the system setting, saved in localStorage). Same token names as the light set, so every component switches with it. `raised` is new in both themes: selected rows, active tab, composer (light #FFFFFF).
+/team only, set by `data-theme="dark"` (toggle in the sidebar, defaults to the system setting, saved in localStorage). Same token names as the light set, so every component switches with it. `raised` is new in both themes: selected rows, active tab, composer (light #FFFFFF).
 
 | Token | Dark value | Contrast |
 |---|---|---|
