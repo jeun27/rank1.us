@@ -28,13 +28,16 @@ beforeEach(() => {
 });
 
 describe("proxy", () => {
-  it.each(["/app", "/app/billing", "/team", "/client/report"])("sends signed-out %s to /signin with next", async (p) => {
-    const res = await proxy(req(p));
-    expect(res.status).toBe(307);
-    expect(new URL(res.headers.get("location")!).pathname + new URL(res.headers.get("location")!).search).toBe(
-      `/signin?next=${encodeURIComponent(p)}`,
-    );
-  });
+  it.each(["/app", "/app/billing", "/team", "/client/report"])(
+    "sends signed-out %s to /signin with next",
+    async (p) => {
+      const res = await proxy(req(p));
+      expect(res.status).toBe(307);
+      expect(new URL(res.headers.get("location")!).pathname + new URL(res.headers.get("location")!).search).toBe(
+        `/signin?next=${encodeURIComponent(p)}`,
+      );
+    },
+  );
 
   it.each(["/", "/signin", "/contact", "/auth/callback"])("lets signed-out %s through", async (p) => {
     const res = await proxy(req(p));

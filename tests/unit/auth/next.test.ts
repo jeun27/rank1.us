@@ -5,12 +5,19 @@ describe("safeNext", () => {
   it.each(["/app", "/app/billing", "/client?x=1", "/team/q/1#a"])("keeps same-origin path %s", (p) => {
     expect(safeNext(p)).toBe(p);
   });
-  it.each([null, "", "app", "//evil.com", "/\\evil.com", "https://evil.com/app", "/%2F%2Fevil.com", " /app", "/\t/evil.com"])(
-    "drops %s",
-    (p) => {
-      expect(safeNext(p)).toBeNull();
-    },
-  );
+  it.each([
+    null,
+    "",
+    "app",
+    "//evil.com",
+    "/\\evil.com",
+    "https://evil.com/app",
+    "/%2F%2Fevil.com",
+    " /app",
+    "/\t/evil.com",
+  ])("drops %s", (p) => {
+    expect(safeNext(p)).toBeNull();
+  });
 });
 
 describe("isProtected", () => {

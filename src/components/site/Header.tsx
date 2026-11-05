@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ContactUsLink } from "@/components/contact/ContactUsLink";
 import { Logo } from "@/components/ui/Logo";
+import { authCopy } from "@/lib/auth/copy";
 import { container } from "./Section";
 
 export const navLink =
@@ -20,6 +21,9 @@ export function Header() {
           FAQ
         </a>
         <ContactUsLink className={navLink}>Contact us</ContactUsLink>
+        <Link href="/signin" className={navLink}>
+          {authCopy.logIn}
+        </Link>
       </nav>
     </header>
   );
