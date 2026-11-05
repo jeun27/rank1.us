@@ -12,7 +12,14 @@ export type LocalCompetitorsResult = {
   error?: string;
 };
 
-export type FindLocalCompetitorsInput = { cuisine: string; city: string; state: string; domain?: string };
+// limit: how many Maps results to keep (default 5); the shared cache keeps up to 20.
+export type FindLocalCompetitorsInput = {
+  cuisine: string;
+  city: string;
+  state: string;
+  domain?: string;
+  limit?: number;
+};
 
 export type SuggestQuestionsInput = { business: Business; picks: Picks };
 export type { BuiltQuestion, Business, Picks };
