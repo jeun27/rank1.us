@@ -143,7 +143,7 @@ test("a seeded dfy_client lands on /client", async ({ page }) => {
   await expectAxeClean(page);
 });
 
-test("Start for $99/mo goes through sign-in to the billing paywall stub", async ({ page }) => {
+test("Start for $99/mo goes through sign-in to /app/billing, where it opens Checkout (Step 14)", async ({ page }) => {
   test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
   await page.goto("/");
   await page.locator("#pricing").getByRole("link", { name: "Start for $99/mo" }).click();
@@ -154,8 +154,9 @@ test("Start for $99/mo goes through sign-in to the billing paywall stub", async 
   await openMagicLink(page, user.email, "/app/billing");
   expect(new URL(page.url()).pathname).toBe("/app/billing");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Billing");
-  await expect(page.getByRole("button", { name: "Start for $99/mo" })).toBeDisabled();
-  await expect(page.getByText(c.checkoutClosed)).toBeVisible();
+  // Step 14 replaced the disabled stub ("Checkout isn't open yet."): the button now opens Checkout.
+  await expect(page.getByRole("button", { name: "Start for $99/mo" })).toBeEnabled();
+  await expect(page.getByText(c.checkoutClosed)).toHaveCount(0);
   await expectNoSideScroll(page);
   await expectAxeClean(page);
 });

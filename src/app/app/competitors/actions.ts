@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { addCompetitor, dismissSuggestion, getCurrentBusiness, type CompetitorInput } from "@/lib/queries/shell";
 import type { DbClient } from "@/lib/queries/client";
 import { createClient } from "@/lib/supabase/server";
+import { selectedBusinessId } from "@/app/app/current";
 
 // The business comes from the session, never from the browser; RLS checks membership again.
 async function run(
@@ -10,7 +11,7 @@ async function run(
   input: CompetitorInput,
 ) {
   const db = await createClient();
-  const business = await getCurrentBusiness(db);
+  const business = await getCurrentBusiness(db, await selectedBusinessId());
   if (!business) return { error: "no_business" };
   try {
     await fn(db, business.id, input);
