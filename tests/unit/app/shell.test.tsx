@@ -79,7 +79,8 @@ describe("Dashboard (UI.md 4b)", () => {
       <Dashboard business={exampleBusiness} latest={exampleLatest} series={series} fixes={exampleFixes} now={now} />,
     );
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Dashboard");
-    expect(screen.getByText("named in 80 of 240 answers")).toBeInTheDocument();
+    // The hero, and the same latest point in the line's table.
+    expect(screen.getAllByText("named in 80 of 240 answers")).toHaveLength(2);
     expect(screen.getByText(/API-measured, directional/)).toBeInTheDocument();
     expect(screen.getByRole("table", { name: "Competitors" })).toBeInTheDocument();
     expect(screen.queryByText("Share of voice")).not.toBeInTheDocument();
@@ -131,7 +132,7 @@ describe("Competitors (UI.md 4b, SoV only here)", () => {
       maps_cid: "s1",
       rating: 4.3,
     });
-    await userEvent.click(within(suggested).getAllByRole("button", { name: "Not a competitor" })[1]);
+    await userEvent.click(within(suggested).getAllByRole("button", { name: "Not a competitor" }).at(-1)!);
     expect(actions.dismiss).toHaveBeenCalledWith({
       name: "Example Pho Spot",
       domain: "examplepho.test",
@@ -190,7 +191,8 @@ describe("History (UI.md 4b)", () => {
       "href",
       "/app/runs/example-run-1/export.csv",
     );
-    expect(within(rows[1]).getByText("+4 pts")).toBeInTheDocument();
+    // 80 of 240 = 33% vs 72 of 240 = 30%.
+    expect(within(rows[1]).getByText("+3 pts")).toBeInTheDocument();
   });
 
   it("no runs: the 4b empty copy", () => {
