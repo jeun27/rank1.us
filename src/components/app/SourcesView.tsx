@@ -8,14 +8,15 @@ import { Page } from "./Page";
 import { sourcesCopy as c } from "./sources-copy";
 
 // Category colors: existing tokens only, validated with the dataviz script (all pairs, paper).
-// Four hues pass; Other is the neutral inkMuted; Social reuses jellyDeep with a 45° texture.
+// The four solid hues pass together; Social (jellyDeep) and Other (neutral inkMuted) are striped,
+// so texture tells them from the solid fills (lead Q3, O1).
 const COLOR: Record<Category, { fill: string; texture?: boolean }> = {
   reddit: { fill: "var(--color-jellyDeep)" },
   youtube: { fill: "var(--color-amber)" },
   social: { fill: "var(--color-jellyDeep)", texture: true },
   review_directory: { fill: "var(--color-jelly)" },
   news_blog: { fill: "var(--color-warnText)" },
-  other: { fill: "var(--color-inkMuted)" },
+  other: { fill: "var(--color-inkMuted)", texture: true },
 };
 const linksText = (n: number) => `${n} ${n === 1 ? "link" : "links"}`;
 
