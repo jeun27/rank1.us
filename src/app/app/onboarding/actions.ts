@@ -3,11 +3,15 @@ import { redirect } from "next/navigation";
 import { findLocalCompetitors, readSite } from "@/lib/onboarding";
 import { MAX_ACTIVE_QUESTIONS } from "@/lib/questions/templates";
 import { getLanding } from "@/lib/queries/auth";
+import type { DbClient } from "@/lib/queries/client";
+import { getCachedLookup, putCachedLookup } from "@/lib/queries/lookup-cache";
+import { takeRateToken } from "@/lib/queries/rate-limits";
+import { createServiceClient } from "@/lib/supabase/service";
+import type { Json } from "@/types/db";
 import { createBusinessOnboarding } from "@/lib/queries/onboarding";
 import { createClient } from "@/lib/supabase/server";
 import type { CompetitorQuery, CompetitorSearch, OnboardingInput, SiteRead } from "./contract";
-import { withLimits } from "@/lib/onboarding/limits";
-import { storeFor } from "../lookup-store";
+import { withLimits, type LookupStore } from "@/lib/onboarding/limits";
 import { lookupCompetitors } from "@/lib/onboarding/lookup";
 import { MAX_SUGGESTED_COMPETITORS } from "@/lib/onboarding/competitors";
 
@@ -18,6 +22,17 @@ async function onboardingClient() {
   const user = (await db.auth.getUser()).data.user;
   if (!user || (await getLanding(db)) !== "onboarding") return null;
   return { db, userId: user.id };
+}
+
+// Rate tokens with the caller's client (take_rate_token); the 24 h result cache with the
+// service client, because users must not write their own cached results.
+function storeFor({ db, userId }: { db: DbClient; userId: string }): LookupStore {
+  const svc = createServiceClient();
+  return {
+    take: (kind) => takeRateToken(db, kind),
+    cached: (kind, key, maxAgeMs) => getCachedLookup(svc, userId, kind, key, maxAgeMs / 1000),
+    save: (kind, key, result) => putCachedLookup(svc, { user_id: userId, kind, key, result: result as Json }),
+  };
 }
 
 export async function readSiteAction(domain: string): Promise<SiteRead> {
