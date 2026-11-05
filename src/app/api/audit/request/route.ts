@@ -1,4 +1,6 @@
 import { randomBytes } from "node:crypto";
+import { after } from "next/server";
+import { startFreeAuditWith } from "@/lib/audit/service";
 import { countLeadsSince, insertLead } from "@/lib/queries/leads";
 import { clientIp, hashIp } from "@/lib/spam/ipHash";
 import { auditDailyLimit, honeypotFilled, utcDayStart } from "@/lib/spam/rateLimit";
@@ -11,7 +13,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 
 const queued = () => Response.json({ status: "queued" }, { status: 202 });
 
-// Stub: stores a lead and answers 202. Step 7 starts the audit run.
+// Stores a lead and answers 202; the free audit starts after the response is sent (next/server after()).
 export async function POST(req: Request) {
   const body = await readBody(req);
   if (!body) return Response.json({ errors: [] }, { status: 400 });
@@ -28,7 +30,12 @@ export async function POST(req: Request) {
     if ((await countLeadsSince(db, utcDayStart(new Date()))) >= auditDailyLimit()) {
       return Response.json({ error: "rate_limited" }, { status: 429 });
     }
-    await insertLead(db, { ...check.data, ip_hash: hashIp(ip), token: randomBytes(32).toString("base64url") });
+    const id = await insertLead(db, {
+      ...check.data,
+      ip_hash: hashIp(ip),
+      token: randomBytes(32).toString("base64url"),
+    });
+    after(() => startFreeAuditWith(db, { id, domain: check.data.domain }));
   } catch {
     console.error("audit request: failed");
     return Response.json({ error: "server" }, { status: 500 });

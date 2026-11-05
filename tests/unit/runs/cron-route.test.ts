@@ -6,6 +6,9 @@ vi.mock("@/lib/supabase/service", () => ({
   createServiceClient: () => ({ from: () => ({ select: () => ({ eq: async () => ({ data: [], error: null }) }) }) }),
 }));
 const runEngine = vi.hoisted(() => vi.fn());
+const NOTIFIED = { sent: 0, failedRuns: 0, sendErrors: 0, skipped: false };
+const notify = vi.hoisted(() => ({ notifyFreeAuditsWith: vi.fn(), startFreeAuditWith: vi.fn() }));
+vi.mock("@/lib/audit/service", () => notify);
 vi.mock("@/lib/engines", async (real) => ({ ...(await real<object>()), runEngine }));
 
 const { GET } = await import("@/app/api/cron/run-jobs/route");
@@ -36,6 +39,7 @@ beforeEach(() => {
   vi.stubEnv("CRON_SECRET", SECRET);
   vi.stubEnv("RUN_JOBS_BATCH", "");
   for (const f of Object.values(q)) f.mockReset();
+  notify.notifyFreeAuditsWith.mockReset().mockResolvedValue(NOTIFIED);
   runEngine.mockReset().mockResolvedValue({
     status: "ok",
     text: "Example Ramen House is great.",
@@ -72,7 +76,13 @@ describe("GET /api/cron/run-jobs", () => {
     );
     const res = await call(`Bearer ${SECRET}`);
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ claimed: 20, finished: 20, unfinished: 0, stopped: "batch" });
+    expect(await res.json()).toEqual({
+      claimed: 20,
+      finished: 20,
+      unfinished: 0,
+      stopped: "batch",
+      notified: NOTIFIED,
+    });
     expect(q.claimJobs.mock.calls.map((c) => c[1])).toEqual([5, 5, 5, 5]);
     expect(q.finishJob).toHaveBeenCalledTimes(20);
     expect(q.finishJob.mock.calls[0][2]).toMatchObject({ status: "ok", mentioned: true, first_position: 1 });
@@ -86,6 +96,7 @@ describe("GET /api/cron/run-jobs", () => {
       finished: 3,
       unfinished: 0,
       stopped: "empty",
+      notified: NOTIFIED,
     });
     expect(q.claimJobs.mock.calls.map((c) => c[1])).toEqual([5, 5]);
   });
@@ -115,6 +126,7 @@ describe("GET /api/cron/run-jobs", () => {
       finished: 5,
       unfinished: 0,
       stopped: "budget",
+      notified: NOTIFIED,
     });
     expect(q.claimJobs).toHaveBeenCalledTimes(1);
     vi.restoreAllMocks();
@@ -128,8 +140,22 @@ describe("GET /api/cron/run-jobs", () => {
       finished: 1,
       unfinished: 1,
       stopped: "empty",
+      notified: NOTIFIED,
     });
     expect(q.recordJobError).toHaveBeenCalledWith(expect.anything(), "job-1", "finish_job: deadlock detected");
+  });
+
+  it("emails finished free audits after the drain, even with an empty queue", async () => {
+    q.claimJobs.mockResolvedValue([]);
+    notify.notifyFreeAuditsWith.mockResolvedValue({ ...NOTIFIED, sent: 2 });
+    const body = await (await call(`Bearer ${SECRET}`)).json();
+    expect(body.notified).toEqual({ ...NOTIFIED, sent: 2 });
+    expect(notify.notifyFreeAuditsWith).toHaveBeenCalledTimes(1);
+  });
+
+  it("never notifies on a 401", async () => {
+    await call("Bearer nope");
+    expect(notify.notifyFreeAuditsWith).not.toHaveBeenCalled();
   });
 
   it("claim_jobs failing → 500 with a short error, nothing thrown", async () => {

@@ -386,9 +386,20 @@ UNVERIFIED
   - ClaimedJob.question.id is now string | null.
 - Tests: tests/db/free-audit.test.ts.
 - src/types/db.ts got the 0012 objects added by hand in the generator format (no local stack). Regenerate it with `pnpm db:types` when a stack is available.
+## Step 7 (data-pipeline): metrics, CSV, free-audit pipeline (branch feat/step7-metrics)
+Step 7 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
+Lead decisions (Step 7 brief): a free audit has no business row; its brand list is a service-only snapshot reached by the lead token. Inputs are readSite → findLocalCompetitors → buildQuestions, with no LLM. AUDIT_DAILY_LIMIT caps leads, and the audit starts only after the lead row is stored. Paid-run metrics count only answers whose question still exists. One email per lead (idempotency key = lead id, from CONTACT_FROM_EMAIL). Metrics are pure TypeScript.
+- Free-audit default picks (lead, 2026-11-05), reconcile with Build Pack: verified local_places only, kind then name order (listLocalPlaces), the first 3 landmarks + first 3 areas, dietary vegan/vegetarian, occasion date night, ≤25 via buildQuestions. With no cuisine found, {cuisine} = "restaurants" (lead) and Maps searches plain "restaurant". Questions use the long form (as onboarding stores active_form 'long'), at city level.
+- Notify (lead Q3): every finished free audit is marked handled (notified_at, notify_sent; failed → sent=false, no email). A failed send bumps notify_attempts; sends cap at 5. With NEXT_PUBLIC_SITE_URL or CONTACT_FROM_EMAIL unset, notify skips with one log line and no attempt counted. Log lines never carry an email, token or domain.
+
+Changed
+- src/lib/metrics/compute.ts: computeMetrics returns Metric {value, numerator, denominator} everywhere (.claude/agents/data-pipeline.md). Visibility overall and per engine; leaderboard {metric, change in floored whole points vs the previous run, tooFew n < 10}, sorted by value, numerator, business first, name; share of voice (each brand once per answer; null at 0 mentions); top sources by domain; jobs (ok includes no_overview); freshness.
+- src/lib/metrics/csv.ts: one row per answer, RFC 4180 with CRLF; cells starting with = + - @ tab CR get a leading ' (OWASP CSV injection).
+- src/lib/audit/start.ts and notify.ts, plus docs/COPY.md "Audit email (lead, 2026-11-05)".
+- src/lib/onboarding/competitors.ts: the Maps keyword is trimmed, so an empty cuisine searches "restaurant".
+- Wiring (after #34 / 0012): src/lib/audit/service.ts binds the real dependencies on the service client: create_free_audit via rpc (p = {lead_id, business {name|null, domain}, competitors ≤5, location, questions}); listUnnotifiedFreeAudits, markFreeAuditNotified and bumpFreeAuditNotifyAttempts from src/lib/queries/results.ts (okAnswers is the email's {n}). POST /api/audit/request calls after(() => startFreeAuditWith(db, {id, domain})) once insertLead returns, so the 202 and the copy are unchanged. GET /api/cron/run-jobs runs notifyFreeAuditsWith after each drain and returns `notified` alongside the drain summary.
 
 ## Step 7 (frontend): audit progress, results and exports (branch feat/step7-audit, issue #33)
-Step 7 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
 - /app/runs/[runId] (members, through RLS getRunResults) and /audit/[token] (service role, getFreeAuditByToken) share AuditView: UI.md 4b Audit progress and Audit results. The free page adds the 'Start for $99/mo' card and the Powered by Rank1 credit; the paid page never shows the credit.
 - Per-engine progress comes from run.jobs_total (3q/3q/3q/q) and the answers so far (lead: run_jobs has no member read path). While a run is queued or running, the page refreshes every 5 s.
 - Exports: export.csv (toCsv) and export.png (next/og, 1200×630) under both routes, with Content-Disposition attachment, Cache-Control no-store, noindex and a [a-z0-9.-] filename. An unknown run or token is a 404.
