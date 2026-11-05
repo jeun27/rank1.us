@@ -10,7 +10,7 @@ import type { LocalCompetitor } from "@/lib/onboarding/types";
 import type { CompetitorInput, CompetitorRow } from "@/lib/queries/shell";
 import { normalizeDomain } from "@/lib/spam/validate";
 import { appCopy as c } from "./copy";
-import { Page, Section } from "./Page";
+import { Measured, Page, Section } from "./Page";
 
 type Actions = { add: (c: CompetitorInput) => Promise<unknown>; dismiss: (c: CompetitorInput) => Promise<unknown> };
 
@@ -23,6 +23,7 @@ export function CompetitorsView({
   tracked,
   suggestions,
   actions,
+  now,
 }: {
   latest: Loaded | null;
   tracked: CompetitorRow[];
@@ -56,6 +57,7 @@ export function CompetitorsView({
       )}
       {latest && rows.length > 0 && (
         <>
+          <Measured checkedAt={latest.metrics.freshness} answers={latest.metrics.visibility.denominator} now={now} />
           {sov && (
             <Card>
               <p className="text-caption font-semibold text-inkMuted">{c.shareOfVoice}</p>
@@ -65,7 +67,7 @@ export function CompetitorsView({
             </Card>
           )}
           {/* Phones: cards with the You row pinned first. */}
-          <ul className="flex flex-col gap-2 md:hidden">
+          <ul aria-label={c.competitors} className="flex flex-col gap-2 md:hidden">
             {[...rows]
               .sort((a, b) => Number(b.kind === "business") - Number(a.kind === "business"))
               .map((b) => (
@@ -80,7 +82,9 @@ export function CompetitorsView({
                     {b.kind === "business" && <Badge tone="info">You</Badge>}
                   </span>
                   <span data-computed className="text-caption tabular-nums">
-                    {b.tooFew ? "too few answers" : formatPercent(b.metric)}
+                    {b.tooFew
+                      ? "too few answers"
+                      : `${formatPercent(b.metric)} (named in ${b.metric.numerator} of ${b.metric.denominator} answers)`}
                   </span>
                 </li>
               ))}

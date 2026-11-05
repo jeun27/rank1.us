@@ -6,7 +6,7 @@ import { Table } from "@/components/ui/Table";
 import type { RunSummary } from "@/lib/queries/shell";
 import type { Metric } from "@/types/metrics";
 import { appCopy as c } from "./copy";
-import { Page } from "./Page";
+import { Measured, Page } from "./Page";
 
 const day = (iso: string | null) =>
   iso
@@ -36,6 +36,7 @@ export function HistoryView({ runs }: { runs: RunSummary[] }) {
   };
   return (
     <Page title={c.history}>
+      <Measured checkedAt={null} />
       <Table
         caption={c.history}
         columns={[
