@@ -1,6 +1,6 @@
 # QA
 
-## Step 8: Self-serve shell (Dashboard, Competitors, Questions, History)
+## Step 8: Self-serve shell (Dashboard, Competitors, Questions, History) (re-run)
 
 Checked 2026-11-05 on main at 1c6a54e:
 - #38 (a91c6eb): self-serve shell queries
@@ -12,7 +12,17 @@ The sandbox Docker disk is full, so there was no local Supabase. test-db and e2e
 Preview: https://rank1-o1xmctq6w-bryan-flowhighlevels-projects.vercel.app (sha 138cf81, READY).
 Sources: Jeun's ENG_HANDOFF_OVERNIGHT §6 Step 8, the lead's brief (rank1-step8.md), docs/UI.md 4b rows Dashboard / Competitors / Questions / History, docs/PRODUCT.md rule 3.
 
-Result: FAIL. 1 blocking problem: the Competitors page breaks product rule 3 (n + freshness + "API-measured, directional"). Listed at the end.
+Result: PASS. The first run's blocker (Competitors broke product rule 3) is fixed by #47 (merged as 6ed31af). No blocking problems.
+
+Re-run 2026-11-05 on #47's preview at 319d441, whose tree is identical to main 6ed31af: https://rank1-mkm6pwzwx-bryan-flowhighlevels-projects.vercel.app
+
+| Check (375 and 1280) | Result | Evidence |
+|---|---|---|
+| Competitors phone cards show n | PASS | 375 competitors-success: "Example Ramen House · You · 33% (named in 80 of 240 answers)", "Example Noodle Bar · 100% (named in 240 of 240 answers)", "Example Izakaya · too few answers" |
+| Competitors freshness + label line | PASS | competitors-success and competitors-partial at both widths: exactly one "Checked 2 h ago · 240 answers · API-measured, directional" |
+| History label once | PASS | history-success and history-partial at both widths: "API-measured, directional" appears exactly once; rows keep date + "named in … of …" |
+| axe, no side scroll | PASS | 0 violations on all 4 states at 375 and 1280; scrollWidth equals the viewport |
+| Preview e2e (6ed31af tests) | PASS | 184 passed, 70 skipped (local-stack tests), 0 failed |
 
 ### Commands
 
@@ -36,16 +46,16 @@ Result: FAIL. 1 blocking problem: the Competitors page breaks product rule 3 (n 
 | run_summaries parity with computeMetrics | PASS | CI db shell.test.ts "listRunSummaries matches computeMetrics on the same run, overall and per engine, with a deleted question"; also newest first, never free audits, non-member and anon get nothing |
 | Copy | PASS | unit "app shell copy uses only strings that are in docs/COPY.md" |
 
-Not blocking:
-- History rows show date + n but no "API-measured, directional" label. The fix for the blocker could add it here too.
+
+First-run blocker (1c6a54e):
+
+| Blocker | Result | Evidence |
+|---|---|---|
+| Competitors page broke product rule 3: phone cards showed a bare % with no n (src/components/app/CompetitorsView.tsx:83), and there was no freshness or "API-measured, directional" at either width | FIXED by #47 (6ed31af) | re-run table above. History now carries the label too |
 
 ### Blocking problems
 
-1. The Competitors page breaks product rule 3 ("Every metric shows its sample size … and freshness … Results carry the label 'API-measured, directional'"). Preview /dev/app?state=competitors-success:
-   - On phones the leaderboard cards show a bare % with no n: "33%", "100%" (src/components/app/CompetitorsView.tsx:83, `formatPercent(b.metric)`). The desktop table shows "(named in a of n answers)".
-   - At both widths the page has no freshness ("checked … ago") and no "API-measured, directional". CompetitorsView renders neither Hero nor Freshness; Dashboard gets both through Hero.
-
-   Fix: show the n on the phone cards (as the desktop table does), and add `Freshness` and the label to the Competitors page.
+None.
 
 ## Step 7: Metrics + same-day audit + CSV/PNG export
 
