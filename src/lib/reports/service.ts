@@ -29,14 +29,17 @@ async function loadReport(
 ) {
   const { data: business, error } = await db
     .from("businesses")
-    .select("name, brand_color, logo_path, report_recipients")
+    .select("name, brand_color, logo_path, report_recipients, service, fix_list_visible")
     .eq("id", businessId)
     .maybeSingle();
   if (error) throw error;
   if (!business) return null;
+  // A DFY client sees fixes only when the team shows them (fix_list_visible). The service client bypasses
+  // that RLS rule, so apply it here: hidden → no fixes, and the PDF omits the whole section (review of #77).
+  const showFixes = business.service !== "dfy" || business.fix_list_visible;
   const [summaries, fixes, logo] = await Promise.all([
     listRunSummaries(db, businessId, SUMMARIES, ["complete", "partial"]),
-    listFixes(db, businessId),
+    showFixes ? listFixes(db, businessId) : null,
     business.logo_path ? loadLogo(serviceDb, business.logo_path) : null,
   ]);
   const { runs, previous } = monthRuns(summaries, periodStart, periodEnd);
@@ -52,7 +55,7 @@ async function loadReport(
       brands: results.brands,
     },
     previous,
-    fixes: [...fixes.ranked, ...fixes.tidyUps].map(({ title, detail }) => ({ title, detail })),
+    fixes: fixes ? [...fixes.ranked, ...fixes.tidyUps].map(({ title, detail }) => ({ title, detail })) : [],
   };
   return { input, recipients: business.report_recipients };
 }

@@ -747,4 +747,5 @@ Changed
 - sendTestReport (for 'Send test to me'): last month's report to the signed-in user's own email only, read with the caller's client (RLS), never stored. The idempotency key dedupes double clicks within a minute.
 - run-jobs drains reports after the fix checks. vercel.json gains the monthly cron, and tests/unit/vercel-config.test.ts pins all 3 crons.
 - Logs carry counts and PG codes only.
+- Review (#77): the drain reads with the service client, which bypasses the DFY fix_list_visible rule. So the report loader applies it: a DFY business with the fix list hidden gets no "What to fix next" section (no heading, no placeholder). DFY visible and self-serve always show it. Tested on the rendered PDF and the email.
 
