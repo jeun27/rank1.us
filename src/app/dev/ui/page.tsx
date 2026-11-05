@@ -73,9 +73,9 @@ export default function DevUiPage() {
         </div>
       </Section>
 
-      <Section name="Card">
-        <Card title="Example data">
-          <p>Example data: named in 34% of 160 answers, +6 pts</p>
+      <Section name="Card" example>
+        <Card title={you.brand}>
+          <StatNumber metric={you.now} />
         </Card>
       </Section>
 
