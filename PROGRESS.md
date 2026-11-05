@@ -307,16 +307,37 @@ UNVERIFIED / open
 - Review (#23) fixes: readSite reads at most 1 MB. A larger Content-Length is refused unread, and a stream is aborted as soon as it passes the cap; both count as unreadable. isPrivateAddress parses IPv6 fully, so v4-mapped in hex form (::ffff:7f00:1), NAT64 (64:ff9b::/96), 2001:db8::/32 and 192.0.0.0/24 are blocked too.
 - Test widened, with reason: tests/unit/engines/fixtures-privacy.test.ts now allows `(www\.)?example-[a-z0-9-]+\.test` links (it was `example-[a-z0-9]+\.test`). The Maps fixtures need hyphenated Example brand hosts (example-ramen-house.test) and a www form to test own-domain exclusion. Only example-*.test hosts are allowed, as before. Net tightening in the same test: the docs-URL exception now applies only inside the `_synthetic` note (it used to apply anywhere in the file), every synthetic file must carry that note, and title/name/source_name fields in synthetic files must start with "Example".
 
+## Step 6 (backend): run jobs and orchestration RPCs (branch feat/step6-run-jobs, issue #25)
+- Step 6 built from ENG_HANDOFF_OVERNIGHT §6 + CLAUDE.md + docs/*; Build Pack not readable; reconcile later.
+- Lead decisions:
+  - Queue = the documented fallback, a Supabase jobs table polled by Vercel Cron. No Vercel Queues in v1.
+  - Runs need subscription_status active/trialing or a DFY business. free_audit is Step 7.
+  - Citations are deduped by normalized URL per answer at storage time. The worker normalizes, and unique(answer_id, url) is the safety net.
+  - One queued/running run per business (P0409).
+  - Stale-job exhaustion writes a failed answer.
+  - Run counts are recomputed from answers on every finish, never incremented, because Vercel Cron may deliver twice.
+- Cron (lead, 2026-11-05): the team is on Vercel Pro, so `* * * * *` is allowed. Crons run only on production, and production updates only on a release tag, so no paid engine calls happen until Jeun's next release AND the API keys exist. The cron route and vercel.json ship in the data-pipeline PR with processJob.
+- Migration 20261105000011 (+ .down.sql):
+  - run_jobs: RLS on, ALL revoked from anon/authenticated, unique(run_id, question_id, engine, run_index).
+  - create_run(business, kind): definer, member or service role.
+    - Errors: 42501 not allowed, P0402 subscription_required, P0409 run_in_progress, 22023 bad kind / archived / no active questions.
+    - Jobs: 10 per active question, 3/3/3/1.
+  - claim_jobs(limit), service only: FOR UPDATE SKIP LOCKED. A job locked over 10 minutes ago is re-claimable. At 3 attempts it's closed as failed with a failed answer.
+  - finish_job(job, answer, citations), service only, idempotent. It stores the answer and citations, closes the job and recomputes the run: jobs_ok = ok + no_overview, jobs_failed = failed, cost_usd, then running / complete / partial / failed and finished_at.
+  - job_error(job, text), service only, sets run_jobs.last_error.
+- Contract: src/lib/runs/types.ts (ClaimedJob, FinishAnswer, FinishCitation). Wrappers: createRun / claimJobs / finishJob / recordJobError in src/lib/queries/run-jobs.ts. Tests: tests/db/run-jobs.test.ts.
+- New env name RUN_JOBS_BATCH (.env.example). CRON_SECRET was already there. The lead sets CRON_SECRET in Vercel.
+- src/types/db.ts got run_jobs and the five functions added by hand in the generator format (no local stack). Regenerate it with `pnpm db:types` in the next DB PR.
 ## Step 6 (data-pipeline): job worker, mention detection, citation categories (branch feat/step6-worker)
 Step 6 built from ENG_HANDOFF_OVERNIGHT §6 + CLAUDE.md + docs/*; Build Pack not readable; reconcile later.
 Lead decisions (Step 6 brief): queue = the documented fallback (a Supabase jobs table polled by Vercel Cron; no Vercel Queues in v1). audit/weekly runs only for subscription_status active/trialing or DFY businesses (free_audit is Step 7). Citations are deduped by normalized URL per answer at storage time.
 
 Changed
-- src/lib/runs/process-job.ts: processJob(job, {db, runEngine}) runs the engine, maps the answer (mentions for ok answers only; failed/no_overview keep mentioned/brands/first_position null; failed raw = {error, response}), dedupes and categorizes the citations, and calls finish_job. It never throws. If finish_job errors, the job stays running for claim_jobs to re-claim, and the error is recorded through RunsDb.recordJobError when backend exposes one.
+- src/lib/runs/process-job.ts: processJob(job, {db, runEngine}) runs the engine, maps the answer (mentions for ok answers only; failed/no_overview keep mentioned/brands/first_position null; failed raw = {error, response}), dedupes and categorizes the citations, and calls finish_job. It never throws. If finish_job errors, the job stays running for claim_jobs to re-claim, and the error is recorded with backend's job_error RPC (recordJobError). A failed answer passes `error`, which finish_job stores in run_jobs.last_error. Unknown cost stays null, never 0. Types come from backend's contract (src/lib/runs/types.ts); serviceRunsDb wraps src/lib/queries/run-jobs.ts plus manual domain_categories rows.
 - src/lib/runs/mentions.ts: detectMentions(text, brands), no LLM. NFKD with diacritics stripped, case-folded, quotes unified, "&" folded to "and". Names and aliases match as whole words (a possessive 's matches). Bare domain, plus the label without TLD when it's ≥5 chars and not all stoplist words. Overlapping hits go to the longest match. position = 1-based order of first appearance among mentioned brands.
 - src/lib/runs/categorize.ts: rules → reddit, youtube, social, review_directory (user-review/listing sites and delivery apps), news_blog (editorial guides such as Eater, The Infatuation, Michelin Guide and Zagat, news outlets, blog hosts and /blog paths), else other. A manual domain_categories row wins, subdomains included.
 - src/lib/runs/citations.ts: dedupe by normalized URL (lowercase scheme and host, no trailing slash, no utm_*, no #fragment, since AIO references carry #:~:text= anchors). First occurrence kept, positions renumbered 1..n.
 
 UNVERIFIED
 - The category domain lists and the mention stoplist are ours, not from any docs. The editorial vs listing split follows fix rules R12 vs R6/R7.
-- Ownership (lead, 2026-11-05): data-pipeline also owns the cron route and vercel.json crons. src/lib/runs/drain.ts: cronAuthorized (exact `Bearer ${CRON_SECRET}`, unset or blank secret → reject, per the Vercel Cron docs "Securing cron jobs"), batchSize (RUN_JOBS_BATCH, default 20, max 100), drainJobs (claims 5 at a time, processes each chunk in parallel, stops at the batch, an empty queue, or a 150 s budget, since live calls run up to ~130 s). vercel.json crons: /api/cron/run-jobs every minute. The team is on Vercel Pro; crons run on production only, which updates only at release.
+- Ownership (lead, 2026-11-05): data-pipeline also owns the cron route and vercel.json crons. src/lib/runs/drain.ts: cronAuthorized (exact `Bearer ${CRON_SECRET}`, unset or blank secret → reject, per the Vercel Cron docs "Securing cron jobs"), batchSize (RUN_JOBS_BATCH, default 20, max 100), drainJobs (claims 5 at a time, processes each chunk in parallel, stops at the batch, an empty queue, or a 150 s budget, since live calls run up to ~130 s). vercel.json crons: /api/cron/run-jobs every minute. src/app/api/cron/run-jobs/route.ts: GET → 401 unless the header matches; claim_jobs failing → 500 with a short error; maxDuration 300 (cacheComponents rejects the `dynamic` segment config, and reading request headers already makes it dynamic). The team is on Vercel Pro; crons run on production only, which updates only at release.

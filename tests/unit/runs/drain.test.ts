@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { batchSize, cronAuthorized, drainJobs } from "@/lib/runs/drain";
-import type { ClaimedJob, ProcessResult } from "@/lib/runs/process-job";
+import type { ProcessResult } from "@/lib/runs/process-job";
+import type { ClaimedJob } from "@/lib/runs/types";
 
 const jobs = (n: number, from = 0) =>
-  Array.from({ length: n }, (_, i) => ({ id: `job-${from + i}` }) as unknown as ClaimedJob);
+  Array.from({ length: n }, (_, i) => ({ job_id: `job-${from + i}` }) as unknown as ClaimedJob);
 
 // A queue of `total` jobs; each claim takes up to `limit` from the front.
 function queue(total: number) {
@@ -15,7 +16,11 @@ function queue(total: number) {
   });
   return claim;
 }
-const done = vi.fn(async (j: ClaimedJob): Promise<ProcessResult> => ({ jobId: j.id, status: "ok", finished: true }));
+const done = vi.fn(async (j: ClaimedJob): Promise<ProcessResult> => ({
+  jobId: j.job_id,
+  status: "ok",
+  finished: true,
+}));
 
 describe("cronAuthorized", () => {
   it("accepts only the exact Bearer secret", () => {
@@ -78,7 +83,7 @@ describe("drainJobs", () => {
     const claim = queue(100);
     const slow = vi.fn(async (j: ClaimedJob): Promise<ProcessResult> => {
       t += 60_000;
-      return { jobId: j.id, status: "ok", finished: true };
+      return { jobId: j.job_id, status: "ok", finished: true };
     });
     const s = await drainJobs({ claim, process: slow, batch: 20, budgetMs: 150_000, now: () => t });
     // Chunk 1 ends at 300 s of fake time (5 × 60 s, parallel calls each add time), so no chunk 2.
@@ -89,10 +94,10 @@ describe("drainJobs", () => {
   it("counts unfinished jobs (finish_job errors) and keeps going", async () => {
     const claim = queue(10);
     const flaky = vi.fn(async (j: ClaimedJob): Promise<ProcessResult> => ({
-      jobId: j.id,
+      jobId: j.job_id,
       status: "ok",
-      finished: j.id !== "job-3",
-      ...(j.id === "job-3" ? { error: "finish_job: x" } : {}),
+      finished: j.job_id !== "job-3",
+      ...(j.job_id === "job-3" ? { error: "finish_job: x" } : {}),
     }));
     expect(await drainJobs({ claim, process: flaky, batch: 20 })).toEqual({
       claimed: 10,
@@ -111,7 +116,7 @@ describe("drainJobs", () => {
       peak = Math.max(peak, active);
       await new Promise((r) => setTimeout(r, 5));
       active--;
-      return { jobId: j.id, status: "ok", finished: true };
+      return { jobId: j.job_id, status: "ok", finished: true };
     });
     await drainJobs({ claim, process: proc, batch: 20 });
     expect(peak).toBe(5);

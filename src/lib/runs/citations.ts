@@ -1,13 +1,8 @@
 import type { EngineCitation } from "@/lib/engines/types";
 import { categorize, hostOf, type Category } from "./categorize";
+import type { FinishCitation } from "./types";
 
-export type StoredCitation = {
-  url: string;
-  domain: string;
-  title: string | null;
-  position: number;
-  category: Category;
-};
+export type StoredCitation = FinishCitation & { category: Category };
 
 // Same link = same lowercase scheme and host, no trailing slash, no utm_* params, no #fragment
 // (AIO references carry #:~:text= anchors).

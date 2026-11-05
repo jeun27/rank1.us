@@ -1,12 +1,10 @@
 // Brand mention detection by text matching. No LLM: names, aliases and distinctive domains only.
-export type TrackedBrand = {
-  kind: "business" | "competitor";
-  name: string;
-  aliases?: string[];
-  domain?: string | null;
-};
+import type { BrandMention, ClaimedJob, TrackedBrand } from "./types";
 
-export type BrandMention = { name: string; kind: TrackedBrand["kind"]; mentioned: boolean; position: number | null };
+export type MentionBrand = Pick<TrackedBrand, "name"> &
+  Partial<Pick<TrackedBrand, "aliases" | "domain">> & {
+    kind: BrandMention["kind"];
+  };
 
 export type Mentions = { mentioned: boolean; first_position: number | null; brands: BrandMention[] };
 
@@ -79,7 +77,7 @@ export function bareDomain(domain: string): string {
     .replace(/^www\./, "");
 }
 
-function patterns(b: TrackedBrand): string[] {
+function patterns(b: MentionBrand): string[] {
   const out = [b.name, ...(b.aliases ?? [])].map(normalize).filter((p) => p.length > 0);
   if (b.domain) {
     const host = bareDomain(b.domain);
@@ -93,7 +91,7 @@ function patterns(b: TrackedBrand): string[] {
 type Hit = { brand: number; start: number; end: number };
 
 // Every brand's hits; overlapping hits go to the longest match, so a short brand inside a longer one doesn't count.
-export function detectMentions(text: string | null | undefined, brands: TrackedBrand[]): Mentions {
+export function detectMentions(text: string | null | undefined, brands: MentionBrand[]): Mentions {
   const t = normalize(text ?? "");
   const hits: Hit[] = [];
   brands.forEach((b, brand) => {
@@ -114,3 +112,9 @@ export function detectMentions(text: string | null | undefined, brands: TrackedB
   const business = result.find((r) => r.kind === "business");
   return { mentioned: !!business?.mentioned, first_position: business?.position ?? null, brands: result };
 }
+
+// The job's business first, then its competitors, in claim order.
+export const jobBrands = (job: Pick<ClaimedJob, "business" | "competitors">): MentionBrand[] => [
+  { ...job.business, kind: "business" },
+  ...job.competitors.map((c) => ({ ...c, kind: "competitor" as const })),
+];

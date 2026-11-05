@@ -5,25 +5,34 @@ import { processJob, type ClaimedJob, type RunsDb } from "@/lib/runs";
 import { KEYS, NOW, fakeFetch, fixture, hangingFetch } from "../engines/helpers";
 
 const job = (engine: ClaimedJob["engine"]): ClaimedJob => ({
-  id: "job-1",
+  job_id: "job-1",
   run_id: "run-1",
-  question_id: "q-1",
   engine,
   run_index: 1,
-  question: "best ramen in Irvine",
-  location: { level: "city", country: "US", state: "CA", city: "Irvine" },
-  brands: [
-    { kind: "business", name: "Example Ramen House", domain: "example-ramen-house.test" },
-    { kind: "competitor", name: "Example Tonkotsu Co." },
-    { kind: "competitor", name: "Example Izakaya" },
+  attempt: 1,
+  question: {
+    id: "q-1",
+    text: "best ramen in Irvine",
+    location_level: "city",
+    country: "US",
+    state: "CA",
+    city: "Irvine",
+    dfs_location_code: null,
+  },
+  business: { id: "b-1", name: "Example Ramen House", aliases: [], domain: "example-ramen-house.test" },
+  competitors: [
+    { id: "c-1", name: "Example Tonkotsu Co.", aliases: [], domain: null },
+    { id: "c-2", name: "Example Izakaya", aliases: [], domain: null },
   ],
 });
 
 function db(overrides = {}, finishError?: string) {
   const d = {
-    finishJob: vi.fn<RunsDb["finishJob"]>(async () => (finishError ? { error: finishError } : {})),
+    finishJob: vi.fn<RunsDb["finishJob"]>(async () => {
+      if (finishError) throw new Error(finishError);
+    }),
     manualCategories: vi.fn<RunsDb["manualCategories"]>(async () => overrides),
-    recordJobError: vi.fn<NonNullable<RunsDb["recordJobError"]>>(async () => {}),
+    recordJobError: vi.fn<RunsDb["recordJobError"]>(async () => {}),
   };
   return d;
 }
@@ -129,9 +138,8 @@ describe("processJob", () => {
       mentioned: null,
       brands: null,
       first_position: null,
-      cost_usd: 0,
+      error,
     });
-    expect(answer.raw).toMatchObject({ error });
     expect(citations).toEqual([]);
   });
 
@@ -142,7 +150,7 @@ describe("processJob", () => {
     }) as unknown as typeof runEngine;
     const res = await processJob(job("gemini"), { db: d, runEngine: boom });
     expect(res).toMatchObject({ status: "failed", finished: true });
-    expect(d.finishJob.mock.calls[0][1].raw).toMatchObject({ error: "worker: kaboom" });
+    expect(d.finishJob.mock.calls[0][1]).toMatchObject({ status: "failed", error: "worker: kaboom", raw: null });
   });
 
   it("finish_job error → not finished, error recorded on the job, never thrown", async () => {
@@ -153,6 +161,18 @@ describe("processJob", () => {
     });
     expect(res).toEqual({ jobId: "job-1", status: "ok", finished: false, error: "finish_job: deadlock detected" });
     expect(d.recordJobError).toHaveBeenCalledWith("job-1", "finish_job: deadlock detected");
+  });
+
+  it("a recordJobError that throws synchronously still doesn't throw", async () => {
+    const d = db({}, "x");
+    d.recordJobError.mockImplementation((() => {
+      throw new Error("sync");
+    }) as never);
+    const res = await processJob(job("perplexity"), {
+      db: d,
+      runEngine: engineWith(fixture("perplexity/synthetic-restaurant-web-search.json")),
+    });
+    expect(res).toMatchObject({ finished: false, error: "finish_job: x" });
   });
 
   it("a throwing db (and a throwing recordJobError) still doesn't throw", async () => {
@@ -166,7 +186,7 @@ describe("processJob", () => {
     expect(res).toMatchObject({ finished: false, error: "finish_job: network" });
   });
 
-  it("an ok answer naming no brand → mentioned false, first_position null, unknown cost stored as 0", async () => {
+  it("an ok answer naming no brand → mentioned false, first_position null, unknown cost stored as null", async () => {
     const d = db();
     const answer: EngineAnswer = {
       status: "ok",
@@ -179,6 +199,6 @@ describe("processJob", () => {
       checkedAt: NOW().toISOString(),
     };
     await processJob(job("gemini"), { db: d, runEngine: (async () => answer) as unknown as typeof runEngine });
-    expect(d.finishJob.mock.calls[0][1]).toMatchObject({ mentioned: false, first_position: null, cost_usd: 0 });
+    expect(d.finishJob.mock.calls[0][1]).toMatchObject({ mentioned: false, first_position: null, cost_usd: null });
   });
 });

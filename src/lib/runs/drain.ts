@@ -1,4 +1,5 @@
-import type { ClaimedJob, ProcessResult } from "./process-job";
+import type { ProcessResult } from "./process-job";
+import type { ClaimedJob } from "./types";
 
 export const CHUNK = 5;
 export const DEFAULT_BATCH = 20;

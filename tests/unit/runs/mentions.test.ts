@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { detectMentions, normalize, type TrackedBrand } from "@/lib/runs/mentions";
+import { detectMentions, jobBrands, normalize, type MentionBrand as TrackedBrand } from "@/lib/runs/mentions";
 
 const business: TrackedBrand = {
   kind: "business",
@@ -104,5 +104,20 @@ describe("detectMentions", () => {
       expect(m.mentioned).toBe(false);
       expect(m.brands.every((b) => !b.mentioned && b.position === null)).toBe(true);
     }
+  });
+});
+
+describe("jobBrands", () => {
+  it("puts the claimed business first as 'business', then competitors in claim order", () => {
+    const b = { id: "b", name: "Example Ramen House", aliases: [], domain: null };
+    const c = [
+      { id: "c1", name: "Example Izakaya", aliases: ["EI"], domain: "example-izakaya.test" },
+      { id: "c2", name: "Example Noodle Bar", aliases: [], domain: null },
+    ];
+    expect(jobBrands({ business: b, competitors: c }).map((x) => [x.kind, x.name])).toEqual([
+      ["business", "Example Ramen House"],
+      ["competitor", "Example Izakaya"],
+      ["competitor", "Example Noodle Bar"],
+    ]);
   });
 });
