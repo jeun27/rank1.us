@@ -1,6 +1,6 @@
 # QA
 
-## Step 11: Team 3-pane shell + workspace + Copy context
+## Step 11: Team 3-pane shell + workspace + Copy context (re-run)
 
 Checked 2026-11-05 on main at d9afd3b:
 - #56 (a69cf31): team read access to DFY clients
@@ -11,7 +11,15 @@ The sandbox Docker disk is full, so there was no local Supabase. test-db and e2e
 Preview: https://rank1-1od9nd4z1-bryan-flowhighlevels-projects.vercel.app (sha b90e927, READY). Production: rank1.us = rank1-ayffk0vj7 at b2cd487 (Step 9; Step 11 not released).
 Sources: Jeun's ENG_HANDOFF_OVERNIGHT §3/§5.7/§6/§8 and the lead's brief (rank1-step11.md).
 
-Result: FAIL. 1 blocking problem: e2e against the preview is red (2 tests), because Vercel's preview toolbar script loads from vercel.live. The app makes no model calls. Listed at the end.
+Result: PASS. The first run's blocker (preview e2e red because Vercel's preview toolbar loads from vercel.live) is fixed by #64 (merged as 076ec8b, test-only). No blocking problems.
+
+Re-run 2026-11-05 on #64's preview at cae62a5, whose tree is identical to main 076ec8b: https://rank1-4liiyi2fo-bryan-flowhighlevels-projects.vercel.app
+
+| Check | Result | Evidence |
+|---|---|---|
+| Preview e2e (076ec8b tests) | PASS | 239 passed, 57 skipped (local-stack tests), 0 failed. "the prompt template is added to the brief; nothing calls a model" passes on both viewports |
+| The guard still fails on a non-allowed host | PASS | tests/e2e/team-workspace.spec.ts (076ec8b) asserts two lists are empty. First, hosts in MODEL_HOSTS (api.anthropic.com, api.openai.com, generativelanguage.googleapis.com, api.perplexity.ai). Second, hosts not in `allowed` = the page's own host, plus exactly "vercel.live" only when E2E_BASE_URL is set. Any other off-site request still fails the test, and a model host fails it even on a preview |
+| CI on main push 076ec8b | PASS | run 42092923609: test, typecheck, lint, format, test-db, e2e green |
 
 ### Commands
 
@@ -20,7 +28,7 @@ Result: FAIL. 1 blocking problem: e2e against the preview is red (2 tests), beca
 | `pnpm test` (sandbox, d9afd3b) | PASS. 76 files, 929 tests passed |
 | `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build` (sandbox) | PASS |
 | CI on main push d9afd3b | PASS. test-db 16 files / 328 tests; e2e 294 passed, 2 skipped; test, typecheck, lint, format green |
-| `E2E_BASE_URL=<preview> pnpm e2e` (d9afd3b tests) | FAIL. 237 passed, 57 skipped, 2 failed: tests/e2e/team-workspace.spec.ts:117 "the prompt template is added to the brief; nothing calls a model" on both viewports. Received third-party host `vercel.live`. Every other team test passed, including /dev/team light and dark (3 landmarks, one H1, axe clean) at 375 and 1280 |
+| `E2E_BASE_URL=<preview> pnpm e2e` (first run, d9afd3b tests) | FAIL. 237 passed, 57 skipped, 2 failed: tests/e2e/team-workspace.spec.ts:117 "the prompt template is added to the brief; nothing calls a model" on both viewports. Received third-party host `vercel.live`. Every other team test passed, including /dev/team light and dark (3 landmarks, one H1, axe clean) at 375 and 1280 |
 
 ### Checks
 
@@ -39,11 +47,17 @@ Result: FAIL. 1 blocking problem: e2e against the preview is red (2 tests), beca
 | Production /team stays the placeholder | PASS (as far as reachable) | ENABLE_TEAM_WORKSPACE is set for target ['preview'] only (Vercel env API), so it's unset on Production, and unit gate.test.tsx shows the placeholder for every unset/false value. rank1.us/team signed out → 307 /signin?next=%2Fteam; rank1.us/dev/team → 404. A signed-in team check on production needs a hosted team login |
 
 Not blocking:
-- The Vercel preview toolbar (`vercel.live/_next-live/feedback/feedback.js`) is injected into every preview page (/, /dev/app, /signin, /dev/team). It isn't in the served HTML. `x-vercel-skip-toolbar: 1` didn't remove it.
+- The Vercel preview toolbar (`vercel.live/_next-live/feedback/feedback.js`) is still injected into every preview page. The test now ignores exactly that host on deployed previews only. Production has no toolbar.
+
+First-run blocker (d9afd3b):
+
+| Blocker | Result | Evidence |
+|---|---|---|
+| Preview e2e: team-workspace.spec.ts:117 "nothing calls a model" failed on both viewports on the vercel.live toolbar request | FIXED by #64 (076ec8b), test-only | re-run table above |
 
 ### Blocking problems
 
-1. `pnpm e2e` against the preview is red: tests/e2e/team-workspace.spec.ts:117 ("nothing calls a model") fails on both viewports because the only off-site request is Vercel's preview toolbar script from vercel.live, not app code. The same test passed on Step 10's preview, so the toolbar is new or now loads every time. Fix without weakening the model-call guard: turn off the Vercel Toolbar for Preview deployments in the project settings, or have this test ignore only `vercel.live` when E2E_BASE_URL is set.
+None.
 
 ## Step 10: What to fix next (role-gated)
 
