@@ -6,7 +6,8 @@ import type { Selection } from "@/lib/workspace/context";
 import { DocView } from "./Docs";
 import { rovingIndex } from "./hooks";
 
-export type DocSel = Selection | { kind: "new"; n: number };
+// clients: the team's Clients tab for the selected DFY client (Step 12); not a brief selection.
+export type DocSel = Selection | { kind: "new"; n: number } | { kind: "clients" };
 export type Tab = { id: string; title: string; sel: DocSel };
 
 const tool =

@@ -21,7 +21,16 @@ const extras: TeamExtras = {
   input: null,
   fixes: { ranked: exampleFixes, tidyUps: exampleTidyUps, unchecked: exampleUnchecked.slice(0, 1), noDomain: false },
   loadSuggestions: async () => exampleSuggestions,
-  actions: { status: noop, add: noop, dismiss: noop },
+  clients: { users: [{ user_id: "example-user", email: "owner@exampleramen.test" }], fixListVisible: false },
+  actions: {
+    status: noop,
+    add: noop,
+    dismiss: noop,
+    invite: async (_b: string, email: string) =>
+      ({ status: email.includes("@") ? "invited" : "invalid_email" }) as const,
+    removeClient: noop,
+    setFixListVisible: noop,
+  },
 };
 
 export function Gallery({ state }: { state?: string }) {

@@ -31,10 +31,14 @@ const team = (over: Partial<TeamExtras> = {}): TeamExtras => ({
   input,
   fixes: { ranked: exampleFixes, tidyUps: exampleTidyUps, unchecked: [], noDomain: false },
   loadSuggestions: vi.fn(async () => []),
+  clients: null,
   actions: {
     status: vi.fn(async () => undefined),
     add: vi.fn(async () => undefined),
     dismiss: vi.fn(async () => undefined),
+    invite: vi.fn(async () => ({ status: "invited" as const })),
+    removeClient: vi.fn(async () => undefined),
+    setFixListVisible: vi.fn(async () => undefined),
   },
   ...over,
 });

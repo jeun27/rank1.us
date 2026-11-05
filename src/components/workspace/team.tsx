@@ -2,9 +2,11 @@
 import { createContext, useContext } from "react";
 import type { FixView } from "@/components/fixes/FixList";
 import type { LocalCompetitor } from "@/lib/onboarding/types";
+import type { InviteStatus } from "@/lib/queries/clients";
 import type { FixStatus } from "@/lib/queries/fixes";
 import type { CompetitorInput } from "@/lib/queries/shell";
 import type { ContextInput } from "@/lib/workspace/context";
+import type { ClientUserView } from "./ClientsPanel";
 
 type Result = Promise<{ error: string } | undefined | void>;
 
@@ -19,10 +21,15 @@ export type TeamExtras = {
   fixes: { ranked: FixView[]; tidyUps: FixView[]; unchecked: { rule_key: string; title: string }[]; noDomain: boolean };
   // Maps suggestions cost a maps_lookup token: fetched only when the Competitors view opens.
   loadSuggestions: (businessId: string) => Promise<LocalCompetitor[]>;
+  // Step 12: the client users of this DFY client and the fix-list toggle (team only). null in galleries without it.
+  clients: { users: ClientUserView[]; fixListVisible: boolean } | null;
   actions: {
     status: (businessId: string, fixId: string, status: FixStatus) => Result;
     add: (businessId: string, c: CompetitorInput) => Result;
     dismiss: (businessId: string, c: CompetitorInput) => Result;
+    invite: (businessId: string, email: string) => Promise<{ status: InviteStatus }>;
+    removeClient: (businessId: string, userId: string) => Result;
+    setFixListVisible: (businessId: string, visible: boolean) => Result;
   };
 };
 

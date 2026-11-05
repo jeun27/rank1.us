@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-import { Placeholder } from "@/components/auth/Placeholder";
+import { ClientDashboard } from "@/components/client/ClientDashboard";
+import { loadClient } from "./load";
 
 export const metadata: Metadata = { title: "Dashboard - Rank1", robots: { index: false } };
 
-// Step 12 builds the done-for-you client view.
-export default function ClientPage() {
-  return <Placeholder title="Dashboard" />;
+// Step 12: the done-for-you client view (read-only).
+export default async function ClientPage() {
+  const data = await loadClient();
+  return <ClientDashboard {...data} now={new Date()} />;
 }

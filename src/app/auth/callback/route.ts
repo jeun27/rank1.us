@@ -6,7 +6,8 @@ import { ensureSelfServeWorkspace, getLanding } from "@/lib/queries/auth";
 import { supabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
-const EMAIL_TYPES: EmailOtpType[] = ["magiclink", "signup", "email"];
+// invite: a DFY client's invite link (Step 12).
+const EMAIL_TYPES: EmailOtpType[] = ["magiclink", "signup", "email", "invite"];
 
 // Google returns ?code (PKCE). Email links carry ?token_hash&type (HANDOFF.md templates), so they work in any browser.
 // Anything else, e.g. tokens in a #fragment the server never sees, is a broken email link.

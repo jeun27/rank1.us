@@ -85,7 +85,8 @@ describe("/auth/callback", () => {
     expect(ensureSelfServeWorkspace).not.toHaveBeenCalled();
   });
 
-  it.each(["magiclink", "signup", "email"])("verifies a token_hash link of type %s", async (type) => {
+  // Step 12 (lead): a client invite link is type invite.
+  it.each(["magiclink", "signup", "email", "invite"])("verifies a token_hash link of type %s", async (type) => {
     expect(await call(`?token_hash=th&type=${type}`)).toBe("/app/onboarding");
     expect(auth.verifyOtp).toHaveBeenCalledWith({ token_hash: "th", type });
   });
@@ -95,7 +96,7 @@ describe("/auth/callback", () => {
     expect(await call("?token_hash=th&type=magiclink")).toBe("/signin?error=link");
   });
 
-  it.each(["?token_hash=th&type=bogus", "?token_hash=th&type=invite", "?token_hash=th", "?type=magiclink"])(
+  it.each(["?token_hash=th&type=bogus", "?token_hash=th&type=recovery", "?token_hash=th", "?type=magiclink"])(
     "rejects %s with the link error, without verifying",
     async (qs) => {
       expect(await call(qs)).toBe("/signin?error=link");

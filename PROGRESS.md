@@ -590,3 +590,47 @@ Changed
 ## Step 11 QA fix (frontend): Vercel preview toolbar in the no-model-calls check (branch fix/step11-preview-toolbar, issue #54, QA #62)
 
 - tests/e2e/team-workspace.spec.ts "nothing calls a model": on deployed previews (E2E_BASE_URL set) the exact host vercel.live is ignored, because Vercel injects its preview toolbar (vercel.live/_next-live/feedback/feedback.js) into every preview page. Every other host still fails the test, and it now also asserts that no request goes to api.anthropic.com, api.openai.com, generativelanguage.googleapis.com or api.perplexity.ai.
+
+## Step 12 (backend): client invites and fix list visibility (branch feat/step12-client-invites, issue #59)
+- Step 12 built from ENG_HANDOFF_OVERNIGHT §3/§6 + Step 3 routing; Build Pack not readable; reconcile later.
+- Lead decisions:
+  - No invites table. A team user invites by email for a DFY business (Supabase Auth admin invite, redirectTo NEXT_PUBLIC_SITE_URL/auth/callback), then the service role grants dfy_client + workspace membership.
+  - Any existing Rank1 account is refused ("This email already has a Rank1 account."), and this business's client gets "Already invited.".
+  - One business per client user (lead, 2026-11-05); reconcile with Build Pack. An existing client of another DFY business counts as an existing account.
+  - Remove access drops the membership and keeps the role. The fix list toggle is team-only.
+  - /client is read-only. Emails never go in logs or error messages, only status codes.
+- Migration 20261105000016 (+ .down.sql), additive and re-runnable:
+  - Service only: client_invite_status, grant_dfy_client (idempotent; refuses team users, members of other workspaces and non-DFY businesses) and revoke_dfy_client (never an owner).
+  - Team only: set_fix_list_visible and list_client_users (emails for team only).
+- Queries (server only, src/lib/queries/clients.ts): inviteClient (injectable invite fn; CI has no mail server), removeClient, listClientUsers, setFixListVisible. Tests: tests/db/clients.test.ts.
+- src/types/db.ts got the 0016 functions added by hand in the generator format. Regenerate it with `pnpm db:types` when a stack is available.
+- QA #58 gallery fidelity (#57): the /dev/app fixes fixtures use the fix_rules titles and §5b copy filled for a made-up site, in bySize order (R14, R10, R11), with no answer count for site rules. The fixes states take n from the Dashboard gallery metrics (240). tests/unit/fixes/example-data.test.ts checks titles against seed.sql, details against COPY, and the order.
+
+## Step 12 (frontend): DFY client dashboard and invites (branch feat/step12-client, issue #59)
+
+- Step 12 built from ENG_HANDOFF_OVERNIGHT §3/§6 + Step 3 routing. The Build Pack isn't readable, so reconcile later.
+- Lead decisions (brief + 2026-11-05 answers):
+  - no invites table: the team invites through inviteClient (#61) after a team (my_landing) + DFY check;
+  - existing accounts are refused;
+  - /auth/callback accepts type invite;
+  - Remove access keeps the role;
+  - a team-only fix-list toggle;
+  - /client is read-only and light only;
+  - one DFY business per client user, so no "Business" switcher on /client.
+- /auth/callback: 'invite' added to EMAIL_TYPES. tests/unit/auth/callback.test.ts used to list invite among the rejected types; that case is now recovery (still rejected), per the lead's decision.
+- /team Clients tab: a "Clients" button under the Client switcher opens a Clients document tab (lead Q1; no seventh nav item). It holds:
+  - ClientsPanel: the client users (listClientUsers), Remove access, "Show fix list to client" and the Invite client form;
+  - server actions inviteTeamClient, removeTeamClient and setTeamFixListVisible, which re-check team + DFY. Invite and remove use the service role, server only. Status codes only: emails are never logged.
+- Statuses:
+  - invited → "Invite sent to {email}."; existing_account and already_invited map to their lead strings;
+  - invalid_email → the forms' email error;
+  - error → "That didn't send. Try again in a minute.";
+  - a failed Remove access or toggle → "We couldn't save that. Try again."
+- /client: src/app/client/load.ts reads listDfyBusinesses through RLS (the client's own; none once removed), listRunSummaries(20) and loadPaidRun of the newest complete/partial run, and listFixes only when fix_list_visible. ClientDashboard shows:
+  - H1 "Dashboard" and the business name;
+  - the Hero (n + change + freshness), the 8-run line, per engine, and leaderboard top 5;
+  - the History table without /app run links or CSV (HistoryTable extracted from HistoryView, linked=false);
+  - FixList canWrite=false.
+- Empty states: no business → "Nothing tracked yet." (no button); no run → "No weekly checks yet. Your first one runs Monday.". Plus loading and error.
+- Gallery: /dev/client (success, fixes, partial, no-run, removed, loading, error); the /dev/team gallery gains the Clients tab.
+- DB e2e: tests/e2e/client-invite.spec.ts. An admin invite link + grant_dfy_client (what inviteClient does, without mail) → /client; no fixes until the toggle; existing account and Already invited; Remove access → "Nothing tracked yet."

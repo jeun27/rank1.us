@@ -18,7 +18,9 @@ const docId = (s: DocSel) =>
     ? `section-${s.section}`
     : s.kind === "new"
       ? `new-${s.n}`
-      : `${s.kind}-${(s.kind === "question" ? s.id : s.kind === "competitor" ? s.name : s.kind === "domain" ? s.domain : s.runId).replace(/\W+/g, "-")}`;
+      : s.kind === "clients"
+        ? "clients"
+        : `${s.kind}-${(s.kind === "question" ? s.id : s.kind === "competitor" ? s.name : s.kind === "domain" ? s.domain : s.runId).replace(/\W+/g, "-")}`;
 
 // team: the real-data extras (Step 11); without it, #11's read-only Example workspace.
 export function Workspace({ view, team = null }: { view: WorkspaceView; team?: TeamExtras | null }) {
@@ -27,7 +29,7 @@ export function Workspace({ view, team = null }: { view: WorkspaceView; team?: T
   const tabOf = (sel: DocSel): Tab => ({
     id: docId(sel),
     sel,
-    title: sel.kind === "new" ? "New tab" : contextFor(view, sel).title,
+    title: sel.kind === "new" ? "New tab" : sel.kind === "clients" ? "Clients" : contextFor(view, sel).title,
   });
   const first = tabOf({ kind: "section", section: "dashboard" });
 
@@ -116,7 +118,8 @@ export function Workspace({ view, team = null }: { view: WorkspaceView; team?: T
             onMode={setMode}
             recents={recents}
             onRecent={(t) => {
-              if (t.sel.kind !== "new") select(t.sel);
+              if (t.sel.kind === "clients") openDoc(t.sel);
+              else if (t.sel.kind !== "new") select(t.sel);
               setPane("Document");
             }}
             theme={prefs.theme}
@@ -140,6 +143,10 @@ export function Workspace({ view, team = null }: { view: WorkspaceView; team?: T
               now={now}
               onSelect={(sel) => {
                 select(sel);
+                setPane("Document");
+              }}
+              onClients={() => {
+                openDoc({ kind: "clients" });
                 setPane("Document");
               }}
             />
