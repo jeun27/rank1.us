@@ -258,6 +258,14 @@ Review follow-ups (lead, 2026-11-05)
 - Citations are not deduped in the adapters: they keep every returned link in order. Dedupe happens at scoring (Step 6/7).
 - docs/COPY.md "Admin (lead, 2026-11-05)" holds the /admin/test strings. The page is built after #14 merges.
 
+## Step 5 (backend): seat rule, onboarding RPCs, team fix-list access (branch feat/step5-onboarding-db, issue #18)
+- Step 5 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
+- Lead decision: UI.md's Billing row has an "Unpaid: 'Start for $99/mo'" state, so a workspace with seats_quantity = 0 may hold exactly one active business. Otherwise active self-serve businesses stay below seats_quantity. Checks don't run for unpaid workspaces (Steps 6/13). DFY businesses (service = 'dfy') are created by the team, are exempt from the seat limit and don't take a seat. The seat trigger also fires on a service change, so dfy → self_serve can't bypass it. tests/db/limits.test.ts "seats 0 cannot add a business" now encodes this rule (first allowed, second blocked).
+- Migration 20261105000009 (+ .down.sql). `create_business_onboarding(p jsonb)` is SECURITY INVOKER (lead OK): RLS, the businesses column grants and both limit triggers apply. It runs in one transaction, uses the caller's own workspace, and reads only the listed fields. `create_dfy_client(p jsonb)` is team-only, SECURITY DEFINER: it creates a workspace owned by the team caller and a business with service 'dfy', fix_list_visible false.
+- Fixes (closes #9): members of a business read its fixes when it is self-serve, fix_list_visible is on, or they are on the team. They write only when it is self-serve or they are on the team. A dfy_client never writes fixes.
+- Queries: createBusinessOnboarding, createDfyClient, getOnboardingState (onboarding.ts), listLocalPlaces (places.ts, verified only). Tests: tests/db/onboarding.test.ts.
+- Local DB tests run on a separate stack: in your own clone, set supabase/config.toml project_id (e.g. rank1-backend) and ports 55xxx, then `git update-index --skip-worktree supabase/config.toml` so it never gets committed.
+
 ## Step 5 (frontend): restaurant onboarding (branch feat/step5-onboarding, issue #18)
 Step 5 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
 
