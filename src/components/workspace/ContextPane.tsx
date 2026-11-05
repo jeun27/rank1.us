@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Freshness } from "@/components/ui/Freshness";
@@ -8,6 +8,7 @@ import type { WorkspaceView } from "@/lib/queries/workspace";
 import {
   SECTION_LABEL,
   buildBrief,
+  buildContextMarkdown,
   CLAUDE_URL,
   contextFor,
   formatDate,
@@ -16,6 +17,7 @@ import {
   type Section,
   type Selection,
 } from "@/lib/workspace/context";
+import { useTeam, type TeamExtras } from "./team";
 
 type Item = { sel: Selection; title: string; detail: string; you?: boolean };
 
@@ -53,6 +55,42 @@ function itemsFor(view: WorkspaceView, section: Section): Item[] {
 
 const same = (a: Selection, b: Selection) => JSON.stringify(a) === JSON.stringify(b);
 
+// A plain GET form, like the Sources location selector: works without JavaScript and doesn't
+// navigate while arrow keys move through the list.
+function ClientSwitcher({ team }: { team: TeamExtras }) {
+  const id = useId();
+  return (
+    <form method="get" action={team.formAction} className="flex items-end gap-2 px-4 pb-3">
+      {Object.entries(team.hidden ?? {}).map(([k, v]) => (
+        <input key={k} type="hidden" name={k} value={v} />
+      ))}
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <label htmlFor={id} className="text-caption font-semibold">
+          Client
+        </label>
+        <select
+          id={id}
+          name="b"
+          defaultValue={team.businessId}
+          className="h-11 min-w-0 rounded-full border border-fieldBorder bg-white px-4 text-ui focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep"
+        >
+          {team.businesses.map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <button
+        type="submit"
+        className="inline-flex min-h-11 items-center rounded-full border border-fieldBorder bg-white px-4 text-ui font-semibold hover:bg-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+      >
+        Show
+      </button>
+    </form>
+  );
+}
+
 export function ContextPane({
   view,
   section,
@@ -68,9 +106,19 @@ export function ContextPane({
 }) {
   const [prompt, setPrompt] = useState("");
   const [status, setStatus] = useState("");
+  const team = useTeam();
   const ctx = contextFor(view, selection);
-  const brief = now ? buildBrief(ctx, now, prompt) : "";
+  // Real data: the stored-data brief (Step 11). Example data keeps #11's brief.
+  const brief = !now
+    ? ""
+    : team?.input
+      ? buildContextMarkdown(team.input, selection, now, prompt)
+      : buildBrief(ctx, now, prompt);
   const items = itemsFor(view, section);
+  // #11's view has no fixes; with real data the Fix list isn't empty when the client has some.
+  const f = team?.fixes;
+  const hasFixes = Boolean(f && f.ranked.length + f.tidyUps.length + f.unchecked.length);
+  const empty = section === "fixes" && selection.kind === "section" && hasFixes ? null : ctx.empty;
   // Blocked or missing clipboard: say so, so the brief is never silently lost.
   const copy = (message: string) =>
     Promise.resolve()
@@ -84,8 +132,9 @@ export function ContextPane({
     <>
       <header className="flex h-12 shrink-0 items-center justify-between gap-3 px-4">
         <h1 className="truncate text-caption font-semibold">{SECTION_LABEL[section]}</h1>
-        <Badge tone="info">Example data</Badge>
+        {!team?.input && <Badge tone="info">Example data</Badge>}
       </header>
+      {team && <ClientSwitcher team={team} />}
 
       <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
         <section className="rounded-card border border-border bg-paper p-4">
@@ -99,7 +148,7 @@ export function ContextPane({
               <Freshness checkedAt={ctx.checkedAt} answers={ctx.answers} now={now} />
             </div>
           )}
-          {ctx.empty && <p className="mt-2 text-ui">{ctx.empty}</p>}
+          {empty && <p className="mt-2 text-ui">{empty}</p>}
           {ctx.facts.length > 0 && (
             <dl className="mt-3 flex flex-col gap-2 text-caption">
               {ctx.facts.map((f) => (
@@ -171,7 +220,7 @@ export function ContextPane({
             href={CLAUDE_URL}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => copy("Brief copied. Paste it in Claude if the box is empty.")}
+            onClick={() => copy("Brief copied. Paste it in Claude.")}
             className="inline-flex min-h-11 items-center gap-2 px-1.5 text-ui font-semibold text-jellyDeep underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
           >
             Open in Claude

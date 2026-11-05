@@ -1,0 +1,46 @@
+"use server";
+import { revalidatePath } from "next/cache";
+import { storeFor } from "@/app/app/lookup-store";
+import { suggestCompetitors } from "@/lib/onboarding";
+import type { LocalCompetitor } from "@/lib/onboarding/types";
+import { setFixStatus, type FixStatus } from "@/lib/queries/fixes";
+import { addCompetitor, dismissSuggestion, listCompetitors, type CompetitorInput } from "@/lib/queries/shell";
+import { listDfyBusinesses } from "@/lib/queries/team";
+import type { DbClient } from "@/lib/queries/client";
+import { createClient } from "@/lib/supabase/server";
+
+// Team writes for a DFY client. The browser names the client, so it must be one the caller can read
+// as DFY; the RPCs and RLS check the role again.
+async function run(businessId: string, fn: (db: DbClient) => Promise<unknown>) {
+  const db = await createClient();
+  if (!(await listDfyBusinesses(db)).some((b) => b.id === businessId)) return { error: "not_found" };
+  try {
+    await fn(db);
+  } catch (e) {
+    return { error: (e as { code?: string }).code ?? "failed" };
+  }
+  revalidatePath("/team");
+}
+
+export async function setTeamFixStatus(businessId: string, fixId: string, status: FixStatus) {
+  return run(businessId, (db) => setFixStatus(db, fixId, status));
+}
+
+export async function addTeamCompetitor(businessId: string, c: CompetitorInput) {
+  return run(businessId, (db) => addCompetitor(db, businessId, { ...c, source: c.maps_cid ? "maps" : "manual" }));
+}
+
+export async function dismissTeamSuggestion(businessId: string, c: CompetitorInput) {
+  return run(businessId, (db) => dismissSuggestion(db, businessId, c));
+}
+
+// Maps suggestions for a DFY client, through the 24 h cache and the caller's maps_lookup token (as
+// /app does). Called only when the Competitors view opens, so switching clients costs nothing.
+export async function teamSuggestions(businessId: string): Promise<LocalCompetitor[]> {
+  const db = await createClient();
+  const business = (await listDfyBusinesses(db)).find((b) => b.id === businessId);
+  const userId = (await db.auth.getUser()).data.user?.id;
+  if (!business || !userId) return [];
+  const known = await listCompetitors(db, business.id);
+  return (await suggestCompetitors({ business, ...known }, { store: storeFor({ db, userId }) })).items;
+}

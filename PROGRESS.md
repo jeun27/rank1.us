@@ -524,6 +524,18 @@ Changed
 - Wiring (after #50): src/lib/fixes/service.ts reads fix_rules.enabled (service role) and uses listRunsNeedingFixChecks(db, 1) and recordFixResults. GET /api/cron/run-jobs runs it after the drain and notify, with time left = maxDuration (300 s) − elapsed since the request started, and returns `fixes`.
 - PROGRESS.md: the duplicate "## Step 9 (data-pipeline)" section on main (a merge leftover) is merged into one copy, with no line dropped.
 
+## Step 11 (data-pipeline): context brief from stored data (branch feat/step11-context)
+Step 11 built from ENG_HANDOFF_OVERNIGHT §3/§6 + issue #10; Build Pack not readable; reconcile later.
+Lead decisions (Step 11 brief): no in-app AI. Copy context = a Markdown brief of stored numbers and texts for the selected item, each with n + freshness and "API-measured, directional": business, latest visibility (overall + per engine), leaderboard, top sources, open fixes (title + detail), and questions where the business wasn't named. Never why_note, raw, cost, vendor stats, lead emails or tokens. Open in Claude opens exactly https://claude.ai after copying the brief; no ?q= and no data in the URL.
+
+Changed
+- src/lib/workspace/context.ts:
+  - buildContextMarkdown(input, selection, now, prompt): input = getCurrentBusiness/listDfyBusinesses + computeMetrics + computeSources + listFixes + getQuestionsWithLatestAnswers + listRunSummaries.
+  - It keeps #11's format (# title, "- label: text", namedText/visibilityText/pointsChange/fallbackNote, ## Sources, ## Prompt template). It reads named fields only. Every % carries "named in a of b answers"; null → "no answers yet".
+  - Lists cap at 10 (questions 25) with "…and N more"; the brief caps at 12,000 chars by dropping the lowest sections, and the header and visibility are always kept.
+- claudeUrl and CLAUDE_Q_MAX are removed and CLAUDE_URL = "https://claude.ai" replaces them. ContextPane's href uses it (its onClick still copies the brief first). The team e2e now asserts the exact URL.
+- Tests changed, with reason: tests/unit/workspace/brief.test.ts's two claudeUrl ?q= prefill tests are replaced by one asserting CLAUDE_URL === "https://claude.ai" (lead, Step 11: the prefill is removed). tests/e2e/team-workspace.spec.ts asserts the href is exactly CLAUDE_URL and the popup is https://claude.ai/ (routed, never reaches the real site).
+- Removed two unused imports in tests/unit/fixes/rules.test.ts (lint warnings from Step 10).
 ## Step 11 (backend): team read access to DFY clients (branch feat/step11-team-read, issue #54)
 - Step 11 built from ENG_HANDOFF_OVERNIGHT §3/§6 + issue #10; Build Pack not readable; reconcile later.
 - Lead decisions:
@@ -547,16 +559,15 @@ Changed
 - Rule 3: a Measured line (latest run, ok answers) under the H1.
 - Nav: "What to fix next" after Sources. The Dashboard section heading links to /app/fixes (top 3 from getTopFixes, same ranking).
 - n fix (#57): the Freshness n comes from loadShell().latest.metrics, the same object the Dashboard hero renders. tests/unit/app/measured.test.tsx (the fixes n equals the Dashboard n with a no_overview answer) supersedes measured.test.ts, which only checked runMeasured against jobs_ok and went away with runMeasured.
+- QA #58 gallery fidelity (#57): the /dev/app fixes fixtures use the fix_rules titles and §5b copy filled for a made-up site, in bySize order (R14, R10, R11), with no answer count for site rules. The fixes states take n from the Dashboard gallery metrics (240). tests/unit/fixes/example-data.test.ts checks titles against seed.sql, details against COPY, and the order.
 
-## Step 11 (data-pipeline): context brief from stored data (branch feat/step11-context)
-Step 11 built from ENG_HANDOFF_OVERNIGHT §3/§6 + issue #10; Build Pack not readable; reconcile later.
-Lead decisions (Step 11 brief): no in-app AI. Copy context = a Markdown brief of stored numbers and texts for the selected item, each with n + freshness and "API-measured, directional": business, latest visibility (overall + per engine), leaderboard, top sources, open fixes (title + detail), and questions where the business wasn't named. Never why_note, raw, cost, vendor stats, lead emails or tokens. Open in Claude opens exactly https://claude.ai after copying the brief; no ?q= and no data in the URL.
+## Step 11 (frontend): team workspace on real data (branch feat/step11-team-real, issue #54)
 
-Changed
-- src/lib/workspace/context.ts:
-  - buildContextMarkdown(input, selection, now, prompt): input = getCurrentBusiness/listDfyBusinesses + computeMetrics + computeSources + listFixes + getQuestionsWithLatestAnswers + listRunSummaries.
-  - It keeps #11's format (# title, "- label: text", namedText/visibilityText/pointsChange/fallbackNote, ## Sources, ## Prompt template). It reads named fields only. Every % carries "named in a of b answers"; null → "no answers yet".
-  - Lists cap at 10 (questions 25) with "…and N more"; the brief caps at 12,000 chars by dropping the lowest sections, and the header and visibility are always kept.
-- claudeUrl and CLAUDE_Q_MAX are removed and CLAUDE_URL = "https://claude.ai" replaces them. ContextPane's href uses it (its onClick still copies the brief first). The team e2e now asserts the exact URL.
-- Tests changed, with reason: tests/unit/workspace/brief.test.ts's two claudeUrl ?q= prefill tests are replaced by one asserting CLAUDE_URL === "https://claude.ai" (lead, Step 11: the prefill is removed). tests/e2e/team-workspace.spec.ts asserts the href is exactly CLAUDE_URL and the popup is https://claude.ai/ (routed, never reaches the real site).
-- Removed two unused imports in tests/unit/fixes/rules.test.ts (lint warnings from Step 10).
+- Step 11 built from ENG_HANDOFF_OVERNIGHT §3/§6 + issue #10. The Build Pack isn't readable, so reconcile later.
+- Lead decisions (brief): same 3-pane shell on real data behind ENABLE_TEAM_WORKSPACE (Production false); team sees every DFY business only, read through RLS (#56), never the service role; nav shows only pages with real data (Dashboard, Questions, Competitors, Sources, Fix list, History; Experiments/Reports/Settings hidden until Steps 15–17); Copy context = buildContextMarkdown (#55); Open in Claude = exactly https://claude.ai after the copy; team writes fix status and competitors through the existing RPCs.
+- /team?b=<id>: src/app/team/load.ts reads listDfyBusinesses → getWorkspaceRows (#11's panes), listRunSummaries (complete/partial audit and weekly runs, as /app; getWorkspaceRows now reads the same kinds, review on #60) + loadPaidRun → computeMetrics, getQuestionsWithLatestAnswers → computeSources, listFixes. Maps suggestions load only when the Competitors view opens (teamSuggestions server action, review on #60), so a /team load or a client switch spends no maps_lookup token. No b → the first client by name. An unknown, archived or self-serve b is a real 404 in the proxy (teamClient), with notFound() as the fallback.
+- Client switcher: a GET form (label "Client", "Show") at the top of the context pane, not the sidebar head (design note), so it stays usable when the sidebar is an icon rail between md and lg.
+- Fix list: the shared FixList (new level prop: h3 cards inside a workspace document). Competitors: the /app suggestions and add form, extracted into CompetitorActions.tsx and used by both. Team server actions re-check the client against listDfyBusinesses.
+- Lead copy: "No clients yet." (no add-client UI in /team), "Client"; the Open in Claude toast is now "Brief copied. Paste it in Claude."
+- #11's Example workspace moved to the /dev/team gallery (404 in production, no sign-in); team-workspace.spec runs there. tests/e2e/team-real.spec.ts covers the real /team (seeded DFY + self-serve businesses).
+- No LLM SDK: tests/unit/engines/no-llm-sdk.test.ts already guards the repo.
