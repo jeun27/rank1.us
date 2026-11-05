@@ -68,6 +68,20 @@ test("every visible string is in docs/COPY.md (fixture data excluded)", async ({
   expect(missing).toEqual([]);
 });
 
+test("every aria-label, title and alt is in docs/COPY.md (alt=\"\" is fine)", async ({ page }) => {
+  await page.goto("/");
+  const attrs = await page.evaluate(() =>
+    [...document.querySelectorAll("[aria-label], [title], [alt]")].flatMap((el) =>
+      ["aria-label", "title", "alt"].filter((a) => el.hasAttribute(a)).map((a) => ({ a, v: el.getAttribute(a)! })),
+    ),
+  );
+  expect(attrs.length).toBeGreaterThan(0);
+  // Whole words or phrases only, so a short label like "Main" can't pass by sitting inside "domain".
+  const inCopy = (v: string) => new RegExp(`(^|[^a-z0-9])${norm(v).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^a-z0-9]|$)`).test(COPY);
+  const missing = attrs.filter(({ v }) => v.trim() !== "" && !inCopy(v)).map(({ a, v }) => `${a}="${v}"`);
+  expect(missing).toEqual([]);
+});
+
 test("hero numbers come from the example fixture", async ({ page }) => {
   await page.goto("/");
   // 55 of 160 = 34% (floor); 45 of 160 last week = 28%, so +6 pts.
@@ -79,6 +93,7 @@ test("screenshot tablist: arrow keys, Home/End, one visible panel", async ({ pag
   await page.goto("/");
   const tabs = page.getByRole("tab");
   await expect(tabs).toHaveText(["Dashboard", "Monthly report", "Audit CSV"]);
+  await expect(page.getByRole("tablist", { name: "What you see on Monday." })).toBeVisible();
   await tabs.first().focus();
   await page.keyboard.press("ArrowRight");
   await expect(tabs.nth(1)).toBeFocused();

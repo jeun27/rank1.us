@@ -3,7 +3,7 @@
 import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 
 // WAI-ARIA tabs with automatic activation: Left/Right wrap, Home/End jump.
-export function ScreenshotTabs({ tabs }: { tabs: { label: string; panel: ReactNode }[] }) {
+export function ScreenshotTabs({ labelledBy, tabs }: { labelledBy: string; tabs: { label: string; panel: ReactNode }[] }) {
   const [active, setActive] = useState(0);
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -18,7 +18,7 @@ export function ScreenshotTabs({ tabs }: { tabs: { label: string; panel: ReactNo
 
   return (
     <div className="rounded-surface border border-ink bg-white">
-      <div role="tablist" aria-label="Example screens" onKeyDown={onKeyDown} className="flex flex-wrap border-b border-ink">
+      <div role="tablist" aria-labelledby={labelledBy} onKeyDown={onKeyDown} className="flex flex-wrap border-b border-ink">
         {tabs.map((t, i) => (
           <button
             key={t.label}

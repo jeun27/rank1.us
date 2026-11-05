@@ -60,7 +60,7 @@ describe("ScreenshotTabs", () => {
   const tabs = ["Dashboard", "Monthly report", "Audit CSV"].map((label) => ({ label, panel: <p>{`${label} panel`}</p> }));
   it("moves with arrow keys, wraps, and supports Home/End", async () => {
     const user = userEvent.setup();
-    render(<ScreenshotTabs tabs={tabs} />);
+    render(<ScreenshotTabs labelledBy="shots" tabs={tabs} />);
     const [a, b, c] = screen.getAllByRole("tab");
     expect(a).toHaveAttribute("aria-selected", "true");
     await user.click(a);
