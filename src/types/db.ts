@@ -628,6 +628,9 @@ isOneToOne: false
 "claim_jobs":
 { Args: { "p_limit": number }; Returns: Json[]
                            },
+"client_invite_status":
+{ Args: { "p_business_id": string,"p_email": string }; Returns: string
+                           },
 "create_business_onboarding":
 { Args: { "p": Json }; Returns: string
                            },
@@ -649,8 +652,14 @@ isOneToOne: false
 "finish_job":
 { Args: { "p_answer": Json,"p_citations": Json,"p_job_id": string }; Returns: undefined
                            },
+"grant_dfy_client":
+{ Args: { "p_business_id": string,"p_user_id": string }; Returns: string
+                           },
 "job_error":
 { Args: { "p_error": string,"p_job_id": string }; Returns: undefined
+                           },
+"list_client_users":
+{ Args: { "p_business_id": string }; Returns: { "added_at": string,"email": string,"signed_in": boolean,"user_id": string }[]
                            },
 "my_landing":
 { Args: Record<PropertyKey, never>; Returns: string
@@ -658,11 +667,17 @@ isOneToOne: false
 "record_fix_results":
 { Args: { "p_business_id": string,"p_results": Json,"p_run_id": string }; Returns: undefined
                            },
+"revoke_dfy_client":
+{ Args: { "p_business_id": string,"p_user_id": string }; Returns: boolean
+                           },
 "run_summaries":
 { Args: { "p_business_id": string,"p_limit"?: number,"p_statuses"?: string[] }; Returns: { "finished_at": string | null,"jobs_failed": number,"jobs_ok": number,"jobs_total": number,"kind": string,"n": number,"named": number,"per_engine": Json,"run_id": string,"started_at": string | null,"status": string }[]
                            },
 "runs_needing_fix_checks":
 { Args: { "p_limit"?: number }; Returns: { "business_id": string,"domain": string | null,"run_id": string }[]
+                           },
+"set_fix_list_visible":
+{ Args: { "p_business_id": string,"p_visible": boolean }; Returns: undefined
                            },
 "set_fix_status":
 { Args: { "p_fix_id": string,"p_status": string }; Returns: undefined
