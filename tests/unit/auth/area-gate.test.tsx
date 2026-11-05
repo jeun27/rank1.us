@@ -40,8 +40,11 @@ describe("AreaGate", () => {
     await expect(gate(area)).rejects.toThrow(`redirect ${to}`);
   });
 
-  it("sends a signed-out visitor to /signin with the area as next", async () => {
-    getLanding.mockResolvedValue(null);
-    await expect(gate("/client")).rejects.toThrow("redirect /signin?next=%2Fclient");
-  });
+  it.each(["/app", "/team", "/client"] as const)(
+    "sends a signed-out visitor of %s to /signin with it as next",
+    async (area) => {
+      getLanding.mockResolvedValue(null);
+      await expect(gate(area)).rejects.toThrow(`redirect /signin?next=${encodeURIComponent(area)}`);
+    },
+  );
 });

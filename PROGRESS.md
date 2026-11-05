@@ -191,6 +191,7 @@ Google Cloud console steps (for Jeun, sign-in only, no GA4 scopes yet)
 6. Check it: open a Vercel preview → Log in → Continue with Google → you land on /app/onboarding (new) or /app.
 
 Intended behavior changes (lead, 2026-11-05), not loosened tests
+- Removed tests/unit/auth/team-gate.test.tsx: its team-only cases are covered by tests/unit/auth/area-gate.test.tsx (every role × area allow/redirect pair); no coverage lost.
 - tests/e2e/team-workspace.spec.ts: `/app` returned 404 and now sends signed-out visitors to `/signin?next=%2Fapp`. Its `/team` visits now sign in a seeded team user first.
 - tests/unit/workspace/gate.test.ts → gate.test.tsx: with the flag off (the same 5 values) /team was a 404 and now shows the placeholder to a team user. "true" still renders the workspace.
 - tests/e2e/landing.spec.ts: "Start for $99/mo" pointed at `/sign-in` (a known 404) and now points at `/signin?next=/app/billing`.
