@@ -12,4 +12,8 @@ describe("vercel.json", () => {
   it("keeps preview deploys for other branches", () => {
     expect(Object.keys(config.git.deploymentEnabled)).toEqual(["main"]);
   });
+
+  it("runs the job worker every minute (Vercel Cron; production only)", () => {
+    expect(config.crons).toEqual([{ path: "/api/cron/run-jobs", schedule: "* * * * *" }]);
+  });
 });
