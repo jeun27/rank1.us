@@ -479,6 +479,7 @@ Step 9 built from ENG_HANDOFF_OVERNIGHT §6 + PRODUCT.md + docs/UI.md; Build Pac
   - A "Location" select ("All locations" + each target, locationLabel) in ?location=, filtered on the server.
   - One card per engine with "{n} links", a stacked bar by category (counts only, no %), the "Exact" / "Country fallback" badge (greyed tooltip) and "No links cited by {Engine}".
   - The top domains table (noopener noreferrer); empty / loading / error states.
+- Rule 3 (review on #45): the Freshness line ("Checked … ago · n answers · API-measured, directional") under the subtitle, through the shared Measured from #47. n = ok answers of the questions in the selected location.
 - The Questions location badge now uses locationLabel, so it and the selector can't disagree.
 - Category colors (lead Q3: O1; dataviz validator, paper surface, all pairs):
   - Solid: Reddit jellyDeep, YouTube amber, Review sites jelly, News and blogs warnText. These four pass every pair.

@@ -4,7 +4,7 @@ import { Table } from "@/components/ui/Table";
 import { CATEGORY_ORDER, type Sources } from "@/lib/metrics";
 import type { Category } from "@/lib/runs/categorize";
 import { LocationSelect } from "./LocationSelect";
-import { Page } from "./Page";
+import { Measured, Page } from "./Page";
 import { sourcesCopy as c } from "./sources-copy";
 
 // Category colors: existing tokens only, validated with the dataviz script (all pairs, paper).
@@ -74,7 +74,20 @@ function Bar({ parts, total }: { parts: Sources["engines"][number]["byCategory"]
 }
 
 // UI.md 4b Sources: per-engine bars by category + n links, and the top domains. Counts only, no %.
-export function SourcesView({ sources, location }: { sources: Sources | null; location: string | undefined }) {
+export function SourcesView({
+  sources,
+  location,
+  checkedAt = null,
+  answers,
+  now,
+}: {
+  sources: Sources | null;
+  location: string | undefined;
+  // Rule 3: the latest run's check time and its ok answers (in the selected location).
+  checkedAt?: string | null;
+  answers?: number;
+  now?: Date;
+}) {
   const any = sources?.engines.some((e) => e.links > 0);
   return (
     <Page title={c.title}>
@@ -85,6 +98,7 @@ export function SourcesView({ sources, location }: { sources: Sources | null; lo
         </Card>
       ) : (
         <>
+          <Measured checkedAt={checkedAt} answers={answers} now={now} />
           <Patterns />
           <LocationSelect locations={sources.locations} value={location} />
           <ul aria-label={c.category} className="flex flex-wrap gap-x-4 gap-y-2 text-caption">

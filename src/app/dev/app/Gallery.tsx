@@ -25,6 +25,7 @@ const none = { points: [], visible: false };
 const noop = async () => undefined;
 const actions = { add: noop, dismiss: noop };
 const results = "We couldn't load your results. Try again.";
+const fresh = { checkedAt: exampleQuestions.run!.finished_at, answers: 38, now: NOW };
 // Success = everything answered; partial = the 4b partial state of the same page.
 const allOk = {
   ...exampleQuestions,
@@ -88,19 +89,24 @@ export const STATES: Record<string, () => React.ReactNode> = {
   "questions-error": () => <ErrorState title="Questions" message={results} reset={() => {}} />,
   "questions-empty": () => <QuestionsView data={{ run: null, questions: [] }} />,
   "sources-success": () => (
-    <SourcesView sources={computeSources({ questions: exampleQuestions.questions })} location={undefined} />
+    <SourcesView sources={computeSources({ questions: exampleQuestions.questions })} location={undefined} {...fresh} />
   ),
   "sources-partial": () => {
     const all = computeSources({ questions: exampleQuestions.questions });
     const engines = all.engines.map((e) =>
       e.engine === "perplexity" ? { ...e, links: 0, byCategory: e.byCategory.map((c) => ({ ...c, count: 0 })) } : e,
     );
-    return <SourcesView sources={{ ...all, engines }} location={undefined} />;
+    return <SourcesView sources={{ ...all, engines }} location={undefined} {...fresh} />;
   },
   "sources-location": () => {
     const key = computeSources({ questions: exampleQuestions.questions }).locations[0].key;
     return (
-      <SourcesView sources={computeSources({ questions: exampleQuestions.questions, location: key })} location={key} />
+      <SourcesView
+        sources={computeSources({ questions: exampleQuestions.questions, location: key })}
+        location={key}
+        {...fresh}
+        answers={19}
+      />
     );
   },
   "sources-empty": () => <SourcesView sources={null} location={undefined} />,
