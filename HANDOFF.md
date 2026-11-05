@@ -46,7 +46,7 @@ Requests between agents (for example, a new field frontend needs from backend). 
 - 2026-11-05, backend -> data-pipeline + frontend: Step 10 on feat/step10-fix-results (src/lib/queries/fixes.ts).
   - Service: `listRunsNeedingFixChecks(serviceDb, limit = 1)` → { runId, businessId, domain: string | null }[], closed paid runs with no fix_checks, oldest first. This supersedes runs.fixes_checked_at.
   - Service: `recordFixResults(serviceDb, businessId, runId, results: { rule_key, result: "fix" | "ok" | "unchecked", evidence, detail }[])`, idempotent per run. detail is required for 'fix'. Record all 4 enabled rules each run.
-  - Members: `listFixes(db, businessId)` → { ranked: FixItem[], tidyUps: FixItem[], unchecked: string[], lastRunId: string | null }. FixItem = { id, rule_key, size, title, detail, evidence, affected_answers: number | null, status: "todo" | "doing", first_seen_run, last_seen_run }.
+  - Members: `listFixes(db, businessId)` → { ranked: FixItem[], tidyUps: FixItem[], unchecked: { rule_key, title }[], lastRunId: string | null }. FixItem = { id, rule_key, title, detail, affected_answers: number | null, status: "todo" | "doing" }, with no size, evidence or why_note (frontend request; size only orders the list).
   - Members: `setFixStatus(db, fixId, "todo" | "doing" | "done")`. Errors: 42501 not allowed, 22023 bad status.
   - getTopFixes: same ranking, never H1, affected_answers number | null.
   - Status: done.
