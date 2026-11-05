@@ -154,3 +154,4 @@ Blocked/open
 
 ## Release gate (PR #5)
 - Merged is not live (Jeun 2026-11-05): main deploys are disabled in vercel.json; releases are tagged and deployed on request.
+- Removed `not.toBe(false)` in tests/unit/vercel-config.test.ts: the `Object.keys(...)` toEqual `["main"]` check already fails if deploymentEnabled is `false`.
