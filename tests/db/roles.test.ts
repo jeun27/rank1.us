@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { Client } from "pg";
 import { beforeAll, describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -110,6 +111,24 @@ describe("ensure_self_serve_workspace", () => {
       expect(await ownedWorkspaces(u.id)).toEqual([]);
       expect(await memberships(u.id)).toEqual([]);
     }
+  });
+
+  it("the HANDOFF seeding flow: create user, insert role, then first sign-in gets null and no workspace", async () => {
+    const s = serviceClient();
+    const email = `seeded-team-${randomUUID()}@example.test`;
+    const password = randomUUID();
+    const created = await s.auth.admin.createUser({ email, password, email_confirm: true });
+    if (created.error) throw created.error;
+    const userId = created.data.user.id;
+    must(await s.from("user_roles").insert({ user_id: userId, role: "team" }));
+
+    const db = anonClient();
+    const signIn = await db.auth.signInWithPassword({ email, password });
+    if (signIn.error) throw signIn.error;
+    expect(await ensureSelfServeWorkspace(db)).toBeNull();
+    expect(await getLanding(db)).toBe("team");
+    expect(await ownedWorkspaces(userId)).toEqual([]);
+    expect(await memberships(userId)).toEqual([]);
   });
 
   it("anon cannot call it", async () => {
