@@ -31,7 +31,8 @@ export async function HeaderSwitcher() {
         active: checking,
       }))}
       currentId={current.id}
-      seats={billing?.seats ?? businesses.length}
+      // What Stripe bills; before checkout (0) the active businesses, so "from n x $99" stays true (backend).
+      seats={billing?.seats || billing?.activeCount || businesses.length}
       periodEnd={billing?.nextInvoiceAt ?? null}
       actions={{
         select: selectBusinessAction,
