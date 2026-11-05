@@ -1,6 +1,7 @@
 import { execSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
+import { Client } from "pg";
 import type { Database } from "@/types/db";
 import type { DbClient } from "@/lib/queries/client";
 
@@ -171,14 +172,27 @@ export async function makeWorkspace(owner: TestUser): Promise<Fixture> {
 }
 
 // `supabase db reset` re-applies migrations and supabase/seed.sql, then restarts the API containers.
+// Ready = auth is healthy and a real table query returns 200: PostgREST has reloaded the schema.
 export async function resetDb() {
   execSync("pnpm exec supabase db reset", { stdio: "pipe" });
-  for (let i = 0; i < 60; i++) {
+  const pg = new Client({ connectionString: dbUrl() });
+  await pg.connect();
+  await pg.query("notify pgrst, 'reload schema'");
+  await pg.end();
+  const key = env("SERVICE_ROLE_KEY");
+  const headers = { apikey: key, Authorization: `Bearer ${key}` };
+  let last = "no response";
+  for (const deadline = Date.now() + 30_000; Date.now() < deadline; await new Promise((r) => setTimeout(r, 250))) {
     try {
-      const [auth, rest] = await Promise.all([fetch(`${apiUrl()}/auth/v1/health`), fetch(`${apiUrl()}/rest/v1/`)]);
-      if (auth.status < 500 && rest.status < 500) return;
-    } catch {}
-    await new Promise((r) => setTimeout(r, 1000));
+      const [auth, rest] = await Promise.all([
+        fetch(`${apiUrl()}/auth/v1/health`),
+        fetch(`${apiUrl()}/rest/v1/businesses?limit=0`, { headers }),
+      ]);
+      if (auth.status < 500 && rest.status === 200) return;
+      last = `auth ${auth.status}, rest ${rest.status} ${(await rest.text()).slice(0, 120)}`;
+    } catch (e) {
+      last = String(e);
+    }
   }
-  throw new Error("Supabase API did not come back after db reset");
+  throw new Error(`Supabase API did not reload the schema within 30 s after db reset (last: ${last})`);
 }

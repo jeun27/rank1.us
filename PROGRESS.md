@@ -307,3 +307,28 @@ UNVERIFIED / open
 - Review (#23) fixes: readSite reads at most 1 MB. A larger Content-Length is refused unread, and a stream is aborted as soon as it passes the cap; both count as unreadable. isPrivateAddress parses IPv6 fully, so v4-mapped in hex form (::ffff:7f00:1), NAT64 (64:ff9b::/96), 2001:db8::/32 and 192.0.0.0/24 are blocked too.
 - Test widened, with reason: tests/unit/engines/fixtures-privacy.test.ts now allows `(www\.)?example-[a-z0-9-]+\.test` links (it was `example-[a-z0-9]+\.test`). The Maps fixtures need hyphenated Example brand hosts (example-ramen-house.test) and a www form to test own-domain exclusion. Only example-*.test hosts are allowed, as before. Net tightening in the same test: the docs-URL exception now applies only inside the `_synthetic` note (it used to apply anywhere in the file), every synthetic file must carry that note, and title/name/source_name fields in synthetic files must start with "Example".
 - admin-test.spec.ts: the 2 local-stack tests (service-role founder seeding) now skip when E2E_BASE_URL is set (preview runs), same as auth.spec.ts; public admin checks still run on previews. CI runs them in full (QA #28).
+
+## Step 6 (backend): run jobs and orchestration RPCs (branch feat/step6-run-jobs, issue #25)
+- Step 6 built from ENG_HANDOFF_OVERNIGHT §6 + CLAUDE.md + docs/*; Build Pack not readable; reconcile later.
+- Lead decisions:
+  - Queue = the documented fallback, a Supabase jobs table polled by Vercel Cron. No Vercel Queues in v1.
+  - Runs need subscription_status active/trialing or a DFY business. free_audit is Step 7.
+  - Citations are deduped by normalized URL per answer at storage time. The worker normalizes, and unique(answer_id, url) is the safety net.
+  - One queued/running run per business (P0409).
+  - Spend cap (review): kind 'weekly' is service role only (the Step 13 cron). A member may start one 'audit' per business per rolling 24 h, counted from runs.started_at, failed runs excluded (P0429 audit_limit). The service role isn't capped.
+  - Question deleted mid-run (review): its jobs cascade away, and an AFTER DELETE trigger recomputes the run from the remaining jobs. jobs_total = remaining jobs. The run closes once none are queued/running. finish_job on a deleted job is a no-op. The deleted question's answers stay (question_id set null) but no longer count in the run's totals. Open for Step 8: visibility queries should also exclude answers with a null question_id (or join to run_jobs) so they match jobs_ok.
+  - Stale-job exhaustion writes a failed answer.
+  - Run counts are recomputed from answers on every finish, never incremented, because Vercel Cron may deliver twice.
+- Cron (lead, 2026-11-05): the team is on Vercel Pro, so `* * * * *` is allowed. Crons run only on production, and production updates only on a release tag, so no paid engine calls happen until Jeun's next release AND the API keys exist. The cron route and vercel.json ship in the data-pipeline PR with processJob.
+- Migration 20261105000011 (+ .down.sql):
+  - run_jobs: RLS on, ALL revoked from anon/authenticated, unique(run_id, question_id, engine, run_index).
+  - create_run(business, kind): definer, member or service role.
+    - Errors: 42501 not allowed (incl. a member asking for weekly), P0402 subscription_required, P0409 run_in_progress, P0429 audit_limit, 22023 bad kind / archived / no active questions.
+    - Jobs: 10 per active question, 3/3/3/1.
+  - claim_jobs(limit), service only: FOR UPDATE SKIP LOCKED. A job locked over 10 minutes ago is re-claimable. At 3 attempts it's closed as failed with a failed answer.
+  - finish_job(job, answer, citations), service only, idempotent. It stores the answer and citations, closes the job and recomputes the run: jobs_ok = ok + no_overview, jobs_failed = failed, cost_usd, then running / complete / partial / failed and finished_at.
+  - job_error(job, text), service only, sets run_jobs.last_error.
+- Contract: src/lib/runs/types.ts (ClaimedJob, FinishAnswer, FinishCitation). Wrappers: createRun / claimJobs / finishJob / recordJobError in src/lib/queries/run-jobs.ts. Tests: tests/db/run-jobs.test.ts.
+- New env name RUN_JOBS_BATCH (.env.example). CRON_SECRET was already there. The lead sets CRON_SECRET in Vercel.
+- src/types/db.ts got run_jobs and the five functions added by hand in the generator format (no local stack). Regenerate it with `pnpm db:types` in the next DB PR.
+- tests/db/helpers.ts resetDb(): after `db reset` it sends `notify pgrst, 'reload schema'` and waits (every 250 ms, 30 s max) until `GET /rest/v1/businesses?limit=0` returns 200, failing with the last status. It used to return as soon as PostgREST answered, before the schema reload, so tests/db/workspace.test.ts failed with "Could not find the table … in the schema cache" (main CI 57c0000, a7e6d31).
