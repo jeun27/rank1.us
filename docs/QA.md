@@ -1,5 +1,64 @@
 # QA
 
+## Step 11: Team 3-pane shell + workspace + Copy context (re-run)
+
+Checked 2026-11-05 on main at d9afd3b:
+- #56 (a69cf31): team read access to DFY clients
+- #55 (d8a6d7c): context brief from stored data
+- #60 (d9afd3b): team workspace on real data
+
+The sandbox Docker disk is full, so there was no local Supabase. test-db and e2e come from CI on main's push of d9afd3b (run 42087416215). Unit, typecheck, lint, format and build ran locally in the sandbox. Preview checks ran from the Mac on #60's preview at b90e927, whose tree is identical to d9afd3b. ENABLE_TEAM_WORKSPACE is set for Preview only. No live paid calls.
+Preview: https://rank1-1od9nd4z1-bryan-flowhighlevels-projects.vercel.app (sha b90e927, READY). Production: rank1.us = rank1-ayffk0vj7 at b2cd487 (Step 9; Step 11 not released).
+Sources: Jeun's ENG_HANDOFF_OVERNIGHT §3/§5.7/§6/§8 and the lead's brief (rank1-step11.md).
+
+Result: PASS. The first run's blocker (preview e2e red because Vercel's preview toolbar loads from vercel.live) is fixed by #64 (merged as 076ec8b, test-only). No blocking problems.
+
+Re-run 2026-11-05 on #64's preview at cae62a5, whose tree is identical to main 076ec8b: https://rank1-4liiyi2fo-bryan-flowhighlevels-projects.vercel.app
+
+| Check | Result | Evidence |
+|---|---|---|
+| Preview e2e (076ec8b tests) | PASS | 239 passed, 57 skipped (local-stack tests), 0 failed. "the prompt template is added to the brief; nothing calls a model" passes on both viewports |
+| The guard still fails on a non-allowed host | PASS | tests/e2e/team-workspace.spec.ts (076ec8b) asserts two lists are empty. First, hosts in MODEL_HOSTS (api.anthropic.com, api.openai.com, generativelanguage.googleapis.com, api.perplexity.ai). Second, hosts not in `allowed` = the page's own host, plus exactly "vercel.live" only when E2E_BASE_URL is set. Any other off-site request still fails the test, and a model host fails it even on a preview |
+| CI on main push 076ec8b | PASS | run 42092923609: test, typecheck, lint, format, test-db, e2e green |
+
+### Commands
+
+| Command | Result |
+|---|---|
+| `pnpm test` (sandbox, d9afd3b) | PASS. 76 files, 929 tests passed |
+| `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build` (sandbox) | PASS |
+| CI on main push d9afd3b | PASS. test-db 16 files / 328 tests; e2e 294 passed, 2 skipped; test, typecheck, lint, format green |
+| `E2E_BASE_URL=<preview> pnpm e2e` (first run, d9afd3b tests) | FAIL. 237 passed, 57 skipped, 2 failed: tests/e2e/team-workspace.spec.ts:117 "the prompt template is added to the brief; nothing calls a model" on both viewports. Received third-party host `vercel.live`. Every other team test passed, including /dev/team light and dark (3 landmarks, one H1, axe clean) at 375 and 1280 |
+
+### Checks
+
+| Check | Result | Evidence |
+|---|---|---|
+| Team-only access | PASS | /team is behind AreaGate (team role) and ENABLE_TEAM_WORKSPACE. Preview e2e "/app is not the team workspace (reserved for owners)" |
+| Team sees DFY businesses only, never self-serve or free audits | PASS | CI db team.test.ts: "sees every covered table for both DFY businesses", "listDfyBusinesses lists every DFY business by name, not self-serve ones", "every query the team pages use returns the DFY data", "free audits stay invisible, even with a DFY business id", "gets nothing for a self-serve business on any covered table"; "a dfy_client sees only its own DFY business, and fixes only when visible"; "a self-serve user sees no DFY rows; anon is refused" |
+| A non-member team user reads and writes DFY | PASS | CI db "a non-member team user sets fix status and adds/dismisses competitors on any DFY business"; "a team user can't write a self-serve business, and a dfy_client never writes". Team pages read through RLS (no createServiceClient in src/app/team or src/components/workspace) |
+| Nav has only the 6 sections | PASS | Sidebar NAV_SECTIONS hides experiments, reports, settings. Preview /dev/team nav: Dashboard, Questions, Competitors, Sources, Fix list, History |
+| Client switcher works without JS | PASS | ContextPane `ClientSwitcher` is `<form method="get">` with `<select name="b">` (2 clients) and a submit button, in the server HTML with JS off and on. Without JS /dev/team, like every /app page, sits in the hidden streaming template (the known non-blocking note) |
+| Copy context = stored-data brief (n on every %, no why_note/raw/cost/emails/tokens) | PASS | unit context-markdown.test.ts: "every percentage carries its n; no bare 0% when nothing was answered", "never prints forbidden fields, even when the inputs carry them", "only stored texts", "is stable", the 12,000-char cap. Preview e2e "Copy context writes the dashboard brief Markdown" passed |
+| Open in Claude opens exactly https://claude.ai after copying | PASS | ContextPane.tsx: `<a href={CLAUDE_URL} target="_blank" rel="noopener noreferrer" onClick={copy…}>`, CLAUDE_URL = "https://claude.ai" (no ?q=). Unit "is exactly https://claude.ai: no ?q= prefill and no data in the URL"; preview e2e "Open in Claude copies it and opens exactly claude.ai" passed on both viewports |
+| Maps suggestions only in the Competitors view | PASS | team.tsx / Docs.tsx fetch `teamSuggestions` only when the Competitors view opens, through the 24 h cache and the caller's maps_lookup token. teamSuggestions resolves the business through listDfyBusinesses (RLS), so a non-team caller gets [] |
+| Latest = an audit or weekly run | PASS | src/app/team/load.ts uses listRunSummaries(…, ["complete", "partial"]) (audit/weekly only, never free audits) and loadPaidRun; e2e "a DFY client with only an audit run shows its numbers" (CI) |
+| No LLM SDK anywhere | PASS | no-llm-sdk.test.ts (package.json, src, control); my `git grep` at d9afd3b for openai, @anthropic-ai, @google/genai, @google/generative-ai, cohere-ai, @mistralai, langchain, ai imports: 0 matches |
+| Production /team stays the placeholder | PASS (as far as reachable) | ENABLE_TEAM_WORKSPACE is set for target ['preview'] only (Vercel env API), so it's unset on Production, and unit gate.test.tsx shows the placeholder for every unset/false value. rank1.us/team signed out → 307 /signin?next=%2Fteam; rank1.us/dev/team → 404. A signed-in team check on production needs a hosted team login |
+
+Not blocking:
+- The Vercel preview toolbar (`vercel.live/_next-live/feedback/feedback.js`) is still injected into every preview page. The test now ignores exactly that host on deployed previews only. Production has no toolbar.
+
+First-run blocker (d9afd3b):
+
+| Blocker | Result | Evidence |
+|---|---|---|
+| Preview e2e: team-workspace.spec.ts:117 "nothing calls a model" failed on both viewports on the vercel.live toolbar request | FIXED by #64 (076ec8b), test-only | re-run table above |
+
+### Blocking problems
+
+None.
+
 ## Step 10: What to fix next (role-gated)
 
 Checked 2026-11-05 on main at 11a5303:
