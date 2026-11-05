@@ -148,7 +148,7 @@ Step 14. /app/billing and the header Business switcher. The UI.md 4b "Billing + 
 | Switcher row menu (label) | "More for {name}" |
 | Switcher search (more than 8 businesses) | "Search businesses" |
 | Switcher status dot (screen readers) | "Active", "Paused" (UI.md: moss active, brick paused) |
-| Billing, past due | "Past due" (warn badge) |
+| Billing, past due / unpaid / incomplete | "Past due" (warn badge) |
 | Billing, paused | "Paused" (warn badge; the plan stays, with 'Manage billing') |
 | Billing, paid | "Plan", "{n} businesses x $99 = ${n x 99}/mo" ("1 business" in the singular), "Next invoice {date}" |
 | While an added business waits for its seat | "Adding your business…" (after 30 s it stays, with "Try again"; no error) |

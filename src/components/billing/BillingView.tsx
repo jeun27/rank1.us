@@ -60,7 +60,7 @@ export function BillingView({
           <div className="flex flex-col items-start gap-3">
             <p className="flex items-center gap-2 text-caption font-semibold text-inkMuted">
               {c.plan}
-              {status === "past_due" && <Badge tone="warn">{c.pastDue}</Badge>}
+              {paymentFailed && <Badge tone="warn">{c.pastDue}</Badge>}
               {status === "paused" && <Badge tone="warn">{c.paused}</Badge>}
             </p>
             <p data-computed className="font-display text-h3 font-semibold tabular-nums">
