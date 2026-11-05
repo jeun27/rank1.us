@@ -22,7 +22,7 @@ describe.each(synthetic)("synthetic fixture %s", (file) => {
   it("links only to example.test, except its docs source", () => {
     const urls = [...new Set(read(file).match(/https?:\/\/[^"\s)\]]+/g) ?? [])];
     const other = urls.filter(
-      (u) => !/^https:\/\/example-[a-z0-9]+\.test\//.test(u) && !u.startsWith("https://docs.dataforseo.com/"),
+      (u) => !/^https:\/\/(www\.)?example-[a-z0-9-]+\.test\//.test(u) && !u.startsWith("https://docs.dataforseo.com/"),
     );
     expect(other).toEqual([]);
   });

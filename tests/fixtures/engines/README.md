@@ -14,3 +14,5 @@ Files named `docs-*` are the example responses from the official docs, copied un
 | perplexity/docs-quickstart-web-search.json | https://docs.perplexity.ai/docs/agent-api/quickstart.md (web_search response) | 2026-11-05 |
 | perplexity/docs-web-search-response-shape.json | https://docs.perplexity.ai/docs/agent-api/tools/web-search.md ("Response Shape") | 2026-11-05 |
 | perplexity/synthetic-restaurant-web-search.json | synthetic: two search_results items, one repeated link | 2026-11-05 |
+| maps/synthetic-maps-live-advanced.json | synthetic, structure from https://docs.dataforseo.com/v3/serp/google/maps/live/advanced/ (the docs example names real places with addresses) | 2026-11-05 |
+| maps/synthetic-irvine-ramen.json | synthetic: 7 Example ramen places in Maps order plus one item with cid null, item shape from the file above | 2026-11-05 |

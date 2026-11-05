@@ -1,0 +1,382 @@
+{
+  "_synthetic": "synthetic, structure from https://docs.dataforseo.com/v3/serp/google/maps/live/advanced/ with every non-structural string replaced (Example brands, example.test URLs, no phones or addresses)",
+  "version": "0.1.20230705",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "time": "4.0977 sec.",
+  "cost": 0.002,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "synthetic-1",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "time": "4.0299 sec.",
+      "cost": 0.002,
+      "result_count": 1,
+      "path": [
+        "v3",
+        "serp",
+        "google",
+        "maps",
+        "live",
+        "advanced"
+      ],
+      "data": {
+        "api": "serp",
+        "function": "live",
+        "se": "google",
+        "se_type": "maps",
+        "language_code": "en",
+        "location_code": 2840,
+        "keyword": "best ramen in Irvine",
+        "depth": 3,
+        "device": "desktop",
+        "os": "windows"
+      },
+      "result": [
+        {
+          "keyword": "best ramen in Irvine",
+          "type": "maps",
+          "se_domain": "google.com",
+          "location_code": 2840,
+          "language_code": "en",
+          "check_url": "https://example-s1.test/page-2",
+          "datetime": "2023-08-02 12:55:43 +00:00",
+          "spell": null,
+          "refinement_chips": null,
+          "item_types": [
+            "maps_search"
+          ],
+          "se_results_count": 0,
+          "items_count": 3,
+          "items": [
+            {
+              "type": "maps_search",
+              "rank_group": 1,
+              "rank_absolute": 1,
+              "domain": null,
+              "title": "Example Place 3",
+              "original_title": null,
+              "url": null,
+              "contact_url": null,
+              "contributor_url": null,
+              "book_online_url": null,
+              "rating": null,
+              "rating_distribution": null,
+              "snippet": "Example data text 4.",
+              "address": null,
+              "address_info": {
+                "borough": "Example data text 5.",
+                "address": null,
+                "city": null,
+                "zip": null,
+                "region": "Example data text 6.",
+                "country_code": "Example data text 7."
+              },
+              "place_id": "synthetic-8",
+              "phone": null,
+              "main_image": "https://example-s2.test/page-9",
+              "total_photos": 12,
+              "category": "Example data text 10.",
+              "additional_categories": null,
+              "category_ids": [
+                "Example data text 11."
+              ],
+              "work_hours": {
+                "timetable": null,
+                "current_status": "Example data text 12."
+              },
+              "feature_id": "synthetic-13",
+              "cid": "synthetic-14",
+              "latitude": 35.5064351,
+              "longitude": -97.6317255,
+              "is_claimed": false,
+              "local_justifications": null,
+              "is_directory_item": false,
+              "price_level": null,
+              "hotel_rating": null
+            },
+            {
+              "type": "maps_search",
+              "rank_group": 2,
+              "rank_absolute": 2,
+              "domain": "example-s3.test",
+              "title": "Example Place 15",
+              "original_title": null,
+              "url": "https://example-s3.test/page-16",
+              "contact_url": null,
+              "contributor_url": null,
+              "book_online_url": null,
+              "rating": {
+                "rating_type": "Max5",
+                "value": 4.7,
+                "votes_count": 1283,
+                "rating_max": null
+              },
+              "rating_distribution": {
+                "1": 4,
+                "2": 8,
+                "3": 51,
+                "4": 194,
+                "5": 1026
+              },
+              "snippet": "Example data text 17.",
+              "address": null,
+              "address_info": {
+                "borough": "Example data text 18.",
+                "address": null,
+                "city": null,
+                "zip": null,
+                "region": "Example data text 19.",
+                "country_code": "Example data text 20."
+              },
+              "place_id": "synthetic-21",
+              "phone": null,
+              "main_image": "https://example-s2.test/page-22",
+              "total_photos": 2501,
+              "category": "Example data text 23.",
+              "additional_categories": [
+                "Example data text 24."
+              ],
+              "category_ids": [
+                "Example data text 25.",
+                "Example data text 26."
+              ],
+              "work_hours": {
+                "timetable": {
+                  "sunday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "monday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "tuesday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "wednesday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "thursday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "friday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "saturday": [
+                    {
+                      "open": {
+                        "hour": 0,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 0,
+                        "minute": 0
+                      }
+                    }
+                  ]
+                },
+                "current_status": "Example data text 27."
+              },
+              "feature_id": "synthetic-28",
+              "cid": "synthetic-29",
+              "latitude": 38.8924028,
+              "longitude": -77.0484139,
+              "is_claimed": false,
+              "local_justifications": null,
+              "is_directory_item": false,
+              "price_level": null,
+              "hotel_rating": null
+            },
+            {
+              "type": "maps_search",
+              "rank_group": 3,
+              "rank_absolute": 3,
+              "domain": "example-s4.test",
+              "title": "Example Place 30",
+              "original_title": null,
+              "url": "https://example-s4.test/page-31",
+              "contact_url": null,
+              "contributor_url": null,
+              "book_online_url": null,
+              "rating": {
+                "rating_type": "Max5",
+                "value": 4,
+                "votes_count": 4,
+                "rating_max": null
+              },
+              "rating_distribution": {
+                "1": 1,
+                "2": 0,
+                "3": 0,
+                "4": 0,
+                "5": 3
+              },
+              "snippet": "Example data text 32.",
+              "address": null,
+              "address_info": {
+                "borough": "Example data text 33.",
+                "address": null,
+                "city": null,
+                "zip": null,
+                "region": "Example data text 34.",
+                "country_code": "Example data text 35."
+              },
+              "place_id": "synthetic-36",
+              "phone": null,
+              "main_image": "https://example-s2.test/page-37",
+              "total_photos": 18,
+              "category": "Example data text 38.",
+              "additional_categories": null,
+              "category_ids": [
+                "Example data text 39."
+              ],
+              "work_hours": {
+                "timetable": {
+                  "sunday": null,
+                  "monday": [
+                    {
+                      "open": {
+                        "hour": 8,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 17,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "tuesday": [
+                    {
+                      "open": {
+                        "hour": 8,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 17,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "wednesday": [
+                    {
+                      "open": {
+                        "hour": 8,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 17,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "thursday": [
+                    {
+                      "open": {
+                        "hour": 8,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 17,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "friday": [
+                    {
+                      "open": {
+                        "hour": 8,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 17,
+                        "minute": 0
+                      }
+                    }
+                  ],
+                  "saturday": [
+                    {
+                      "open": {
+                        "hour": 8,
+                        "minute": 0
+                      },
+                      "close": {
+                        "hour": 12,
+                        "minute": 0
+                      }
+                    }
+                  ]
+                },
+                "current_status": "Example data text 40."
+              },
+              "feature_id": "synthetic-41",
+              "cid": "synthetic-42",
+              "latitude": 29.515755199999997,
+              "longitude": -98.3017169,
+              "is_claimed": true,
+              "local_justifications": null,
+              "is_directory_item": false,
+              "price_level": null,
+              "hotel_rating": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

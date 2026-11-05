@@ -270,6 +270,24 @@ Review follow-ups (lead, 2026-11-05)
 - Open: src/types/db.ts got the two 0009 functions added by hand in the generator format, because the pod disk was full and no local stack could run. Regenerate it with `pnpm db:types` in the next DB PR when a stack is available.
 - Open (Step 11/12 decision): a DFY workspace is owned by the team member who created it, so only that member (and anyone added to workspace_members) reaches it through RLS. Whether every team user sees every DFY client is still to decide.
 
+## Step 5 (data-pipeline): Maps competitors, readSite, question suggestions (branch feat/step5-onboarding-engines, issue #18)
+Step 5 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
+Lead decision (Step 5 brief): a workspace with seats_quantity = 0 may hold exactly one active business (UI.md Billing "Unpaid: 'Start for $99/mo'"); checks don't run for unpaid workspaces (Steps 6/13); DFY businesses are exempt from the seat limit. Implemented by backend in #20.
+
+Changed
+- src/lib/onboarding: the fixed contract (types.ts) the onboarding UI builds against. readSite(domain), findLocalCompetitors({cuisine, city, state, domain?}), suggestQuestions({business, picks}) (wraps buildQuestions, ≤25), CUISINES (template fixed_cuisine values first, then common ones).
+- src/lib/engines/maps.ts: DataForSEO Google Maps SERP live/advanced. keyword '{cuisine} restaurant', location_name "Irvine,California,United States", language_code en, depth 20. maps_search items → {title, domain, rating (rating.value), category, cid}, field names from the docs page. Missing keys → 'missing_keys', other failures → 'error'; never throws.
+- findLocalCompetitors: the first 5 in Maps order (no re-ranking), skipping items without a cid and the business's own domain (www/scheme/case ignored).
+- readSite: robots.txt first (a Rank1 group wins over *, longest match, Allow wins ties), then home + /menu; 10 s timeout each, User-Agent "Rank1/1.0 (+https://rank1.us)", 1 MB cap. Name = og:site_name, else the <title> before its first separator. Cuisine = the CUISINES entry named most often (whole words, scripts/styles stripped), ties by list order. No LLM.
+- SSRF guard (user-supplied domain fetched by our server): hostnames only (no IP literals, localhost, .local/.internal and similar), every hop's DNS answers must be public (no loopback/private/link-local/CGNAT/v6 local), and only same-site redirects (www, http/https) are followed, max 3.
+- Fixtures: maps/synthetic-maps-live-advanced.json (structure from the docs example, which names real places with addresses) and maps/synthetic-irvine-ramen.json (Example brands). Both are covered by the privacy test.
+- `pnpm smoke:maps`: ≤5 Maps calls, only with keys, printing status/ms/count. `pnpm smoke:engines` now runs only the engines smoke file.
+
+UNVERIFIED / open
+- Maps: depth 20 (docs: billed per SERP of up to 100 results, so 20 costs the same as 100); rating as an object with `value` (docs example: rating_type Max5, value, votes_count); whether domain is always the bare host.
+- readSite: DNS is checked before each request but the fetch resolves again, so a DNS-rebinding race remains. Closing it needs a pinned-IP agent; logged for Step 6+.
+- The 'unknown state code' fix in stateName() is in #19. maps.ts uses the state table directly, so it doesn't depend on #19.
+
 ## Step 5 (frontend): restaurant onboarding (branch feat/step5-onboarding, issue #18)
 Step 5 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
 
