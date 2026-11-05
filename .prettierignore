@@ -1,0 +1,5 @@
+pnpm-lock.yaml
+supabase/seed.sql
+src/types/db.ts
+docs/qa/*.png
+tests/fixtures/*.csv
