@@ -2,12 +2,18 @@
 import { redirect } from "next/navigation";
 import { findLocalCompetitors, readSite } from "@/lib/onboarding";
 import { MAX_ACTIVE_QUESTIONS } from "@/lib/questions/templates";
+import { getLanding } from "@/lib/queries/auth";
 import { createBusinessOnboarding } from "@/lib/queries/onboarding";
 import { createClient } from "@/lib/supabase/server";
 import type { CompetitorQuery, CompetitorSearch, OnboardingInput, SiteRead } from "./contract";
 
-// Server actions are public endpoints: fetch sites or pay for Maps only for a signed-in user.
-const signedIn = async () => Boolean((await (await createClient()).auth.getUser()).data.user);
+// Server actions are public endpoints: fetch sites or pay for Maps only for a signed-in
+// self-serve owner who is still onboarding (team, DFY and set-up owners get the fallbacks).
+async function signedIn() {
+  const db = await createClient();
+  if (!(await db.auth.getUser()).data.user) return false;
+  return (await getLanding(db)) === "onboarding";
+}
 
 export async function readSiteAction(domain: string): Promise<SiteRead> {
   if (!(await signedIn())) return { status: "unreadable" };
