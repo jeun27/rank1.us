@@ -306,6 +306,7 @@ UNVERIFIED / open
 - The 'unknown state code' fix in stateName() is in #19. maps.ts uses the state table directly, so it doesn't depend on #19.
 - Review (#23) fixes: readSite reads at most 1 MB. A larger Content-Length is refused unread, and a stream is aborted as soon as it passes the cap; both count as unreadable. isPrivateAddress parses IPv6 fully, so v4-mapped in hex form (::ffff:7f00:1), NAT64 (64:ff9b::/96), 2001:db8::/32 and 192.0.0.0/24 are blocked too.
 - Test widened, with reason: tests/unit/engines/fixtures-privacy.test.ts now allows `(www\.)?example-[a-z0-9-]+\.test` links (it was `example-[a-z0-9]+\.test`). The Maps fixtures need hyphenated Example brand hosts (example-ramen-house.test) and a www form to test own-domain exclusion. Only example-*.test hosts are allowed, as before. Net tightening in the same test: the docs-URL exception now applies only inside the `_synthetic` note (it used to apply anywhere in the file), every synthetic file must carry that note, and title/name/source_name fields in synthetic files must start with "Example".
+- admin-test.spec.ts: the 2 local-stack tests (service-role founder seeding) now skip when E2E_BASE_URL is set (preview runs), same as auth.spec.ts; public admin checks still run on previews. CI runs them in full (QA #28).
 
 ## Step 6 (backend): run jobs and orchestration RPCs (branch feat/step6-run-jobs, issue #25)
 - Step 6 built from ENG_HANDOFF_OVERNIGHT §6 + CLAUDE.md + docs/*; Build Pack not readable; reconcile later.

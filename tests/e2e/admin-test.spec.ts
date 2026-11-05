@@ -46,6 +46,7 @@ for (const encoded of ["/%61dmin/test", "/admin%2Ftest"]) {
 }
 
 test("another signed-in user gets a 404", async ({ page }) => {
+  test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
   const u = await newUser("not-founder");
   await openMagicLink(page, u.email);
   const res = await page.goto("/admin/test");
@@ -54,6 +55,7 @@ test("another signed-in user gets a 404", async ({ page }) => {
 });
 
 test("the founder sees the form and runs engines against the fake API", async ({ page }) => {
+  test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
   await founder();
   expect((await signInFounder(page)).status()).toBe(200);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(c.title);
