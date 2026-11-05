@@ -330,3 +330,4 @@ UNVERIFIED / open
 - Contract: src/lib/runs/types.ts (ClaimedJob, FinishAnswer, FinishCitation). Wrappers: createRun / claimJobs / finishJob / recordJobError in src/lib/queries/run-jobs.ts. Tests: tests/db/run-jobs.test.ts.
 - New env name RUN_JOBS_BATCH (.env.example). CRON_SECRET was already there. The lead sets CRON_SECRET in Vercel.
 - src/types/db.ts got run_jobs and the five functions added by hand in the generator format (no local stack). Regenerate it with `pnpm db:types` in the next DB PR.
+- tests/db/helpers.ts resetDb(): after `db reset` it sends `notify pgrst, 'reload schema'` and waits (every 250 ms, 30 s max) until `GET /rest/v1/businesses?limit=0` returns 200, failing with the last status. It used to return as soon as PostgREST answered, before the schema reload, so tests/db/workspace.test.ts failed with "Could not find the table … in the schema cache" (main CI 57c0000, a7e6d31).
