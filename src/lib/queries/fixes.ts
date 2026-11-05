@@ -8,57 +8,69 @@ export const FIX_SIZES = ["S", "S-M", "M", "M-L", "L"] as const;
 export type FixSize = (typeof FIX_SIZES)[number];
 export type FixStatus = "todo" | "doing" | "done";
 
-export type FixItem = {
+// A fix row as stored, used for ranking (size) and by getTopFixes.
+export type OpenFix = {
   id: string;
   rule_key: string;
   size: FixSize;
   title: string;
   detail: string | null;
-  evidence: Json | null;
   // null for site rules (no answer-derived rule is enabled yet); the UI hides it then.
   affected_answers: number | null;
   status: "todo" | "doing";
-  first_seen_run: string | null;
-  last_seen_run: string | null;
 };
+
+// What the fix list shows: no size, evidence, why_note or other rule internals.
+export type FixItem = Omit<OpenFix, "size">;
 
 export type FixList = {
   // Open fixes, smallest effort first (S, S-M, M, M-L, L), then rule key. Never hygiene rules.
   ranked: FixItem[];
   // Open hygiene fixes (H1), shown only under "Tidy-ups".
   tidyUps: FixItem[];
-  // Rules the latest checked run couldn't check ("We couldn't check this yet.").
-  unchecked: string[];
+  // Rules the latest checked run couldn't check ("We couldn't check this yet."), with their titles.
+  unchecked: { rule_key: string; title: string }[];
   lastRunId: string | null;
 };
 
-const FIX_COLUMNS =
-  "id, rule_key, size, title, detail, evidence, affected_answers, status, first_seen_run, last_seen_run";
+const FIX_COLUMNS = "id, rule_key, size, title, detail, affected_answers, status";
+const byKey = (a: string, b: string) => a.localeCompare(b, "en", { numeric: true });
+const bySize = (a: OpenFix, b: OpenFix) =>
+  FIX_SIZES.indexOf(a.size) - FIX_SIZES.indexOf(b.size) || byKey(a.rule_key, b.rule_key);
 
-const bySize = (a: FixItem, b: FixItem) =>
-  FIX_SIZES.indexOf(a.size) - FIX_SIZES.indexOf(b.size) ||
-  a.rule_key.localeCompare(b.rule_key, "en", { numeric: true });
-
-// Open fixes of a business split into ranked and tidy-ups (by the rule's group).
-export async function openFixes(db: DbClient, businessId: string): Promise<{ ranked: FixItem[]; tidyUps: FixItem[] }> {
+// Open fixes of a business split into ranked and tidy-ups (by the rule's group), plus rule titles.
+export async function openFixes(
+  db: DbClient,
+  businessId: string,
+): Promise<{ ranked: OpenFix[]; tidyUps: OpenFix[]; titles: Map<string, string> }> {
   const [fixes, rules] = await Promise.all([
     db.from("fixes").select(FIX_COLUMNS).eq("business_id", businessId).in("status", ["todo", "doing"]),
-    db.from("fix_rules_public").select("key, grp"),
+    db.from("fix_rules_public").select("key, grp, title"),
   ]);
   if (fixes.error) throw fixes.error;
   if (rules.error) throw rules.error;
   const hygiene = new Set(rules.data.filter((r) => r.grp === "hygiene").map((r) => r.key));
-  const items = (fixes.data as FixItem[]).sort(bySize);
+  const items = (fixes.data as OpenFix[]).sort(bySize);
   return {
     ranked: items.filter((f) => !hygiene.has(f.rule_key)),
     tidyUps: items.filter((f) => hygiene.has(f.rule_key)),
+    titles: new Map(rules.data.map((r) => [r.key as string, r.title as string])),
   };
 }
+
+const toItem = (f: OpenFix): FixItem => ({
+  id: f.id,
+  rule_key: f.rule_key,
+  title: f.title,
+  detail: f.detail,
+  affected_answers: f.affected_answers,
+  status: f.status,
+});
 
 // The fix list a member may see through RLS (self-serve and team always; dfy_client only when
 // fix_list_visible). A caller who can't see it gets empty lists.
 export async function listFixes(db: DbClient, businessId: string): Promise<FixList> {
-  const [{ ranked, tidyUps }, checks] = await Promise.all([
+  const [{ ranked, tidyUps, titles }, checks] = await Promise.all([
     openFixes(db, businessId),
     db
       .from("fix_checks")
@@ -72,9 +84,9 @@ export async function listFixes(db: DbClient, businessId: string): Promise<FixLi
   const lastRunId = checks.data[0]?.run_id ?? null;
   const unchecked = checks.data
     .filter((c) => c.run_id === lastRunId && c.result === "unchecked")
-    .map((c) => c.rule_key)
-    .sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
-  return { ranked, tidyUps, unchecked, lastRunId };
+    .map((c) => ({ rule_key: c.rule_key, title: titles.get(c.rule_key) ?? c.rule_key }))
+    .sort((a, b) => byKey(a.rule_key, b.rule_key));
+  return { ranked: ranked.map(toItem), tidyUps: tidyUps.map(toItem), unchecked, lastRunId };
 }
 
 // Sets a fix's status (self-serve members and team only). Errors: 42501 not allowed or not

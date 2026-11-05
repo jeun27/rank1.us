@@ -134,7 +134,16 @@ describe("record_fix_results", () => {
     let list = await listFixes(user.db, businessId);
     expect(list.ranked.map((f) => f.rule_key)).toEqual(["R10", "R11"]);
     expect(list.tidyUps.map((f) => f.rule_key)).toEqual(["H1"]);
-    expect(list.unchecked).toEqual(["R14"]);
+    const [rule14] = must(await s.from("fix_rules_public").select("title").eq("key", "R14"));
+    expect(list.unchecked).toEqual([{ rule_key: "R14", title: rule14.title }]);
+    expect(Object.keys(list.ranked[0]).sort()).toEqual([
+      "affected_answers",
+      "detail",
+      "id",
+      "rule_key",
+      "status",
+      "title",
+    ]);
     expect(list.lastRunId).toBe(run1);
 
     // A repeat for the same run changes nothing.
@@ -160,7 +169,7 @@ describe("record_fix_results", () => {
 
     list = await listFixes(user.db, businessId);
     expect(list.ranked.map((f) => f.rule_key)).toEqual(["R10"]);
-    expect(list.unchecked).toEqual(["H1"]);
+    expect(list.unchecked.map((u) => u.rule_key)).toEqual(["H1"]);
     expect(list.lastRunId).toBe(run2);
   });
 
@@ -176,7 +185,9 @@ describe("record_fix_results", () => {
     await recordFixResults(s, businessId, run, [fix("R14")]);
     const [again] = (await listFixes(user.db, businessId)).ranked;
     expect(again.id).not.toBe(first.id);
-    expect(again).toMatchObject({ rule_key: "R14", status: "todo", first_seen_run: run });
+    expect(again).toMatchObject({ rule_key: "R14", status: "todo" });
+    const reopened = (await fixRows(businessId)).find((r) => r.status === "todo");
+    expect(reopened?.first_seen_run).toBe(run);
     expect((await fixRows(businessId)).map((r) => r.status).sort()).toEqual(["done", "todo"]);
   });
 
@@ -309,7 +320,7 @@ describe("role gate", () => {
   it("team members read and write a dfy business's fix list while it is hidden from the client", async () => {
     const list = await listFixes(team.db, dfyBusinessId);
     expect(list.ranked.map((f) => f.rule_key)).toEqual(["R10"]);
-    expect(list.unchecked).toEqual(["R11"]);
+    expect(list.unchecked.map((u) => u.rule_key)).toEqual(["R11"]);
     await setFixStatus(team.db, list.ranked[0].id, "doing");
   });
 
@@ -326,7 +337,7 @@ describe("role gate", () => {
     must(await serviceClient().from("businesses").update({ fix_list_visible: true }).eq("id", dfyBusinessId));
     const visible = await listFixes(client.db, dfyBusinessId);
     expect(visible.ranked.map((f) => f.rule_key)).toEqual(["R10"]);
-    expect(visible.unchecked).toEqual(["R11"]);
+    expect(visible.unchecked.map((u) => u.rule_key)).toEqual(["R11"]);
     await expect(setFixStatus(client.db, row.id, "done")).rejects.toMatchObject({ code: "42501" });
     expect(must(await serviceClient().from("fixes").select("status").eq("id", row.id).single()).status).toBe("doing");
     must(await serviceClient().from("businesses").update({ fix_list_visible: false }).eq("id", dfyBusinessId));
