@@ -315,7 +315,7 @@ UNVERIFIED / open
   - Citations are deduped by normalized URL per answer at storage time. The worker normalizes, and unique(answer_id, url) is the safety net.
   - One queued/running run per business (P0409).
   - Spend cap (review): kind 'weekly' is service role only (the Step 13 cron). A member may start one 'audit' per business per rolling 24 h, counted from runs.started_at, failed runs excluded (P0429 audit_limit). The service role isn't capped.
-  - Question deleted mid-run (review): its jobs cascade away, and an AFTER DELETE trigger recomputes the run from the remaining jobs. jobs_total = remaining jobs. The run closes once none are queued/running. finish_job on a deleted job is a no-op. The deleted question's answers stay (question_id set null) but no longer count in the run's totals.
+  - Question deleted mid-run (review): its jobs cascade away, and an AFTER DELETE trigger recomputes the run from the remaining jobs. jobs_total = remaining jobs. The run closes once none are queued/running. finish_job on a deleted job is a no-op. The deleted question's answers stay (question_id set null) but no longer count in the run's totals. Open for Step 8: visibility queries should also exclude answers with a null question_id (or join to run_jobs) so they match jobs_ok.
   - Stale-job exhaustion writes a failed answer.
   - Run counts are recomputed from answers on every finish, never incremented, because Vercel Cron may deliver twice.
 - Cron (lead, 2026-11-05): the team is on Vercel Pro, so `* * * * *` is allowed. Crons run only on production, and production updates only on a release tag, so no paid engine calls happen until Jeun's next release AND the API keys exist. The cron route and vercel.json ship in the data-pipeline PR with processJob.
