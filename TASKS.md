@@ -34,3 +34,12 @@
 - [ ] 6. The free-audit CTA posts to /api/audit/request (a stub; step 7 runs the audit).
 - [ ] 7. The Final Button Set (PR #3) is the source of truth for every component. The copy says weekly checks + monthly report everywhere.
 - [ ] 8. pnpm test, pnpm test:db, typecheck, lint and pnpm e2e are green locally. The Vercel preview builds, and the e2e passes on it.
+
+## Team workspace: Profound-style 3-pane shell (issue #10)
+- [x] 1. /app behind ENABLE_TEAM_WORKSPACE=true (404 otherwise), in .env.example.
+- [x] 2. Sidebar: business name, Workspace | Analytics, the 9 screens, Recents, help, theme toggle, collapse.
+- [x] 3. Context pane: stored facts with sample size + freshness + "API-measured, directional"; Copy context (Markdown brief) and Open in Claude. No model calls.
+- [x] 4. Document pane: tabs that close, add, expand and split; roving tablist, Delete, Esc.
+- [x] 5. Light (Field Notes) and dark tokens, every text pair AA; theme, split and collapse persist in localStorage.
+- [x] 6. Below 768px: one pane with a Nav / Context / Document tab bar. 150-200ms motion, off for reduced motion.
+- [x] 7. Unit, DB and e2e tests at 375 and 1280 in light and dark, axe clean.
