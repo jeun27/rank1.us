@@ -102,6 +102,7 @@ export function Screenshots() {
         <Badge tone="info">Example data</Badge>
       </div>
       <ScreenshotTabs
+        labelledBy="screenshots-title"
         tabs={[
           { label: "Dashboard", panel: <Dashboard /> },
           { label: "Monthly report", panel: <MonthlyReport /> },
