@@ -19,11 +19,19 @@ describe.each(files)("fixture %s", (file) => {
 });
 
 describe.each(synthetic)("synthetic fixture %s", (file) => {
-  it("links only to example.test, except its docs source", () => {
-    const urls = [...new Set(read(file).match(/https?:\/\/[^"\s)\]]+/g) ?? [])];
-    const other = urls.filter(
-      (u) => !/^https:\/\/example-[a-z0-9]+\.test\//.test(u) && !u.startsWith("https://docs.dataforseo.com/"),
+  // The docs URL may appear only in the _synthetic note; every link in the data is example-*.test.
+  it("links only to example-*.test outside its _synthetic note", () => {
+    const { _synthetic: note, ...data } = JSON.parse(read(file));
+    expect(typeof note).toBe("string");
+    const urls = [...new Set(JSON.stringify(data).match(/https?:\/\/[^"\s)\]\\]+/g) ?? [])];
+    expect(urls.filter((u) => !/^https:\/\/(www\.)?example-[a-z0-9-]+\.test\//.test(u))).toEqual([]);
+    expect([...(note as string).matchAll(/https?:\/\/[^\s)]+/g)].every((m) => m[0].startsWith("https://docs."))).toBe(
+      true,
     );
-    expect(other).toEqual([]);
+  });
+
+  it("names only Example brands in title/name fields", () => {
+    const names = [...read(file).matchAll(/"(title|name|source_name)": "([^"]*)"/g)].map((m) => m[2]);
+    expect(names.filter((n) => !/^Example\b/.test(n))).toEqual([]);
   });
 });
