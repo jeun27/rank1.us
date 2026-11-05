@@ -664,6 +664,7 @@ Changed
   - While a removal is scheduled, the business still counts as active until archive_at. At renewal the archive happens first, then seats.
 - Migration 20261105000018 (+ .down.sql), additive:
   - workspaces.stripe_current_period_end / stripe_event_at and businesses.archive_at. All are service-write only, like the billing fields.
+  - apply_stripe_subscription(p): one transaction. It finds the workspace by customer id or client_reference_id first (not_found is NOT recorded, so Stripe's retry can apply it once checkout links the customer), then records the event (duplicate → no-op), ignores stale events, archives due removals and only then sets ids/status/seats/period end.
   - apply_stripe_subscription(p): one transaction. It records the event (duplicate → no-op), then finds the workspace by customer id or client_reference_id, ignores stale events, archives due removals and only then sets ids/status/seats/period end.
   - record_stripe_event. schedule_business_removal / cancel_business_removal / archive_scheduled_businesses. All service only, self-serve only (DFY untouched).
 - Queries (src/lib/queries/billing.ts):
@@ -672,6 +673,7 @@ Changed
   - getCurrentBusiness(db, selectedId?) honors a selected id that's one of the caller's active self-serve businesses, else the oldest.
 - Cleanup: merged the doubled "## Step 12 (backend)" section (the second copy was fully contained in the first; no line lost).
 - src/types/db.ts got the 0018 columns and functions added by hand in the generator format.
+
 ## Step 14 (data-pipeline): checkout, webhook and portal (branch feat/step14-billing)
 Step 14 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b; Build Pack not readable; reconcile later.
 Lead decisions (Step 14 brief):
@@ -704,4 +706,4 @@ Changed
   - POST /api/stripe/webhook reads req.text() and verifies with stripe.webhooks.constructEvent + STRIPE_WEBHOOK_SECRET. It calls applyStripeSubscription / recordStripeEvent (service client). Unix times are converted to ISO for the RPC.
   - A live key or a missing secret → 500 {error: "not_configured"}.
 - src/lib/stripe/service.ts (server-only; frontend's server actions pass the workspaceId from getBillingState): startCheckout, addBusinessSeat, removeBusinessAtPeriodEnd (the Stripe schedule, then scheduleBusinessRemoval at the period end), openPortal. Stripe ids are read with the service client and never sent to the browser.
-- Open: Stripe has a `paused` subscription status that 0018's SubscriptionStatus lacks; asked backend (no paused flow in v1).
+- Stripe's `paused` subscription status is in 0018's SubscriptionStatus (backend added it), so a paused subscription applies instead of failing with 22023.

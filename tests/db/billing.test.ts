@@ -104,6 +104,14 @@ describe("apply_stripe_subscription", () => {
     expect((await ws(workspaceId)).subscription_status).toBe("past_due");
   });
 
+  it("accepts Stripe's paused status (weekly checks stay paused: not active or trialing)", async () => {
+    const { workspaceId } = await workspace("stripe-paused");
+    expect(
+      await applyStripeSubscription(serviceClient(), event({ client_reference_id: workspaceId, status: "paused" })),
+    ).toBe("applied");
+    expect((await ws(workspaceId)).subscription_status).toBe("paused");
+  });
+
   it("a duplicate event id is a no-op, even with a different payload", async () => {
     const { workspaceId } = await workspace("stripe-dup");
     const first = event({ client_reference_id: workspaceId, status: "active" });
@@ -135,9 +143,28 @@ describe("apply_stripe_subscription", () => {
     );
   });
 
+  it("not_found records nothing, so Stripe's retry applies once the customer is linked", async () => {
+    const { workspaceId } = await workspace("stripe-early");
+    const customer = `cus_${randomUUID()}`;
+    const early = event({ customer_id: customer, status: "active", quantity: 1 });
+    expect(await applyStripeSubscription(serviceClient(), early)).toBe("not_found");
+    expect(must(await serviceClient().from("stripe_events").select("event_id").eq("event_id", early.event_id))).toEqual(
+      [],
+    );
+
+    // Checkout links the customer to the workspace (stored by the service role, no event time yet).
+    must(await serviceClient().from("workspaces").update({ stripe_customer_id: customer }).eq("id", workspaceId));
+    expect(await applyStripeSubscription(serviceClient(), early)).toBe("applied");
+    expect(await ws(workspaceId)).toMatchObject({ subscription_status: "active", seats_quantity: 1 });
+    expect(
+      must(await serviceClient().from("stripe_events").select("event_id").eq("event_id", early.event_id)),
+    ).toHaveLength(1);
+    expect(await applyStripeSubscription(serviceClient(), early)).toBe("duplicate");
+  });
+
   it("rejects a bad status or missing ids (22023) without recording the event, so a retry works", async () => {
     const { workspaceId } = await workspace("stripe-bad");
-    const bad = event({ client_reference_id: workspaceId, status: "paused" as never });
+    const bad = event({ client_reference_id: workspaceId, status: "bogus" as never });
     await expect(applyStripeSubscription(serviceClient(), bad)).rejects.toMatchObject({ code: "22023" });
     await expect(
       applyStripeSubscription(serviceClient(), { ...bad, status: "active", event_id: "" }),
@@ -316,6 +343,10 @@ describe("billing state and the current business", () => {
   it("getCurrentBusiness honors the caller's own selection, else the oldest", async () => {
     const { user, businessIds } = await workspace("stripe-switch", 2);
     const other = await workspace("stripe-switch-other");
+    expect(await listMyBusinesses(user.db)).toEqual([
+      { id: businessIds[0], name: "Example Ramen House", city: "Irvine", archiveAt: null },
+      { id: businessIds[1], name: "Example Business 1", city: "Irvine", archiveAt: null },
+    ]);
     expect((await getCurrentBusiness(user.db))?.id).toBe(businessIds[0]);
     expect((await getCurrentBusiness(user.db, businessIds[1]))?.id).toBe(businessIds[1]);
     expect((await getCurrentBusiness(user.db, other.businessIds[0]))?.id).toBe(businessIds[0]);
