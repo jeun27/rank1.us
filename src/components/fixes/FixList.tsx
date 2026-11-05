@@ -44,22 +44,26 @@ function StatusControl({ fix, onStatus, onError }: { fix: FixView; onStatus: OnS
   );
 }
 
+// level: ranked cards sit under the page H1 (h2); Tidy-ups cards under its H2 (h3).
 function FixCard({
   fix,
   canWrite,
   onStatus,
   onError,
+  level,
 }: {
   fix: FixView;
   canWrite: boolean;
   onStatus?: OnStatus;
   onError: () => void;
+  level: 2 | 3;
 }) {
+  const Heading = level === 2 ? "h2" : "h3";
   return (
     <li className="flex flex-col gap-3 rounded-surface bg-white p-4 shadow-card md:p-6">
-      <h3 data-computed className="text-ui font-semibold">
+      <Heading data-computed className="text-ui font-semibold">
         {fix.title}
-      </h3>
+      </Heading>
       {fix.detail && (
         <p data-computed className="text-ui">
           {fix.detail}
@@ -113,7 +117,7 @@ export function FixList({
       {ranked.length > 0 && (
         <ul aria-label={c.title} className="flex flex-col gap-3">
           {ranked.map((f) => (
-            <FixCard key={f.id} fix={f} canWrite={canWrite} onStatus={onStatus} onError={onError} />
+            <FixCard key={f.id} fix={f} canWrite={canWrite} onStatus={onStatus} onError={onError} level={2} />
           ))}
         </ul>
       )}
@@ -137,7 +141,7 @@ export function FixList({
           <h2 className="font-display text-h3 font-semibold">{c.tidyUps}</h2>
           <ul className="flex flex-col gap-3">
             {tidyUps.map((f) => (
-              <FixCard key={f.id} fix={f} canWrite={canWrite} onStatus={onStatus} onError={onError} />
+              <FixCard key={f.id} fix={f} canWrite={canWrite} onStatus={onStatus} onError={onError} level={3} />
             ))}
           </ul>
         </section>
