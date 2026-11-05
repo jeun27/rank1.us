@@ -3,12 +3,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { appCopy as c } from "./copy";
 
-// Only pages that exist (lead): later steps add Fix list, Report, Experiments, Settings.
+// Only pages that exist (lead): later steps add Report, Experiments, Settings.
 const ITEMS = [
   { href: "/app", label: c.dashboard },
   { href: "/app/competitors", label: c.competitors },
   { href: "/app/questions", label: c.questions },
   { href: "/app/sources", label: c.sources },
+  { href: "/app/fixes", label: c.fixNext },
   { href: "/app/history", label: c.history },
   { href: "/app/billing", label: c.billing },
 ] as const;

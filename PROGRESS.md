@@ -531,3 +531,12 @@ Changed
 - The copy templates are the SCHEMA §5b customer copy verbatim (a test reads docs/SCHEMA.md); detail is set only for fix.
 - Wiring (after #50): src/lib/fixes/service.ts reads fix_rules.enabled (service role) and uses listRunsNeedingFixChecks(db, 1) and recordFixResults. GET /api/cron/run-jobs runs it after the drain and notify, with time left = maxDuration (300 s) − elapsed since the request started, and returns `fixes`.
 - PROGRESS.md: the duplicate "## Step 9 (data-pipeline)" section on main (a merge leftover) is merged into one copy, with no line dropped.
+
+## Step 10 (frontend): What to fix next page (branch feat/step10-fixes-page, issue #48)
+
+- Built from ENG_HANDOFF_OVERNIGHT §4/§6 and SCHEMA.md §5b. The Build Pack wasn't readable, so reconcile later. A1–A6 stay seeded disabled.
+- /app/fixes: listFixes → ranked (S→L, ranked server-side), Tidy-ups (hygiene, h2 + h3 cards), and "We couldn’t check this yet." rows from backend's unchecked {rule_key, title}. "Listing and site checks need your website URL" shows when the business has no domain.
+- Status select (To do / Doing / Done) via setFixStatusAction → set_fix_status. Every self-serve member may write, and RLS checks again. On error the value reverts and a Banner shows "We couldn't save that. Try again." (that copy is awaiting the lead's OK). Done removes the fix (only open fixes are listed).
+- The shared FixList (src/components/fixes) is reused by Steps 11/12. There, canWrite={false} renders a read-only status badge.
+- Rule 3: a Measured line (latest run, ok answers) under the H1.
+- Nav: "What to fix next" after Sources. The Dashboard section heading links to /app/fixes (top 3 from getTopFixes, same ranking).
