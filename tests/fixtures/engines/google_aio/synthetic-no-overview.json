@@ -1,0 +1,69 @@
+{
+  "_synthetic": "synthetic: Example brands and example.test URLs only; shape follows docs-organic-live-advanced.json without an ai_overview item",
+  "version": "0.1.20250724",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "time": "5.0 sec.",
+  "cost": 0.002,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "synthetic-0001",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "time": "5.0 sec.",
+      "cost": 0.002,
+      "result_count": 1,
+      "path": [
+        "v3",
+        "serp",
+        "google",
+        "organic",
+        "live",
+        "advanced"
+      ],
+      "data": {
+        "api": "serp",
+        "function": "live",
+        "se": "google",
+        "se_type": "organic",
+        "keyword": "best ramen in Irvine",
+        "location_name": "Irvine,California,United States",
+        "language_code": "en",
+        "load_async_ai_overview": true
+      },
+      "result": [
+        {
+          "keyword": "best ramen in Irvine",
+          "type": "organic",
+          "se_domain": "google.com",
+          "location_code": 1013962,
+          "language_code": "en",
+          "item_types": [
+            "organic"
+          ],
+          "items_count": 2,
+          "items": [
+            {
+              "type": "organic",
+              "rank_group": 1,
+              "rank_absolute": 1,
+              "domain": "example-reviews.test",
+              "title": "Example Ramen House",
+              "url": "https://example-reviews.test/example-ramen-house"
+            },
+            {
+              "type": "organic",
+              "rank_group": 2,
+              "rank_absolute": 2,
+              "domain": "example-blog.test",
+              "title": "Example Noodle Bar",
+              "url": "https://example-blog.test/example-noodle-bar"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

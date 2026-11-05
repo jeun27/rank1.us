@@ -1,0 +1,23 @@
+{
+  "_synthetic": "synthetic: task-level error; code and message from docs.dataforseo.com/v3/appendix/errors/",
+  "version": "0.1.20250724",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "time": "0.1 sec.",
+  "cost": 0,
+  "tasks_count": 1,
+  "tasks_error": 1,
+  "tasks": [
+    {
+      "id": "synthetic-0002",
+      "status_code": 40501,
+      "status_message": "Invalid Field.",
+      "time": "0 sec.",
+      "cost": 0,
+      "result_count": 0,
+      "path": [],
+      "data": {},
+      "result": null
+    }
+  ]
+}

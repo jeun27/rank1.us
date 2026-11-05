@@ -181,3 +181,28 @@ Doc differences
 - Clipboard blocked: both buttons show "Couldn't copy. Allow clipboard access and try again." instead of failing silently (review note on #11).
 - The business switcher shows the name only: UI.md hides the switcher while the workspace has 1 business.
 - Tailwind v4 inlines theme shadows into utilities, so the light shadows also render in dark (the inset white highlight is subtle on dark surfaces). The workspace itself uses borders, not shadows.
+
+## Step 4 (data-pipeline): engine adapters with fixtures (branch feat/step4-engines, issue #15)
+Step 4 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
+
+Changed
+- src/lib/engines: types.ts (EngineId, EngineRequest, EngineAnswer), chatgpt.ts, gemini.ts (both via llm-scraper.ts), google-aio.ts, perplexity.ts, dataforseo.ts (basic auth, status_code 20000, 130 s timeout), shared.ts, index.ts (runEngine with injectable fetch/env/clock). No LLM calls, no SDKs: plain fetch.
+- tests/fixtures/engines: docs example responses copied unedited (README lists URL + fetch date per file) plus synthetic files marked "synthetic" (Example brands, example.test URLs only).
+- `pnpm smoke:engines`: prints "skipped: no keys" and exits 0 without keys. With keys, 5 questions x 1 run per engine, printing only status, ms and cost.
+- .env.example: PERPLEXITY_MODEL (optional).
+
+Blocked/open
+- /admin/test waits for PR #14 (Step 3 auth) to merge.
+- PERPLEXITY_MODEL default = perplexity/sonar from models.md ("Perplexity's grounded search model"); UNVERIFIED that it matches what perplexity.ai users get; Jeun to confirm.
+
+Doc differences
+- Perplexity endpoint: the docs (agent-api/quickstart.md, tools/web-search.md) use POST https://api.perplexity.ai/v1/agent; INTEGRATIONS.md says /agent/responses. Followed the docs.
+- Perplexity user_location.region uses the full state name ("California"), as in INTEGRATIONS.md and the web-search docs' field description.
+- ChatGPT/Gemini citations = result.sources (the cited links). result.search_results (ChatGPT) are search hits, not citations, and are not used.
+- AIO citations = ai_overview.references; if absent, the elements' references. Inline items[].links are not counted as citations.
+- AIO location: location_code when the question has dfs_location_code, else location_name in the docs' format ("Irvine,California,United States"); country level uses 2840.
+
+UNVERIFIED (handled defensively: missing fields give null text, no citations or null cost, never a throw)
+- Perplexity: model name (above); error response body shape (any non-null `error` or a `status` other than "completed" = failed; a missing status is accepted, as in the docs' response-shape example); timeout (ours: 60 s); usage.cost.total_cost as the full charge.
+- DataForSEO: tasks[0].cost as the full per-call charge; ChatGPT/Gemini city effect (treated as country); force_web_search on Gemini (not sent); live-call duration for AIO with load_async_ai_overview.
+- Country support: only US has a location code (2840) and name; other countries return failed.
