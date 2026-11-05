@@ -1,3 +1,4 @@
+import { execSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/db";
@@ -78,4 +79,17 @@ export async function makeWorkspace(owner: TestUser): Promise<Fixture> {
     runId: run.id, answerId: ans.id, citationId: cit.id, snapshotId: snap.id, fixId: fix.id,
     experimentId: exp.id, reportId: rep.id,
   };
+}
+
+// `supabase db reset` re-applies migrations and supabase/seed.sql, then restarts the API containers.
+export async function resetDb() {
+  execSync("pnpm exec supabase db reset", { stdio: "pipe" });
+  for (let i = 0; i < 60; i++) {
+    try {
+      const [auth, rest] = await Promise.all([fetch(`${apiUrl()}/auth/v1/health`), fetch(`${apiUrl()}/rest/v1/`)]);
+      if (auth.status < 500 && rest.status < 500) return;
+    } catch {}
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+  throw new Error("Supabase API did not come back after db reset");
 }

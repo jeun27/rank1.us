@@ -11,7 +11,9 @@
     "e2e": "playwright test",
     "typecheck": "next typegen && tsc --noEmit",
     "test:db": "vitest run -c vitest.db.config.ts",
-    "db:types": "supabase gen types typescript --local > src/types/db.ts"
+    "db:types": "supabase gen types typescript --local > src/types/db.ts",
+    "db:seed:gen": "WRITE_SEED=1 vitest run tests/unit/seed.test.ts",
+    "db:seed:dev": "node scripts/seed-dev.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
