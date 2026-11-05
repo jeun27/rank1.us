@@ -418,6 +418,15 @@ Changed
 - Queries (src/lib/queries/shell.ts): getCurrentBusiness (self_serve only), listRunSummaries, getTopFixes, getQuestionsWithLatestAnswers, listCompetitors, addCompetitor, dismissSuggestion. Tests: tests/db/shell.test.ts, including the parity test against computeMetrics.
 - src/types/db.ts got the 0013 objects added by hand in the generator format (no local stack). Regenerate it with `pnpm db:types` when a stack is available.
 
+## Step 7 (frontend): audit progress, results and exports (branch feat/step7-audit, issue #33)
+- /app/runs/[runId] (members, through RLS getRunResults) and /audit/[token] (service role, getFreeAuditByToken) share AuditView: UI.md 4b Audit progress and Audit results. The free page adds the 'Start for $99/mo' card and the Powered by Rank1 credit; the paid page never shows the credit.
+- Per-engine progress comes from run.jobs_total (3q/3q/3q/q) and the answers so far (lead: run_jobs has no member read path). While a run is queued or running, the page refreshes every 5 s.
+- Exports: export.csv (toCsv) and export.png (next/og, 1200×630) under both routes, with Content-Disposition attachment, Cache-Control no-store, noindex and a [a-z0-9.-] filename. An unknown run or token is a 404.
+- Token privacy (lead): /audit/* sends Referrer-Policy: no-referrer and X-Robots-Tag: noindex, nofollow (next.config headers), the page has robots noindex,nofollow, cited links use rel="noopener noreferrer", and the lead email is never rendered.
+- /dev/audit?state=… shows every state with Example data (404 in production).
+- Real 404s: these pages stream inside Suspense, and notFound() there still sends a 200. So the proxy (src/lib/supabase/middleware.ts, the same pattern as /admin) rewrites to a 404 first. A run not readable by the visitor's session (RLS) or an unknown audit token (service role) gets the 404. The exports are route handlers and 404 on their own. The route is matched on the normalized path, but the token or run id comes from the raw path, because normalizePath lowercases and tokens are mixed-case base64url (review on #35).
+- Doc difference: citations.category is typed string in the result query and Category in computeMetrics. The loader casts it, because Step 6 stores only categorize() values.
+
 ## Step 8 (data-pipeline): competitor suggestions and visibility series (branch feat/step8-suggestions)
 Step 8 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
 Lead decisions (Step 8 brief): suggested competitors = findLocalCompetitors for the business cuisine/city (existing cache + maps_lookup token) minus tracked and dismissed; keys missing → nothing shown. The 8-run line = the latest 8 complete/partial audit+weekly runs; fewer than 2 → hidden. Free audits never appear in /app.
@@ -428,15 +437,6 @@ Changed
 - src/lib/onboarding/suggest.ts suggestCompetitors({business, tracked, dismissed}, {store}): drops Maps items whose bare domain or normalized name (detectMentions' normalize) matches a tracked or dismissed competitor or the business; first of each domain/name kept; Maps order; ≤5. limited / missing_keys / error → no items. Never throws.
 - src/lib/metrics/series.ts seriesFromSummaries(summaries): {points: {runId, at, metric: Metric}[] oldest → newest, visible: ≥2}.
 - src/lib/metrics/series.ts seriesFromSummaries(summaries): takes listRunSummaries rows (RunSummary, #38) and passes their visibility Metric through. Returns {points: {runId, at, metric}[] oldest → newest, visible: ≥2}, keeping only complete/partial audit+weekly runs as a safety net. Callers use listRunSummaries(db, id, 8, ["complete", "partial"]), which filters before the limit.
-
-## Step 7 (frontend): audit progress, results and exports (branch feat/step7-audit, issue #33)
-- /app/runs/[runId] (members, through RLS getRunResults) and /audit/[token] (service role, getFreeAuditByToken) share AuditView: UI.md 4b Audit progress and Audit results. The free page adds the 'Start for $99/mo' card and the Powered by Rank1 credit; the paid page never shows the credit.
-- Per-engine progress comes from run.jobs_total (3q/3q/3q/q) and the answers so far (lead: run_jobs has no member read path). While a run is queued or running, the page refreshes every 5 s.
-- Exports: export.csv (toCsv) and export.png (next/og, 1200×630) under both routes, with Content-Disposition attachment, Cache-Control no-store, noindex and a [a-z0-9.-] filename. An unknown run or token is a 404.
-- Token privacy (lead): /audit/* sends Referrer-Policy: no-referrer and X-Robots-Tag: noindex, nofollow (next.config headers), the page has robots noindex,nofollow, cited links use rel="noopener noreferrer", and the lead email is never rendered.
-- /dev/audit?state=… shows every state with Example data (404 in production).
-- Real 404s: these pages stream inside Suspense, and notFound() there still sends a 200. So the proxy (src/lib/supabase/middleware.ts, the same pattern as /admin) rewrites to a 404 first. A run not readable by the visitor's session (RLS) or an unknown audit token (service role) gets the 404. The exports are route handlers and 404 on their own. The route is matched on the normalized path, but the token or run id comes from the raw path, because normalizePath lowercases and tokens are mixed-case base64url (review on #35).
-- Doc difference: citations.category is typed string in the result query and Category in computeMetrics. The loader casts it, because Step 6 stores only categorize() values.
 
 ## Step 9 (data-pipeline): per-engine sources and location view (branch feat/step9-sources, issue #42)
 Step 9 built from ENG_HANDOFF_OVERNIGHT §6 + PRODUCT.md + docs/UI.md; Build Pack not readable; reconcile later.
@@ -503,6 +503,7 @@ Step 9 built from ENG_HANDOFF_OVERNIGHT §6 + PRODUCT.md + docs/UI.md; Build Pac
   - Solid: Reddit jellyDeep, YouTube amber, Review sites jelly, News and blogs warnText. These four pass every pair.
   - Striped (45° SVG texture; CSS gradients are aurora-only): Social jellyDeep, Other inkMuted (neutral). Texture tells them from the solid fills, and the two striped fills pass separation from each other (ΔE 16.8).
   - Every segment's count is also shown as text under its bar.
+
 ## Step 10 (data-pipeline): site checks R10, R11, R14 and H1 (branch feat/step10-site-checks)
 Step 10 built from ENG_HANDOFF_OVERNIGHT §4/§6 + SCHEMA.md §5b; Build Pack not readable; A1–A6 seeded disabled; reconcile later.
 Lead decisions (Step 10 brief): detectors only for the enabled rules R10, R11, R14 and H1, using our own fetch, with no paid calls and no LLM. Detection runs once per paid run after it closes complete/partial, from the cron drain, never for free audits. No domain → every site rule is unchecked. fix = upsert, ok = auto-resolve, unchecked = leave as is. R14 fixes only for OAI-SearchBot and PerplexityBot; GPTBot and Google-Extended are info only.
@@ -523,6 +524,20 @@ Changed
 - Wiring (after #50): src/lib/fixes/service.ts reads fix_rules.enabled (service role) and uses listRunsNeedingFixChecks(db, 1) and recordFixResults. GET /api/cron/run-jobs runs it after the drain and notify, with time left = maxDuration (300 s) − elapsed since the request started, and returns `fixes`.
 - PROGRESS.md: the duplicate "## Step 9 (data-pipeline)" section on main (a merge leftover) is merged into one copy, with no line dropped.
 
+## Step 11 (backend): team read access to DFY clients (branch feat/step11-team-read, issue #54)
+- Step 11 built from ENG_HANDOFF_OVERNIGHT §3/§6 + issue #10; Build Pack not readable; reconcile later.
+- Lead decisions:
+  - /team keeps #11's 3-pane workspace on real data, behind ENABLE_TEAM_WORKSPACE (Production false). Access is role 'team' only.
+  - The team sees every DFY business across workspaces, never self-serve data, and reads through RLS (no service role in a page path).
+  - Nav: Dashboard, Questions, Competitors, Sources, Fix list, History.
+  - The Copy context brief uses stored values only. Open in Claude = exactly https://claude.ai. No LLM.
+  - O1 (lead): any team user writes fixes (status) and competitors of any DFY business. can_write_fixes / can_write_competitors = (self_serve and member) or (team and dfy). A dfy_client still never writes.
+- Migration 20261105000015 (+ .down.sql), additive and re-runnable:
+  - Helpers private.is_team_dfy_business / team_can_read_run / team_can_read_answer.
+  - Extra SELECT policies (*_team_read) on businesses, competitors, questions, runs (no free_audit), answers, citations, fixes and fix_checks, DFY only. Member and dfy_client policies are unchanged.
+  - Widened write helpers (O1). The rollback restores the membership-only helpers.
+- Query: listDfyBusinesses (src/lib/queries/team.ts). Every team-page query (getRunResults, getPreviousRun, listRunSummaries, getQuestionsWithLatestAnswers, listCompetitors, listFixes) is tested as a non-member team user. Tests: tests/db/team.test.ts.
+
 ## Step 10 (frontend): What to fix next page (branch feat/step10-fixes-page, issue #48)
 
 - Built from ENG_HANDOFF_OVERNIGHT §4/§6 and SCHEMA.md §5b. The Build Pack wasn't readable, so reconcile later. A1–A6 stay seeded disabled.
@@ -531,6 +546,8 @@ Changed
 - The shared FixList (src/components/fixes) is reused by Steps 11/12. There, canWrite={false} renders a read-only status badge.
 - Rule 3: a Measured line (latest run, ok answers) under the H1.
 - Nav: "What to fix next" after Sources. The Dashboard section heading links to /app/fixes (top 3 from getTopFixes, same ranking).
+- n fix (#57): the Freshness n comes from loadShell().latest.metrics, the same object the Dashboard hero renders. tests/unit/app/measured.test.tsx (the fixes n equals the Dashboard n with a no_overview answer) supersedes measured.test.ts, which only checked runMeasured against jobs_ok and went away with runMeasured.
+
 ## Step 11 (data-pipeline): context brief from stored data (branch feat/step11-context)
 Step 11 built from ENG_HANDOFF_OVERNIGHT §3/§6 + issue #10; Build Pack not readable; reconcile later.
 Lead decisions (Step 11 brief): no in-app AI. Copy context = a Markdown brief of stored numbers and texts for the selected item, each with n + freshness and "API-measured, directional": business, latest visibility (overall + per engine), leaderboard, top sources, open fixes (title + detail), and questions where the business wasn't named. Never why_note, raw, cost, vendor stats, lead emails or tokens. Open in Claude opens exactly https://claude.ai after copying the brief; no ?q= and no data in the URL.

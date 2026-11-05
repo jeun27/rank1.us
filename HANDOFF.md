@@ -52,3 +52,8 @@ Requests between agents (for example, a new field frontend needs from backend). 
   - Status: done.
 
 - 2026-11-05, data-pipeline -> backend: Step 10 fix checks (for your 0014). Lead/backend: the once-per-run marker is a `fix_checks` table (run_id, rule_key, result) written by `record_fix_results(p_business_id, p_run_id, p_results)`. A service-client query `listRunsNeedingFixCheck(serviceDb, limit)` → `{ runId, businessId, domain: string | null }[]`: kind audit|weekly, status complete|partial, no fix_checks rows yet, oldest finished first. p_results = `{ rule_key: "R10"|"R11"|"R14"|"H1", result: "fix"|"ok"|"unchecked", evidence: jsonb, detail: string | null }[]` (detail only for fix; size/title come from fix_rules). The cron calls it for at most 1 run per tick. Status: done (#50: listRunsNeedingFixChecks, recordFixResults, fix_checks).
+- 2026-11-05, backend -> frontend + data-pipeline: Step 11 on feat/step11-team-read.
+  - `listDfyBusinesses(db): DfyBusiness[]` (src/lib/queries/team.ts) = { id, name, domain, cuisine, city, state, country, fix_list_visible }: active DFY businesses by name. A team user gets all of them.
+  - For a selected DFY business, a team user (even a non-member) can use the existing queries as-is: getRunResults, getPreviousRun, listRunSummaries, getQuestionsWithLatestAnswers, listCompetitors, listFixes.
+  - Team writes: setFixStatus, addCompetitor, dismissSuggestion (lead O1).
+  - Status: done.
