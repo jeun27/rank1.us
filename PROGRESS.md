@@ -155,3 +155,9 @@ Blocked/open
 ## Release gate (PR #5)
 - Merged is not live (Jeun 2026-11-05): main deploys are disabled in vercel.json; releases are tagged and deployed on request.
 - Removed `not.toBe(false)` in tests/unit/vercel-config.test.ts: the `Object.keys(...)` toEqual `["main"]` check already fails if deploymentEnabled is `false`.
+
+## Step 3 (backend): user roles + self-serve workspace bootstrap (branch feat/step3-roles, issue #12)
+- Step 3 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
+- Migration 20261105000008 (+ .down.sql): `user_roles` (team | dfy_client; no row = self-serve; readable only by self; service role writes). `ensure_self_serve_workspace()` returns the caller's workspace, or creates one with the caller as owner on first sign-in, behind a per-user advisory lock. Team and dfy_client get null. `my_landing()` returns team | dfy_client | onboarding | dashboard. Both are executable by authenticated only (anon EXECUTE revoked).
+- Queries: ensureSelfServeWorkspace, getLanding (src/lib/queries/auth.ts). Tests: tests/db/roles.test.ts.
+- Open: auto-created workspaces start at seats_quantity 0, so onboarding cannot insert a business until checkout. Lead settles this in Step 5.
