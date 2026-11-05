@@ -167,15 +167,16 @@ export type UnnotifiedFreeAudit = {
 export const MAX_NOTIFY_ATTEMPTS = 5;
 
 // Service client only. Finished free audits (complete, partial or failed) not yet notified,
-// with fewer than MAX_NOTIFY_ATTEMPTS tries.
-export async function listUnnotifiedFreeAudits(serviceDb: DbClient): Promise<UnnotifiedFreeAudit[]> {
+// with fewer than MAX_NOTIFY_ATTEMPTS tries, oldest first.
+export async function listUnnotifiedFreeAudits(serviceDb: DbClient, limit = 50): Promise<UnnotifiedFreeAudit[]> {
   const { data, error } = await serviceDb
     .from("free_audits")
     .select("run_id, lead_id, domain, runs!inner(status), leads!inner(email, token)")
     .is("notified_at", null)
     .lt("notify_attempts", MAX_NOTIFY_ATTEMPTS)
     .in("runs.status", ["complete", "partial", "failed"])
-    .order("created_at");
+    .order("created_at")
+    .limit(limit);
   if (error) throw error;
 
   return Promise.all(
