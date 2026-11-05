@@ -1,0 +1,499 @@
+{
+  "_synthetic": "synthetic, structure from https://docs.dataforseo.com/v3/ai_optimization/chat_gpt/llm_scraper/live/advanced/ with every non-structural string replaced (Example brands, example.test URLs, no phones or addresses)",
+  "version": "0.1.20250724",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "time": "15.0903 sec.",
+  "cost": 0.004,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "synthetic-1",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "time": "15.0329 sec.",
+      "cost": 0.004,
+      "result_count": 1,
+      "path": [
+        "v3",
+        "ai_optimization",
+        "chat_gpt",
+        "llm_scraper",
+        "live",
+        "advanced"
+      ],
+      "data": {
+        "api": "ai_optimization",
+        "function": "live",
+        "se": "chat_gpt",
+        "force_web_search": true,
+        "language_code": "en",
+        "location_code": 2840,
+        "keyword": "best ramen in Irvine",
+        "device": "desktop",
+        "os": "windows"
+      },
+      "result": [
+        {
+          "keyword": "best ramen in Irvine",
+          "location_code": 2840,
+          "language_code": "en",
+          "model": "gpt-4o",
+          "check_url": "https://example-s1.test/page-2",
+          "datetime": "2025-08-14 09:26:26 +00:00",
+          "markdown": "Example data text 3.",
+          "search_results": [
+            {
+              "type": "chatgpt_search_result",
+              "url": "https://example-s2.test/page-4",
+              "domain": "example-s2.test",
+              "title": "Example Place 5",
+              "description": "Example data text 6.",
+              "breadcrumb": "example-s3.test"
+            }
+          ],
+          "sources": [
+            {
+              "type": "chat_gpt_source",
+              "title": "Example Place 7",
+              "snippet": null,
+              "domain": "example-s4.test",
+              "url": "https://example-s4.test/page-8",
+              "thumbnail": null,
+              "source_name": "Example Place 9",
+              "publication_date": "2025-08-13 22:16:33 +00:00",
+              "markdown": null
+            },
+            {
+              "type": "chat_gpt_source",
+              "title": "Example Place 10",
+              "snippet": null,
+              "domain": "example-s5.test",
+              "url": "https://example-s5.test/page-11",
+              "thumbnail": null,
+              "source_name": "Example Place 12",
+              "publication_date": null,
+              "markdown": null
+            },
+            {
+              "type": "chat_gpt_source",
+              "title": "Example Place 13",
+              "snippet": null,
+              "domain": "example-s4.test",
+              "url": "https://example-s4.test/page-14",
+              "thumbnail": null,
+              "source_name": "Example Place 15",
+              "publication_date": "2025-07-06 19:19:49 +00:00",
+              "markdown": null
+            }
+          ],
+          "fan_out_queries": [
+            "Example data text 16."
+          ],
+          "brand_entities": [
+            {
+              "type": "chat_gpt_brand_entity",
+              "title": "Example Place 17",
+              "category": "Example data text 18.",
+              "markdown": "Example data text 19.",
+              "urls": null
+            },
+            {
+              "type": "chat_gpt_brand_entity",
+              "title": "Example Place 20",
+              "category": "Example data text 21.",
+              "markdown": "Example data text 22.",
+              "urls": null
+            }
+          ],
+          "se_results_count": 0,
+          "item_types": [
+            "chat_gpt_images",
+            "chat_gpt_text",
+            "chat_gpt_table",
+            "chat_gpt_products",
+            "chat_gpt_local_businesses",
+            "chat_gpt_navigation_list"
+          ],
+          "items_count": 5,
+          "items": [
+            {
+              "type": "chat_gpt_images",
+              "rank_group": 1,
+              "rank_absolute": 1,
+              "markdown": "Example data text 23.",
+              "items": [
+                {
+                  "type": "chat_gpt_images_element",
+                  "url": "https://example-s4.test/page-24",
+                  "alt": "Example Place 25",
+                  "image_url": "https://example-s6.test/page-26",
+                  "markdown": "Example data text 27."
+                }
+              ]
+            },
+            {
+              "type": "chat_gpt_text",
+              "rank_group": 1,
+              "rank_absolute": 2,
+              "markdown": "Example data text 28.",
+              "sources": [
+                {
+                  "type": "chat_gpt_source",
+                  "title": "Example Place 29",
+                  "snippet": null,
+                  "domain": "example-s4.test",
+                  "url": "https://example-s4.test/page-30",
+                  "thumbnail": null,
+                  "source_name": "Example Place 31",
+                  "publication_date": "2025-08-13 22:16:33 +00:00",
+                  "markdown": null
+                },
+                {
+                  "type": "chat_gpt_source",
+                  "title": "Example Place 32",
+                  "snippet": null,
+                  "domain": "example-s5.test",
+                  "url": "https://example-s5.test/page-33",
+                  "thumbnail": null,
+                  "source_name": "Example Place 34",
+                  "publication_date": null,
+                  "markdown": null
+                },
+                {
+                  "type": "chat_gpt_source",
+                  "title": "Example Place 35",
+                  "snippet": null,
+                  "domain": "example-s4.test",
+                  "url": "https://example-s4.test/page-36",
+                  "thumbnail": null,
+                  "source_name": "Example Place 37",
+                  "publication_date": "2025-07-06 19:19:49 +00:00",
+                  "markdown": null
+                }
+              ],
+              "brand_entities": [
+                {
+                  "type": "chat_gpt_brand_entity",
+                  "title": "Example Place 38",
+                  "category": "Example data text 39.",
+                  "markdown": "Example data text 40.",
+                  "urls": null
+                },
+                {
+                  "type": "chat_gpt_brand_entity",
+                  "title": "Example Place 41",
+                  "category": "Example data text 42.",
+                  "markdown": "Example data text 43.",
+                  "urls": null
+                }
+              ]
+            },
+            {
+              "type": "chat_gpt_table",
+              "rank_group": 1,
+              "rank_absolute": 3,
+              "text": null,
+              "markdown": "Example data text 44.",
+              "table": {
+                "table_header": [
+                  "Example data text 45.",
+                  "Example data text 46."
+                ],
+                "table_content": [
+                  [
+                    "Example data text 47.",
+                    "Example data text 48."
+                  ],
+                  [
+                    "Example data text 49.",
+                    "Example data text 50."
+                  ],
+                  [
+                    "Example data text 51.",
+                    "Example data text 52."
+                  ],
+                  [
+                    "Example data text 53.",
+                    "Example data text 54."
+                  ],
+                  [
+                    "Example data text 55.",
+                    "Example data text 56."
+                  ]
+                ]
+              },
+              "brand_entities": [
+                {
+                  "type": "chat_gpt_brand_entity",
+                  "title": "Example Place 57",
+                  "category": "Example data text 58.",
+                  "markdown": "Example data text 59.",
+                  "urls": null
+                },
+                {
+                  "type": "chat_gpt_brand_entity",
+                  "title": "Example Place 60",
+                  "category": "Example data text 61.",
+                  "markdown": "Example data text 62.",
+                  "urls": null
+                }
+              ]
+            },
+            {
+              "type": "chat_gpt_text",
+              "rank_group": 2,
+              "rank_absolute": 4,
+              "markdown": "Example data text 63.",
+              "sources": null,
+              "brand_entities": [
+                {
+                  "type": "chat_gpt_brand_entity",
+                  "title": "Example Place 64",
+                  "category": "Example data text 65.",
+                  "markdown": "Example data text 66.",
+                  "urls": null
+                },
+                {
+                  "type": "chat_gpt_brand_entity",
+                  "title": "Example Place 67",
+                  "category": "Example data text 68.",
+                  "markdown": "Example data text 69.",
+                  "urls": null
+                }
+              ]
+            },
+            {
+              "type": "chat_gpt_products",
+              "rank_group": 1,
+              "rank_absolute": 2,
+              "items": [
+                {
+                  "type": "chat_gpt_products_element",
+                  "product_id": "synthetic-70",
+                  "merchants": "Example Place 71",
+                  "id_to_token_map": "synthetic-72",
+                  "title": "Example Place 73",
+                  "rating": null,
+                  "price": 34.95,
+                  "currency": "USD",
+                  "tag": "Example data text 74.",
+                  "url": "https://example-s7.test/page-75",
+                  "domain": "example-s7.test",
+                  "images": [
+                    "Example data text 76."
+                  ],
+                  "product_ids": [
+                    {
+                      "type": "chat_gpt_google_shopping_product",
+                      "ei": "synthetic-77",
+                      "product_id": null,
+                      "catalog_id": "synthetic-78",
+                      "gpcid": "synthetic-79",
+                      "headline_offer_docid": "synthetic-80",
+                      "image_docid": "synthetic-81",
+                      "rds": "synthetic-82",
+                      "query": "best ramen in Irvine",
+                      "mid": null,
+                      "pvt": "synthetic-83",
+                      "uule": "synthetic-84",
+                      "gl": "synthetic-85",
+                      "hl": "synthetic-86"
+                    }
+                  ]
+                },
+                {
+                  "type": "chat_gpt_products_element",
+                  "product_id": "synthetic-87",
+                  "merchants": "Example Place 88",
+                  "id_to_token_map": "synthetic-89",
+                  "title": "Example Place 90",
+                  "rating": null,
+                  "price": 49.95,
+                  "currency": "USD",
+                  "tag": "Example data text 91.",
+                  "url": "https://example-s8.test/page-92",
+                  "domain": "example-s8.test",
+                  "images": [
+                    "Example data text 93."
+                  ],
+                  "product_ids": [
+                    {
+                      "type": "chat_gpt_google_shopping_product",
+                      "ei": "synthetic-94",
+                      "product_id": null,
+                      "catalog_id": "synthetic-95",
+                      "gpcid": "synthetic-96",
+                      "headline_offer_docid": "synthetic-97",
+                      "image_docid": "synthetic-98",
+                      "rds": "synthetic-99",
+                      "query": "best ramen in Irvine",
+                      "mid": null,
+                      "pvt": "synthetic-100",
+                      "uule": "synthetic-101",
+                      "gl": "synthetic-102",
+                      "hl": "synthetic-103"
+                    }
+                  ]
+                },
+                {
+                  "type": "chat_gpt_products_element",
+                  "product_id": "synthetic-104",
+                  "merchants": "Example Place 105",
+                  "id_to_token_map": "synthetic-106",
+                  "title": "Example Place 107",
+                  "rating": null,
+                  "price": 59.99,
+                  "currency": "USD",
+                  "tag": "Example data text 108.",
+                  "url": "https://example-s9.test/page-109",
+                  "domain": "example-s9.test",
+                  "images": [
+                    "Example data text 110."
+                  ],
+                  "product_ids": [
+                    {
+                      "type": "chat_gpt_google_shopping_product",
+                      "ei": "synthetic-111",
+                      "product_id": null,
+                      "catalog_id": "synthetic-112",
+                      "gpcid": "synthetic-113",
+                      "headline_offer_docid": "synthetic-114",
+                      "image_docid": "synthetic-115",
+                      "rds": "synthetic-116",
+                      "query": "best ramen in Irvine",
+                      "mid": null,
+                      "pvt": "synthetic-117",
+                      "uule": "synthetic-118",
+                      "gl": "synthetic-119",
+                      "hl": "synthetic-120"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "chat_gpt_local_businesses",
+              "rank_group": 1,
+              "rank_absolute": 2,
+              "markdown": "Example data text 121.",
+              "items": [
+                {
+                  "type": "chat_gpt_local_businesses_element",
+                  "title": "Example Place 122",
+                  "description": "Example data text 123.",
+                  "address": null,
+                  "phone": null,
+                  "reviews_count": 22,
+                  "url": "https://example-s10.test/page-124",
+                  "domain": "example-s10.test",
+                  "rating": {
+                    "rating_type": "Max5",
+                    "value": 3.9,
+                    "votes_count": 22,
+                    "rating_max": 5
+                  }
+                },
+                {
+                  "type": "chat_gpt_local_businesses_element",
+                  "title": "Example Place 125",
+                  "description": "Example data text 126.",
+                  "address": null,
+                  "phone": null,
+                  "reviews_count": 44,
+                  "url": "https://example-s11.test/page-127",
+                  "domain": "example-s11.test",
+                  "rating": {
+                    "rating_type": "Max5",
+                    "value": 3.7,
+                    "votes_count": 44,
+                    "rating_max": 5
+                  }
+                },
+                {
+                  "type": "chat_gpt_local_businesses_element",
+                  "title": "Example Place 128",
+                  "description": "Example data text 129.",
+                  "address": null,
+                  "phone": null,
+                  "reviews_count": 27,
+                  "url": "https://example-s12.test/page-130",
+                  "domain": "example-s12.test",
+                  "rating": {
+                    "rating_type": "Max5",
+                    "value": 4.4,
+                    "votes_count": 27,
+                    "rating_max": 5
+                  }
+                },
+                {
+                  "type": "chat_gpt_local_businesses_element",
+                  "title": "Example Place 131",
+                  "description": "Example data text 132.",
+                  "address": null,
+                  "phone": null,
+                  "reviews_count": 12,
+                  "url": null,
+                  "domain": null,
+                  "rating": {
+                    "rating_type": "Max5",
+                    "value": 3.9,
+                    "votes_count": 12,
+                    "rating_max": 5
+                  }
+                }
+              ]
+            },
+            {
+              "type": "chat_gpt_navigation_list",
+              "rank_group": 1,
+              "rank_absolute": 5,
+              "title": "Example Place 133",
+              "sources": [
+                {
+                  "type": "chat_gpt_source",
+                  "title": "Example Place 134",
+                  "snippet": null,
+                  "domain": "example-s13.test",
+                  "url": "https://example-s13.test/page-135",
+                  "thumbnail": "https://example-s14.test/page-136",
+                  "source_name": null,
+                  "publication_date": "2007-03-14 16:00:00 +00:00",
+                  "markdown": null
+                },
+                {
+                  "type": "chat_gpt_source",
+                  "title": "Example Place 137",
+                  "snippet": null,
+                  "domain": "example-s15.test",
+                  "url": "https://example-s15.test/page-138",
+                  "thumbnail": "https://example-s16.test/page-139",
+                  "source_name": null,
+                  "publication_date": "2007-03-26 04:00:00 +00:00",
+                  "markdown": null
+                }
+              ]
+            },
+            {
+              "type": "chat_gpt_ad",
+              "rank_group": 1,
+              "rank_absolute": 2,
+              "is_rendered": true,
+              "title": "Example Place 140",
+              "snippet": "Example data text 141.",
+              "url": "https://example-s17.test/page-142",
+              "domain": "example-s17.test",
+              "image_url": "https://example-s18.test/page-143",
+              "advertiser": {
+                "name": "Example Place 144",
+                "url": "https://example-s17.test/page-145",
+                "favicon_url": "https://example-s18.test/page-146"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

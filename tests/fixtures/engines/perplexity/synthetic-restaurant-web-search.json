@@ -1,0 +1,80 @@
+{
+  "_synthetic": "synthetic: Example brands and example.test URLs only; shape follows docs-quickstart-web-search.json",
+  "id": "resp_synthetic-0001",
+  "model": "perplexity/sonar",
+  "object": "response",
+  "status": "completed",
+  "error": null,
+  "output": [
+    {
+      "type": "search_results",
+      "queries": [
+        "best ramen in Irvine"
+      ],
+      "results": [
+        {
+          "id": 1,
+          "url": "https://example-reviews.test/irvine/ramen",
+          "title": "Example data: best ramen in Irvine",
+          "snippet": "Example Ramen House and Example Noodle Bar.",
+          "date": "2026-10-01",
+          "last_updated": "2026-10-01",
+          "source": "web"
+        },
+        {
+          "id": 2,
+          "url": "https://example-blog.test/ramen-guide",
+          "title": "Example data: ramen guide",
+          "snippet": "Example Tonkotsu Co.",
+          "date": "2026-09-01",
+          "last_updated": "2026-09-01",
+          "source": "web"
+        }
+      ]
+    },
+    {
+      "type": "search_results",
+      "queries": [
+        "Irvine ramen late night"
+      ],
+      "results": [
+        {
+          "id": 3,
+          "url": "https://example-reviews.test/irvine/ramen",
+          "title": "Example data: best ramen in Irvine (again)",
+          "snippet": "Repeated link",
+          "date": "2026-10-01",
+          "last_updated": "2026-10-01",
+          "source": "web"
+        }
+      ]
+    },
+    {
+      "id": "msg_synthetic",
+      "type": "message",
+      "role": "assistant",
+      "status": "completed",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "Example data. Try Example Ramen House [1] or Example Tonkotsu Co. [2].",
+          "annotations": []
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "input_tokens": 100,
+    "output_tokens": 40,
+    "total_tokens": 140,
+    "cost": {
+      "currency": "USD",
+      "total_cost": 0.0061
+    },
+    "tool_calls_details": {
+      "search_web": {
+        "invocation": 2
+      }
+    }
+  }
+}

@@ -1,0 +1,2752 @@
+{
+  "_synthetic": "synthetic, structure from https://docs.dataforseo.com/v3/serp/google/organic/live/advanced/ with every non-structural string replaced (Example brands, example.test URLs, no phones or addresses)",
+  "version": "0.1.20200129",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "time": "0.3059 sec.",
+  "cost": 0.003,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "synthetic-1",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "time": "0.0952 sec.",
+      "cost": 0.003,
+      "result_count": 1,
+      "path": [
+        "v3",
+        "serp",
+        "google",
+        "organic",
+        "advanced",
+        "live"
+      ],
+      "data": {
+        "api": "serp",
+        "function": "live",
+        "se": "google",
+        "se_type": "organic",
+        "language_name": "English",
+        "location_name": "United States",
+        "keyword": "best ramen in Irvine",
+        "tag": "Example data text 2.",
+        "device": "desktop",
+        "os": "windows"
+      },
+      "result": [
+        {
+          "keyword": "best ramen in Irvine",
+          "type": "organic",
+          "se_domain": "google.com",
+          "location_code": 2840,
+          "language_code": "en",
+          "check_url": "https://example-s1.test/page-3",
+          "datetime": "2019-11-15 12:57:46 +00:00",
+          "spell": null,
+          "refinement_chips": {
+            "type": "refinement_chips",
+            "xpath": "/html[1]/body[1]/div[3]/div[1]/div[9]/div[1]/div[1]/div[3]/div[1]/div[1]",
+            "items": [
+              {
+                "type": "refinement_chips_element",
+                "title": "Example Place 4",
+                "url": "https://example-s1.test/page-5",
+                "domain": "example-s1.test",
+                "options": null
+              },
+              {
+                "type": "refinement_chips_element",
+                "title": "Example Place 6",
+                "url": null,
+                "domain": null,
+                "options": [
+                  {
+                    "type": "refinement_chips_option",
+                    "title": "Example Place 7",
+                    "url": "https://example-s1.test/page-8",
+                    "domain": "example-s1.test"
+                  },
+                  {
+                    "type": "refinement_chips_option",
+                    "title": "Example Place 9",
+                    "url": "https://example-s1.test/page-10",
+                    "domain": "example-s1.test"
+                  }
+                ]
+              }
+            ]
+          },
+          "item_types": [
+            "answer_box",
+            "app",
+            "carousel",
+            "multi_carousel",
+            "featured_snippet",
+            "google_flights",
+            "google_reviews",
+            "images",
+            "jobs",
+            "knowledge_graph",
+            "local_pack",
+            "hotels_pack",
+            "map",
+            "organic",
+            "paid",
+            "people_also_ask",
+            "related_searches",
+            "people_also_search",
+            "shopping",
+            "top_stories",
+            "twitter",
+            "video",
+            "events",
+            "math_solver",
+            "recipes",
+            "top_sights",
+            "scholarly_articles",
+            "popular_products",
+            "questions_and_answers",
+            "find_results_on",
+            "stocks_box",
+            "commercial_units",
+            "local_services",
+            "google_hotels",
+            "currency_box",
+            "short_videos",
+            "refine_products",
+            "perspectives",
+            "discussions_and_forums",
+            "compare_sites",
+            "ai_overview"
+          ],
+          "se_results_count": 85600000,
+          "pages_count": 1,
+          "items_count": 96,
+          "items": [
+            {
+              "type": "carousel",
+              "rank_group": 1,
+              "rank_absolute": 3,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[7]/div[1]/div[11]/div[1]/div[2]/div[2]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/div[2]/div[2]/div[1]/div[1]/div[1]/div[1]/div[1]",
+              "title": null,
+              "items": [
+                {
+                  "type": "carousel_element",
+                  "title": "Example Place 11",
+                  "subtitle": "Example data text 12.",
+                  "image_url": "https://example-s2.test/page-13"
+                },
+                {
+                  "type": "carousel_element",
+                  "title": "Example Place 14",
+                  "subtitle": "Example data text 15.",
+                  "image_url": "https://example-s2.test/page-16"
+                },
+                {
+                  "type": "carousel_element",
+                  "title": "Example Place 17",
+                  "subtitle": "Example data text 18.",
+                  "image_url": "https://example-s2.test/page-19"
+                }
+              ],
+              "rectangle": {
+                "x": 181,
+                "y": 360,
+                "width": 652,
+                "height": 176
+              }
+            },
+            {
+              "type": "multi_carousel",
+              "rank_group": 1,
+              "rank_absolute": 2,
+              "page": 1,
+              "position": "right",
+              "xpath": "/html[1]/body[1]/div[7]/div[2]/div[5]/div[1]/div[3]/div[1]/div[1]/div[1]/sticky-header[1]/div[2]/div[1]/g-flippy-carousel[1]/div[1]/div[1]/ol[1]/li[1]/span[1]/div[1]/div[1]/div[1]/div[3]/div[8]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]",
+              "items": [
+                {
+                  "type": "multi_carousel_element",
+                  "title": "Example Place 20",
+                  "multi_carousel_snippets": [
+                    {
+                      "type": "multi_carousel_snippet",
+                      "title": "Example Place 21",
+                      "subtitle": null,
+                      "image_url": null
+                    },
+                    {
+                      "type": "multi_carousel_snippet",
+                      "title": "Example Place 22",
+                      "subtitle": null,
+                      "image_url": null
+                    },
+                    {
+                      "type": "multi_carousel_snippet",
+                      "title": "Example Place 23",
+                      "subtitle": null,
+                      "image_url": null
+                    }
+                  ]
+                }
+              ],
+              "rectangle": {
+                "x": 181,
+                "y": 360,
+                "width": 652,
+                "height": 176
+              }
+            },
+            {
+              "type": "top_stories",
+              "rank_group": 1,
+              "rank_absolute": 3,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[7]/div[3]/div[10]/div[1]/div[2]/div[1]/div[2]/div[2]/div[1]/div[1]/div[2]/div[1]/g-section-with-header[1]/div[2]",
+              "title": null,
+              "items": [
+                {
+                  "type": "top_stories_element",
+                  "source": "Example Place 24",
+                  "domain": "example-s3.test",
+                  "title": "Example Place 25",
+                  "date": "Example data text 26.",
+                  "amp_version": false,
+                  "timestamp": "2020-09-11 14:42:55 +00:00",
+                  "url": "https://example-s3.test/page-27",
+                  "image_url": null,
+                  "badges": null
+                },
+                {
+                  "type": "top_stories_element",
+                  "source": "Example Place 28",
+                  "domain": "example-s4.test",
+                  "title": "Example Place 29",
+                  "date": "Example data text 30.",
+                  "amp_version": false,
+                  "timestamp": "2020-09-11 14:42:55 +00:00",
+                  "url": "https://example-s4.test/page-31",
+                  "image_url": null,
+                  "badges": null
+                },
+                {
+                  "type": "top_stories_element",
+                  "source": "Example Place 32",
+                  "domain": "example-s5.test",
+                  "title": "Example Place 33",
+                  "date": "Example data text 34.",
+                  "amp_version": false,
+                  "timestamp": "2020-09-11 14:42:55 +00:00",
+                  "url": "https://example-s5.test/page-35",
+                  "image_url": null,
+                  "badges": null
+                }
+              ],
+              "rectangle": {
+                "x": 181,
+                "y": 360,
+                "width": 652,
+                "height": 176
+              }
+            },
+            {
+              "type": "math_solver",
+              "rank_group": 1,
+              "rank_absolute": 1,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[7]/div[1]/div[9]/div[1]/div[1]/div[2]/div[2]/div[1]/div[1]/div[1]",
+              "title": "Example Place 36",
+              "result": "Example data text 37.",
+              "items": [
+                {
+                  "type": "math_solver_element",
+                  "title": "Example Place 38",
+                  "expanded_element": [
+                    {
+                      "type": "math_solver_expanded_element",
+                      "title": "Example Place 39",
+                      "solution": [
+                        "Example data text 40.",
+                        "Example data text 41."
+                      ]
+                    },
+                    {
+                      "type": "math_solver_expanded_element",
+                      "title": "Example Place 42",
+                      "solution": [
+                        "Example data text 43.",
+                        "Example data text 44."
+                      ]
+                    },
+                    {
+                      "type": "math_solver_expanded_element",
+                      "title": "Example Place 45",
+                      "solution": [
+                        "Example data text 46.",
+                        "Example data text 47."
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "math_solver_element",
+                  "title": "Example Place 48",
+                  "expanded_element": [
+                    {
+                      "type": "math_solver_expanded_element",
+                      "title": "Example Place 49",
+                      "solution": [
+                        "Example data text 50.",
+                        "Example data text 51."
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "links": [
+                {
+                  "type": "link_element",
+                  "title": "Example Place 52",
+                  "description": null,
+                  "url": "https://example-s6.test/page-53",
+                  "domain": "example-s6.test"
+                },
+                {
+                  "type": "link_element",
+                  "title": "Example Place 54",
+                  "description": null,
+                  "url": "https://example-s7.test/page-55",
+                  "domain": "example-s7.test"
+                },
+                {
+                  "type": "link_element",
+                  "title": "Example Place 56",
+                  "description": null,
+                  "url": "https://example-s8.test/page-57",
+                  "domain": "example-s8.test"
+                }
+              ]
+            },
+            {
+              "type": "answer_box",
+              "rank_group": 1,
+              "rank_absolute": 1,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[5]/div[1]/div[12]/div[1]/div[2]/div[2]/div[1]/div[1]/div[1]/div[1]/block-component[1]/div[1]/div[1]/div[1]/div[1]/div[1]",
+              "text": [
+                "Example data text 58.",
+                "Example data text 59.",
+                "Example data text 60."
+              ],
+              "links": null,
+              "rectangle": null
+            },
+            {
+              "type": "video",
+              "rank_group": 1,
+              "rank_absolute": 5,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[7]/div[3]/div[10]/div[1]/div[2]/div[1]/div[2]/div[2]/div[1]/div[1]/div[7]/div[1]/g-section-with-header[1]/div[2]",
+              "items": [
+                {
+                  "type": "video_element",
+                  "source": "Example Place 61",
+                  "title": "Example Place 62",
+                  "timestamp": "2020-09-11 14:42:55 +00:00",
+                  "url": "https://example-s9.test/page-63"
+                },
+                {
+                  "type": "video_element",
+                  "source": "Example Place 64",
+                  "title": "Example Place 65",
+                  "timestamp": "2020-09-11 14:42:55 +00:00",
+                  "url": "https://example-s9.test/page-66"
+                },
+                {
+                  "type": "video_element",
+                  "source": "Example Place 67",
+                  "title": "Example Place 68",
+                  "timestamp": "2020-09-11 14:42:55 +00:00",
+                  "url": "https://example-s9.test/page-69"
+                }
+              ],
+              "rectangle": {
+                "x": 181,
+                "y": 360,
+                "width": 652,
+                "height": 176
+              }
+            },
+            {
+              "type": "organic",
+              "rank_group": 26,
+              "rank_absolute": 30,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[7]/div[1]/div[9]/div[1]/div[1]/div[2]/div[2]/div[1]/div[1]/div[29]",
+              "domain": "example-s10.test",
+              "title": "Example Place 70",
+              "url": "https://example-s10.test/page-71",
+              "cache_url": null,
+              "related_search_url": null,
+              "breadcrumb": "example-s11.test",
+              "website_name": "Example data text 72.",
+              "is_image": false,
+              "is_video": false,
+              "is_featured_snippet": false,
+              "is_malicious": false,
+              "is_web_story": false,
+              "checks": [
+                "Example data text 73."
+              ],
+              "description": "Example data text 74.",
+              "pre_snippet": null,
+              "extended_snippet": "Example data text 75.",
+              "images": null,
+              "amp_version": false,
+              "rating": {
+                "rating_type": "Max5",
+                "value": 4,
+                "votes_count": 231,
+                "rating_max": 5
+              },
+              "price": {
+                "current": 30,
+                "regular": null,
+                "max_value": 899.99,
+                "currency": "USD",
+                "is_price_range": true,
+                "displayed_price": "Example data text 76."
+              },
+              "highlighted": null,
+              "links": null,
+              "faq": null,
+              "extended_people_also_search": null,
+              "about_this_result": null,
+              "related_result": [
+                {
+                  "type": "related_result",
+                  "xpath": "/html[1]/body[1]/div[7]/div[1]/div[9]/div[1]/div[1]/div[2]/div[2]/div[1]/div[1]/div[29]/div[1]/div[2]/ul[1]/li[1]",
+                  "domain": "example-s10.test",
+                  "title": "Example Place 77",
+                  "url": "https://example-s10.test/page-78",
+                  "cache_url": null,
+                  "related_search_url": null,
+                  "breadcrumb": "example-s11.test",
+                  "is_image": false,
+                  "is_video": false,
+                  "checks": [
+                    "Example data text 79."
+                  ],
+                  "description": "Example data text 80.",
+                  "pre_snippet": null,
+                  "extended_snippet": null,
+                  "images": null,
+                  "amp_version": false,
+                  "rating": {
+                    "rating_type": "Max5",
+                    "value": 4.6,
+                    "votes_count": 30,
+                    "rating_max": 5
+                  },
+                  "price": {
+                    "current": 24.34,
+                    "regular": null,
+                    "max_value": 779.99,
+                    "currency": "USD",
+                    "is_price_range": true,
+                    "displayed_price": "Example data text 81."
+                  },
+                  "highlighted": null,
+                  "about_this_result": null,
+                  "timestamp": null
+                }
+              ],
+              "timestamp": null,
+              "rectangle": {
+                "x": 180,
+                "y": 5814,
+                "width": 652,
+                "height": 363
+              }
+            },
+            {
+              "type": "people_also_search",
+              "rank_group": 1,
+              "rank_absolute": 7,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[7]/div[3]/div[10]/div[1]/div[2]/div[1]/div[4]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]/div[1]",
+              "title": "Example Place 82",
+              "items": [
+                "Example data text 83.",
+                "Example data text 84.",
+                "Example data text 85.",
+                "Example data text 86.",
+                "Example data text 87.",
+                "Example data text 88.",
+                "Example data text 89.",
+                "Example data text 90."
+              ],
+              "rectangle": {
+                "x": 181,
+                "y": 360,
+                "width": 652,
+                "height": 176
+              }
+            },
+            {
+              "type": "related_searches",
+              "rank_group": 1,
+              "rank_absolute": 8,
+              "page": 1,
+              "xpath": "/html[1]/body[1]/div[7]/div[3]/div[10]/div[1]/div[2]/div[1]/div[4]/div[1]/div[1]/div[3]/g-section-with-header[1]/div[2]",
+              "position": "left",
+              "items": [
+                "Example data text 91.",
+                "Example data text 92.",
+                "Example data text 93.",
+                "Example data text 94.",
+                "Example data text 95.",
+                "Example data text 96.",
+                "Example data text 97.",
+                "Example data text 98."
+              ],
+              "rectangle": {
+                "x": 181,
+                "y": 360,
+                "width": 652,
+                "height": 176
+              }
+            },
+            {
+              "type": "map",
+              "rank_group": 1,
+              "rank_absolute": 9,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[7]/div[3]/div[10]/div[1]/div[2]/div[1]/div[2]/div[2]/div[1]/div[1]/div[2]/div[1]/div[1]",
+              "title": "Example Place 99",
+              "url": null,
+              "rectangle": {
+                "x": 181,
+                "y": 360,
+                "width": 652,
+                "height": 176
+              }
+            },
+            {
+              "type": "featured_snippet",
+              "rank_group": 1,
+              "rank_absolute": 10,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[7]/div[3]/div[10]/div[1]/div[2]/div[1]/div[2]/div[2]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]",
+              "domain": "example-s12.test",
+              "title": "Example Place 100",
+              "featured_title": null,
+              "description": "Example data text 101.",
+              "timestamp": "2020-09-11 14:42:55 +00:00",
+              "url": "https://example-s12.test/page-102",
+              "images": [
+                {
+                  "type": "images_element",
+                  "alt": "Example Place 103",
+                  "url": "https://example-s13.test/page-104",
+                  "image_url": "https://example-s2.test/page-105"
+                }
+              ],
+              "table": {
+                "table_header": [
+                  "Example data text 106.",
+                  "Example data text 107.",
+                  "Example data text 108."
+                ],
+                "table_content": [
+                  [
+                    "Example data text 109.",
+                    "Example data text 110.",
+                    "Example data text 111."
+                  ],
+                  [
+                    "Example data text 112.",
+                    "Example data text 113.",
+                    "Example data text 114."
+                  ],
+                  [
+                    "Example data text 115.",
+                    "Example data text 116.",
+                    "Example data text 117."
+                  ],
+                  [
+                    "Example data text 118.",
+                    "Example data text 119.",
+                    "Example data text 120."
+                  ]
+                ]
+              },
+              "rectangle": {
+                "x": 181,
+                "y": 360,
+                "width": 652,
+                "height": 176
+              }
+            },
+            {
+              "type": "local_pack",
+              "rank_group": 1,
+              "rank_absolute": 1,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[6]/div[2]/div[10]/div[1]/div[2]/div[1]/div[2]/div[2]/div[1]/div[1]/div[2]/div[1]/div[2]/div[1]/div[4]/div[1]/div[1]",
+              "title": "Example Place 121",
+              "description": "Example data text 122.",
+              "domain": null,
+              "phone": null,
+              "url": null,
+              "is_paid": false,
+              "rating": {
+                "rating_type": "Max5",
+                "value": 4.1,
+                "votes_count": null,
+                "rating_max": 5
+              },
+              "cid": "synthetic-123",
+              "rectangle": {
+                "x": 181,
+                "y": 360,
+                "width": 652,
+                "height": 176
+              }
+            },
+            {
+              "type": "hotels_pack",
+              "rank_group": 1,
+              "rank_absolute": 1,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[8]/div[2]/div[9]/div[2]/div[1]/div[2]/div[2]/div[1]/div[1]/div[1]/div[1]/div[1]",
+              "title": "Example Place 124",
+              "date_from": "Example data text 125.",
+              "date_to": "Example data text 126.",
+              "items": [
+                {
+                  "type": "hotels_pack_element",
+                  "price": {
+                    "current": 198,
+                    "regular": null,
+                    "max_value": null,
+                    "currency": "USD",
+                    "is_price_range": false,
+                    "displayed_price": "Example data text 127."
+                  },
+                  "title": "Example Place 128",
+                  "description": "Example data text 129.",
+                  "hotel_identifier": "Example data text 130.",
+                  "domain": "example-s1.test",
+                  "url": "https://example-s1.test/page-131",
+                  "is_paid": false,
+                  "rating": {
+                    "rating_type": "Max5",
+                    "value": 3.8,
+                    "votes_count": 2995,
+                    "rating_max": 5
+                  },
+                  "group_title": "Example data text 132.",
+                  "group_source": "Example data text 133."
+                }
+              ],
+              "rectangle": {
+                "x": 181,
+                "y": 360,
+                "width": 652,
+                "height": 176
+              }
+            },
+            {
+              "type": "twitter",
+              "rank_group": 1,
+              "rank_absolute": 12,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[7]/div[3]/div[10]/div[1]/div[2]/div[1]/div[2]/div[2]/div[1]/div[1]/div[3]/div[1]/div[1]/g-section-with-header[1]",
+              "title": null,
+              "url": null,
+              "items": [
+                {
+                  "type": "twitter_element",
+                  "tweet": "Example data text 134.",
+                  "date": "Example data text 135.",
+                  "timestamp": "2020-09-11 14:42:55 +00:00",
+                  "url": "https://example-s14.test/page-136"
+                },
+                {
+                  "type": "twitter_element",
+                  "tweet": "Example data text 137.",
+                  "date": "Example data text 138.",
+                  "timestamp": "2020-09-11 14:42:55 +00:00",
+                  "url": "https://example-s14.test/page-139"
+                },
+                {
+                  "type": "twitter_element",
+                  "tweet": "Example data text 140.",
+                  "date": "Example data text 141.",
+                  "timestamp": "2020-09-11 14:42:55 +00:00",
+                  "url": "https://example-s14.test/page-142"
+                }
+              ],
+              "rectangle": {
+                "x": 181,
+                "y": 360,
+                "width": 652,
+                "height": 176
+              }
+            },
+            {
+              "type": "knowledge_graph",
+              "rank_group": 1,
+              "rank_absolute": 1,
+              "page": 1,
+              "position": "right",
+              "xpath": "/html[1]/body[1]/div[7]/div[2]/div[10]/div[1]/div[3]/div[1]",
+              "title": "Example Place 143",
+              "subtitle": "Example data text 144.",
+              "description": "Example data text 145.",
+              "card_id": "Example data text 146.",
+              "url": "https://example-s15.test/page-147",
+              "image_url": "https://example-s16.test/page-148",
+              "logo_url": "https://example-s17.test/page-149",
+              "cid": null,
+              "items": [
+                {
+                  "type": "knowledge_graph_images_item",
+                  "rank_group": 0,
+                  "rank_absolute": 0,
+                  "page": 1,
+                  "position": "left",
+                  "xpath": "/html[1]/body[1]/div[7]/div[2]/div[10]/div[1]/div[3]/div[1]/div[1]/div[1]/div[1]/div[2]",
+                  "link": {
+                    "type": "link_element",
+                    "title": "Example Place 150",
+                    "url": "https://example-s1.test/page-151",
+                    "domain": null,
+                    "description": null,
+                    "xpath": "/html[1]/body[1]/div[7]/div[2]/div[10]/div[1]/div[3]/div[1]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/a[1]"
+                  },
+                  "items": [
+                    {
+                      "type": "knowledge_graph_images_element",
+                      "url": "https://example-s18.test/page-152",
+                      "domain": "example-s18.test",
+                      "alt": "Example Place 153",
+                      "image_url": "https://example-s2.test/page-154",
+                      "xpath": "/html[1]/body[1]/div[7]/div[2]/div[10]/div[1]/div[3]/div[1]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]"
+                    },
+                    {
+                      "type": "knowledge_graph_images_element",
+                      "url": "https://example-s19.test/page-155",
+                      "domain": "example-s19.test",
+                      "alt": "Example Place 156",
+                      "image_url": "https://example-s2.test/page-157",
+                      "xpath": "/html[1]/body[1]/div[7]/div[2]/div[10]/div[1]/div[3]/div[1]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]"
+                    }
+                  ],
+                  "rectangle": null
+                },
+                {
+                  "type": "knowledge_graph_ai_overview_item",
+                  "rank_group": 0,
+                  "rank_absolute": 0,
+                  "page": 1,
+                  "position": "left",
+                  "xpath": "/html[1]/body[1]/div[3]/div[2]/div[1]/div[10]/div[3]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/div[1]/div[2]/div[1]/div[3]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/div[1]",
+                  "asynchronous_ai_overview": false,
+                  "items": [
+                    {
+                      "type": "ai_overview_element",
+                      "rank_group": 1,
+                      "rank_absolute": 1,
+                      "page": 1,
+                      "position": "left",
+                      "title": null,
+                      "text": "Example data text 158.",
+                      "markdown": "Example data text 159.",
+                      "links": [
+                        {
+                          "type": "link_element",
+                          "title": "Example Place 160",
+                          "description": null,
+                          "url": "https://example-s20.test/page-161",
+                          "domain": "example-s20.test"
+                        }
+                      ],
+                      "images": [
+                        {
+                          "type": "images_element",
+                          "alt": "Example Place 162",
+                          "url": null,
+                          "image_url": "https://example-s2.test/page-163"
+                        }
+                      ],
+                      "references": [
+                        {
+                          "type": "ai_overview_reference",
+                          "rank_group": 1,
+                          "rank_absolute": 1,
+                          "page": 1,
+                          "position": "left",
+                          "source": "Example Place 164",
+                          "domain": "example-s21.test",
+                          "url": "https://example-s21.test/page-165",
+                          "title": "Example Place 166",
+                          "text": "Example data text 167."
+                        },
+                        {
+                          "type": "ai_overview_reference",
+                          "rank_group": 2,
+                          "rank_absolute": 2,
+                          "page": 1,
+                          "position": "left",
+                          "source": "Example Place 168",
+                          "domain": "example-s22.test",
+                          "url": "https://example-s22.test/page-169",
+                          "title": "Example Place 170",
+                          "text": "Example data text 171."
+                        }
+                      ]
+                    },
+                    {
+                      "type": "ai_overview_expanded_element",
+                      "position": "left",
+                      "title": "Example Place 172",
+                      "text": "Example data text 173.",
+                      "components": [
+                        {
+                          "type": "ai_overview_expanded_component",
+                          "title": null,
+                          "text": "Example data text 174.",
+                          "markdown": "Example data text 175.",
+                          "images": null,
+                          "links": null,
+                          "references": null
+                        }
+                      ],
+                      "references": null
+                    },
+                    {
+                      "type": "ai_overview_video_element",
+                      "position": "left",
+                      "title": "Example Place 176",
+                      "snippet": "Example data text 177.",
+                      "url": "https://example-s9.test/page-178",
+                      "domain": "example-s9.test",
+                      "image_url": "https://example-s23.test/page-179",
+                      "source": "Example Place 180",
+                      "date": "Example data text 181.",
+                      "timestamp": "2024-04-26 00:00:00 +00:00"
+                    },
+                    {
+                      "type": "ai_overview_table_element",
+                      "position": "left",
+                      "markdown": "Example data text 182.",
+                      "table": {
+                        "table_header": null,
+                        "table_content": [
+                          [
+                            "Example data text 183.",
+                            "Example data text 184.",
+                            "Example data text 185."
+                          ],
+                          [
+                            "Example data text 186.",
+                            "Example data text 187.",
+                            "Example data text 188."
+                          ],
+                          [
+                            "Example data text 189.",
+                            "Example data text 190.",
+                            "Example data text 191."
+                          ],
+                          [
+                            "Example data text 192.",
+                            "Example data text 193.",
+                            "Example data text 194."
+                          ]
+                        ]
+                      },
+                      "references": null
+                    }
+                  ],
+                  "references": [
+                    {
+                      "type": "ai_overview_reference",
+                      "source": "Example Place 195",
+                      "domain": "example-s24.test",
+                      "url": "https://example-s24.test/page-196",
+                      "title": "Example Place 197",
+                      "text": "Example data text 198."
+                    },
+                    {
+                      "type": "ai_overview_reference",
+                      "source": "Example Place 199",
+                      "domain": "example-s25.test",
+                      "url": "https://example-s25.test/page-200",
+                      "title": "Example Place 201",
+                      "text": "Example data text 202."
+                    },
+                    {
+                      "type": "ai_overview_reference",
+                      "source": "Example Place 203",
+                      "domain": "example-s26.test",
+                      "url": "https://example-s26.test/page-204",
+                      "title": "Example Place 205",
+                      "text": "Example data text 206."
+                    }
+                  ],
+                  "rectangle": null
+                },
+                {
+                  "type": "knowledge_graph_description_item",
+                  "rank_group": 0,
+                  "rank_absolute": 0,
+                  "page": 1,
+                  "position": "left",
+                  "xpath": "/html[1]/body[1]/div[7]/div[2]/div[10]/div[1]/div[3]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]",
+                  "text": "Example data text 207.",
+                  "links": [
+                    {
+                      "type": "link_element",
+                      "title": "Example Place 208",
+                      "url": "https://example-s25.test/page-209",
+                      "domain": null,
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[7]/div[2]/div[10]/div[1]/div[3]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/span[2]/a[1]"
+                    }
+                  ],
+                  "rectangle": null
+                },
+                {
+                  "type": "knowledge_graph_row_item",
+                  "rank_group": 0,
+                  "rank_absolute": 0,
+                  "page": 1,
+                  "position": "left",
+                  "xpath": "/html[1]/body[1]/div[7]/div[2]/div[10]/div[1]/div[3]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[2]",
+                  "title": "Example Place 210",
+                  "data_attrid": "Example data text 211.",
+                  "text": "Example data text 212.",
+                  "links": [
+                    {
+                      "type": "link_element",
+                      "title": "Example Place 213",
+                      "url": "https://example-s1.test/page-214",
+                      "domain": null,
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[7]/div[2]/div[10]/div[1]/div[3]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/span[1]/a[1]"
+                    },
+                    {
+                      "type": "link_element",
+                      "title": "Example Place 215",
+                      "url": "https://example-s1.test/page-216",
+                      "domain": null,
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[7]/div[2]/div[10]/div[1]/div[3]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/span[2]/a[1]"
+                    }
+                  ],
+                  "rectangle": null
+                },
+                {
+                  "type": "knowledge_graph_list_item",
+                  "rank_group": 0,
+                  "rank_absolute": 0,
+                  "page": 1,
+                  "position": "left",
+                  "xpath": "/html[1]/body[1]/div[7]/div[2]/div[10]/div[1]/div[3]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[4]/div[1]/div[1]/div[1]/div[1]",
+                  "title": "Example Place 217",
+                  "data_attrid": "Example data text 218.",
+                  "link": {
+                    "type": "link_element",
+                    "title": "Example Place 219",
+                    "url": "https://example-s1.test/page-220",
+                    "domain": null,
+                    "description": null,
+                    "xpath": "/html[1]/body[1]/div[7]/div[2]/div[10]/div[1]/div[3]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[4]/div[1]/div[1]/div[1]/div[1]/div[3]/a[1]"
+                  },
+                  "items": [
+                    {
+                      "type": "knowledge_graph_list_element",
+                      "title": "Example Place 221",
+                      "subtitle": "Example data text 222.",
+                      "url": "https://example-s1.test/page-223",
+                      "domain": "example-s1.test",
+                      "image_url": "https://example-s2.test/page-224",
+                      "xpath": "/html[1]/body[1]/div[7]/div[2]/div[10]/div[1]/div[3]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[4]/div[1]/div[1]/div[1]/div[1]/div[2]/div[1]"
+                    },
+                    {
+                      "type": "knowledge_graph_list_element",
+                      "title": "Example Place 225",
+                      "subtitle": "Example data text 226.",
+                      "url": "https://example-s1.test/page-227",
+                      "domain": "example-s1.test",
+                      "image_url": "https://example-s2.test/page-228",
+                      "xpath": "/html[1]/body[1]/div[7]/div[2]/div[10]/div[1]/div[3]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[4]/div[1]/div[1]/div[1]/div[1]/div[2]/div[2]"
+                    }
+                  ],
+                  "rectangle": null
+                },
+                {
+                  "type": "knowledge_graph_carousel_item",
+                  "rank_group": 0,
+                  "rank_absolute": 0,
+                  "page": 1,
+                  "position": "left",
+                  "xpath": "/html[1]/body[1]/div[7]/div[2]/div[10]/div[1]/div[3]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]",
+                  "title": "Example Place 229",
+                  "data_attrid": "Example data text 230.",
+                  "link": {
+                    "type": "link_element",
+                    "title": "Example Place 231",
+                    "url": "https://example-s1.test/page-232",
+                    "domain": null,
+                    "description": null,
+                    "xpath": "/html[1]/body[1]/div[7]/div[2]/div[10]/div[1]/div[3]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/a[1]"
+                  },
+                  "items": [
+                    {
+                      "type": "knowledge_graph_carousel_element",
+                      "title": "Example Place 233",
+                      "subtitle": "Example data text 234.",
+                      "url": "https://example-s1.test/page-235",
+                      "domain": "example-s1.test",
+                      "image_url": "https://example-s2.test/page-236",
+                      "xpath": "/html[1]/body[1]/div[7]/div[2]/div[10]/div[1]/div[3]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[2]/div[1]"
+                    }
+                  ],
+                  "rectangle": null
+                },
+                {
+                  "type": "knowledge_graph_part_item",
+                  "rank_group": 0,
+                  "rank_absolute": 0,
+                  "page": 1,
+                  "position": "left",
+                  "xpath": "/html[1]/body[1]/div[7]/div[2]/div[10]/div[1]/div[3]/div[1]/div[1]/div[1]/div[1]/div[1]/div[7]",
+                  "title": "Example Place 237",
+                  "data_attrid": "Example data text 238.",
+                  "text": "Example data text 239.",
+                  "links": [
+                    {
+                      "type": "link_element",
+                      "title": "Example Place 240",
+                      "url": "https://example-s1.test/page-241",
+                      "domain": null,
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[7]/div[2]/div[10]/div[1]/div[3]/div[1]/div[1]/div[1]/div[1]/div[1]/div[7]/div[2]/span[1]/a[1]"
+                    },
+                    {
+                      "type": "link_element",
+                      "title": "Example Place 242",
+                      "url": "https://example-s1.test/page-243",
+                      "domain": null,
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[7]/div[2]/div[10]/div[1]/div[3]/div[1]/div[1]/div[1]/div[1]/div[1]/div[7]/div[2]/a[1]"
+                    }
+                  ],
+                  "rectangle": null
+                },
+                {
+                  "type": "knowledge_graph_expanded_item",
+                  "rank_group": 0,
+                  "rank_absolute": 0,
+                  "page": 1,
+                  "position": "left",
+                  "xpath": "/html[1]/body[1]/div[7]/div[2]/div[9]/div[3]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[8]/div[1]/div[1]",
+                  "title": "Example Place 244",
+                  "data_attrid": "Example data text 245.",
+                  "expanded_element": [
+                    {
+                      "type": "knowledge_graph_expanded_element",
+                      "featured_title": "Example data text 246.",
+                      "url": "https://example-s27.test/page-247",
+                      "domain": "example-s27.test",
+                      "title": "Example Place 248",
+                      "snippet": null,
+                      "images": null,
+                      "timestamp": null,
+                      "table": {
+                        "table_element": "Example data text 249.",
+                        "table_header": [
+                          "Example data text 250.",
+                          "Example data text 251."
+                        ],
+                        "table_content": [
+                          [
+                            "Example data text 252.",
+                            "Example data text 253."
+                          ],
+                          [
+                            "Example data text 254.",
+                            "Example data text 255."
+                          ]
+                        ]
+                      }
+                    }
+                  ],
+                  "rectangle": null
+                },
+                {
+                  "type": "knowledge_graph_shopping_item",
+                  "rank_group": 1,
+                  "rank_absolute": 3,
+                  "page": 1,
+                  "position": "left",
+                  "xpath": "/html[1]/body[1]/div[3]/div[2]/div[1]/div[5]/div[3]/div[1]/div[2]/div[2]/sticky-header[1]/div[2]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]",
+                  "title": null,
+                  "data_attrid": null,
+                  "items": [
+                    {
+                      "type": "knowledge_graph_shopping_element",
+                      "title": "Example Place 256",
+                      "url": "https://example-s28.test/page-257",
+                      "domain": "example-s28.test",
+                      "price": {
+                        "current": 979,
+                        "regular": null,
+                        "max_value": null,
+                        "currency": "USD",
+                        "is_price_range": false,
+                        "displayed_price": "Example data text 258."
+                      },
+                      "source": "Example Place 259",
+                      "snippet": "Example data text 260.",
+                      "marketplace": null,
+                      "marketplace_url": null
+                    }
+                  ],
+                  "rectangle": null
+                },
+                {
+                  "type": "knowledge_graph_hotels_booking_item",
+                  "rank_group": 0,
+                  "rank_absolute": 0,
+                  "page": 1,
+                  "position": "left",
+                  "xpath": "/html[1]/body[1]/div[5]/div[1]/div[12]/div[2]/div[1]/div[1]/div[2]/div[1]/div[3]/div[1]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[5]/div[1]",
+                  "title": "Example Place 261",
+                  "date_from": "Example data text 262.",
+                  "date_to": "Example data text 263.",
+                  "data_attrid": "Example data text 264.",
+                  "items": [
+                    {
+                      "type": "knowledge_graph_hotels_booking_element",
+                      "source": "Example Place 265",
+                      "description": null,
+                      "url": "https://example-s29.test/page-266",
+                      "domain": "example-s29.test",
+                      "price": {
+                        "current": 138,
+                        "regular": null,
+                        "max_value": null,
+                        "currency": "GBP",
+                        "is_price_range": false,
+                        "displayed_price": "Example data text 267."
+                      },
+                      "is_paid": true
+                    }
+                  ],
+                  "rectangle": null
+                }
+              ],
+              "rectangle": null
+            },
+            {
+              "type": "paid",
+              "rank_group": 1,
+              "rank_absolute": 1,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[7]/div[1]/div[11]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]",
+              "title": "Example Place 268",
+              "domain": "example-s30.test",
+              "website_name": "Example data text 269.",
+              "breadcrumb": "example-s31.test",
+              "is_image": true,
+              "is_video": false,
+              "images": [
+                {
+                  "type": "images_element",
+                  "alt": "Example Place 270",
+                  "url": "https://example-s1.test/page-271",
+                  "image_url": "https://example-s2.test/page-272"
+                }
+              ],
+              "url": "https://example-s30.test/page-273",
+              "highlighted": [
+                "Example data text 274.",
+                "Example data text 275."
+              ],
+              "extra": {
+                "ad_aclk": "Example data text 276."
+              },
+              "description": "Example data text 277.",
+              "description_rows": null,
+              "links": [
+                {
+                  "type": "ad_link_element",
+                  "title": "Example Place 278",
+                  "description": "Example data text 279.",
+                  "url": "https://example-s30.test/page-280",
+                  "domain": null,
+                  "ad_aclk": "Example data text 281."
+                },
+                {
+                  "type": "ad_link_element",
+                  "title": "Example Place 282",
+                  "description": "Example data text 283.",
+                  "url": "https://example-s30.test/page-284",
+                  "domain": null,
+                  "ad_aclk": "Example data text 285."
+                }
+              ],
+              "price": null,
+              "rating": {
+                "rating_type": "Max5",
+                "value": 4.8,
+                "votes_count": 803,
+                "rating_max": 5
+              },
+              "rectangle": {
+                "x": 181,
+                "y": 360,
+                "width": 652,
+                "height": 176
+              }
+            },
+            {
+              "type": "google_reviews",
+              "rank_group": 1,
+              "rank_absolute": 15,
+              "page": 1,
+              "position": "right",
+              "xpath": "/#document",
+              "reviews_count": 9031,
+              "rating": {
+                "rating_type": "Max5",
+                "value": 4.8,
+                "votes_count": 803,
+                "rating_max": 5
+              },
+              "place_id": "synthetic-286",
+              "feature": "Example data text 287.",
+              "cid": "synthetic-288",
+              "rectangle": {
+                "x": 181,
+                "y": 360,
+                "width": 652,
+                "height": 176
+              }
+            },
+            {
+              "type": "google_flights",
+              "rank_group": 1,
+              "rank_absolute": 15,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[7]/div[3]/div[10]/div[1]/div[2]/div[1]/div[2]/div[2]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]",
+              "title": "Example Place 289",
+              "url": "https://example-s32.test/page-290",
+              "items": [
+                {
+                  "type": "google_flights_element",
+                  "description": "Example data text 291.",
+                  "url": "https://example-s32.test/page-292"
+                }
+              ],
+              "rectangle": {
+                "x": 181,
+                "y": 360,
+                "width": 652,
+                "height": 176
+              }
+            },
+            {
+              "type": "app",
+              "rank_group": 1,
+              "rank_absolute": 16,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[10]/div[2]/div[5]/div[1]/div[3]/div[1]/div[2]/div[1]",
+              "items": [
+                {
+                  "type": "app_element",
+                  "url": "https://example-s33.test/page-293",
+                  "title": "Example Place 294",
+                  "description": null,
+                  "price": {
+                    "current": 3.99,
+                    "regular": null,
+                    "max_value": null,
+                    "currency": "USD",
+                    "is_price_range": false,
+                    "displayed_price": "Example data text 295."
+                  }
+                }
+              ],
+              "rectangle": {
+                "x": 181,
+                "y": 360,
+                "width": 652,
+                "height": 176
+              }
+            },
+            {
+              "type": "people_also_ask",
+              "rank_group": 1,
+              "rank_absolute": 3,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[3]/div[1]/div[11]/div[2]/div[1]/div[2]/div[1]/div[1]/div[2]/div[1]",
+              "items": [
+                {
+                  "type": "people_also_ask_element",
+                  "title": "Example Place 296",
+                  "seed_question": null,
+                  "xpath": "/html[1]/body[1]/div[3]/div[1]/div[11]/div[2]/div[1]/div[2]/div[1]/div[1]/div[2]/div[1]/div[1]/div[2]/div[1]",
+                  "expanded_element": [
+                    {
+                      "type": "people_also_ask_expanded_element",
+                      "featured_title": null,
+                      "url": "https://example-s34.test/page-297",
+                      "domain": "example-s34.test",
+                      "title": "Example Place 298",
+                      "description": "Example data text 299.",
+                      "images": null,
+                      "timestamp": null,
+                      "table": null
+                    }
+                  ]
+                },
+                {
+                  "type": "people_also_ask_element",
+                  "title": "Example Place 300",
+                  "seed_question": null,
+                  "xpath": "/html[1]/body[1]/div[3]/div[1]/div[11]/div[2]/div[1]/div[2]/div[1]/div[1]/div[2]/div[1]/div[1]/div[2]/div[2]",
+                  "expanded_element": [
+                    {
+                      "type": "people_also_ask_ai_overview_expanded_element",
+                      "items": [
+                        {
+                          "type": "ai_overview_element",
+                          "position": "left",
+                          "title": null,
+                          "text": "Example data text 301.",
+                          "markdown": "Example data text 302.",
+                          "links": [
+                            {
+                              "type": "link_element",
+                              "title": "Example Place 303",
+                              "description": null,
+                              "url": "https://example-s20.test/page-304",
+                              "domain": "example-s20.test"
+                            }
+                          ],
+                          "images": [
+                            {
+                              "type": "images_element",
+                              "alt": "Example Place 305",
+                              "url": null,
+                              "image_url": "https://example-s2.test/page-306"
+                            }
+                          ],
+                          "references": [
+                            {
+                              "type": "ai_overview_reference",
+                              "position": "left",
+                              "source": "Example Place 307",
+                              "domain": "example-s21.test",
+                              "url": "https://example-s21.test/page-308",
+                              "title": "Example Place 309",
+                              "text": "Example data text 310."
+                            },
+                            {
+                              "type": "ai_overview_reference",
+                              "position": "left",
+                              "source": "Example Place 311",
+                              "domain": "example-s22.test",
+                              "url": "https://example-s22.test/page-312",
+                              "title": "Example Place 313",
+                              "text": "Example data text 314."
+                            }
+                          ]
+                        },
+                        {
+                          "type": "ai_overview_expanded_element",
+                          "position": "left",
+                          "title": "Example Place 315",
+                          "text": "Example data text 316.",
+                          "components": [
+                            {
+                              "type": "ai_overview_expanded_component",
+                              "title": null,
+                              "text": "Example data text 317.",
+                              "markdown": "Example data text 318.",
+                              "images": null,
+                              "links": null,
+                              "references": null
+                            }
+                          ],
+                          "references": null
+                        },
+                        {
+                          "type": "ai_overview_video_element",
+                          "position": "left",
+                          "title": "Example Place 319",
+                          "snippet": "Example data text 320.",
+                          "url": "https://example-s9.test/page-321",
+                          "domain": "example-s9.test",
+                          "image_url": "https://example-s23.test/page-322",
+                          "source": "Example Place 323",
+                          "date": "Example data text 324.",
+                          "timestamp": "2024-04-26 00:00:00 +00:00"
+                        },
+                        {
+                          "type": "ai_overview_table_element",
+                          "position": "left",
+                          "markdown": "Example data text 325.",
+                          "table": {
+                            "table_header": null,
+                            "table_content": [
+                              [
+                                "Example data text 326.",
+                                "Example data text 327.",
+                                "Example data text 328."
+                              ],
+                              [
+                                "Example data text 329.",
+                                "Example data text 330.",
+                                "Example data text 331."
+                              ],
+                              [
+                                "Example data text 332.",
+                                "Example data text 333.",
+                                "Example data text 334."
+                              ],
+                              [
+                                "Example data text 335.",
+                                "Example data text 336.",
+                                "Example data text 337."
+                              ]
+                            ]
+                          },
+                          "references": null
+                        }
+                      ],
+                      "references": [
+                        {
+                          "type": "ai_overview_reference",
+                          "source": "Example Place 338",
+                          "domain": "example-s35.test",
+                          "url": "https://example-s35.test/page-339",
+                          "title": "Example Place 340",
+                          "text": "Example data text 341."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "rectangle": {
+                "x": 181,
+                "y": 360,
+                "width": 652,
+                "height": 176
+              }
+            },
+            {
+              "type": "images",
+              "rank_group": 1,
+              "rank_absolute": 69,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[7]/div[1]/div[9]/div[1]/div[1]/div[2]/div[2]/div[1]/div[1]/div[66]/div[1]/div[2]",
+              "title": "Example Place 342",
+              "url": "https://example-s1.test/page-343",
+              "items": [
+                {
+                  "type": "images_element",
+                  "alt": "Example Place 344",
+                  "url": "https://example-s36.test/page-345",
+                  "image_url": "https://example-s37.test/page-346"
+                },
+                {
+                  "type": "images_element",
+                  "alt": "Example Place 347",
+                  "url": "https://example-s38.test/page-348",
+                  "image_url": "https://example-s37.test/page-349"
+                }
+              ],
+              "related_image_searches": null,
+              "rectangle": {
+                "x": 181,
+                "y": 360,
+                "width": 652,
+                "height": 176
+              }
+            },
+            {
+              "type": "shopping",
+              "rank_group": 1,
+              "rank_absolute": 19,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[7]/div[3]/div[10]/div[1]/div[2]/div[1]/div[1]/div[3]/div[1]/div[1]",
+              "title": "Example Place 350",
+              "items": [
+                {
+                  "type": "shopping_element",
+                  "title": "Example Place 351",
+                  "price": {
+                    "current": 1799,
+                    "regular": null,
+                    "max_value": null,
+                    "currency": "USD",
+                    "is_price_range": false,
+                    "displayed_price": "Example data text 352."
+                  },
+                  "source": "Example Place 353",
+                  "description": null,
+                  "marketplace": null,
+                  "marketplace_url": null,
+                  "url": "https://example-s39.test/page-354",
+                  "rating": {
+                    "rating_type": "Max5",
+                    "value": 4.8,
+                    "votes_count": 803,
+                    "rating_max": 5
+                  }
+                },
+                {
+                  "type": "shopping_element",
+                  "title": "Example Place 355",
+                  "price": {
+                    "current": 999,
+                    "regular": null,
+                    "max_value": null,
+                    "currency": "USD",
+                    "is_price_range": false,
+                    "displayed_price": "Example data text 356."
+                  },
+                  "source": "Example Place 357",
+                  "description": null,
+                  "marketplace": null,
+                  "marketplace_url": null,
+                  "url": "https://example-s40.test/page-358",
+                  "rating": {
+                    "rating_type": "Max5",
+                    "value": 4.8,
+                    "votes_count": 803,
+                    "rating_max": 5
+                  }
+                }
+              ],
+              "rectangle": {
+                "x": 181,
+                "y": 360,
+                "width": 652,
+                "height": 176
+              }
+            },
+            {
+              "type": "jobs",
+              "rank_group": 1,
+              "rank_absolute": 20,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[8]/div[3]/div[10]/div[1]/div[2]/div[1]/div[2]/div[2]/div[1]/div[1]/div[1]/div[1]/g-card[1]/div[1]/div[1]",
+              "title": "Example Place 359",
+              "url": "https://example-s1.test/page-360",
+              "items": [
+                {
+                  "type": "jobs_element",
+                  "title": "Example Place 361",
+                  "description": "Example data text 362.",
+                  "location": "Example data text 363.",
+                  "author": null,
+                  "job_posted_time": "Example data text 364.",
+                  "timestamp": "2020-09-11 14:42:55 +00:00",
+                  "contract_type": "Example data text 365.",
+                  "salary": null,
+                  "url": "https://example-s1.test/page-366"
+                }
+              ],
+              "rectangle": {
+                "x": 181,
+                "y": 360,
+                "width": 652,
+                "height": 176
+              }
+            },
+            {
+              "type": "events",
+              "rank_group": 1,
+              "rank_absolute": 21,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[7]/div[3]/div[9]/div[1]/div[2]/div[1]/div[2]/div[2]/div[1]/div[1]/div[1]/div[1]/g-card[1]/div[1]/div[1]",
+              "title": "Example Place 367",
+              "url": "https://example-s41.test/page-368",
+              "items": [
+                {
+                  "type": "events_element",
+                  "title": "Example Place 369",
+                  "snippet": "Example data text 370.",
+                  "url": "https://example-s41.test/page-371"
+                },
+                {
+                  "type": "events_element",
+                  "title": "Example Place 372",
+                  "snippet": "Example data text 373.",
+                  "url": "https://example-s41.test/page-374"
+                }
+              ],
+              "rectangle": {
+                "x": 181,
+                "y": 360,
+                "width": 652,
+                "height": 176
+              }
+            },
+            {
+              "type": "recipes",
+              "rank_group": 1,
+              "rank_absolute": 23,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[8]/div[3]/div[9]/div[1]/div[2]/div[1]/div[2]/div[2]/div[1]/div[1]/div[1]",
+              "items": [
+                {
+                  "type": "recipes_element",
+                  "title": "Example Place 375",
+                  "url": "https://example-s42.test/page-376",
+                  "domain": "example-s42.test",
+                  "source": "Example Place 377",
+                  "description": "Example data text 378.",
+                  "time": "2 hr 30 min",
+                  "rating": {
+                    "rating_type": "Max5",
+                    "value": 4.8,
+                    "votes_count": 285,
+                    "rating_max": 5
+                  }
+                },
+                {
+                  "type": "recipes_element",
+                  "title": "Example Place 379",
+                  "url": "https://example-s43.test/page-380",
+                  "domain": "example-s43.test",
+                  "source": "Example Place 381",
+                  "description": "Example data text 382.",
+                  "time": null,
+                  "rating": {
+                    "rating_type": "Max5",
+                    "value": 4.9,
+                    "votes_count": 2,
+                    "rating_max": 5
+                  }
+                }
+              ],
+              "rectangle": {
+                "x": 181,
+                "y": 360,
+                "width": 652,
+                "height": 176
+              }
+            },
+            {
+              "type": "top_sights",
+              "rank_group": 1,
+              "rank_absolute": 24,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[8]/div[3]/div[9]/div[1]/div[2]/div[1]/div[2]/div[2]/div[1]/div[1]/div[1]",
+              "title": "Example Place 383",
+              "items": [
+                {
+                  "type": "top_sights_element",
+                  "title": "Example Place 384",
+                  "url": "https://example-s1.test/page-385",
+                  "description": "Example data text 386.",
+                  "rating": {
+                    "rating_type": "Max5",
+                    "value": 4.8,
+                    "votes_count": 6300,
+                    "rating_max": 5
+                  }
+                },
+                {
+                  "type": "top_sights_element",
+                  "title": "Example Place 387",
+                  "url": "https://example-s1.test/page-388",
+                  "description": "Example data text 389.",
+                  "rating": {
+                    "rating_type": "Max5",
+                    "value": 4.6,
+                    "votes_count": 2958,
+                    "rating_max": 5
+                  }
+                }
+              ],
+              "rectangle": {
+                "x": 181,
+                "y": 360,
+                "width": 652,
+                "height": 176
+              }
+            },
+            {
+              "type": "scholarly_articles",
+              "rank_group": 1,
+              "rank_absolute": 25,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[6]/div[2]/div[9]/div[1]/div[2]/div[1]/div[2]/div[2]/div[1]/div[1]/div[2]",
+              "title": "Example Place 390",
+              "url": "https://example-s44.test/page-391",
+              "items": [
+                {
+                  "type": "scholarly_articles_element",
+                  "title": "Example Place 392",
+                  "url": "https://example-s44.test/page-393",
+                  "author": null,
+                  "description": "Example data text 394."
+                },
+                {
+                  "type": "scholarly_articles_element",
+                  "title": "Example Place 395",
+                  "url": "https://example-s44.test/page-396",
+                  "author": null,
+                  "description": "Example data text 397."
+                }
+              ],
+              "rectangle": {
+                "x": 181,
+                "y": 360,
+                "width": 652,
+                "height": 176
+              }
+            },
+            {
+              "type": "popular_products",
+              "rank_group": 1,
+              "rank_absolute": 3,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[3]/div[1]/div[12]/div[1]/div[2]/div[2]/div[1]/div[1]/div[5]/div[1]",
+              "title": "Example Place 398",
+              "items": [
+                {
+                  "type": "popular_products_element",
+                  "title": "Example Place 399",
+                  "url": null,
+                  "domain": null,
+                  "description": "Example data text 400.",
+                  "more_sellers": false,
+                  "seller": "Example Place 401",
+                  "group_title": null,
+                  "group_source": null,
+                  "image_url": "https://example-s2.test/page-402",
+                  "price": {
+                    "current": 19.99,
+                    "regular": 45,
+                    "max_value": null,
+                    "currency": "USD",
+                    "is_price_range": false,
+                    "displayed_price": "Example data text 403."
+                  },
+                  "rating": null,
+                  "product_identifiers": {
+                    "product_id": "synthetic-404",
+                    "data_docid": "synthetic-405",
+                    "gid": "synthetic-406"
+                  }
+                },
+                {
+                  "type": "popular_products_element",
+                  "title": "Example Place 407",
+                  "url": null,
+                  "domain": null,
+                  "description": "Example data text 408.",
+                  "more_sellers": false,
+                  "seller": "Example Place 409",
+                  "group_title": null,
+                  "group_source": null,
+                  "image_url": "https://example-s2.test/page-410",
+                  "price": {
+                    "current": 25.99,
+                    "regular": 36,
+                    "max_value": null,
+                    "currency": "USD",
+                    "is_price_range": false,
+                    "displayed_price": "Example data text 411."
+                  },
+                  "rating": null,
+                  "product_identifiers": {
+                    "product_id": null,
+                    "data_docid": "synthetic-412",
+                    "gid": null
+                  }
+                },
+                {
+                  "type": "popular_products_element",
+                  "title": "Example Place 413",
+                  "url": null,
+                  "domain": null,
+                  "description": "Example data text 414.",
+                  "more_sellers": true,
+                  "seller": "Example Place 415",
+                  "group_title": null,
+                  "group_source": null,
+                  "image_url": "https://example-s2.test/page-416",
+                  "price": {
+                    "current": 13.77,
+                    "regular": null,
+                    "max_value": null,
+                    "currency": "USD",
+                    "is_price_range": false,
+                    "displayed_price": "Example data text 417."
+                  },
+                  "rating": null,
+                  "product_identifiers": {
+                    "product_id": "synthetic-418",
+                    "data_docid": "synthetic-419",
+                    "gid": "synthetic-420"
+                  }
+                },
+                {
+                  "type": "popular_products_element",
+                  "title": "Example Place 421",
+                  "url": null,
+                  "domain": null,
+                  "description": "Example data text 422.",
+                  "more_sellers": false,
+                  "seller": "Example Place 423",
+                  "group_title": null,
+                  "group_source": null,
+                  "image_url": "https://example-s2.test/page-424",
+                  "price": {
+                    "current": 15,
+                    "regular": null,
+                    "max_value": null,
+                    "currency": "USD",
+                    "is_price_range": false,
+                    "displayed_price": "Example data text 425."
+                  },
+                  "rating": null,
+                  "product_identifiers": {
+                    "product_id": null,
+                    "data_docid": "synthetic-426",
+                    "gid": null
+                  }
+                },
+                {
+                  "type": "popular_products_element",
+                  "title": "Example Place 427",
+                  "url": null,
+                  "domain": null,
+                  "description": "Example data text 428.",
+                  "more_sellers": false,
+                  "seller": "Example Place 429",
+                  "group_title": null,
+                  "group_source": null,
+                  "image_url": "https://example-s2.test/page-430",
+                  "price": {
+                    "current": 40,
+                    "regular": null,
+                    "max_value": null,
+                    "currency": "USD",
+                    "is_price_range": false,
+                    "displayed_price": "Example data text 431."
+                  },
+                  "rating": null,
+                  "product_identifiers": {
+                    "product_id": null,
+                    "data_docid": "synthetic-432",
+                    "gid": null
+                  }
+                },
+                {
+                  "type": "popular_products_element",
+                  "title": "Example Place 433",
+                  "url": null,
+                  "domain": null,
+                  "description": "Example data text 434.",
+                  "more_sellers": true,
+                  "seller": "Example Place 435",
+                  "group_title": null,
+                  "group_source": null,
+                  "image_url": "https://example-s2.test/page-436",
+                  "price": {
+                    "current": 99.99,
+                    "regular": null,
+                    "max_value": null,
+                    "currency": "USD",
+                    "is_price_range": false,
+                    "displayed_price": "Example data text 437."
+                  },
+                  "rating": {
+                    "rating_type": "Max5",
+                    "value": 2.5,
+                    "votes_count": 2,
+                    "rating_max": 5
+                  },
+                  "product_identifiers": {
+                    "product_id": "synthetic-438",
+                    "data_docid": "synthetic-439",
+                    "gid": "synthetic-440"
+                  }
+                },
+                {
+                  "type": "popular_products_element",
+                  "title": "Example Place 441",
+                  "url": null,
+                  "domain": null,
+                  "description": "Example data text 442.",
+                  "more_sellers": false,
+                  "seller": "Example Place 443",
+                  "group_title": null,
+                  "group_source": null,
+                  "image_url": "https://example-s2.test/page-444",
+                  "price": {
+                    "current": 28.99,
+                    "regular": null,
+                    "max_value": null,
+                    "currency": "USD",
+                    "is_price_range": false,
+                    "displayed_price": "Example data text 445."
+                  },
+                  "rating": null,
+                  "product_identifiers": {
+                    "product_id": null,
+                    "data_docid": "synthetic-446",
+                    "gid": null
+                  }
+                },
+                {
+                  "type": "popular_products_element",
+                  "title": "Example Place 447",
+                  "url": null,
+                  "domain": null,
+                  "description": "Example data text 448.",
+                  "more_sellers": false,
+                  "seller": "Example Place 449",
+                  "group_title": null,
+                  "group_source": null,
+                  "image_url": "https://example-s2.test/page-450",
+                  "price": {
+                    "current": 15,
+                    "regular": null,
+                    "max_value": null,
+                    "currency": "USD",
+                    "is_price_range": false,
+                    "displayed_price": "Example data text 451."
+                  },
+                  "rating": null,
+                  "product_identifiers": {
+                    "product_id": null,
+                    "data_docid": "synthetic-452",
+                    "gid": null
+                  }
+                },
+                {
+                  "type": "popular_products_element",
+                  "title": "Example Place 453",
+                  "url": null,
+                  "domain": null,
+                  "description": "Example data text 454.",
+                  "more_sellers": false,
+                  "seller": "Example Place 455",
+                  "group_title": null,
+                  "group_source": null,
+                  "image_url": "https://example-s2.test/page-456",
+                  "price": {
+                    "current": 13.77,
+                    "regular": null,
+                    "max_value": null,
+                    "currency": "USD",
+                    "is_price_range": false,
+                    "displayed_price": "Example data text 457."
+                  },
+                  "rating": null,
+                  "product_identifiers": {
+                    "product_id": null,
+                    "data_docid": "synthetic-458",
+                    "gid": null
+                  }
+                },
+                {
+                  "type": "popular_products_element",
+                  "title": "Example Place 459",
+                  "url": null,
+                  "domain": null,
+                  "description": "Example data text 460.",
+                  "more_sellers": false,
+                  "seller": "Example Place 461",
+                  "group_title": null,
+                  "group_source": null,
+                  "image_url": "https://example-s2.test/page-462",
+                  "price": {
+                    "current": 74.99,
+                    "regular": null,
+                    "max_value": null,
+                    "currency": "USD",
+                    "is_price_range": false,
+                    "displayed_price": "Example data text 463."
+                  },
+                  "rating": null,
+                  "product_identifiers": {
+                    "product_id": "synthetic-464",
+                    "data_docid": "synthetic-465",
+                    "gid": "synthetic-466"
+                  }
+                }
+              ],
+              "rectangle": {
+                "x": 230,
+                "y": 569,
+                "width": 876,
+                "height": 711
+              }
+            },
+            {
+              "type": "questions_and_answers",
+              "rank_group": 1,
+              "rank_absolute": 1,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[7]/div[2]/div[10]/div[1]/div[2]/div[1]/div[2]/div[2]/div[1]/div[1]/div[1]",
+              "items": [
+                {
+                  "type": "questions_and_answers_element",
+                  "url": "https://example-s45.test/page-467",
+                  "question_text": "Example data text 468.",
+                  "answer_text": "Example data text 469.",
+                  "source": "Example Place 470",
+                  "domain": "example-s45.test",
+                  "votes": 170
+                },
+                {
+                  "type": "questions_and_answers_element",
+                  "url": "https://example-s46.test/page-471",
+                  "question_text": "Example data text 472.",
+                  "answer_text": "Example data text 473.",
+                  "source": "Example Place 474",
+                  "domain": "example-s46.test",
+                  "votes": 11
+                }
+              ],
+              "rectangle": {
+                "x": 176,
+                "y": 172,
+                "width": 660,
+                "height": 371
+              }
+            },
+            {
+              "type": "find_results_on",
+              "rank_group": 1,
+              "rank_absolute": 28,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[6]/div[2]/div[10]/div[1]/div[2]/div[1]/div[2]/div[2]/div[1]/div[1]/div[1]",
+              "items": [
+                {
+                  "type": "find_results_on_element",
+                  "title": "Example Place 475",
+                  "domain": "example-s47.test",
+                  "url": "https://example-s47.test/page-476",
+                  "source": "Example Place 477"
+                },
+                {
+                  "type": "find_results_on_element",
+                  "title": "Example Place 478",
+                  "domain": "example-s48.test",
+                  "url": "https://example-s48.test/page-479",
+                  "source": "Example Place 480"
+                }
+              ],
+              "rectangle": {
+                "x": 176,
+                "y": 172,
+                "width": 660,
+                "height": 371
+              }
+            },
+            {
+              "type": "stocks_box",
+              "rank_group": 1,
+              "rank_absolute": 29,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[7]/div[2]/div[10]/div[1]/div[2]/div[1]/div[2]/div[2]/div[1]/div[1]/div[1]",
+              "title": "Example Place 481",
+              "source": "Example Place 482",
+              "snippet": "Example data text 483.",
+              "price": {
+                "current": 579.21,
+                "regular": null,
+                "max_value": null,
+                "currency": "USD",
+                "is_price_range": false,
+                "displayed_price": "Example data text 484."
+              },
+              "url": "https://example-s1.test/page-485",
+              "domain": "example-s1.test",
+              "rectangle": {
+                "x": 176,
+                "y": 172,
+                "width": 660,
+                "height": 371
+              },
+              "table": {
+                "table_header": null,
+                "table_content": [
+                  [
+                    "Example data text 486.",
+                    "Example data text 487."
+                  ],
+                  [
+                    "Example data text 488.",
+                    "Example data text 489."
+                  ],
+                  [
+                    "Example data text 490.",
+                    "Example data text 491."
+                  ],
+                  [
+                    "Example data text 492.",
+                    "Example data text 493."
+                  ],
+                  [
+                    "Example data text 494.",
+                    "Example data text 495."
+                  ],
+                  [
+                    "Example data text 496.",
+                    "Example data text 497."
+                  ]
+                ]
+              },
+              "graph": {
+                "items": [
+                  {
+                    "type": "graph_element",
+                    "date": "Example data text 498.",
+                    "value": 409.04
+                  },
+                  {
+                    "type": "graph_element",
+                    "date": "Example data text 499.",
+                    "value": 409.23
+                  },
+                  {
+                    "type": "graph_element",
+                    "date": "Example data text 500.",
+                    "value": 408.05
+                  },
+                  {
+                    "type": "graph_element",
+                    "date": "Example data text 501.",
+                    "value": 407.19
+                  },
+                  {
+                    "type": "graph_element",
+                    "date": "Example data text 502.",
+                    "value": 406.02
+                  }
+                ],
+                "previous_items": [
+                  {
+                    "type": "graph_element",
+                    "date": "Example data text 503.",
+                    "value": 406.02
+                  },
+                  {
+                    "type": "graph_element",
+                    "date": "Example data text 504.",
+                    "value": 406.73
+                  },
+                  {
+                    "type": "graph_element",
+                    "date": "Example data text 505.",
+                    "value": 406.7
+                  },
+                  {
+                    "type": "graph_element",
+                    "date": "Example data text 506.",
+                    "value": 405.11
+                  },
+                  {
+                    "type": "graph_element",
+                    "date": "Example data text 507.",
+                    "value": 405.2
+                  }
+                ]
+              }
+            },
+            {
+              "type": "commercial_units",
+              "rank_group": 1,
+              "rank_absolute": 1,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[3]/div[2]/div[1]/div[5]/div[1]/div[2]/div[1]/div[1]/div[1]",
+              "title": "Example Place 508",
+              "rectangle": null,
+              "items": [
+                {
+                  "type": "commercial_units_element",
+                  "title": "Example Place 509",
+                  "url": "https://example-s49.test/page-510",
+                  "domain": "example-s49.test",
+                  "price": {
+                    "current": 43,
+                    "regular": null,
+                    "max_value": null,
+                    "currency": "USD",
+                    "is_price_range": false,
+                    "displayed_price": "Example data text 511."
+                  },
+                  "source": "Example Place 512",
+                  "rating": {
+                    "rating_type": "Max5",
+                    "value": 5,
+                    "votes_count": 9,
+                    "rating_max": 5
+                  }
+                },
+                {
+                  "type": "commercial_units_element",
+                  "title": "Example Place 513",
+                  "url": "https://example-s50.test/page-514",
+                  "domain": "example-s50.test",
+                  "price": {
+                    "current": 46,
+                    "regular": null,
+                    "max_value": null,
+                    "currency": "USD",
+                    "is_price_range": false,
+                    "displayed_price": "Example data text 515."
+                  },
+                  "source": "Example Place 516",
+                  "rating": {
+                    "rating_type": "Max5",
+                    "value": 4.5,
+                    "votes_count": 18,
+                    "rating_max": 5
+                  }
+                }
+              ]
+            },
+            {
+              "type": "local_services",
+              "rank_group": 1,
+              "rank_absolute": 1,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[7]/div[1]/div[9]/div[1]/div[1]/div[1]/div[3]/div[1]/div[1]",
+              "title": "Example Place 517",
+              "url": "https://example-s1.test/page-518",
+              "domain": "example-s1.test",
+              "items": [
+                {
+                  "type": "local_services_element",
+                  "title": "Example Place 519",
+                  "url": "https://example-s1.test/page-520",
+                  "domain": "example-s1.test",
+                  "description": "Example data text 521.",
+                  "rating": {
+                    "rating_type": "Max5",
+                    "value": 5,
+                    "votes_count": 302,
+                    "rating_max": 5
+                  },
+                  "profile_image_url": "https://example-s51.test/page-522"
+                },
+                {
+                  "type": "local_services_element",
+                  "title": "Example Place 523",
+                  "url": "https://example-s1.test/page-524",
+                  "domain": "example-s1.test",
+                  "description": "Example data text 525.",
+                  "rating": {
+                    "rating_type": "Max5",
+                    "value": 5,
+                    "votes_count": 62,
+                    "rating_max": 5
+                  },
+                  "profile_image_url": "https://example-s51.test/page-526"
+                }
+              ],
+              "rectangle": null
+            },
+            {
+              "type": "google_hotels",
+              "rank_group": 1,
+              "rank_absolute": 1,
+              "page": 1,
+              "position": "right",
+              "xpath": "/html[1]/body[1]/div[7]/div[1]/div[8]/div[2]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[2]/div[4]/div[1]/div[1]/a[1]",
+              "hotel_identifier": "Example data text 527.",
+              "url": "https://example-s18.test/page-528",
+              "cid": "synthetic-529",
+              "rectangle": null
+            },
+            {
+              "type": "currency_box",
+              "rank_group": 1,
+              "rank_absolute": 1,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[7]/div[1]/div[10]/div[1]/div[2]/div[2]/div[1]/div[1]/div[1]",
+              "value": 1,
+              "converted_value": 1.0551899999999999,
+              "currency": "Euro",
+              "converted_currency": "Example data text 530.",
+              "timestamp": "2022-05-11 11:10:00 +00:00",
+              "table": {
+                "table_header": null,
+                "table_content": [
+                  [
+                    "Example data text 531.",
+                    "Example data text 532."
+                  ],
+                  [
+                    "Example data text 533.",
+                    "Example data text 534."
+                  ]
+                ]
+              },
+              "graph": {
+                "items": [
+                  {
+                    "type": "graph_element",
+                    "date": "Example data text 535.",
+                    "value": 1.08776
+                  },
+                  {
+                    "type": "graph_element",
+                    "date": "Example data text 536.",
+                    "value": 1.08257
+                  },
+                  {
+                    "type": "graph_element",
+                    "date": "Example data text 537.",
+                    "value": 1.089625
+                  },
+                  {
+                    "type": "graph_element",
+                    "date": "Example data text 538.",
+                    "value": 1.082065
+                  },
+                  {
+                    "type": "graph_element",
+                    "date": "Example data text 539.",
+                    "value": 1.08119
+                  }
+                ],
+                "previous_items": null
+              },
+              "rectangle": {
+                "x": 181,
+                "y": 360,
+                "width": 652,
+                "height": 176
+              }
+            },
+            {
+              "type": "product_considerations",
+              "rank_group": 1,
+              "rank_absolute": 14,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[3]/div[2]/div[1]/div[7]/div[3]/div[1]/div[9]/div[1]",
+              "title": "Example Place 540",
+              "items": [
+                {
+                  "type": "product_considerations_element",
+                  "title": "Example Place 541",
+                  "consideration_category": "Example data text 542.",
+                  "expanded_element": {
+                    "type": "product_considerations_expanded_element",
+                    "title": "Example Place 543",
+                    "featured_title": null,
+                    "breadcrumb": "example-s52.test",
+                    "snippet": "Example data text 544.",
+                    "domain": "example-s53.test",
+                    "url": "https://example-s53.test/page-545",
+                    "timestamp": null,
+                    "related_searches": [
+                      "Example data text 546."
+                    ],
+                    "about_this_result": null
+                  }
+                },
+                {
+                  "type": "product_considerations_ai_overview_expanded_element",
+                  "items": [
+                    {
+                      "type": "ai_overview_element",
+                      "title": null,
+                      "text": "Example data text 547.",
+                      "images": [
+                        {
+                          "type": "images_element",
+                          "alt": "Example Place 548",
+                          "url": null,
+                          "image_url": "https://example-s2.test/page-549"
+                        }
+                      ],
+                      "references": [
+                        {
+                          "type": "ai_overview_reference",
+                          "source": "Example Place 550",
+                          "domain": "example-s54.test",
+                          "url": "https://example-s54.test/page-551",
+                          "title": "Example Place 552",
+                          "text": "Example data text 553."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "rectangle": {
+                "x": 0,
+                "y": 4296,
+                "width": 360,
+                "height": 374
+              }
+            },
+            {
+              "type": "short_videos",
+              "rank_group": 1,
+              "rank_absolute": 72,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[3]/div[2]/div[1]/div[7]/div[3]/div[1]/div[50]/div[1]",
+              "title": "Example Place 554",
+              "items": [
+                {
+                  "type": "short_videos_element",
+                  "title": "Example Place 555",
+                  "url": "https://example-s9.test/page-556",
+                  "domain": "example-s9.test",
+                  "source": "Example Place 557"
+                },
+                {
+                  "type": "short_videos_element",
+                  "title": "Example Place 558",
+                  "url": "https://example-s55.test/page-559",
+                  "domain": "example-s55.test",
+                  "source": "Example Place 560"
+                }
+              ],
+              "rectangle": null
+            },
+            {
+              "type": "refine_products",
+              "rank_group": 1,
+              "rank_absolute": 53,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[7]/div[1]/div[12]/div[1]/div[2]/div[2]/div[1]/div[1]/div[53]/div[1]",
+              "title": "Example Place 561",
+              "items": [
+                {
+                  "type": "refine_products_element",
+                  "title": "Example Place 562",
+                  "image_url": "https://example-s56.test/page-563",
+                  "keyword": "best ramen in Irvine",
+                  "refine_type": "Example data text 564.",
+                  "xpath": "/html[1]/body[1]/div[7]/div[1]/div[12]/div[1]/div[2]/div[2]/div[1]/div[1]/div[53]/div[1]/div[1]/div[1]/div[3]/div[1]/div[1]/div[2]/div[1]/a[1]"
+                },
+                {
+                  "type": "refine_products_element",
+                  "title": "Example Place 565",
+                  "image_url": "https://example-s57.test/page-566",
+                  "keyword": "best ramen in Irvine",
+                  "refine_type": "Example data text 567.",
+                  "xpath": "/html[1]/body[1]/div[7]/div[1]/div[12]/div[1]/div[2]/div[2]/div[1]/div[1]/div[53]/div[1]/div[1]/div[1]/div[3]/div[1]/div[1]/div[2]/div[1]/a[2]"
+                },
+                {
+                  "type": "refine_products_element",
+                  "title": "Example Place 568",
+                  "image_url": "https://example-s56.test/page-569",
+                  "keyword": "best ramen in Irvine",
+                  "refine_type": "Example data text 570.",
+                  "xpath": "/html[1]/body[1]/div[7]/div[1]/div[12]/div[1]/div[2]/div[2]/div[1]/div[1]/div[53]/div[1]/div[1]/div[1]/div[3]/div[1]/div[1]/div[2]/div[1]/a[3]"
+                }
+              ],
+              "rectangle": {
+                "x": 230,
+                "y": 10036,
+                "width": 652,
+                "height": 470
+              }
+            },
+            {
+              "type": "perspectives",
+              "rank_group": 1,
+              "rank_absolute": 4,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[5]/div[1]/div[12]/div[1]/div[2]/div[2]/div[1]/div[1]/div[4]/div[1]/g-section-with-header[1]",
+              "title": "Example Place 571",
+              "items": [
+                {
+                  "type": "perspectives_element",
+                  "title": "Example Place 572",
+                  "description": "Example data text 573.",
+                  "url": "https://example-s58.test/page-574",
+                  "domain": "example-s58.test",
+                  "date": "Example data text 575.",
+                  "source": "Example Place 576",
+                  "timestamp": "2023-10-12 00:54:53 +00:00"
+                },
+                {
+                  "type": "perspectives_element",
+                  "title": "Example Place 577",
+                  "description": "Example data text 578.",
+                  "url": "https://example-s59.test/page-579",
+                  "domain": "example-s59.test",
+                  "date": "Example data text 580.",
+                  "source": "Example Place 581",
+                  "timestamp": "2023-10-11 13:54:53 +00:00"
+                }
+              ],
+              "rectangle": null
+            },
+            {
+              "type": "discussions_and_forums",
+              "rank_group": 1,
+              "rank_absolute": 5,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[5]/div[1]/div[12]/div[2]/div[1]/div[2]/div[1]/div[1]/div[4]/div[1]",
+              "title": "Example Place 582",
+              "items": [
+                {
+                  "type": "discussions_and_forums_element",
+                  "title": "Example Place 583",
+                  "url": "https://example-s60.test/page-584",
+                  "domain": "example-s60.test",
+                  "source": "Example Place 585",
+                  "description": null,
+                  "timestamp": "2022-08-14T00:00:00Z",
+                  "posts_count": 64
+                }
+              ],
+              "rectangle": null
+            },
+            {
+              "type": "compare_sites",
+              "rank_group": 1,
+              "rank_absolute": 1,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[1]/div[13]/div[1]/div[2]/div[2]/div[1]/div[1]/div[1]/div[1]",
+              "title": "Example Place 586",
+              "items": [
+                {
+                  "type": "compare_sites_element",
+                  "title": "Example Place 587",
+                  "url": "https://example-s61.test/page-588",
+                  "domain": "example-s61.test",
+                  "image_url": "https://example-s2.test/page-589",
+                  "source": "Example Place 590"
+                },
+                {
+                  "type": "compare_sites_element",
+                  "title": "Example Place 591",
+                  "url": "https://example-s29.test/page-592",
+                  "domain": "example-s29.test",
+                  "image_url": "https://example-s2.test/page-593",
+                  "source": "Example Place 594"
+                },
+                {
+                  "type": "compare_sites_element",
+                  "title": "Example Place 595",
+                  "url": "https://example-s62.test/page-596",
+                  "domain": "example-s62.test",
+                  "image_url": "https://example-s2.test/page-597",
+                  "source": "Example Place 598"
+                }
+              ],
+              "rectangle": null
+            },
+            {
+              "type": "ai_overview",
+              "rank_group": 1,
+              "rank_absolute": 1,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[3]/div[1]/div[12]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]",
+              "asynchronous_ai_overview": false,
+              "markdown": "Example data text 599.",
+              "items": [
+                {
+                  "type": "ai_overview_element",
+                  "rank_group": 1,
+                  "rank_absolute": 1,
+                  "page": 1,
+                  "position": "left",
+                  "title": null,
+                  "text": "Example data text 600.",
+                  "markdown": "Example data text 601.",
+                  "links": [
+                    {
+                      "type": "link_element",
+                      "title": "Example Place 602",
+                      "description": null,
+                      "url": "https://example-s20.test/page-603",
+                      "domain": "example-s20.test"
+                    }
+                  ],
+                  "images": [
+                    {
+                      "type": "images_element",
+                      "alt": "Example Place 604",
+                      "url": null,
+                      "image_url": "https://example-s2.test/page-605"
+                    }
+                  ],
+                  "references": [
+                    {
+                      "type": "ai_overview_reference",
+                      "rank_group": 1,
+                      "rank_absolute": 1,
+                      "page": 1,
+                      "position": "left",
+                      "source": "Example Place 606",
+                      "domain": "example-s21.test",
+                      "url": "https://example-s21.test/page-607",
+                      "title": "Example Place 608",
+                      "text": "Example data text 609."
+                    },
+                    {
+                      "type": "ai_overview_reference",
+                      "rank_group": 2,
+                      "rank_absolute": 2,
+                      "page": 1,
+                      "position": "left",
+                      "source": "Example Place 610",
+                      "domain": "example-s22.test",
+                      "url": "https://example-s22.test/page-611",
+                      "title": "Example Place 612",
+                      "text": "Example data text 613."
+                    }
+                  ]
+                },
+                {
+                  "type": "ai_overview_expanded_element",
+                  "position": "left",
+                  "title": "Example Place 614",
+                  "text": "Example data text 615.",
+                  "components": [
+                    {
+                      "type": "ai_overview_expanded_component",
+                      "title": null,
+                      "text": "Example data text 616.",
+                      "markdown": "Example data text 617.",
+                      "images": null,
+                      "links": null,
+                      "references": null
+                    }
+                  ],
+                  "references": null
+                },
+                {
+                  "type": "ai_overview_video_element",
+                  "position": "left",
+                  "title": "Example Place 618",
+                  "snippet": "Example data text 619.",
+                  "url": "https://example-s9.test/page-620",
+                  "domain": "example-s9.test",
+                  "image_url": "https://example-s23.test/page-621",
+                  "source": "Example Place 622",
+                  "date": "Example data text 623.",
+                  "timestamp": "2024-04-26 00:00:00 +00:00"
+                },
+                {
+                  "type": "ai_overview_table_element",
+                  "position": "left",
+                  "markdown": "Example data text 624.",
+                  "table": {
+                    "table_header": null,
+                    "table_content": [
+                      [
+                        "Example data text 625.",
+                        "Example data text 626.",
+                        "Example data text 627."
+                      ],
+                      [
+                        "Example data text 628.",
+                        "Example data text 629.",
+                        "Example data text 630."
+                      ],
+                      [
+                        "Example data text 631.",
+                        "Example data text 632.",
+                        "Example data text 633."
+                      ],
+                      [
+                        "Example data text 634.",
+                        "Example data text 635.",
+                        "Example data text 636."
+                      ]
+                    ]
+                  },
+                  "references": null
+                }
+              ],
+              "references": [
+                {
+                  "type": "ai_overview_reference",
+                  "rank_group": 1,
+                  "rank_absolute": 21,
+                  "page": 1,
+                  "position": "right",
+                  "source": "Example Place 637",
+                  "domain": "example-s21.test",
+                  "url": "https://example-s21.test/page-638",
+                  "title": "Example Place 639",
+                  "text": "Example data text 640."
+                },
+                {
+                  "type": "ai_overview_reference",
+                  "rank_group": 2,
+                  "rank_absolute": 22,
+                  "page": 1,
+                  "position": "right",
+                  "source": "Example Place 641",
+                  "domain": "example-s22.test",
+                  "url": "https://example-s22.test/page-642",
+                  "title": "Example Place 643",
+                  "text": "Example data text 644."
+                }
+              ],
+              "rectangle": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
