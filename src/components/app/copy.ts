@@ -4,6 +4,7 @@ export const appCopy = {
   dashboard: "Dashboard",
   competitors: "Competitors",
   questions: "Questions",
+  sources: "Sources",
   history: "History",
   billing: "Billing",
   visibility: "Visibility",

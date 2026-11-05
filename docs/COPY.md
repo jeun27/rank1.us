@@ -186,6 +186,17 @@ Strings for the self-serve /app shell (Step 8): the nav and the Dashboard, Compe
 | Questions drawer | "Close" |
 | History status | "Complete", "Failed" |
 
+## Sources (lead, 2026-11-05)
+
+Strings for /app/sources (Step 9). State messages are the 4b Sources strings; the location badge uses "Exact" / "Country fallback" and the engine location tooltip.
+
+| Where | String |
+|---|---|
+| Subtitle (from AEO.md) | "See which sites each AI cites for your questions." |
+| Category labels | "Reddit", "YouTube", "Social", "Review sites", "News and blogs", "Other" |
+| Location selector | "Location" (label), "All locations" |
+| Top domains table headers | "Domain", "Category", "Links", "Engines" |
+
 # 4b. App screens: every state
 
 Copy in quotes is exact. Every number shows n + checked X ago. Results labeled API-measured, directional.

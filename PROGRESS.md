@@ -468,3 +468,16 @@ Changed
 - Questions: read-only, with per-engine dots for the latest run, the failed '–' tooltip (lead copy), the location badge, and a modal drawer (focus trap, Esc, focus returns, noreferrer links). History: every audit/weekly run newest first, linking to /app/runs/[id] with Download CSV.
 - AuditView's Hero / EngineTable / Leaderboard are shared (exported). The onboarding lookup store moved to src/app/app/lookup-store.ts, so onboarding and Competitors share it.
 - The visibility line follows UI.md Chart (one jellyDeep 2px line) and the dataviz skill: no legend for one series, a hover tooltip with n, and an sr-only table.
+
+## Step 9 (frontend): sources page with location view (branch feat/step9-sources-page, issue #42)
+Step 9 built from ENG_HANDOFF_OVERNIGHT §6 + PRODUCT.md + docs/UI.md; Build Pack not readable; reconcile later.
+- /app/sources (nav after Questions): the latest complete/partial run's cited links through computeSources (#44).
+  - A "Location" select ("All locations" + each target, locationLabel) in ?location=, filtered on the server.
+  - One card per engine with "{n} links", a stacked bar by category (counts only, no %), the "Exact" / "Country fallback" badge (greyed tooltip) and "No links cited by {Engine}".
+  - The top domains table (noopener noreferrer); empty / loading / error states.
+- The Questions location badge now uses locationLabel, so it and the selector can't disagree.
+- Category colors (dataviz validator, paper surface, all pairs): only jellyDeep, amber, jelly and warnText pass together.
+  - Other is the neutral inkMuted.
+  - Social reuses jellyDeep with a 45° SVG texture (CSS gradients are reserved for the aurora ring).
+  - Every segment's count is also shown as text under its bar.
+  - Lead Q3 (texture vs a new chart token) is open.
