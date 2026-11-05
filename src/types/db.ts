@@ -429,6 +429,20 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"user_roles": {
+                  Row: {
+                    "created_at": string | null,"role": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string | null,"role": string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string | null,"role"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"workspace_members": {
                   Row: {
                     "created_at": string,"role": string,"user_id": string,"workspace_id": string
@@ -483,7 +497,12 @@ isOneToOne: false
                 }
           }
           Functions: {
-            [_ in never]: never
+            "ensure_self_serve_workspace":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
+"my_landing":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           }
           }
           Enums: {
             [_ in never]: never
