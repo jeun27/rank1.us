@@ -170,6 +170,9 @@ Changed
 - `/signin`: "Continue with Google" (primary, full width) and an email magic link (secondary). Strings are in COPY.md "Auth (lead, 2026-11-05)".
 - `/auth/callback`: takes `?code` (Google and PKCE email links) or `?token_hash&type` (admin links and custom email templates). Then ensureSelfServeWorkspace → getLanding → team `/team`, dfy_client `/client`, onboarding `/app/onboarding`, dashboard `/app`. `next` is honored only when it's a same-origin path in the user's own area or a public page.
 - `POST /auth/signout` and the Account menu (details/summary, works without JS) on the /app and /client headers and in #11's workspace sidebar (new `user` icon).
+- Role gates (AreaGate in the /app and /client layouts and the /team page): `/app` is for self-serve owners and members, `/team` for team and `/client` for dfy_client. A wrong role goes to its own home (review of #14).
+- Without NEXT_PUBLIC_SUPABASE_URL and the anon key (Supabase not connected on Vercel yet), the proxy passes public pages through and still sends the app areas to /signin, instead of every page returning 500 (review of #14).
+- `POST /auth/signout` accepts only same-origin requests (Sec-Fetch-Site, or else Origin), so another site's form can't sign a user out.
 - `/team` (#11's workspace): team role only. Signed out goes to /signin, and any other role goes to its own home. With ENABLE_TEAM_WORKSPACE off, a team user gets the placeholder.
 - Landing: "Start for $99/mo" → `/signin?next=/app/billing` (was a 404 to /sign-in). Header "Log in" → `/signin`. `/app/billing` is the paywall stub: the Pricing card, the button disabled, "Checkout isn't open yet."
 - Placeholders with one H1 + the Dashboard EmptyState: `/app`, `/app/onboarding`, `/client`.
