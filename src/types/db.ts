@@ -423,6 +423,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"run_jobs": {
+                  Row: {
+                    "attempts": number,"created_at": string,"engine": string,"id": string,"last_error": string | null,"locked_at": string | null,"question_id": string,"run_id": string,"run_index": number,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "attempts"?: number,"created_at"?: string,"engine": string,"id"?: string,"last_error"?: string | null,"locked_at"?: string | null,"question_id": string,"run_id": string,"run_index": number,"status"?: string
+                  }
+                  Update: {
+                    "attempts"?: number,"created_at"?: string,"engine"?: string,"id"?: string,"last_error"?: string | null,"locked_at"?: string | null,"question_id"?: string,"run_id"?: string,"run_index"?: number,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "run_jobs_question_id_fkey"
+      columns: ["question_id"]
+isOneToOne: false
+      referencedRelation: "questions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "run_jobs_run_id_fkey"
+      columns: ["run_id"]
+isOneToOne: false
+      referencedRelation: "runs"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"runs": {
                   Row: {
                     "business_id": string | null,"cost_usd": number,"finished_at": string | null,"id": string,"jobs_failed": number,"jobs_ok": number,"jobs_total": number,"kind": string,"started_at": string | null,"status": string
@@ -525,14 +551,26 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "create_business_onboarding":
+            "claim_jobs":
+{ Args: { "p_limit": number }; Returns: Json[]
+                           },
+"create_business_onboarding":
 { Args: { "p": Json }; Returns: string
                            },
 "create_dfy_client":
 { Args: { "p": Json }; Returns: Json
                            },
+"create_run":
+{ Args: { "p_business_id": string,"p_kind": string }; Returns: string
+                           },
 "ensure_self_serve_workspace":
 { Args: Record<PropertyKey, never>; Returns: string
+                           },
+"finish_job":
+{ Args: { "p_answer": Json,"p_citations": Json,"p_job_id": string }; Returns: undefined
+                           },
+"job_error":
+{ Args: { "p_error": string,"p_job_id": string }; Returns: undefined
                            },
 "my_landing":
 { Args: Record<PropertyKey, never>; Returns: string
