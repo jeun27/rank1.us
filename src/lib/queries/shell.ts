@@ -73,9 +73,10 @@ export async function listRunSummaries(db: DbClient, businessId: string, limit =
       started_at: r.started_at,
       finished_at: r.finished_at,
       visibility: metric(r.named, r.n),
-      perEngine: Object.fromEntries(
-        ENGINE_IDS.map((e) => [e, metric(per[e]?.named ?? 0, per[e]?.n ?? 0)]),
-      ) as Record<EngineId, Metric>,
+      perEngine: Object.fromEntries(ENGINE_IDS.map((e) => [e, metric(per[e]?.named ?? 0, per[e]?.n ?? 0)])) as Record<
+        EngineId,
+        Metric
+      >,
     };
   });
 }

@@ -399,3 +399,21 @@ Changed
 - src/lib/audit/start.ts and notify.ts, plus docs/COPY.md "Audit email (lead, 2026-11-05)".
 - src/lib/onboarding/competitors.ts: the Maps keyword is trimmed, so an empty cuisine searches "restaurant".
 - Wiring (after #34 / 0012): src/lib/audit/service.ts binds the real dependencies on the service client: create_free_audit via rpc (p = {lead_id, business {name|null, domain}, competitors ≤5, location, questions}); listUnnotifiedFreeAudits, markFreeAuditNotified and bumpFreeAuditNotifyAttempts from src/lib/queries/results.ts (okAnswers is the email's {n}). POST /api/audit/request calls after(() => startFreeAuditWith(db, {id, domain})) once insertLead returns, so the 202 and the copy are unchanged. GET /api/cron/run-jobs runs notifyFreeAuditsWith after each drain and returns `notified` alongside the drain summary.
+
+## Step 8 (backend): self-serve shell queries (branch feat/step8-shell-queries, issue #37)
+- Step 8 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
+- Lead decisions:
+  - /app nav: Dashboard, Competitors, Questions, History, Billing (only pages that exist). Full width, light mode.
+  - Current business = the workspace's oldest active business (switcher in Step 14). Latest run = the newest complete/partial audit or weekly run, with change vs getPreviousRun. Free audits never appear in /app.
+  - SoV only on Competitors. The Dashboard has visibility, per engine, top-5 leaderboard, top 3 fixes, freshness and the 8-run line (hidden under 2 runs).
+  - Top fixes are read from `fixes` only, never fix_rules.why_note.
+  - Suggested competitors = findLocalCompetitors minus tracked and dismissed. "Not a competitor" stores the row hidden (source 'suggested').
+  - The Questions page is read-only. History lists every audit/weekly run. No page triggers runs.
+  - Run summaries are left to RLS. /client (Step 12) decides what DFY clients see.
+- Migration 20261105000013 (+ .down.sql), additive and re-runnable in one transaction:
+  - businesses.created_at, so the oldest business has an order. Existing rows get the migration time, with ties by id.
+  - competitors writes (insert/update/delete) only for self-serve businesses or the team (a dfy_client never writes). Members still read.
+  - run_summaries(business, limit): SECURITY INVOKER, using computeMetrics' exclusions (ok, question_id not null, named = mentioned).
+  - add_competitor / dismiss_competitor: invoker RPCs with a per-business lock. They match by domain, else name, un-hide on re-add, are idempotent on dismiss, and validate with 22023.
+- Queries (src/lib/queries/shell.ts): getCurrentBusiness (self_serve only), listRunSummaries, getTopFixes, getQuestionsWithLatestAnswers, listCompetitors, addCompetitor, dismissSuggestion. Tests: tests/db/shell.test.ts, including the parity test against computeMetrics.
+- src/types/db.ts got the 0013 objects added by hand in the generator format (no local stack). Regenerate it with `pnpm db:types` when a stack is available.
