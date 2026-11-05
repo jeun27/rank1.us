@@ -487,5 +487,5 @@ Changed
   - R14 (each bot's group else *, "/" and "/menu");
   - H1 (Restaurant / FoodEstablishment family / Menu JSON-LD or hasMenu on home + menu);
   - evaluateFixes (R10, R11, R14, H1 order; unchecked reasons no_domain, robots_disallowed, site_unreachable, robots_unreachable, menu_not_found, menu_ambiguous, no_html_menu, error);
-  - checkFixesForOneRun (cron.ts).
+  - checkFixesForOneRun (cron.ts): always records all 4 enabled rules per run (an evaluate error → 4 unchecked rows, reason error), so backend's fix_checks marker means no run is retried every tick.
 - The copy templates are the SCHEMA §5b customer copy verbatim (a test reads docs/SCHEMA.md); detail is set only for fix.
