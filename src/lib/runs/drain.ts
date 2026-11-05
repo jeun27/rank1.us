@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from "node:crypto";
 import type { ProcessResult } from "./process-job";
 import type { ClaimedJob } from "./types";
 
@@ -6,9 +7,12 @@ export const DEFAULT_BATCH = 20;
 // Live engine calls take up to ~130 s, so stop starting chunks well before the function limit.
 export const DEFAULT_BUDGET_MS = 150_000;
 
-// Exact `Bearer ${CRON_SECRET}`; an unset or blank secret rejects everything (Vercel Cron docs).
+// Exact `Bearer ${CRON_SECRET}`; an unset or blank secret rejects everything (Vercel Cron docs). Compared in
+// constant time over SHA-256 digests (equal length), so neither content nor length leaks. Both cron routes.
 export function cronAuthorized(header: string | null, secret = process.env.CRON_SECRET): boolean {
-  return !!secret?.trim() && header === `Bearer ${secret}`;
+  if (!secret?.trim() || header === null) return false;
+  const digest = (s: string) => createHash("sha256").update(s).digest();
+  return timingSafeEqual(digest(header), digest(`Bearer ${secret}`));
 }
 
 export const batchSize = (raw = process.env.RUN_JOBS_BATCH) => {

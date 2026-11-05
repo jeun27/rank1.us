@@ -26,8 +26,9 @@ export async function GET(req: Request) {
     const fixes = await checkFixesWith(db, () => maxDuration * 1000 - (Date.now() - started));
     return Response.json({ ...summary, notified, fixes });
   } catch (e) {
-    const message =
-      e instanceof Error ? e.message : typeof e === "object" && e && "message" in e ? String(e.message) : "error";
-    return Response.json({ error: `claim_jobs: ${message.slice(0, 200)}` }, { status: 500 });
+    // No DB error text in the body (Step 6 QA): a fixed label, with only the PG code logged.
+    const code = typeof e === "object" && e && "code" in e ? String(e.code) : "error";
+    console.error(`run-jobs: claim failed (${code})`);
+    return Response.json({ error: "claim_failed" }, { status: 500 });
   }
 }

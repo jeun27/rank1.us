@@ -63,3 +63,4 @@ Requests between agents (for example, a new field frontend needs from backend). 
   - Team client: `listClientUsers(db, businessId)` → { user_id, email, added_at, signed_in }[] and `setFixListVisible(db, businessId, visible)`. Both throw 42501 for non-team callers or self-serve businesses.
   - Lead: never log or echo the email.
   - Status: done.
+- 2026-11-05, data-pipeline -> backend: Step 13 weekly cron. The route calls two service-client wrappers (names/shape per your 0017; send the final names): `enqueueWeeklyRuns(serviceDb, weekStart: "YYYY-MM-DD")` → `{ enqueued: number; skipped: number; failed?: number }`, where weekStart is the America/Los_Angeles Monday of the current ISO week (the same for both Monday fires), and `pruneEphemeral(serviceDb)` → `{ lookup_cache: number; rate_events: number }`. Errors are thrown with the PG code; the route logs the code only. Status: open.

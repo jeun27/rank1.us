@@ -196,10 +196,14 @@ describe("GET /api/cron/run-jobs", () => {
     vi.restoreAllMocks();
   });
 
-  it("claim_jobs failing → 500 with a short error, nothing thrown", async () => {
-    q.claimJobs.mockRejectedValue({ message: "permission denied for function claim_jobs" });
+  it("claim_jobs failing → 500 with a fixed label and no DB error text; only the code is logged", async () => {
+    q.claimJobs.mockRejectedValue({ code: "42501", message: "permission denied for function claim_jobs" });
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
     const res = await call(`Bearer ${SECRET}`);
     expect(res.status).toBe(500);
-    expect(await res.json()).toEqual({ error: "claim_jobs: permission denied for function claim_jobs" });
+    expect(await res.json()).toEqual({ error: "claim_failed" });
+    expect(err).toHaveBeenCalledWith("run-jobs: claim failed (42501)");
+    expect(JSON.stringify(err.mock.calls)).not.toContain("permission denied");
+    err.mockRestore();
   });
 });
