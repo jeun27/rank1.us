@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ContactUsLink } from "@/components/contact/ContactUsLink";
 import { Logo } from "@/components/ui/Logo";
 import { container } from "./Section";
 
@@ -14,7 +15,7 @@ export function Header() {
       <nav aria-label="Main" className="flex items-center gap-1 md:gap-4">
         <a href="#pricing" className={navLink}>Pricing</a>
         <a href="#faq" className={navLink}>FAQ</a>
-        <a href="/contact" className={navLink}>Contact us</a>
+        <ContactUsLink className={navLink}>Contact us</ContactUsLink>
       </nav>
     </header>
   );

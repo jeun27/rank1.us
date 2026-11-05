@@ -1,3 +1,4 @@
+import { ContactUsLink } from "@/components/contact/ContactUsLink";
 import { navLink } from "./Header";
 import { container } from "./Section";
 
@@ -9,7 +10,7 @@ export function Footer() {
       <nav aria-label="Footer" className="flex flex-wrap gap-x-4">
         <a href="#pricing" className={navLink}>Pricing</a>
         <a href="#faq" className={navLink}>FAQ</a>
-        <a href="/contact" className={navLink}>Contact us</a>
+        <ContactUsLink className={navLink}>Contact us</ContactUsLink>
         <a href="/privacy" className={navLink}>Privacy</a>
         <a href="/terms" className={navLink}>Terms</a>
       </nav>

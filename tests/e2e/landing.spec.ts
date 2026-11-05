@@ -196,8 +196,41 @@ test("links point at the right places", async ({ page }) => {
   await expect(page.locator("#pricing").getByRole("link", { name: "Start for $99/mo" })).toHaveAttribute("href", "/sign-in");
   await expect(page.locator("#pricing").getByRole("link", { name: "Get my free audit first" })).toHaveAttribute("href", "#audit");
   await expect(page.locator("#comparison").getByRole("link", { name: "Start with a free audit" })).toHaveAttribute("href", "#audit");
-  await expect(page.locator("#audit [data-slot='audit-form']")).toHaveCount(1);
+  await expect(page.locator("#audit form")).toHaveCount(1);
+  for (const link of await page.getByRole("link", { name: "Contact us" }).all()) await expect(link).toHaveAttribute("href", "/contact");
   const footer = page.locator("footer").getByRole("link");
   await expect(footer).toHaveText(["Pricing", "FAQ", "Contact us", "Privacy", "Terms"]);
   await expect(page.locator("body")).not.toContainText("@");
+});
+
+test("#audit holds the real audit form on the ink band; a mocked 202 shows success", async ({ page }) => {
+  // No live calls: the API route is mocked at the network boundary.
+  let body: Record<string, string> | null = null;
+  await page.route("**/api/audit/request", async (route) => {
+    body = route.request().postDataJSON();
+    await route.fulfill({ status: 202, contentType: "application/json", body: "{}" });
+  });
+  await page.goto("/");
+  const audit = page.locator("#audit");
+  await expect(audit.getByLabel("Email")).toBeVisible();
+  await expect(audit.getByLabel("Your domain")).toBeVisible();
+  const submit = audit.getByRole("button", { name: "Get my free audit" });
+  expect(await submit.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(217, 142, 43)");
+  await audit.getByLabel("Email").fill("owner@example.com");
+  await audit.getByLabel("Your domain").fill("ramenhouse.com");
+  await submit.click();
+  await expect(audit.getByRole("status")).toHaveText("Got it. We'll email your audit to owner@example.com.");
+  expect(body).toMatchObject({ email: "owner@example.com", domain: "ramenhouse.com" });
+});
+
+test("Contact us in the header, pricing and footer opens the Contact us dialog", async ({ page }) => {
+  await page.goto("/");
+  for (const where of ["header", "#pricing", "footer"]) {
+    await page.locator(where).getByRole("link", { name: "Contact us" }).first().click();
+    const dialog = page.getByRole("dialog", { name: "Contact us" });
+    await expect(dialog).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+  }
+  await expect(page).toHaveURL(/\/$/);
 });

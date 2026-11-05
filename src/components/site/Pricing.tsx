@@ -1,3 +1,4 @@
+import { ContactUsLink } from "@/components/contact/ContactUsLink";
 import { Button } from "@/components/ui/Button";
 import { navLink } from "./Header";
 import { Section } from "./Section";
@@ -11,12 +12,9 @@ const includes = [
   "no 'Powered by Rank1' credit",
 ];
 
-// Swapped for ContactUsLink when step2-forms lands.
 const contact = (
   <>
-    <a href="/contact" className={`${navLink} px-0 text-jellyDeep underline`}>
-      Contact us
-    </a>
+    <ContactUsLink className={`${navLink} px-0 text-jellyDeep underline`}>Contact us</ContactUsLink>
     {"."}
   </>
 );

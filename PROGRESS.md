@@ -120,4 +120,4 @@ Doc differences / decisions
 Known gaps
 - "Start for $99/mo" links to /sign-in, which doesn't exist yet (auth step).
 - OG image is [PLACEHOLDER], so og:image is omitted until a real image exists.
-- The audit form is a `<div data-slot="audit-form" />` placeholder and the Contact us links are plain href="/contact" until step2-forms lands. /privacy and /terms come from step2-forms.
+- Merged origin/step2-forms (366ebf4). #audit renders AuditRequestForm, and every Contact us link is a ContactUsLink. The e2e tests mock /api/audit/request. The /api routes, /contact, /privacy and /terms come later on step2-forms.
