@@ -1,22 +1,22 @@
 # QA
 
-## Step 4: Engine adapters with fixtures + /admin/test
+## Step 4: Engine adapters with fixtures + /admin/test (re-run)
 
-Checked 2026-11-05: the adapters on main at d4962b9 (#16), and /admin/test in PR #19 (feat/admin-engine-test) at d201823, its head. The sandbox Docker disk is full, so per the lead there was no local Supabase. test:db and e2e come from CI on #19 (run 42021589468 at d201823). Unit, typecheck, lint, format, smoke and build ran locally in the sandbox. The 404 checks ran on the Vercel preview of d201823 from the Mac.
-Preview: https://rank1-mboof4yut-bryan-flowhighlevels-projects.vercel.app (git ref feat/admin-engine-test, sha d201823, READY). FOUNDER_EMAIL and the engine keys are not set on Vercel.
+Checked 2026-11-05: the adapters on main at d4962b9 (#16), and /admin/test in PR #19 (feat/admin-engine-test), first at d201823 and re-checked at 3241698, its head. 3241698 = c21ac6f (proxy gates match the normalized path) + a merge of main (#20). The sandbox Docker disk is full, so per the lead there was no local Supabase. test:db and e2e come from CI on #19 (9 of 9 green at d201823 and again at 3241698). Unit, typecheck, lint, format, smoke and build ran locally in the sandbox. The 404 checks ran from the Mac on the Vercel previews of d201823 and 3241698.
+Preview: https://rank1-1k0aomd6u-bryan-flowhighlevels-projects.vercel.app (git ref feat/admin-engine-test, sha 3241698, READY). FOUNDER_EMAIL and the engine keys are not set on Vercel.
 Sources: Jeun's ENG_HANDOFF_OVERNIGHT §6 Step 4 and the lead's brief (rank1-step4.md).
 
-Result: FAIL. 2 blocking problems, both small, listed at the end.
+Result: PASS. Both blockers from the first run (d201823) are fixed. No blocking problems.
 
 ### Commands
 
 | Command | Result |
 |---|---|
-| `pnpm test` (sandbox) | PASS. 39 files, 493 tests passed |
+| `pnpm test` (sandbox, 3241698) | PASS. 40 files, 578 tests passed (incl. path-normalize.test.ts and proxy-admin.test.ts, 92 tests) |
 | `pnpm typecheck`, `pnpm lint`, `pnpm format:check` (sandbox) | PASS. exit 0 |
 | `pnpm smoke:engines` without keys (sandbox) | PASS. exit 0, prints "skipped: no keys (DATAFORSEO_LOGIN, DATAFORSEO_PASSWORD, PERPLEXITY_API_KEY)" |
 | `pnpm build` (sandbox) | PASS |
-| CI on #19 at d201823 | PASS. 9 of 9: typecheck, test, test-db, lint, format, e2e (164 passed, 2 skipped; the count includes admin-test.spec's 3 tests × 2 viewports), signoff, Vercel, preview comments |
+| CI on #19 at 3241698 | PASS. 9 of 9: typecheck, test, test-db, lint, format, e2e (164 passed, 2 skipped; the count includes admin-test.spec's 3 tests × 2 viewports), signoff, Vercel, preview comments |
 
 ### Acceptance
 
@@ -29,7 +29,7 @@ Result: FAIL. 2 blocking problems, both small, listed at the end.
 | 5 | Fixtures are synthetic Example data, no real businesses or personal data | PASS | fixtures-privacy.test.ts: no phones, emails or filled address/phone fields in any fixture; synthetic fixtures link only to example.test. The `docs-*` files are the official docs examples, copied unedited as the brief allows (Gemini: Albert Einstein facts; Perplexity: AI-trend articles from Stanford, MIT, IBM, Microsoft). They name no local businesses and hold no personal data. The ChatGPT and organic-SERP docs examples name real cafés and hotels, so those two are synthetic (tests/fixtures/engines/README.md) |
 | 6 | No LLM SDKs | PASS | no-llm-sdk.test.ts (package.json, src/ imports, plus a control case); my own `git grep` for openai, @anthropic-ai, @google/genai, @google/generative-ai, cohere, @mistralai, langchain, ai: 0 matches |
 | 7 | `pnpm smoke:engines` skips cleanly without keys | PASS | see Commands |
-| 8 | /admin/test founder-only, real 404 otherwise; form; mocked results; missing keys; axe 375/1280; copy; raw server-side | FAIL | Mostly passes. Preview, FOUNDER_EMAIL unset: /admin, /admin/test, /admin/test?x=1, /admin/foo and the server-action POST all return a real 404 with no form. CI e2e: signed-out 404, another signed-in user 404, the founder sees the form and runs Perplexity and ChatGPT against the fake engine API (exact vs Country fallback, 3 cited links, cost), axe clean and no side scroll on both viewports. Unit: missing-keys message and a disabled Run test without keys; the action drops `raw` before returning; proxy 404s while FOUNDER_EMAIL is unset or Supabase isn't connected. Every label and option is in COPY.md "Admin (lead, 2026-11-05)". Fails on encoded paths: blocker 2 |
+| 8 | /admin/test founder-only, real 404 otherwise; form; mocked results; missing keys; axe 375/1280; copy; raw server-side | PASS | Preview of 3241698, FOUNDER_EMAIL unset, every case below has no form in the body. Real 404: /admin, /admin/test, /admin%2Ftest, /%61dmin/test, /admin%252Ftest, /%2561dmin/test, /./admin/test, /x/../admin/test, /ADMIN/test, /Admin, /admin%5Ctest, /%E0%A4 (bad UTF-8), and the server-action POST to /%61dmin/test. //admin and //admin/test: 308 to /admin and /admin/test, which are 404. /%E0%A4%A: Vercel's edge resets it (HTTP/2 stream error) before the app. CI e2e: signed-out and encoded-path 404s, another user 404, founder form + fake-engine results, axe and no side scroll at 375 and 1280. Unit: missing-keys message, Run test disabled, `raw` dropped. Copy in COPY.md "Admin (lead, 2026-11-05)" |
 | 9 | API URL overrides ignored on Vercel production | PASS | `apiBase` (shared.ts:67) returns the official host when VERCEL_ENV is production, and accepts only loopback hosts elsewhere; 3 unit tests. Neither override is set on Vercel |
 
 ### Standing checks
@@ -37,18 +37,24 @@ Result: FAIL. 2 blocking problems, both small, listed at the end.
 | Check | Result | Evidence |
 |---|---|---|
 | No secrets in .next/static | PASS | 29 files: no server-only env name, no secret patterns, no Basic auth header. No engine code reaches the client (no api.dataforseo.com, api.perplexity.ai, llm_scraper, ai_overview or user_location in the bundle) |
-| "Visuals for <sha>" matches the head | FAIL | newest #19 Visuals comment is "Visuals for 87824a2"; the head is d201823. Blocker 1 |
+| "Visuals for <sha>" matches the head | PASS | newest #19 comment is "Visuals for 3241698" (no UI change since 87824a2, same images from this sha); the head is 3241698 |
+| Step 3 gates on encoded paths | PASS | same preview: /%61pp, /te%61m, /%63lient, /./team and /APP 307 to /signin?next=…; //app → 308 /app → /signin. Look-alikes stay ungated (no sign-in redirect): /application, /teams, /clients, /administrator, /admins are the router's plain 404 |
 
 Not blocking:
 - The Status row shows the raw status value and the engine error text ("failed: DataForSEO 40100: …"). That's fine for a founder-only debug page, and no secret can reach it.
 - An invalid form post (unknown engine or level, an empty question, or more than 500 characters) returns nothing visible.
 - Run test is disabled when any of the 3 keys is missing, so DataForSEO engines can't be tried until the Perplexity key exists too.
-- The Step 3 proxy has the same raw-path pattern for /app, /team and /client (`isProtected`). AreaGate still redirects there, so it's defense in depth only.
+
+First-run blockers (d201823):
+
+| Blocker | Result | Evidence |
+|---|---|---|
+| 1. Visuals comment was for 87824a2, not the head | FIXED | "Visuals for 3241698" matches the head |
+| 2. Encoded /admin paths returned HTTP 200 | FIXED | src/lib/auth/path.ts `normalizePath` (repeated percent-decoding, slash/backslash split, dot segments, lowercase; malformed → 404) runs before `isAdminPath` and `isProtected` in src/lib/supabase/middleware.ts. Preview results in item 8 |
 
 ### Blocking problems
 
-1. PR #19's newest Visuals comment is for 87824a2, but the head is d201823 (README Working Guidelines 7: new pushes get new visuals). d201823 changes no UI, so a "Visuals for d201823" comment with the same images is enough.
-2. Encoded paths skip the proxy's 404: on the preview, `/admin%2Ftest` and `/%61dmin/test` return HTTP 200. The body is Next's not-found page (no form, no fields, no admin copy), because `requireFounder` still runs. Item 8 asks for a real 404 status. Cause: src/lib/supabase/middleware.ts:14 and :40 pass the raw `request.nextUrl.pathname` to `isAdminPath` (src/lib/admin/is-founder.ts:7), and Next routes the decoded path. Decode the path first (and keep `requireFounder` as the authoritative gate).
+None.
 
 ## Step 3: Sign in + role routing (re-run)
 
