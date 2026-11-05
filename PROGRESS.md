@@ -257,3 +257,16 @@ Review follow-ups (lead, 2026-11-05)
 - Perplexity reports 'exact' only when the requested level was sent in user_location (a city goes only with its region). Otherwise 'fallback_country'.
 - Citations are not deduped in the adapters: they keep every returned link in order. Dedupe happens at scoring (Step 6/7).
 - docs/COPY.md "Admin (lead, 2026-11-05)" holds the /admin/test strings. The page is built after #14 merges.
+
+## Step 5 (frontend): restaurant onboarding (branch feat/step5-onboarding, issue #18)
+Step 5 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
+
+Changed
+- src/app/app/onboarding: Onboarding.tsx (client, 3 steps, step in ?step= so the browser Back walks the steps), contract.ts (the types agreed with backend and data-pipeline), copy.ts.
+- /dev/onboarding: every 4b onboarding state with Example data (404 in production, like /dev/ui), for visuals and axe.
+- DomainField takes an optional onSubmit (client forms). LoadingState's progress bar is optional (one lookup has nothing to count).
+
+Doc differences
+- "Type 3 things you sell" (unreadable site): the three answers are shown and kept for the session but not saved. Neither the RPC nor SCHEMA.md has a field for them; the cuisine select is still required.
+- Questions are saved with active_form 'long' (Step 5 brief). Location level defaults to city; ChatGPT and Gemini show the UI.md tooltip copy at city and state level.
+- Local Supabase is off (pod disk full, lead 2026-11-05): DB-backed e2e (tests/e2e/onboarding.spec.ts) is gated by CI.

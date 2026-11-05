@@ -43,3 +43,12 @@
 - [x] 5. Light (Field Notes) and dark tokens, every text pair AA; theme, split and collapse persist in localStorage.
 - [x] 6. Below 768px: one pane with a Nav / Context / Document tab bar. 150-200ms motion, off for reduced motion.
 - [x] 7. Unit, DB and e2e tests at 375 and 1280 in light and dark, axe clean.
+
+## Step 5 (frontend): restaurant onboarding at /app/onboarding (issue #18)
+- [x] 1. 3 steps (Business, Competitors, Questions + location) per UI.md 4b, every state, exact COPY.md strings.
+- [x] 2. Business: domain (DomainField), name, cuisine select, Irvine, CA prefilled, landmark/area picks (max 3 each), dietary, occasion.
+- [x] 3. Competitors: 5 pre-ticked rows (name, rating, domain), manual add/remove, partial/empty/error states.
+- [x] 4. Questions: up to 25 template rows, short + long form, track toggle, location level with ChatGPT/Gemini greyed below country.
+- [ ] 5. Finish setup calls createBusinessOnboarding, then /app (waits on feat/step5-onboarding-db).
+- [ ] 6. Site read and Maps lookup through readSite / findLocalCompetitors (waits on feat/step5-onboarding-engines).
+- [ ] 7. e2e at 375 and 1280 (axe, keyboard, sign in to DB rows) green in CI; visuals for each state.
