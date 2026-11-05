@@ -47,17 +47,17 @@ export function validateAudit(body: Record<string, unknown>): Result<AuditInput,
   return { ok: true, data: { email: str(body.email), domain: domain! } };
 }
 
-export type ContactField = "name" | "email" | "company" | "tier" | "message";
+export type ContactField = "name" | "email" | "tier" | "message";
 
 export function validateContact(body: Record<string, unknown>): Result<ContactInput, ContactField> {
   const errors: ContactField[] = [];
   const name = line(body.name);
-  const company = line(body.company);
+  // Optional, so never an error: anything past 100 characters is cut.
+  const company = line(body.company).slice(0, 100);
   const message = str(body.message);
   const tier = TIERS.find((t) => t === body.tier);
   if (!name || name.length > 100) errors.push("name");
   if (!isEmail(body.email)) errors.push("email");
-  if (company.length > 100) errors.push("company");
   if (!tier) errors.push("tier");
   if (!message || message.length > 5000) errors.push("message");
   if (errors.length) return { ok: false, errors };

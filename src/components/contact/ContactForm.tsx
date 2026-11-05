@@ -18,11 +18,10 @@ type State =
 const fieldError: Record<ContactField, string> = {
   name: c.nameError,
   email: c.emailError,
-  company: c.companyError,
   tier: c.tierError,
   message: c.messageError,
 };
-const FIELDS: ContactField[] = ["name", "email", "company", "tier", "message"];
+const FIELDS: ContactField[] = ["name", "email", "tier", "message"];
 
 // Contact us form, used on /contact and in the ContactUsLink modal.
 export function ContactForm() {
@@ -73,7 +72,7 @@ export function ContactForm() {
       {state.kind === "error" && state.banner && <Banner tone="error">{state.banner}</Banner>}
       <PillField label={c.nameLabel} name="name" autoComplete="name" required maxLength={100} error={err("name")} />
       <PillField label={c.emailLabel} name="email" type="email" autoComplete="email" inputMode="email" spellCheck={false} required error={err("email")} />
-      <PillField label={c.companyLabel} name="company" autoComplete="organization" maxLength={100} error={err("company")} />
+      <PillField label={c.companyLabel} name="company" autoComplete="organization" maxLength={100} />
       <div>
         <label htmlFor={tierId} className="mb-1.5 block text-caption font-semibold">
           {c.tierLabel}

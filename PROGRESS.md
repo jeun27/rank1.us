@@ -114,7 +114,8 @@ Changed
 
 Doc differences
 - Next 16 with cacheComponents rejects `export const runtime = "nodejs"`, so the routes rely on the default Node.js runtime (comment in each route).
-- Brick field-error text fails contrast on the ink band. In AuditRequestForm the inline error takes the band's text color, the input keeps the 2px brick edge, and the Banner stays white/brick.
+- Brick field-error text fails contrast on the ink band. In AuditRequestForm the inline error is paper colored (the band's text color), the input keeps the 2px brick edge as an extra cue, and aria-invalid + aria-describedby carry the meaning, so color is not the only signal. The Banner stays white/brick (lead OK, 2026-11-05).
 - DomainField is unchanged (lead). AuditRequestForm uses its pill look through PillField with plain inputs and the "final" Button.
 - Validation is hand-rolled (src/lib/spam/validate.ts), shared by the browser and the routes. No new dependency.
-- Company is optional in the Contact form (contact_requests.company is nullable). Name, Email, Tier and Message are required.
+- Company is optional in the Contact form (contact_requests.company is nullable) and has no error: the input caps it at 100 characters and the server cuts anything longer. Name, Email, Tier and Message are required.
+- Form strings live in src/components/forms/copy.ts. tests/unit/forms/copy.test.ts fails on any [PLACEHOLDER] there, and on any string that is not in docs/COPY.md.

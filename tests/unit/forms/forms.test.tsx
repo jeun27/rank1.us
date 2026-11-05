@@ -3,7 +3,6 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AuditRequestForm } from "@/components/forms/AuditRequestForm";
 import { ContactForm } from "@/components/contact/ContactForm";
-import { formCopy } from "@/components/forms/copy";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -46,6 +45,7 @@ describe("AuditRequestForm", () => {
     render(<AuditRequestForm />);
     await fill("", "ramenhouse");
     expect(screen.getByText("Add the ending, like ramenhouse.com")).toBeVisible();
+    expect(screen.getByLabelText("Email")).toHaveAccessibleDescription("Add a valid email, like you@ramenhouse.com");
     expect(screen.getByLabelText("Your domain")).toHaveAttribute("aria-invalid", "true");
     expect(screen.getByLabelText("Your domain")).toHaveAccessibleDescription("Add the ending, like ramenhouse.com");
     await waitFor(() => expect(screen.getByLabelText("Email")).toHaveFocus());
@@ -68,9 +68,9 @@ describe("AuditRequestForm", () => {
   });
 
   it.each([
-    [429, formCopy.auditTooMany],
-    [500, formCopy.auditError],
-    [403, formCopy.auditError],
+    [429, "Free audits are full for today. Try again tomorrow."],
+    [500, "That didn't send. Try again in a minute."],
+    [403, "That didn't send. Try again in a minute."],
   ])("server %i: Banner error, form stays", async (status, text) => {
     const { release } = pendingFetch(status);
     release();
@@ -108,6 +108,7 @@ describe("ContactForm", () => {
     for (const l of ["Name", "Email", "Company", "Tier", "Message"]) expect(screen.getByLabelText(l)).toBeInTheDocument();
     const options = [...(screen.getByLabelText("Tier") as HTMLSelectElement).options].filter((o) => !o.disabled).map((o) => o.textContent);
     expect(options).toEqual(["Agency bundle", "Done-for-you (custom)", "Other"]);
+    expect((screen.getByLabelText("Tier") as HTMLSelectElement).options[0]).toHaveTextContent("Choose one");
     expect(screen.getByLabelText("Tier").textContent).not.toMatch(/\$/);
   });
 
@@ -116,7 +117,15 @@ describe("ContactForm", () => {
     vi.stubGlobal("fetch", fetch);
     render(<ContactForm />);
     await userEvent.click(screen.getByRole("button", { name: "Send" }));
-    for (const l of ["Name", "Email", "Tier", "Message"]) expect(screen.getByLabelText(l)).toHaveAttribute("aria-invalid", "true");
+    for (const [l, msg] of [
+      ["Name", "Add your name"],
+      ["Email", "Add a valid email, like you@ramenhouse.com"],
+      ["Tier", "Choose one"],
+      ["Message", "Add a message"],
+    ]) {
+      expect(screen.getByLabelText(l)).toHaveAttribute("aria-invalid", "true");
+      expect(screen.getByLabelText(l)).toHaveAccessibleDescription(msg);
+    }
     expect(screen.getByLabelText("Company")).not.toHaveAttribute("aria-invalid");
     await waitFor(() => expect(screen.getByLabelText("Name")).toHaveFocus());
     expect(fetch).not.toHaveBeenCalled();

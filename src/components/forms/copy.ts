@@ -19,14 +19,12 @@ export const formCopy = {
   tooMany: "Too many tries. Try again in an hour.",
   contactSuccess: "Thanks. We'll reply by email within 2 business days.",
 
-  // Pending strings from the lead (asked 2026-11-05).
-  emailError: "[PLACEHOLDER] email error",
-  nameError: "[PLACEHOLDER] name error",
-  companyError: "[PLACEHOLDER] company error",
-  tierError: "[PLACEHOLDER] tier error",
-  messageError: "[PLACEHOLDER] message error",
-  tierPlaceholder: "[PLACEHOLDER] tier placeholder",
-  auditError: "[PLACEHOLDER] audit error",
-  auditTooMany: "[PLACEHOLDER] audit limit",
-  close: "[PLACEHOLDER] close",
+  emailError: "Add a valid email, like you@ramenhouse.com",
+  nameError: "Add your name",
+  messageError: "Add a message",
+  tierPlaceholder: "Choose one",
+  tierError: "Choose one",
+  auditError: "That didn't send. Try again in a minute.",
+  auditTooMany: "Free audits are full for today. Try again tomorrow.",
+  close: "Close",
 };

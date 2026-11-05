@@ -106,7 +106,7 @@ test.describe("Contact us modal (from /privacy)", () => {
     await fill(dialog);
     await dialog.getByRole("button", { name: "Send" }).click();
     await expect(dialog.getByRole("status")).toHaveText("Thanks. We'll reply by email within 2 business days.");
-    await dialog.locator("button[aria-label]").click();
+    await dialog.getByRole("button", { name: "Close" }).click();
     await expect(dialog).toBeHidden();
     await expect(page.getByRole("link", { name: "Contact us" })).toBeFocused();
   });

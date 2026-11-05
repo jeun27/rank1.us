@@ -33,6 +33,14 @@ Progress percentages ("48%") are computed from n of d, so they are not copy.
 | Audit form labels | "Email", "Your domain" (no email placeholder) |
 | Audit domain placeholder | "yourbusiness.com" |
 | Audit success | "Got it. We'll email your audit to {email}." (proposed by lead, pending Jeun) |
+| Email error (both forms) | "Add a valid email, like you@ramenhouse.com" |
+| Contact name error | "Add your name" |
+| Contact message error | "Add a message" |
+| Contact tier placeholder option and tier error | "Choose one" |
+| Contact company | Optional, no error string |
+| Audit Banner error | "That didn't send. Try again in a minute." |
+| Audit daily-cap 429 | "Free audits are full for today. Try again tomorrow." (a per-request 429 keeps "Too many tries. Try again in an hour.") |
+| Contact modal close button (aria-label) | "Close" |
 
 | Jelly | Rule |
 |---|---|
