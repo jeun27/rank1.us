@@ -102,6 +102,8 @@ test("fixes: each Status select is keyboard reachable; read-only has none", asyn
   await page.goto("/dev/app?state=fixes-success");
   const selects = page.getByLabel("Status");
   await expect(selects).toHaveCount(4);
+  // focus() doesn't wait for visibility; the streamed content is hidden until React moves it into place.
+  await expect(selects.first()).toBeVisible();
   await selects.first().focus();
   await expect(selects.first()).toBeFocused();
   await page.goto("/dev/app?state=fixes-readonly");
@@ -152,10 +154,7 @@ test("signed-in owner: What to fix next lists open fixes, Tidy-ups, and Done rem
     .select("id")
     .single();
   if (ws.error) throw ws.error;
-  const member = await db
-    .from("workspace_members")
-    .insert({ workspace_id: ws.data.id, user_id: user.id, role: "owner" });
-  if (member.error) throw member.error;
+  // A trigger adds the owner as a workspace member.
   const biz = await db
     .from("businesses")
     .insert({ workspace_id: ws.data.id, name: "Example Ramen House", domain: "exampleramen.test" })
