@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { apiUrl, dbUrl } from "./helpers";
+import { apiUrl, dbUrl, serviceClient } from "./helpers";
 
 const TABLES = [
   "workspaces",
@@ -62,6 +62,24 @@ async function waitForApi() {
   throw new Error("Supabase API did not come back after db reset");
 }
 
+// `notify pgrst, 'reload schema'` is asynchronous: wait until PostgREST serves every table again,
+// so the next test file doesn't hit a stale schema cache ("Could not find the table ...").
+async function waitForSchema() {
+  for (let i = 0; i < 60; i++) {
+    const results = await Promise.all(
+      TABLES.map((t) =>
+        serviceClient()
+          .from(t as never)
+          .select("*", { head: true })
+          .limit(1),
+      ),
+    );
+    if (results.every((r) => !r.error)) return;
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  throw new Error("PostgREST did not reload the schema after the rollback round-trip");
+}
+
 beforeAll(async () => {
   execSync("pnpm exec supabase db reset", { stdio: "pipe" });
   await waitForApi();
@@ -92,8 +110,9 @@ describe("migrations", () => {
 
     for (const f of sqlFiles("migrations")) await pg.query(readFileSync(join(dir("migrations"), f), "utf8"));
     await pg.query("notify pgrst, 'reload schema'");
+    await waitForSchema();
     const tables = await publicTables();
     expect(tables.map((t) => t.name)).toEqual(TABLES);
     expect(tables.filter((t) => !t.rls)).toEqual([]);
-  });
+  }, 90_000);
 });
