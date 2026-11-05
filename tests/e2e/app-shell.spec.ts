@@ -66,6 +66,8 @@ test("questions drawer: keyboard opens it, Tab stays inside, Esc closes and focu
 test("sources: the location select is keyboard reachable and lists All locations first", async ({ page }) => {
   await page.goto("/dev/app?state=sources-success");
   const select = page.getByLabel("Location");
+  // focus() doesn't wait for visibility; the streamed content is hidden until React moves it into place.
+  await expect(select).toBeVisible();
   await select.focus();
   await expect(select).toBeFocused();
   await expect(select.locator("option").first()).toHaveText("All locations");
@@ -122,4 +124,24 @@ test("signed-in owner: the nav reaches every page, one H1 each, Dashboard empty 
   await expect(nav.getByRole("link", { name: "Billing" })).toHaveAttribute("aria-current", "page");
   const axe = await new AxeBuilder({ page }).analyze();
   expect(axe.violations.map((v) => v.id)).toEqual([]);
+});
+
+// QA STEP 9 (#49): the selector is a plain GET form submitted by its Show button (the form markup is
+// unit-tested). Streamed /app pages need JavaScript to reveal their content, so this runs with JS on.
+test("sources location form: Show submits ?location= and the choice is kept; All locations clears it", async ({
+  page,
+}) => {
+  await page.goto("/dev/app?state=sources-form");
+  const select = page.getByLabel("Location");
+  const second = await select.locator("option").nth(1).getAttribute("value");
+  await select.selectOption(second!);
+  expect(page.url()).not.toContain("location=");
+  await page.getByRole("button", { name: "Show" }).click();
+  await page.waitForURL(/location=/);
+  expect(new URL(page.url()).searchParams.get("location")).toBe(second);
+  await expect(page.getByLabel("Location")).toHaveValue(second!);
+  await page.getByLabel("Location").selectOption("");
+  await page.getByRole("button", { name: "Show" }).click();
+  await page.waitForURL((u) => u.searchParams.get("location") === "");
+  await expect(page.getByLabel("Location")).toHaveValue("");
 });

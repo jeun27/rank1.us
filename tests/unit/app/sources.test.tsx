@@ -94,6 +94,16 @@ describe("Sources (UI.md 4b)", () => {
     expect(screen.getByText("Checked 3 d ago · 38 answers · API-measured, directional")).toBeInTheDocument();
   });
 
+  it("the location selector is a plain GET form, so it works without JavaScript (QA #49)", () => {
+    render(<SourcesView sources={sources} location={undefined} />);
+    const select = screen.getByLabelText("Location");
+    const form = select.closest("form")!;
+    expect(form).toHaveAttribute("method", "get");
+    expect(form).toHaveAttribute("action", "/app/sources");
+    expect(select).toHaveAttribute("name", "location");
+    expect(within(form).getByRole("button", { name: "Show" })).toHaveAttribute("type", "submit");
+  });
+
   it("uses only strings that are in docs/COPY.md", () => {
     const md = readFileSync("docs/COPY.md", "utf8");
     const strings = Object.values(sourcesCopy).flatMap((v) =>

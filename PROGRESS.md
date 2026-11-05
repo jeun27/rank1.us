@@ -499,6 +499,7 @@ Changed
   - The shell getTopFixes test uses one fix per rule and size ranking (was affected_answers order).
   - onboarding.test's team-added fix uses R2 (one open fix per rule).
 - src/types/db.ts got the 0014 objects added by hand in the generator format. Regenerate it with `pnpm db:types` when a stack is available.
+
 ## Step 9 (frontend): sources page with location view (branch feat/step9-sources-page, issue #42)
 Step 9 built from ENG_HANDOFF_OVERNIGHT §6 + PRODUCT.md + docs/UI.md; Build Pack not readable; reconcile later.
 - /app/sources (nav after Questions): the latest complete/partial run's cited links through computeSources (#44).
