@@ -435,6 +435,7 @@ Lead decisions (Step 8 brief): suggested competitors = findLocalCompetitors for 
 
 Changed
 - src/lib/onboarding/suggest.ts suggestCompetitors({business, tracked, dismissed}, {store}): drops Maps items whose bare domain or normalized name (detectMentions' normalize) matches a tracked or dismissed competitor or the business; first of each domain/name kept; Maps order; ≤5. limited / missing_keys / error → no items. Never throws.
+- src/lib/metrics/series.ts seriesFromSummaries(summaries): {points: {runId, at, metric: Metric}[] oldest → newest, visible: ≥2}.
 - src/lib/metrics/series.ts seriesFromSummaries(summaries): takes listRunSummaries rows (RunSummary, #38) and passes their visibility Metric through. Returns {points: {runId, at, metric}[] oldest → newest, visible: ≥2}, keeping only complete/partial audit+weekly runs as a safety net. Callers use listRunSummaries(db, id, 8, ["complete", "partial"]), which filters before the limit.
 
 ## Step 9 (data-pipeline): per-engine sources and location view (branch feat/step9-sources, issue #42)
