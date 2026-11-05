@@ -695,7 +695,9 @@ Changed
   - checkout.session.completed → retrieves the subscription, then the same call with client_reference_id;
   - invoice.paid / payment_failed → record_stripe_event only;
   - unknown → 200 ignored.
-  - applied/duplicate/stale/not_found → 200 (logged); an RPC error → 500 "apply_failed" so Stripe retries.
+  - applied/duplicate/stale → 200 (logged). not_found → 500 "not_linked" (lead, after review): a subscription event can arrive before checkout.session.completed links the customer, 0018 leaves not_found unrecorded, and Stripe retries with its own backoff. An RPC error → 500 "apply_failed".
+  - checkout.session.completed retrieves the subscription (items come back by default) and applies the full state (status, quantity, period end) plus client_reference_id, so seats/status are right even with no later subscription event.
+  - Test changed, with reason: the not_found case moved from 200 to 500 not_linked (lead decision); an ordering test covers subscription-first then checkout.
   - Logs: event type, id and outcome only.
 - .env.example: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY marked UNUSED (hosted Checkout).
 - Wiring (after #72):

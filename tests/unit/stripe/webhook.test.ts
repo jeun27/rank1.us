@@ -105,11 +105,49 @@ describe("event mapping", () => {
 });
 
 describe("outcomes", () => {
-  it.each(["duplicate", "stale", "not_found"] as const)("%s → 200 (no retry storm), logged", async (outcome) => {
+  it.each(["duplicate", "stale"] as const)("%s → 200, logged", async (outcome) => {
     const d = deps({ applySubscription: vi.fn(async () => outcome) });
     const { r } = await send(event("customer.subscription.updated", sub()), d);
     expect(r).toEqual({ status: 200, body: { received: outcome } });
     expect(d.log).toHaveBeenCalledWith(`stripe webhook: customer.subscription.updated evt_example_1 ${outcome}`);
+  });
+
+  it("not_found (the customer isn't linked yet) → 500 not_linked so Stripe retries; logged", async () => {
+    const d = deps({ applySubscription: vi.fn(async () => "not_found" as const) });
+    const { r } = await send(event("customer.subscription.created", sub()), d);
+    expect(r).toEqual({ status: 500, body: { error: "not_linked" } });
+    expect(d.log).toHaveBeenCalledWith("stripe webhook: customer.subscription.created evt_example_1 not_found");
+  });
+
+  it("ordering: the subscription event arrives first (500, retried), checkout then links it with the full state", async () => {
+    const applied: string[] = [];
+    const d = deps({
+      applySubscription: vi.fn(async (p) => {
+        if (p.client_reference_id) return (applied.push("linked"), "applied");
+        return applied.includes("linked") ? "applied" : "not_found";
+      }),
+    });
+    const early = await send(event("customer.subscription.created", sub({ quantity: 2 }), { id: "evt_example_a" }), d);
+    expect(early.r.status).toBe(500);
+    const session = {
+      id: "cs_example_1",
+      object: "checkout.session",
+      mode: "subscription",
+      customer: "cus_example_1",
+      subscription: "sub_example_1",
+      client_reference_id: "ws-example-1",
+    };
+    const checkout = await send(event("checkout.session.completed", session, { id: "evt_example_b" }), d);
+    expect(checkout.r).toEqual({ status: 200, body: { received: "applied" } });
+    // Full state from the retrieved subscription, so seats and status are right without a later event.
+    expect(d.applySubscription.mock.calls[1][0]).toMatchObject({
+      client_reference_id: "ws-example-1",
+      status: "active",
+      quantity: 3,
+      current_period_end: "2026-01-01T00:00:00.000Z",
+    });
+    const retry = await send(event("customer.subscription.created", sub({ quantity: 2 }), { id: "evt_example_a" }), d);
+    expect(retry.r).toEqual({ status: 200, body: { received: "applied" } });
   });
 
   it("an RPC error → 500 apply_failed so Stripe retries; the body has no DB text", async () => {

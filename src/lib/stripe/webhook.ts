@@ -83,6 +83,9 @@ export async function handleStripeWebhook(
       outcome = "ignored";
     }
     log(`stripe webhook: ${event.type} ${event.id} ${outcome}`);
+    // A subscription event can arrive before checkout.session.completed links the customer. 0018 leaves
+    // not_found unrecorded, so a 500 lets Stripe retry with its own backoff until the link exists.
+    if (outcome === "not_found") return { status: 500, body: { error: "not_linked" } };
     return { status: 200, body: { received: outcome } };
   } catch (e) {
     const code = typeof e === "object" && e && "code" in e ? String(e.code) : "error";
