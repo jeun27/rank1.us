@@ -10,13 +10,13 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatNumber, formatPercent } from "@/components/ui/StatNumber";
 import { Table } from "@/components/ui/Table";
-import { ENGINES, ENGINE_LABEL, type Metrics, type RunResults, type Share } from "./contract";
+import type { Metric } from "@/types/metrics";
+import { ENGINES, ENGINE_LABEL, type Metrics, type RunResults } from "./contract";
 import { auditCopy as c } from "./copy";
 import { progressFor } from "./progress";
 
 const D = ({ children }: { children: ReactNode }) => <span data-computed>{children}</span>;
-const metric = (s: Share) => ({ value: s.n ? s.named / s.n : null, numerator: s.named, denominator: s.n });
-const namedText = (s: Share) => `named in ${s.named} of ${s.n} answers`;
+const namedText = (m: Metric) => `named in ${m.numerator} of ${m.denominator} answers`;
 const points = (change: number | null) => (change === null ? "–" : `${change > 0 ? "+" : ""}${change} pts`);
 
 // One page body for a paid run (/app/runs/[runId]) and the free audit (/audit/[token]).
@@ -120,8 +120,10 @@ function Results({
     <>
       <Card>
         <div data-computed className="flex flex-col gap-3">
-          <StatNumber metric={metric(metrics.visibility)} />
-          {metrics.freshness && <Freshness checkedAt={metrics.freshness} answers={metrics.visibility.n} now={now} />}
+          <StatNumber metric={metrics.visibility} />
+          {metrics.freshness && (
+            <Freshness checkedAt={metrics.freshness} answers={metrics.visibility.denominator} now={now} />
+          )}
         </div>
       </Card>
 
@@ -159,7 +161,7 @@ function Results({
                 {b.kind === "business" && <Badge tone="info">{c.you}</Badge>}
               </span>
             ),
-            v: b.tooFew ? c.tooFew : <D>{`${formatPercent(metric(b))} (${namedText(b)})`}</D>,
+            v: b.tooFew ? c.tooFew : <D>{`${formatPercent(b.metric)} (${namedText(b.metric)})`}</D>,
             c: <D>{points(b.change)}</D>,
           }))}
         />

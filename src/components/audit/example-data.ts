@@ -1,4 +1,5 @@
 // Example data: an invented Irvine ramen audit for the /dev/audit gallery and unit tests. Not real results.
+import { metric } from "@/lib/metrics";
 import { ENGINES, type Engine, type Metrics, type RunResults, type RunStatus } from "./contract";
 
 const brands: RunResults["brands"] = [
@@ -28,7 +29,15 @@ export function exampleRun(
       question_text_used: "best ramen in Irvine",
       mentioned: i % 3 === 0,
       first_position: i % 3 === 0 ? 2 : null,
-      brands: [{ name: "Example Noodle Bar", position: 1 }],
+      brands: [
+        { name: "Example Noodle Bar", kind: "competitor" as const, mentioned: true, position: 1 },
+        {
+          name: "Example Ramen House",
+          kind: "business" as const,
+          mentioned: i % 3 === 0,
+          position: i % 3 === 0 ? 2 : null,
+        },
+      ],
       location_used: "Irvine, CA, US",
       location_supported:
         engine === "chatgpt" || engine === "gemini" ? ("fallback_country" as const) : ("exact" as const),
@@ -55,21 +64,21 @@ export function exampleRun(
         answer_id: "chatgpt-0",
         url: "https://example-reviews.test/irvine/ramen",
         domain: "example-reviews.test",
-        title: "Example data: best ramen",
+        position: 1,
         category: "review_directory",
       },
       {
         answer_id: "gemini-0",
         url: "https://example-blog.test/ramen-guide",
         domain: "example-blog.test",
-        title: "Example data: ramen guide",
+        position: 1,
         category: "news_blog",
       },
     ],
   };
 }
 
-const share = (named: number, n: number) => ({ named, n, pct: n ? named / n : 0 });
+const share = metric;
 
 export const exampleMetrics: Metrics = {
   visibility: {
@@ -82,10 +91,11 @@ export const exampleMetrics: Metrics = {
     },
   },
   leaderboard: [
-    { name: "Example Noodle Bar", kind: "competitor", ...share(240, 240), change: null, tooFew: false },
-    { name: "Example Ramen House", kind: "business", ...share(80, 240), change: null, tooFew: false },
-    { name: "Example Izakaya", kind: "competitor", ...share(6, 8), change: null, tooFew: true },
+    { name: "Example Noodle Bar", kind: "competitor", metric: share(240, 240), change: null, tooFew: false },
+    { name: "Example Ramen House", kind: "business", metric: share(80, 240), change: null, tooFew: false },
+    { name: "Example Izakaya", kind: "competitor", metric: share(6, 8), change: null, tooFew: true },
   ],
+  shareOfVoice: share(80, 320),
   sources: [
     { domain: "example-reviews.test", category: "review_directory", count: 12 },
     { domain: "example-blog.test", category: "news_blog", count: 7 },
