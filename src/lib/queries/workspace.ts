@@ -50,7 +50,8 @@ export async function getWorkspaceRows(db: DbClient, businessId: string): Promis
       .from("runs")
       .select("id, started_at, finished_at")
       .eq("business_id", businessId)
-      .eq("kind", "weekly")
+      // Step 8's rule, as /app: audit and weekly runs (never free audits).
+      .in("kind", ["audit", "weekly"])
       .in("status", ["partial", "complete"])
       .order("started_at", { ascending: false }),
   ]);

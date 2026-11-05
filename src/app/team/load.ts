@@ -13,7 +13,7 @@ export type TeamData =
   { kind: "no-clients" } | { kind: "missing" } | { kind: "ok"; rows: WorkspaceRows; extras: TeamExtras };
 
 // One DFY client for /team, read with the team user's own session (RLS, never the service role).
-// The brief and the panes count the same weekly runs as #11's workspace.
+// The brief and the panes count the same runs: complete/partial audit and weekly runs, as /app (Step 8).
 export async function loadTeam(picked: string | undefined): Promise<TeamData> {
   const db = await createClient();
   const businesses = await listDfyBusinesses(db);
@@ -27,8 +27,7 @@ export async function loadTeam(picked: string | undefined): Promise<TeamData> {
     listFixes(db, business.id),
   ]);
   if (!rows) return { kind: "missing" };
-  const checks = summaries.filter((r) => r.kind === "weekly");
-  const latest = checks[0] ? await loadPaidRun(checks[0].id) : null;
+  const latest = summaries[0] ? await loadPaidRun(summaries[0].id) : null;
   return {
     kind: "ok",
     rows,
@@ -42,7 +41,7 @@ export async function loadTeam(picked: string | undefined): Promise<TeamData> {
         sources: questions.run ? computeSources({ questions: questions.questions }) : null,
         fixes,
         questions: questions.questions,
-        checks,
+        checks: summaries,
       },
       fixes: { ...fixes, noDomain: !business.domain },
       loadSuggestions: teamSuggestions,
