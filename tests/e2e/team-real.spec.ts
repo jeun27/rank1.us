@@ -77,3 +77,66 @@ test("team sees a DFY client on real data, writes its fix status, and never a se
   expect((await page.goto(`/team?b=${randomUUID()}`))?.status()).toBe(404);
   expect((await page.goto("/team?b=not-a-uuid"))?.status()).toBe(404);
 });
+
+// Review on #60: latest = the newest complete/partial run of kind audit or weekly, as /app does.
+test("a DFY client with only an audit run shows its numbers in the panes and the brief", async ({ page, context }) => {
+  const tag = randomUUID().slice(0, 8);
+  const name = `Example Audit-only Ramen ${tag}`;
+  const dfy = await seedBusiness("dfy", name);
+  const db = admin();
+  const q = must(
+    await db
+      .from("questions")
+      .insert({ business_id: dfy, short_text: "best ramen in Irvine", location_level: "city", city: "Irvine" })
+      .select("id")
+      .single(),
+  );
+  const run = must(
+    await db
+      .from("runs")
+      .insert({
+        business_id: dfy,
+        kind: "audit",
+        status: "complete",
+        jobs_total: 2,
+        jobs_ok: 2,
+        started_at: "2026-11-05T12:00:00Z",
+        finished_at: "2026-11-05T12:30:00Z",
+      })
+      .select("id")
+      .single(),
+  );
+  const brands = (mentioned: boolean) => [{ name, kind: "business", mentioned, position: mentioned ? 1 : null }];
+  must(
+    await db.from("answers").insert(
+      [true, false].map((m, i) => ({
+        run_id: run.id,
+        question_id: q.id,
+        engine: "perplexity",
+        run_index: i + 1,
+        status: "ok",
+        question_text_used: "best ramen in Irvine",
+        mentioned: m,
+        brands: brands(m),
+        checked_at: "2026-11-05T12:20:00Z",
+      })),
+    ),
+  );
+
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await openMagicLink(page, (await newUser("team-audit", "team")).email);
+  await page.goto(`/team?b=${dfy}`);
+  await show(page, "Context");
+  await expect(
+    page
+      .locator("main")
+      .getByText(/· 2 answers ·/)
+      .first(),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Copy context" }).click();
+  const brief = await page.evaluate(() => navigator.clipboard.readText());
+  // The overall and Perplexity lines carry the audit's numbers; engines with no answers say so.
+  expect(brief).toMatch(/^- Visibility: .*1 of 2 answers/m);
+  expect(brief).toMatch(/^- Perplexity: .*1 of 2 answers/m);
+  expect(brief).not.toContain("- Visibility: no answers yet");
+});
