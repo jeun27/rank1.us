@@ -11,11 +11,19 @@ const STATES = [
   "dashboard-loading",
   "dashboard-error",
   "competitors-success",
+  "competitors-partial",
   "competitors-empty",
+  "competitors-loading",
+  "competitors-error",
   "questions-success",
+  "questions-partial",
   "questions-empty",
+  "questions-loading",
+  "questions-error",
   "history-success",
+  "history-partial",
   "history-empty",
+  "history-loading",
   "history-error",
 ];
 
@@ -33,7 +41,7 @@ for (const state of STATES) {
 }
 
 test("questions drawer: keyboard opens it, Tab stays inside, Esc closes and focus returns", async ({ page }) => {
-  await page.goto("/dev/app?state=questions-success");
+  await page.goto("/dev/app?state=questions-partial");
   const row = page.getByRole("button", { name: /best ramen in Irvine/ });
   await row.focus();
   await page.keyboard.press("Enter");
