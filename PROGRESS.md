@@ -139,3 +139,15 @@ Doc differences
 - Validation is hand-rolled (src/lib/spam/validate.ts), shared by the browser and the routes. No new dependency.
 - Company is optional in the Contact form (contact_requests.company is nullable) and has no error: the input caps it at 100 characters and the server cuts anything longer. Name, Email, Tier and Message are required.
 - Form strings live in src/components/forms/copy.ts. tests/unit/forms/copy.test.ts fails on any [PLACEHOLDER] there, and on any string that is not in docs/COPY.md.
+
+## Step 2 (backend): industry + fix list visibility migration
+Changed
+- Migration 20261105000007 (+ .down.sql). contact_requests gets `industry` (NOT NULL; one of Restaurant, HVAC, Plumbing, Roofing, Pest control, Other; the 'Other' backfill default is dropped) and `industry_other` (max 60 chars, only allowed with Other). businesses gets `service` ('self_serve' default | 'dfy') and `fix_list_visible` (default false).
+- service and fix_list_visible are service-role only. businesses now has explicit column grants for INSERT and UPDATE, like the workspaces billing fields, so any new businesses column must be added to those grants to be member-writable.
+- fixes SELECT for members = member AND (service = 'self_serve' OR fix_list_visible). The old FOR ALL policy is split into select/insert/update/delete, because a FOR ALL policy also grants SELECT. fix_rules_public is unchanged.
+- insertContactRequest takes ContactRequestInsert: industry is one of INDUSTRIES, and industry_other is only allowed with "Other". INDUSTRIES and INDUSTRY_OTHER_MAX are exported from src/lib/queries/contactRequests.ts.
+- Tests: tests/db/step2-migration.test.ts. The rls.test.ts contact_requests fixture now sets industry.
+
+Blocked/open
+- A staff role arrives with the team UX step. Until then "the team always sees the fix list" means the Rank1 team reads through the service role / admin path.
+- POST /api/contact and the Contact form must send industry (+ industry_other). Until they do, the route fails typecheck and every contact insert hits the NOT NULL check (HANDOFF.md).

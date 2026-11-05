@@ -71,14 +71,14 @@ isOneToOne: false
                   ]
                 },"businesses": {
                   Row: {
-                    "aliases": (string)[],"archived_at": string | null,"brand_color": string | null,"city": string,"country": string,"cuisine": string | null,"domain": string | null,"ga4_property_id": string | null,"id": string,"logo_path": string | null,"name": string,"report_recipients": (string)[],"state": string,"vertical": string,"workspace_id": string
+                    "aliases": (string)[],"archived_at": string | null,"brand_color": string | null,"city": string,"country": string,"cuisine": string | null,"domain": string | null,"fix_list_visible": boolean,"ga4_property_id": string | null,"id": string,"logo_path": string | null,"name": string,"report_recipients": (string)[],"service": string,"state": string,"vertical": string,"workspace_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "aliases"?: (string)[],"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"cuisine"?: string | null,"domain"?: string | null,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"name": string,"report_recipients"?: (string)[],"state"?: string,"vertical"?: string,"workspace_id": string
+                    "aliases"?: (string)[],"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"name": string,"report_recipients"?: (string)[],"service"?: string,"state"?: string,"vertical"?: string,"workspace_id": string
                   }
                   Update: {
-                    "aliases"?: (string)[],"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"cuisine"?: string | null,"domain"?: string | null,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"name"?: string,"report_recipients"?: (string)[],"state"?: string,"vertical"?: string,"workspace_id"?: string
+                    "aliases"?: (string)[],"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"name"?: string,"report_recipients"?: (string)[],"service"?: string,"state"?: string,"vertical"?: string,"workspace_id"?: string
                   }
                   Relationships: [
                     {
@@ -131,14 +131,14 @@ isOneToOne: false
                   ]
                 },"contact_requests": {
                   Row: {
-                    "company": string | null,"created_at": string,"email": string,"emailed": boolean,"id": string,"ip_hash": string | null,"message": string | null,"name": string,"tier": string | null,"user_agent": string | null
+                    "company": string | null,"created_at": string,"email": string,"emailed": boolean,"id": string,"industry": string,"industry_other": string | null,"ip_hash": string | null,"message": string | null,"name": string,"tier": string | null,"user_agent": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "company"?: string | null,"created_at"?: string,"email": string,"emailed"?: boolean,"id"?: string,"ip_hash"?: string | null,"message"?: string | null,"name": string,"tier"?: string | null,"user_agent"?: string | null
+                    "company"?: string | null,"created_at"?: string,"email": string,"emailed"?: boolean,"id"?: string,"industry": string,"industry_other"?: string | null,"ip_hash"?: string | null,"message"?: string | null,"name": string,"tier"?: string | null,"user_agent"?: string | null
                   }
                   Update: {
-                    "company"?: string | null,"created_at"?: string,"email"?: string,"emailed"?: boolean,"id"?: string,"ip_hash"?: string | null,"message"?: string | null,"name"?: string,"tier"?: string | null,"user_agent"?: string | null
+                    "company"?: string | null,"created_at"?: string,"email"?: string,"emailed"?: boolean,"id"?: string,"industry"?: string,"industry_other"?: string | null,"ip_hash"?: string | null,"message"?: string | null,"name"?: string,"tier"?: string | null,"user_agent"?: string | null
                   }
                   Relationships: [
                     
