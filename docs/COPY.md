@@ -104,6 +104,22 @@ Strings for the /team team workspace shell (ENG_HANDOFF_STEP2 §3). Nav labels a
 | Phone tab bar | "Nav", "Context", "Document" |
 | Every pane | "Example data" |
 
+## Admin (lead, 2026-11-05)
+
+Strings for /admin/test, the founder-only engine test page (Step 4). Anyone else gets a 404, so there is no not-allowed copy.
+
+| Where | String |
+|---|---|
+| H1 | "Engine test" |
+| Field labels | "Engine", "Question", "Location level" |
+| Engine options | "ChatGPT", "Gemini", "Google AI Overview", "Perplexity" |
+| Location level options | "Country", "State", "City" |
+| Button | "Run test" |
+| Button while loading | "Running…" |
+| Missing keys | "Missing API keys: {names}. Add them in Vercel to run live tests." |
+| Result labels | "Status", "Answer", "Cited links", "Location", "Cost (USD)" |
+| Location values | "Exact", "Country fallback" |
+
 # 4b. App screens: every state
 
 Copy in quotes is exact. Every number shows n + checked X ago. Results labeled API-measured, directional.

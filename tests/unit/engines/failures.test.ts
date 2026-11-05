@@ -6,9 +6,9 @@ import { KEYS, NOW, fakeFetch, fixture, hangingFetch, irvine } from "./helpers";
 const ok = (engine: (typeof ENGINE_IDS)[number]) =>
   fixture(
     {
-      chatgpt: "chatgpt/docs-live-advanced.json",
+      chatgpt: "chatgpt/synthetic-live-advanced.json",
       gemini: "gemini/docs-live-advanced.json",
-      google_aio: "google_aio/docs-organic-live-advanced.json",
+      google_aio: "google_aio/synthetic-organic-live-advanced.json",
       perplexity: "perplexity/docs-quickstart-web-search.json",
     }[engine],
   );

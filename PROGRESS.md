@@ -206,3 +206,9 @@ UNVERIFIED (handled defensively: missing fields give null text, no citations or 
 - Perplexity: model name (above); error response body shape (any non-null `error` or a `status` other than "completed" = failed; a missing status is accepted, as in the docs' response-shape example); timeout (ours: 60 s); usage.cost.total_cost as the full charge.
 - DataForSEO: tasks[0].cost as the full per-call charge; ChatGPT/Gemini city effect (treated as country); force_web_search on Gemini (not sent); live-call duration for AIO with load_async_ai_overview.
 - Country support: only US has a location code (2840) and name; other countries return failed.
+
+Review follow-ups (lead, 2026-11-05)
+- The repo is public, so the ChatGPT and AIO docs examples (real NYC cafés with phones and addresses; real local businesses, hotels, reviews, jobs) are replaced by synthetic files with the docs' exact JSON structure and field names: Example brands, example.test URLs, null phone/address fields. The Gemini and Perplexity docs examples are generic (no local businesses, phones or emails) and stay verbatim. tests/unit/engines/fixtures-privacy.test.ts guards this.
+- Perplexity reports 'exact' only when the requested level was sent in user_location (a city goes only with its region). Otherwise 'fallback_country'.
+- Citations are not deduped in the adapters: they keep every returned link in order. Dedupe happens at scoring (Step 6/7).
+- docs/COPY.md "Admin (lead, 2026-11-05)" holds the /admin/test strings. The page is built after #14 merges.

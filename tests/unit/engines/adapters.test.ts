@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { runEngine } from "@/lib/engines";
-import type { EngineId } from "@/lib/engines/types";
+import type { EngineId, EngineRequest } from "@/lib/engines/types";
 import { KEYS, NOW, fakeFetch, fixture, irvine, sentBody } from "./helpers";
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -10,7 +10,7 @@ const run = (engine: EngineId, body: unknown, level: "country" | "state" | "city
 };
 
 describe("ChatGPT (DataForSEO LLM Scraper)", () => {
-  const doc = fixture("chatgpt/docs-live-advanced.json") as Json;
+  const doc = fixture("chatgpt/synthetic-live-advanced.json") as Json;
   const result = doc.tasks[0].result[0];
 
   it("parses the docs example into an EngineAnswer", async () => {
@@ -69,7 +69,7 @@ describe("Gemini (DataForSEO LLM Scraper)", () => {
 });
 
 describe("Google AI Overview (DataForSEO organic SERP)", () => {
-  const doc = fixture("google_aio/docs-organic-live-advanced.json") as Json;
+  const doc = fixture("google_aio/synthetic-organic-live-advanced.json") as Json;
   const aio = doc.tasks[0].result[0].items.find((i: Json) => i.type === "ai_overview");
 
   it("parses the ai_overview item; citations = its references, in order", async () => {
@@ -155,6 +155,26 @@ describe("Perplexity (Agent API)", () => {
     });
     const country = run("perplexity", doc, "country");
     expect(sentBody((await country.answer, country.f)).tools[0].user_location).toEqual({ country: "US" });
+  });
+
+  it("reports exact only when the requested level was sent in user_location", async () => {
+    const send = async (location: EngineRequest["location"]) => {
+      const f = fakeFetch(doc);
+      const a = await runEngine("perplexity", { question: "q", location }, { fetch: f, env: KEYS, now: NOW });
+      return { a, sent: sentBody(f).tools[0].user_location };
+    };
+    const noState = await send({ level: "city", country: "US", city: "Irvine" });
+    expect(noState.sent).toEqual({ country: "US" });
+    expect(noState.a).toMatchObject({ locationSupported: "fallback_country", locationUsed: "United States" });
+    const stateOnly = await send({ level: "state", country: "US" });
+    expect(stateOnly.sent).toEqual({ country: "US" });
+    expect(stateOnly.a.locationSupported).toBe("fallback_country");
+    const noCity = await send({ level: "city", country: "US", state: "CA" });
+    expect(noCity.sent).toEqual({ country: "US", region: "California" });
+    expect(noCity.a.locationSupported).toBe("fallback_country");
+    for (const level of ["country", "state", "city"] as const) {
+      expect((await send(irvine(level).location)).a.locationSupported, level).toBe("exact");
+    }
   });
 
   it("PERPLEXITY_MODEL overrides the model", async () => {
