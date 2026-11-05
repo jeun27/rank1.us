@@ -1,5 +1,61 @@
 # QA
 
+## Step 2: Public site, contact, legal, audit request
+
+Checked 2026-11-05 on commit 6b4c633 (branch step-2 = step2-landing dbda4b3 + step2-forms 4137697, on main 712c38f). Build, test and test:db ran in the agent sandbox (lean local Supabase, stopped afterwards). Preview e2e and probes ran on the Mac from a temporary detached worktree of 6b4c633.
+Preview: https://rank1-gcdz3j051-bryan-flowhighlevels-projects.vercel.app (redeploy of rank1-e7nsor67i, the step-2 6b4c633 build, so it has IP_HASH_SALT, AUDIT_DAILY_LIMIT=20 and the Turnstile test keys; no Supabase or Resend env).
+
+Result: FAIL. 1 blocking problem, listed at the end.
+
+### Commands
+
+| Command | Result |
+|---|---|
+| `pnpm test` | PASS. 18 files, 155 tests passed |
+| `pnpm test:db` | PASS. 6 files, 166 tests passed (incl. tests/db/forms.test.ts) |
+| `pnpm typecheck` | PASS. exit 0 |
+| `pnpm lint` | PASS. exit 0 |
+| `pnpm e2e` (sandbox, `.next` deleted, fresh build) | PASS. 77 passed, 1 skipped (client-secrets runs on desktop only, by design) |
+| `E2E_BASE_URL=<preview> pnpm e2e` | PASS. 76 passed, 2 skipped (client-secrets skips on a deployed URL, by design) |
+
+### TASKS.md step 2
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| 1 | `/` from UI.md 4a: 9 sections in order, header, footer, meta; social proof behind SHOW_SOCIAL_PROOF=false | PASS | landing.spec.ts:18 (one H1, sections in order, social proof hidden) passed local and preview; page.tsx:22 renders SocialProof only when `SHOW_SOCIAL_PROOF === "true"`; .env.example:27 `SHOW_SOCIAL_PROOF=false` |
+| 2 | Only the existing Jelly asset | PASS | the only Jelly reference in src is `/jelly.png` (src/components/ui/Jelly.tsx:8); public/ has jelly.png and no other Jelly file |
+| 3 | /privacy and /terms placeholders, [LEGAL REVIEW NEEDED]; Privacy names Google sign-in, GA4 read-only, deletion on request | PASS | legal.spec.ts:25 passed; privacy page has "Google sign-in", "read-only access (the analytics.readonly scope)" and "Deleting your data" via Contact us; no DO NOT USE item on either page (grep: 0 matches) |
+| 4 | /contact page + modal; tiers Agency bundle, Done-for-you (custom), Other, no $ | PASS | validate.ts:4 TIERS; contact.spec.ts passed (page, modal focus trap, Esc, no-JS fallback) |
+| 5 | POST /api/contact: honeypot, Turnstile, 3 per IP hash per hour, contact_requests row, Resend email from env, no hard-coded address | PASS | route order validate, honeypot, Turnstile, rate limit, store, email (contact/route.ts); CONTACT_LIMIT 3 per rolling hour (rateLimit.ts); tests/db/forms.test.ts and tests/unit/api/routes.test.ts passed; from/to only from CONTACT_FROM_EMAIL / CONTACT_TO_EMAIL (resend.ts) |
+| 6 | Free-audit CTA posts to /api/audit/request (stub) | PASS | landing.spec.ts:206 and audit-form.spec.ts passed; route stores a lead and returns 202 |
+| 7 | Final set is the source of truth; weekly checks + monthly report wording everywhere | PASS | cadence grep: HowItWorks "every week" + "monthly report", Features "every weekly check kept in History" + "monthly", Pricing "every week" + "monthly report"; no "daily" in customer copy |
+| 8 | All green locally; preview builds and e2e passes | PASS | commands above |
+
+### Standing checks
+
+| Check | Result | Evidence |
+|---|---|---|
+| Unmocked API on the preview fails cleanly | PASS | /api/audit/request (valid body + Turnstile test token): 500 `{"error":"server"}`. /api/contact (same): 500 with an empty body. No token: 403 `{"error":"turnstile"}` on both. Empty body: 400 field list. No stack trace, file path or secret in any response. Real browser on preview /contact (Turnstile test widget, no mocks): POST 500, form shows the Banner "That didn't send. Try again in a minute." |
+| Visible strings on /, /contact and the modal are in COPY.md | FAIL | Script read every visible text node, placeholder, aria-label and option (fixture `data-computed` values skipped) and compared them to COPY.md. /contact: 0 missing. Modal: 0 missing. /: 1 missing, the tablist accessible name "Example screens" (src/components/site/ScreenshotTabs.tsx:21). landing.spec.ts:39 only reads visible text, so it misses aria-labels |
+| Legal pages: no DO NOT USE items | PASS | grep of privacy, terms and LegalPlaceholder: 0 matches |
+| Only price is $99; tiers have no $ | PASS | every `$<digits>` in src is `$99` (7 hits); no discount, coupon, founding or trial wording |
+| SHOW_SOCIAL_PROOF off by default | PASS | see item 1 |
+| Jelly only public/jelly.png | PASS | see item 2 |
+| One jellyDeep primary per viewport | PASS | landing.spec.ts:120 passed local and preview |
+| 375px no horizontal scroll except the comparison table | PASS | landing.spec.ts:157 passed; preview scrollWidth 375 at 375px, 1280 at 1280px |
+| Sticky bar never covers the footer | PASS | landing.spec.ts:100 and :138 passed local and preview |
+| Axe on every page | PASS | axe on /, /contact, /privacy, /terms and the open modal: 0 violations; e2e axe checks passed |
+| No secrets in .next/static | PASS | 24 files: no `sk_`, `whsec_`, `service_role`, `sb_secret_`, JWT, `pplx-`, `re_`, `GOCSPX-`, Turnstile test secret or e2e canary salt; no server-only env name; client-secrets.spec.ts passed |
+| No hard-coded email address in src | PASS | grep for `@` in src: the only address is "you@ramenhouse.com" inside the approved COPY.md error string "Add a valid email, like you@ramenhouse.com" (forms/copy.ts:22). Nothing sends to it |
+
+Screenshots (preview, full page): docs/qa/landing-after-375.png, docs/qa/landing-after-1280.png
+
+Not blocking: /api/contact creates the service client outside its try block (src/app/api/contact/route.ts:24), so a missing Supabase env becomes an uncaught 500 with an empty body. /api/audit/request returns `{"error":"server"}` in the same case. Nothing leaks and the form shows its error, but the two routes differ.
+
+### Blocking problems
+
+1. src/components/site/ScreenshotTabs.tsx:21: `aria-label="Example screens"` is a customer-facing (screen-reader) string that is not in docs/COPY.md. Add it to COPY.md, or label the tablist with an existing string such as the H2 "What you see on Monday." via aria-labelledby.
+
 ## Components v2: Final set
 
 Checked 2026-11-05 on commit 9ef40cb (branch components-v2, off main 2938e46). Local runs in the agent sandbox. Preview e2e ran on the Mac from a temporary detached worktree of 9ef40cb (removed afterwards).
