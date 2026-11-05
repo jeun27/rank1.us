@@ -355,6 +355,20 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"lookup_cache": {
+                  Row: {
+                    "created_at": string,"key": string,"kind": string,"result": Json,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"key": string,"kind": string,"result": Json,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"key"?: string,"kind"?: string,"result"?: Json,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"questions": {
                   Row: {
                     "active": boolean,"active_form": string,"business_id": string,"city": string | null,"country": string | null,"dfs_location_code": number | null,"id": string,"location_level": string,"long_text": string | null,"short_text": string,"state": string | null,"template_key": string | null

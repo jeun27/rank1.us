@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getCachedLookup, putCachedLookup } from "@/lib/queries/lookup-cache";
 import { takeRateToken, type RateKind } from "@/lib/queries/rate-limits";
 import { anonClient, must, newUser, serviceClient } from "./helpers";
 
@@ -112,5 +113,50 @@ describe("take_rate_token", () => {
     expect(must(await user.db.from("rate_events").select("kind"))).toEqual([]);
     const { error } = await user.db.from("rate_events").insert({ user_id: user.id, kind: "read_site" });
     expect(error?.code).toBe("42501");
+  });
+});
+
+describe("lookup_cache", () => {
+  const DAY = 24 * 3600;
+  const result = { name: "Example Ramen House", cuisine: "ramen", status: "ok" };
+
+  it("returns a stored result within its max age, for that user, kind and key only", async () => {
+    const user = await newUser("cache");
+    const other = await newUser("cache-other");
+    const s = serviceClient();
+    await putCachedLookup(s, { user_id: user.id, kind: "read_site", key: "example-ramen.test", result });
+
+    expect(await getCachedLookup(s, user.id, "read_site", "example-ramen.test", DAY)).toEqual(result);
+    expect(await getCachedLookup(s, user.id, "read_site", "other.test", DAY)).toBeNull();
+    expect(await getCachedLookup(s, user.id, "maps_lookup", "example-ramen.test", DAY)).toBeNull();
+    expect(await getCachedLookup(s, other.id, "read_site", "example-ramen.test", DAY)).toBeNull();
+  });
+
+  it("ignores results older than the max age, and an upsert refreshes the age", async () => {
+    const user = await newUser("cache-age");
+    const s = serviceClient();
+    const old = new Date(Date.now() - 25 * 3600 * 1000).toISOString();
+    must(
+      await s.from("lookup_cache").insert({ user_id: user.id, kind: "maps_lookup", key: "k", result, created_at: old }),
+    );
+    expect(await getCachedLookup(s, user.id, "maps_lookup", "k", DAY)).toBeNull();
+
+    const fresh = { ...result, name: "Example Fresh" };
+    await putCachedLookup(s, { user_id: user.id, kind: "maps_lookup", key: "k", result: fresh });
+    expect(await getCachedLookup(s, user.id, "maps_lookup", "k", DAY)).toEqual(fresh);
+    expect(must(await s.from("lookup_cache").select("key").eq("user_id", user.id))).toHaveLength(1);
+  });
+
+  it("signed-in users and anon cannot read or write it", async () => {
+    const user = await newUser("cache-direct");
+    await putCachedLookup(serviceClient(), { user_id: user.id, kind: "read_site", key: "k", result });
+    for (const db of [user.db, anonClient()]) {
+      const read = await loose(db).from("lookup_cache").select("*");
+      expect(read.error?.code ?? "").toBe("42501");
+      const write = await loose(db)
+        .from("lookup_cache")
+        .insert({ user_id: user.id, kind: "read_site", key: "x", result });
+      expect(write.error?.code).toBe("42501");
+    }
   });
 });
