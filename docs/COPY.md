@@ -151,6 +151,17 @@ Labels for the 3 onboarding screens (4b Onboarding 1-3). State messages are the 
 | Location level options | "Country", "State", "City" |
 | Save failure | "We couldn't save your business. Try again." |
 
+## Audit (lead, 2026-11-05)
+
+Strings for the run results page (/app/runs/[runId]) and the free audit (/audit/[token]). State messages are the 4b Audit progress / Audit results strings.
+
+| Where | String |
+|---|---|
+| H1 | "Audit results" (paid run), "Your free audit" (free audit) |
+| Export buttons | "Download CSV", "Download PNG" |
+| Whole run failed | "We couldn't finish this audit. Try again later." |
+| Per-engine progress | "{done} of {total} answers" |
+
 # 4b. App screens: every state
 
 Copy in quotes is exact. Every number shows n + checked X ago. Results labeled API-measured, directional.
