@@ -435,3 +435,17 @@ Lead decisions (Step 8 brief): suggested competitors = findLocalCompetitors for 
 Changed
 - src/lib/onboarding/suggest.ts suggestCompetitors({business, tracked, dismissed}, {store}): drops Maps items whose bare domain or normalized name (detectMentions' normalize) matches a tracked or dismissed competitor or the business; first of each domain/name kept; Maps order; ≤5. limited / missing_keys / error → no items. Never throws.
 - src/lib/metrics/series.ts seriesFromSummaries(summaries): takes listRunSummaries rows (RunSummary, #38) and passes their visibility Metric through. Returns {points: {runId, at, metric}[] oldest → newest, visible: ≥2}, keeping only complete/partial audit+weekly runs as a safety net. Callers use listRunSummaries(db, id, 8, ["complete", "partial"]), which filters before the limit.
+
+## Step 9 (data-pipeline): per-engine sources and location view (branch feat/step9-sources, issue #42)
+Step 9 built from ENG_HANDOFF_OVERNIGHT §6 + PRODUCT.md + docs/UI.md; Build Pack not readable; reconcile later.
+Lead decisions (Step 9 brief): /app/sources reads the latest complete/partial audit/weekly run. One card per engine with cited links by category (counts, never %), categories from citations.category only. Top domains ≤20. A location selector ("All locations" + each question target) filters the chart and the table. An engine's badge is "Country fallback" if any answer fell back. No SoV and no percentages on the page.
+
+Changed
+- src/lib/metrics/sources.ts computeSources({questions, location?}) over getQuestionsWithLatestAnswers' questions:
+  - links = citations of ok answers as stored (deduped per answer); deleted questions are already excluded by the query; a null/unknown category → other;
+  - engines in ENGINE_IDS order with all 6 categories in a fixed order (0s kept);
+  - locationSupport from that engine's non-failed answers: any fallback_country → fallback, all exact → exact, none → null;
+  - topDomains by bare domain (most-cited category, ties by the fixed order; engines in order), sorted by links desc then domain, ≤20;
+  - locations from questions with answers: key `level:country|state|city` (fields above the level dropped).
+- Labels match the Questions page badge (#40): "City", "State", "Country". Only when two targets share a level is the place added ("City · Irvine, CA"). An unknown location key → an empty result, never everything.
+- HANDOFF to backend: add citations.category to getQuestionsWithLatestAnswers (lead: in their "fix(db): sources fields and shell lint" PR).
