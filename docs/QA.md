@@ -1,5 +1,59 @@
 # QA
 
+## Step 5: Local competitors + restaurant onboarding
+
+Checked 2026-11-05: the merged backend and data-pipeline work on main, plus the onboarding UI in PR #21 (feat/step5-onboarding) at b8453fd, its head:
+- #20 (227a30f): onboarding RPCs, seat rule, DFY create, fixes RLS
+- #23 (a7e6d31): Maps adapter, readSite, suggestQuestions, CUISINES
+- #24 (57c0000): take_rate_token, lookup_cache
+
+The sandbox Docker disk is full, so per the lead there was no local Supabase. test:db and e2e come from CI on #21 (run 42028278532 at b8453fd). Unit, typecheck, lint, format and build ran locally in the sandbox. The preview checks ran on the Mac from a temporary detached worktree of b8453fd (removed afterwards). No live Maps, site or engine calls (no keys).
+Preview: https://rank1-9uifpq0e4-bryan-flowhighlevels-projects.vercel.app (sha b8453fd, READY).
+Sources: Jeun's ENG_HANDOFF_OVERNIGHT §6 Step 5, the lead's brief (rank1-step5.md), docs/UI.md 4b Onboarding 1/2/3.
+
+Result: FAIL. 1 blocking problem: e2e against the preview is red. It isn't caused by #21's code. Listed at the end.
+
+### Commands
+
+| Command | Result |
+|---|---|
+| `pnpm test` (sandbox) | PASS. 47 files, 665 tests passed |
+| `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build` (sandbox) | PASS |
+| CI on #21 at b8453fd | PASS. 9 of 9; test-db 11 files / 261 tests, e2e 176 passed |
+| `E2E_BASE_URL=<preview> pnpm e2e` | FAIL. 114 passed, 60 skipped, 4 failed. All 4 are tests/e2e/admin-test.spec.ts:48 and :56 (×2 viewports), with "Local Supabase is not running". The onboarding specs pass or skip cleanly, and dev-onboarding.spec.ts passes on both viewports |
+
+### Acceptance
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| 1 | Restaurant template; ≤25 questions; short + long; location level per question, greyed where an engine can't, with tooltip copy | PASS | onboarding.test.tsx "lists the template questions (25 max), tracked, city level, both forms editable", "city and state levels grey ChatGPT and Gemini with the tooltip copy; country doesn't"; cuisines-questions.test.ts (never > 25); preview gallery step 3 shows the filled templates and "{Engine} can't target a city yet, so we check it for the whole country." |
+| 2 | Maps local competitors: top 5 pre-ticked, manual add, <3 partial, 0 empty, error/missing_keys fallback | PASS | maps.test.ts (docs field names, top 5 in Maps order, own domain excluded, missing_keys without a request); onboarding.test.tsx step 2 cases for 5 ticked, < 3 + manual prompt, none → empty message, error and missing_keys → message + manual form |
+| 3 | readSite: robots, 1 MB stream cap, SSRF guard; unreadable → "Type 3 things you sell"; cuisine not found → highlighted select | PASS | read-site.test.ts: robots Disallow / and /menu, Rank1 group rules, 1 MB stream cut and Content-Length refusal, private-address refusal (v4, v6, mapped, NAT64), same-site redirects only, timeout → unreadable. Code: siteHost rejects IP literals and internal names, DNS check before every hop, manual redirects. onboarding.test.tsx: unreadable → 3 inputs; no cuisine → highlighted select, Next off |
+| 4 | Finish setup saves business + competitors + questions atomically → /app | PASS | onboarding.test.ts (db): creates all three; "is atomic: a bad question rolls back the business and competitors"; > 25 active rejected, nothing stored. finishAction redirects to /app (actions.test.ts). CI e2e "a new owner sets up a business in 3 steps and lands on /app" |
+| 5 | Unpaid workspace: exactly 1 business; 2nd blocked; DFY exempt | PASS | db: "0 seats: the first active business is allowed, the second is blocked (service role too)", "an unpaid workspace cannot onboard a second business", "dfy businesses are exempt", "2 paid seats: two, not three" |
+| 6 | create_dfy_client: service='dfy', fix_list_visible=false, team-only | PASS | db: "a team user creates a client workspace and a hidden-fix-list dfy business"; "self-serve and dfy_client users are denied; anon too"; smuggled service / fix_list_visible ignored |
+| 7 | Fix list: team sees and edits; dfy_client only when visible, never writes; self-serve unchanged | PASS | db "fixes visibility and writes by role (closes #9)": the 3 cases |
+| 8 | Rate limits: read_site 10/h, maps 5/h + 20/day; 24 h cache, no token on a hit; over limit → fallbacks; only onboarding users trigger lookups | PASS | take_rate_token fixes the limits in SQL with a per-user advisory lock. db rate-limits.test.ts covers 10/h, 5/h, 20/24 h, parallel calls, no caller limits and no direct table access. lookup_cache is per user, kind and key, service-role only. actions.test.ts covers signed out, team, dfy_client and dashboard users getting fallbacks with no fetch or Maps call, the over-limit fallback, and a cache hit with no token and no paid call. limits.test.ts: failed or keyless results count but aren't cached |
+| 9 | All 4b states: mobile < 768, 44px targets, axe clean, copy in COPY.md, Example data only, no LLM | PASS | preview /dev/onboarding at 375 and 1280: axe 0 violations, scrollWidth equals viewport, all 102 checkbox labels 44 or 56 px tall. CI e2e "tap targets are at least 44px on every step" and keyboard-only. Every visible string, aria-label and title is in COPY.md or is a COPY.md/UI.md template filled with Example data (question forms, the tooltip, "Finding ramen places in Irvine…"), a cuisine option or a gallery label. onboarding/copy.test.ts passed. Gallery brands are "Example …" with example.test domains, and places are the UI.md Irvine list. No LLM: no-llm-sdk.test.ts passed, and no LLM name in the page |
+
+### Extra checks
+
+| Check | Result | Evidence |
+|---|---|---|
+| Signed-out /app/onboarding | PASS | preview: 307 to /signin?next=%2Fapp%2Fonboarding |
+| Real magic-link onboarding on the preview | NOT RUN | needs a mailbox or the hosted service-role key. The full flow is CI e2e "a new owner sets up a business in 3 steps and lands on /app" on the local stack |
+| No secrets in .next/static | PASS | 31 files: no server-only env name or secret pattern; no api.dataforseo.com, maps/live, take_rate_token or lookup_cache in the client bundle |
+| "Visuals for <sha>" matches the head | PASS | newest #21 comment is "Visuals for b8453fd", and the head is b8453fd |
+
+Not blocking:
+- readSite checks DNS, then fetch resolves again (a small DNS-rebinding window). Low risk: only a name and a cuisine come back to the user.
+- A same-site redirect may change the port (e.g. :8080) on the same public host.
+- At state level the greyed tooltip still says "can't target a city yet" (the only UI.md copy).
+
+### Blocking problems
+
+1. e2e against the preview is red: tests/e2e/admin-test.spec.ts:48 ("another signed-in user gets a 404") and :56 ("the founder sees the form…") use the local service-role helpers without the `test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase")` every other local-stack test has. This came in with #19 (on main), not #21. My Step 4 report missed it because e2e came from CI only. Add the skip, in #21 or a small PR.
+
 ## Step 4: Engine adapters with fixtures + /admin/test (re-run)
 
 Checked 2026-11-05: the adapters on main at d4962b9 (#16), and /admin/test in PR #19 (feat/admin-engine-test), first at d201823 and re-checked at 3241698, its head. 3241698 = c21ac6f (proxy gates match the normalized path) + a merge of main (#20). The sandbox Docker disk is full, so per the lead there was no local Supabase. test:db and e2e come from CI on #19 (9 of 9 green at d201823 and again at 3241698). Unit, typecheck, lint, format, smoke and build ran locally in the sandbox. The 404 checks ran from the Mac on the Vercel previews of d201823 and 3241698.
