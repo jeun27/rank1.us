@@ -252,7 +252,8 @@ describe("fixes visibility and writes by role (closes #9)", () => {
   let dfyBusinessId: string;
   let fixId: string;
 
-  const fix = (business_id: string, title: string) => ({ business_id, rule_key: "R1", size: "S", title });
+  // One open fix per rule per business (Step 10), so the team's extra fix uses another rule.
+  const fix = (business_id: string, title: string, rule_key = "R1") => ({ business_id, rule_key, size: "S", title });
 
   beforeAll(async () => {
     team = await withRole("fix-team", "team");
@@ -260,14 +261,14 @@ describe("fixes visibility and writes by role (closes #9)", () => {
     const s = serviceClient();
     must(
       await s.from("fix_rules").upsert(
-        {
-          key: "R1",
+        ["R1", "R2"].map((key) => ({
+          key,
           grp: "restaurant",
           title: "Test rule",
           size: "S",
           cadence: "weekly",
           customer_copy: "Test copy",
-        },
+        })),
         { onConflict: "key", ignoreDuplicates: true },
       ),
     );
@@ -296,7 +297,7 @@ describe("fixes visibility and writes by role (closes #9)", () => {
     expect(must(await team.db.from("fixes").select("id").eq("business_id", dfyBusinessId))).toEqual([{ id: fixId }]);
     const updated = must(await team.db.from("fixes").update({ status: "doing" }).eq("id", fixId).select("status"));
     expect(updated).toEqual([{ status: "doing" }]);
-    must(await team.db.from("fixes").insert(fix(dfyBusinessId, "Team-added fix")));
+    must(await team.db.from("fixes").insert(fix(dfyBusinessId, "Team-added fix", "R2")));
   });
 
   it("a dfy_client member cannot read while hidden, and can never write", async () => {

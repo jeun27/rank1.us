@@ -485,6 +485,30 @@ Changed
   - locations from questions with answers: key `level:country|state|city` (fields above the level dropped).
 - Labels match the Questions page badge (#40): "City", "State", "Country". Only when two targets share a level is the place added ("City · Irvine, CA"). An unknown location key → an empty result, never everything.
 - citations.category on getQuestionsWithLatestAnswers came from backend #43 (a57fbdf), merged into this branch.
+
+## Step 10 (backend): fix results and status (branch feat/step10-fix-results, issue #48)
+- Step 10 built from ENG_HANDOFF_OVERNIGHT §4/§6 + SCHEMA.md §5b; Build Pack not readable; A1–A6 seeded disabled; reconcile later.
+- Lead decisions:
+  - Detectors exist only for the enabled rules R10, R11, R14, H1 (own fetch, no paid calls).
+  - A1–A6 are disabled placeholders ('PENDING: Build Pack Step 10', never rendered).
+  - Detection runs once per paid run that closes complete/partial, never for free audits. The data-pipeline always records all 4 enabled rules (unchecked on any internal error), so a run is never retried forever.
+  - fix → upsert the open fix. ok → auto-resolve. unchecked → leave the fix ("We couldn't check this yet.").
+  - Ranking by size S → L, then rule key. H1 appears only under Tidy-ups, never in the Dashboard top 3. affected_answers is null for site rules.
+  - Status is writable by self-serve members + team. A dfy_client never writes.
+  - listFixes returns open fixes only. Marking a fix done hides it, and if the next run still detects it, a fresh todo comes back.
+- Migration 20261105000014 (+ .down.sql), additive and re-runnable:
+  - A1–A6 rows (grp answers, enabled false, ai_lever true, unverified = ['PENDING: Build Pack Step 10']).
+  - fixes.affected_answers is nullable with no default.
+  - Unique open fix per (business, rule).
+  - fix_checks(run, business, rule, result): RLS read = can_see_fix_list. It's the once-per-run marker, so there's no runs.fixes_checked_at.
+  - record_fix_results: service only, one transaction, a no-op for an already-recorded run, 22023 for a bad run or rule.
+  - runs_needing_fix_checks: service only. set_fix_status: invoker, can_write_fixes, 42501/22023.
+- Queries: listFixes / setFixStatus / recordFixResults / listRunsNeedingFixChecks (src/lib/queries/fixes.ts). getTopFixes now uses the same ranking and skips tidy-ups, and TopFix.affected_answers is number | null.
+- Test changes from lead decisions:
+  - tests/db/seed.test.ts expects 22 fix_rules with A1–A6 disabled (was "no A rules", 16).
+  - The shell getTopFixes test uses one fix per rule and size ranking (was affected_answers order).
+  - onboarding.test's team-added fix uses R2 (one open fix per rule).
+- src/types/db.ts got the 0014 objects added by hand in the generator format. Regenerate it with `pnpm db:types` when a stack is available.
 ## Step 9 (frontend): sources page with location view (branch feat/step9-sources-page, issue #42)
 Step 9 built from ENG_HANDOFF_OVERNIGHT §6 + PRODUCT.md + docs/UI.md; Build Pack not readable; reconcile later.
 - /app/sources (nav after Questions): the latest complete/partial run's cited links through computeSources (#44).
