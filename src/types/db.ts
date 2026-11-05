@@ -355,7 +355,7 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
-                },"lookup_cache": {
+                },"onboarding_lookups": {
                   Row: {
                     "created_at": string,"key": string,"kind": string,"result": Json,"user_id": string
                   }
