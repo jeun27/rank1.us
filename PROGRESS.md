@@ -275,3 +275,14 @@ Review follow-ups (lead, 2026-11-05)
 - `lookup_cache` (user_id, kind, key, result jsonb, created_at; PK user_id+kind+key) is service-role only (RLS on, no policies, revoked from anon/authenticated). It's the 24 h result cache, so repeating a lookup (Back/Next) takes no token. Queries on the service client: getCachedLookup(db, userId, kind, key, maxAgeSeconds), and putCachedLookup(db, row) as an upsert that restarts the age (src/lib/queries/lookup-cache.ts).
 - Query: takeRateToken(db, kind) in src/lib/queries/rate-limits.ts. Tests: tests/db/rate-limits.test.ts.
 - src/types/db.ts got rate_events and take_rate_token added by hand in the generator format (no local stack, disk full). Regenerate it with `pnpm db:types` in the next DB PR.
+
+## Step 4 (data-pipeline): /admin/test founder engine test page (branch feat/admin-engine-test, refs #15)
+Changed
+- /admin/test: form (engine, question, location level; Irvine, CA) that calls runEngine server-side through a server action and shows status, answer, cited links, location and cost. Raw vendor JSON stays on the server. Copy from docs/COPY.md "Admin (lead, 2026-11-05)". Run test is disabled while engine keys are missing.
+- Gate: proxy (src/lib/supabase/middleware.ts) rewrites /admin/** to a 404 for anyone whose verified email isn't FOUNDER_EMAIL, unset included, so the status is a real 404. The page and its server action also call requireFounder() (getUser() via the Step 3 server client) and notFound().
+- Engines: DATAFORSEO_API_URL / PERPLEXITY_API_URL optional base-URL overrides (e2e points them at tests/e2e/helpers/fake-engines.mjs, which serves the fixtures). stateName() returns undefined for unknown state codes (reviewer note on #16), so Perplexity falls back and AIO fails instead of sending a guess.
+
+Doc differences
+- Next 16 streams pages with a 200 first, so notFound() inside the page can't set a 404 status (node_modules/next/dist/docs, loading.md "Status codes"). The real 404 comes from Proxy, as those docs recommend. The page sets `instant = false` because it reads the session at request time.
+- e2e signs the founder in with magic links. Only one link per user is valid, and both viewport projects sign in at once, so the founder test retries up to 5 times.
+- QA (#22) fix: the proxy matched the raw pathname, so /%61dmin/test and /admin%2Ftest reached the page (soft 404 with status 200). The proxy now matches a normalized path (src/lib/auth/path.ts): segments percent-decoded up to 3 times and re-split on decoded slashes/backslashes, empty and "." segments dropped, ".." resolved, lowercased. Malformed encoding → 404. The same check covers Step 3's /app, /team and /client sign-in redirect.

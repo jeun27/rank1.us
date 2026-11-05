@@ -1,5 +1,6 @@
 import { execSync } from "node:child_process";
 import { defineConfig, devices } from "@playwright/test";
+import { E2E_FOUNDER_EMAIL } from "./tests/e2e/helpers/admin";
 
 // Local builds talk to the local Supabase stack. Keys come from `supabase status`, never from committed files.
 function localSupabase(): Record<string, string> {
@@ -18,6 +19,8 @@ function localSupabase(): Record<string, string> {
 const supabaseEnv = localSupabase();
 
 const baseURL = process.env.E2E_BASE_URL ?? "http://localhost:3000";
+// /admin/test e2e: the founder email, dummy engine keys and a local fake engine API (tests/e2e/helpers/fake-engines.mjs).
+const fakeEngines = "http://127.0.0.1:4599";
 const bypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 
 export default defineConfig({
@@ -29,18 +32,27 @@ export default defineConfig({
   ],
   webServer: process.env.E2E_BASE_URL
     ? undefined
-    : {
-        command: "pnpm build && pnpm start",
-        url: baseURL,
-        reuseExistingServer: true,
-        timeout: 180_000,
-        // Cloudflare's public Turnstile test keys, plus a canary secret the client-bundle check looks for.
-        env: {
-          NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "1x00000000000000000000AA",
-          TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY ?? "1x0000000000000000000000000000000AA",
-          IP_HASH_SALT: process.env.IP_HASH_SALT ?? "e2e-canary-ip-hash-salt",
-          ...supabaseEnv,
-          ENABLE_TEAM_WORKSPACE: "true",
+    : [
+        { command: "node tests/e2e/helpers/fake-engines.mjs", url: `${fakeEngines}/health`, reuseExistingServer: true },
+        {
+          command: "pnpm build && pnpm start",
+          url: baseURL,
+          reuseExistingServer: true,
+          timeout: 180_000,
+          // Cloudflare's public Turnstile test keys, plus a canary secret the client-bundle check looks for.
+          env: {
+            NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "1x00000000000000000000AA",
+            TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY ?? "1x0000000000000000000000000000000AA",
+            IP_HASH_SALT: process.env.IP_HASH_SALT ?? "e2e-canary-ip-hash-salt",
+            ...supabaseEnv,
+            ENABLE_TEAM_WORKSPACE: "true",
+            FOUNDER_EMAIL: E2E_FOUNDER_EMAIL,
+            DATAFORSEO_LOGIN: "e2e-login",
+            DATAFORSEO_PASSWORD: "e2e-password",
+            PERPLEXITY_API_KEY: "e2e-key",
+            DATAFORSEO_API_URL: `${fakeEngines}/v3`,
+            PERPLEXITY_API_URL: `${fakeEngines}/perplexity`,
+          },
         },
-      },
+      ],
 });
