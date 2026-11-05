@@ -559,19 +559,6 @@ Changed
 - Rule 3: a Measured line (latest run, ok answers) under the H1.
 - Nav: "What to fix next" after Sources. The Dashboard section heading links to /app/fixes (top 3 from getTopFixes, same ranking).
 - n fix (#57): the Freshness n comes from loadShell().latest.metrics, the same object the Dashboard hero renders. tests/unit/app/measured.test.tsx (the fixes n equals the Dashboard n with a no_overview answer) supersedes measured.test.ts, which only checked runMeasured against jobs_ok and went away with runMeasured.
-
-## Step 11 (data-pipeline): context brief from stored data (branch feat/step11-context)
-Step 11 built from ENG_HANDOFF_OVERNIGHT §3/§6 + issue #10; Build Pack not readable; reconcile later.
-Lead decisions (Step 11 brief): no in-app AI. Copy context = a Markdown brief of stored numbers and texts for the selected item, each with n + freshness and "API-measured, directional": business, latest visibility (overall + per engine), leaderboard, top sources, open fixes (title + detail), and questions where the business wasn't named. Never why_note, raw, cost, vendor stats, lead emails or tokens. Open in Claude opens exactly https://claude.ai after copying the brief; no ?q= and no data in the URL.
-
-Changed
-- src/lib/workspace/context.ts:
-  - buildContextMarkdown(input, selection, now, prompt): input = getCurrentBusiness/listDfyBusinesses + computeMetrics + computeSources + listFixes + getQuestionsWithLatestAnswers + listRunSummaries.
-  - It keeps #11's format (# title, "- label: text", namedText/visibilityText/pointsChange/fallbackNote, ## Sources, ## Prompt template). It reads named fields only. Every % carries "named in a of b answers"; null → "no answers yet".
-  - Lists cap at 10 (questions 25) with "…and N more"; the brief caps at 12,000 chars by dropping the lowest sections, and the header and visibility are always kept.
-- claudeUrl and CLAUDE_Q_MAX are removed and CLAUDE_URL = "https://claude.ai" replaces them. ContextPane's href uses it (its onClick still copies the brief first). The team e2e now asserts the exact URL.
-- Tests changed, with reason: tests/unit/workspace/brief.test.ts's two claudeUrl ?q= prefill tests are replaced by one asserting CLAUDE_URL === "https://claude.ai" (lead, Step 11: the prefill is removed). tests/e2e/team-workspace.spec.ts asserts the href is exactly CLAUDE_URL and the popup is https://claude.ai/ (routed, never reaches the real site).
-- Removed two unused imports in tests/unit/fixes/rules.test.ts (lint warnings from Step 10).
 - QA #58 gallery fidelity (#57): the /dev/app fixes fixtures use the fix_rules titles and §5b copy filled for a made-up site, in bySize order (R14, R10, R11), with no answer count for site rules. The fixes states take n from the Dashboard gallery metrics (240). tests/unit/fixes/example-data.test.ts checks titles against seed.sql, details against COPY, and the order.
 
 ## Step 11 (frontend): team workspace on real data (branch feat/step11-team-real, issue #54)
