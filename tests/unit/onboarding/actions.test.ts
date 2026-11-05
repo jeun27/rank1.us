@@ -4,6 +4,17 @@ const user = { current: null as { id: string } | null };
 const landing = { current: "onboarding" as string | null };
 vi.mock("@/lib/queries/auth", () => ({ getLanding: async () => landing.current }));
 const tokens = { left: 99 };
+const cache = new Map<string, unknown>();
+vi.mock("@/lib/supabase/service", () => ({ createServiceClient: () => ({ service: true }) }));
+vi.mock("@/lib/queries/lookup-cache", () => ({
+  getCachedLookup: vi.fn(
+    async (_db: unknown, userId: string, kind: string, key: string) => cache.get(`${userId}|${kind}|${key}`) ?? null,
+  ),
+  putCachedLookup: vi.fn(
+    async (_db: unknown, r: { user_id: string; kind: string; key: string; result: unknown }) =>
+      void cache.set(`${r.user_id}|${r.kind}|${r.key}`, r.result),
+  ),
+}));
 vi.mock("@/lib/queries/rate-limits", () => ({ takeRateToken: vi.fn(async () => tokens.left-- > 0) }));
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({ auth: { getUser: async () => ({ data: { user: user.current } }) } }),
@@ -59,6 +70,7 @@ beforeEach(() => {
   user.current = null;
   landing.current = "onboarding";
   tokens.left = 99;
+  cache.clear();
 });
 
 describe("onboarding server actions", () => {
@@ -108,5 +120,21 @@ describe("onboarding server actions", () => {
     expect(findLocalCompetitors).not.toHaveBeenCalled();
     const { takeRateToken } = await import("@/lib/queries/rate-limits");
     expect(vi.mocked(takeRateToken).mock.calls.map((c) => c[1])).toEqual(["read_site", "maps_lookup"]);
+  });
+
+  it("an identical Maps lookup within 24 h is served from the cache: no token, no paid call", async () => {
+    user.current = { id: "u1" };
+    const found = { status: "ok", items: [{ name: "Example Noodle Bar", cid: "c1" }] };
+    vi.mocked(findLocalCompetitors).mockResolvedValue(found as never);
+    expect(await findCompetitorsAction(q)).toEqual(found);
+    expect(await findCompetitorsAction({ ...q, cuisine: " Ramen ", city: "IRVINE", state: "ca" })).toEqual(found);
+    expect(findLocalCompetitors).toHaveBeenCalledTimes(1);
+    const { takeRateToken } = await import("@/lib/queries/rate-limits");
+    expect(takeRateToken).toHaveBeenCalledTimes(1);
+    expect([...cache.keys()]).toEqual(["u1|maps_lookup|ramen|irvine|CA|exampleramen.test"]);
+    // Another user never sees it.
+    user.current = { id: "u2" };
+    await findCompetitorsAction(q);
+    expect(findLocalCompetitors).toHaveBeenCalledTimes(2);
   });
 });
