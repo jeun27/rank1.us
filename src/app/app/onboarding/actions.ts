@@ -4,7 +4,10 @@ import { findLocalCompetitors, readSite } from "@/lib/onboarding";
 import { MAX_ACTIVE_QUESTIONS } from "@/lib/questions/templates";
 import { getLanding } from "@/lib/queries/auth";
 import type { DbClient } from "@/lib/queries/client";
+import { getCachedLookup, putCachedLookup } from "@/lib/queries/lookup-cache";
 import { takeRateToken } from "@/lib/queries/rate-limits";
+import { createServiceClient } from "@/lib/supabase/service";
+import type { Json } from "@/types/db";
 import { createBusinessOnboarding } from "@/lib/queries/onboarding";
 import { createClient } from "@/lib/supabase/server";
 import type { CompetitorQuery, CompetitorSearch, OnboardingInput, SiteRead } from "./contract";
@@ -14,22 +17,27 @@ import { withLimits, type LookupStore } from "./limits";
 // self-serve owner who is still onboarding (team, DFY and set-up owners get the fallbacks).
 async function onboardingClient() {
   const db = await createClient();
-  if (!(await db.auth.getUser()).data.user) return null;
-  return (await getLanding(db)) === "onboarding" ? db : null;
+  const user = (await db.auth.getUser()).data.user;
+  if (!user || (await getLanding(db)) !== "onboarding") return null;
+  return { db, userId: user.id };
 }
 
-// Rate tokens in the DB (take_rate_token); the 24 h result cache joins it here.
-const storeFor = (db: DbClient): LookupStore => ({
-  take: (kind) => takeRateToken(db, kind),
-  cached: async () => null,
-  save: async () => {},
-});
+// Rate tokens with the caller's client (take_rate_token); the 24 h result cache with the
+// service client, because users must not write their own cached results.
+function storeFor({ db, userId }: { db: DbClient; userId: string }): LookupStore {
+  const svc = createServiceClient();
+  return {
+    take: (kind) => takeRateToken(db, kind),
+    cached: (kind, key, maxAgeMs) => getCachedLookup(svc, userId, kind, key, maxAgeMs / 1000),
+    save: (kind, key, result) => putCachedLookup(svc, { user_id: userId, kind, key, result: result as Json }),
+  };
+}
 
 export async function readSiteAction(domain: string): Promise<SiteRead> {
-  const db = await onboardingClient();
-  if (!db) return { status: "unreadable" };
+  const caller = await onboardingClient();
+  if (!caller) return { status: "unreadable" };
   const r = await withLimits(
-    storeFor(db),
+    storeFor(caller),
     "read_site",
     domain,
     () => readSite(domain),
@@ -40,8 +48,8 @@ export async function readSiteAction(domain: string): Promise<SiteRead> {
 
 // The UI shows only the COPY.md message, so the raw upstream error never leaves the server.
 export async function findCompetitorsAction(q: CompetitorQuery): Promise<CompetitorSearch> {
-  const db = await onboardingClient();
-  if (!db) return { status: "error", items: [] };
+  const caller = await onboardingClient();
+  if (!caller) return { status: "error", items: [] };
   const key = [
     q.cuisine.trim().toLowerCase(),
     q.city.trim().toLowerCase(),
@@ -49,7 +57,7 @@ export async function findCompetitorsAction(q: CompetitorQuery): Promise<Competi
     q.domain,
   ].join("|");
   const r = await withLimits(
-    storeFor(db),
+    storeFor(caller),
     "maps_lookup",
     key,
     async (): Promise<CompetitorSearch> => {

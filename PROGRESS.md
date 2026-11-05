@@ -322,4 +322,4 @@ Doc differences
 - Questions are saved with active_form 'long' (Step 5 brief). Location level defaults to city; ChatGPT and Gemini show the UI.md tooltip copy at city and state level.
 - Local Supabase is off (pod disk full, lead 2026-11-05): DB-backed e2e (tests/e2e/onboarding.spec.ts) is gated by CI.
 - The server actions (readSite, findLocalCompetitors) run only for a signed-in user, and the browser never gets DataForSEO's raw error text (review on #23).
-- Open, before real DataForSEO keys go on: a per-user rate limit on the site read and the Maps lookup. It needs a persistent counter (a backend table or RPC); an in-memory one wouldn't hold across serverless instances. Tracked in #21.
+- Lookup limits (lead, 2026-11-05): per signed-in self-serve owner, readSite 10/hour and Maps 5/hour + 20/24 h (take_rate_token, #24). Over the limit the actions return the existing fallbacks. Identical ok lookups (same domain, or same cuisine + city + state) come from lookup_cache for 24 h with no token taken. The cache is written with the service client, so users can't forge results.
