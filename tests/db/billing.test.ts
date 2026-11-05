@@ -104,6 +104,14 @@ describe("apply_stripe_subscription", () => {
     expect((await ws(workspaceId)).subscription_status).toBe("past_due");
   });
 
+  it("accepts Stripe's paused status (weekly checks stay paused: not active or trialing)", async () => {
+    const { workspaceId } = await workspace("stripe-paused");
+    expect(
+      await applyStripeSubscription(serviceClient(), event({ client_reference_id: workspaceId, status: "paused" })),
+    ).toBe("applied");
+    expect((await ws(workspaceId)).subscription_status).toBe("paused");
+  });
+
   it("a duplicate event id is a no-op, even with a different payload", async () => {
     const { workspaceId } = await workspace("stripe-dup");
     const first = event({ client_reference_id: workspaceId, status: "active" });
@@ -156,7 +164,7 @@ describe("apply_stripe_subscription", () => {
 
   it("rejects a bad status or missing ids (22023) without recording the event, so a retry works", async () => {
     const { workspaceId } = await workspace("stripe-bad");
-    const bad = event({ client_reference_id: workspaceId, status: "paused" as never });
+    const bad = event({ client_reference_id: workspaceId, status: "bogus" as never });
     await expect(applyStripeSubscription(serviceClient(), bad)).rejects.toMatchObject({ code: "22023" });
     await expect(
       applyStripeSubscription(serviceClient(), { ...bad, status: "active", event_id: "" }),

@@ -4,7 +4,7 @@ import type { DbClient } from "./client";
 // Stripe subscription state (Step 14). Billing fields are service-write only; members read them.
 
 export type SubscriptionStatus =
-  "active" | "trialing" | "past_due" | "canceled" | "unpaid" | "incomplete" | "incomplete_expired";
+  "active" | "trialing" | "past_due" | "canceled" | "unpaid" | "incomplete" | "incomplete_expired" | "paused";
 
 export type BillingState = {
   workspaceId: string;
