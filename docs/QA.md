@@ -1,5 +1,62 @@
 # QA
 
+## Step 8: Self-serve shell (Dashboard, Competitors, Questions, History) (re-run)
+
+Checked 2026-11-05 on main at 1c6a54e:
+- #38 (a91c6eb): self-serve shell queries
+- #41 (f91a8ad): competitor suggestions and visibility series
+- #43 (4feb18b): sources fields and shell lint
+- #40 (1c6a54e): self-serve shell and pages
+
+The sandbox Docker disk is full, so there was no local Supabase. test-db and e2e come from CI on main's push of 1c6a54e (run 42053783602). Unit, typecheck, lint, format and build ran locally in the sandbox. The UI checks ran from the Mac on #40's preview at 138cf81, whose tree is identical to 1c6a54e. No live paid calls, fake Example data only.
+Preview: https://rank1-o1xmctq6w-bryan-flowhighlevels-projects.vercel.app (sha 138cf81, READY).
+Sources: Jeun's ENG_HANDOFF_OVERNIGHT §6 Step 8, the lead's brief (rank1-step8.md), docs/UI.md 4b rows Dashboard / Competitors / Questions / History, docs/PRODUCT.md rule 3.
+
+Result: PASS. The first run's blocker (Competitors broke product rule 3) is fixed by #47 (merged as 6ed31af). No blocking problems.
+
+Re-run 2026-11-05 on #47's preview at 319d441, whose tree is identical to main 6ed31af: https://rank1-mkm6pwzwx-bryan-flowhighlevels-projects.vercel.app
+
+| Check (375 and 1280) | Result | Evidence |
+|---|---|---|
+| Competitors phone cards show n | PASS | 375 competitors-success: "Example Ramen House · You · 33% (named in 80 of 240 answers)", "Example Noodle Bar · 100% (named in 240 of 240 answers)", "Example Izakaya · too few answers" |
+| Competitors freshness + label line | PASS | competitors-success and competitors-partial at both widths: exactly one "Checked 2 h ago · 240 answers · API-measured, directional" |
+| History label once | PASS | history-success and history-partial at both widths: "API-measured, directional" appears exactly once; rows keep date + "named in … of …" |
+| axe, no side scroll | PASS | 0 violations on all 4 states at 375 and 1280; scrollWidth equals the viewport |
+| Preview e2e (6ed31af tests) | PASS | 184 passed, 70 skipped (local-stack tests), 0 failed |
+
+### Commands
+
+| Command | Result |
+|---|---|
+| `pnpm test` (sandbox, 1c6a54e) | PASS. 65 files, 831 tests passed |
+| `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build` (sandbox) | PASS |
+| CI on main push 1c6a54e | PASS. test-db 14 files / 307 tests; e2e 250 passed, 2 skipped; test, typecheck, lint, format green |
+| `E2E_BASE_URL=<preview> pnpm e2e` (1c6a54e tests) | PASS. 182 passed, 70 skipped (local-stack tests), 0 failed, including 48 app-shell tests: all 22 /dev/app states with one H1, axe clean and no side scroll at 375 and 1280, the drawer keyboard test, and 44px tap targets |
+
+### Checks
+
+| Check | Result | Evidence |
+|---|---|---|
+| Nav: only existing pages; content full width | PASS | src/components/app/AppNav.tsx links exactly /app, /app/competitors, /app/questions, /app/history, /app/billing (all exist under src/app/app). Unit "lists Dashboard, Competitors, Questions, History, Billing and marks the current one", "is hidden during onboarding". Gallery pages are single-column full width |
+| SoV only on Competitors | PASS | `shareOfVoice` is rendered only in src/components/app/CompetitorsView.tsx. Dashboard uses `Leaderboard top={5} change={false}` without SoV. Preview: "share of voice" only on competitors-success. Unit "leaderboard top 5 without SoV" |
+| Dashboard: hero + n + change; 8-run line hidden under 2 runs; per-engine; top 5; "What to fix next" without why_note; partial badge; empty / unpaid / first-check states | PASS | Unit Dashboard tests: no business, no run yet (paid first-check / unpaid "Start for $99/mo"), success, partial + no fixes + under 2 runs. series.test.ts "hidden with fewer than 2 points", "the latest 8 complete/partial runs", "n = 0 → value null". getTopFixes "never why_note" (db), and no component reads why_note. Preview dashboard-success: n ("named in … of …"), "checked … ago" and "API-measured, directional" at both widths |
+| Competitors: You row pinned; 'too few answers' under n<10; suggestions with Add / Not a competitor (dismissed not re-suggested); manual add; dfy_client can't write | PASS except the rule 3 blocker below | Phones: cards sort the You row first (CompetitorsView.tsx:67-69); desktop table has the infoBg You tag. Preview shows "too few answers" for Example Izakaya. suggest.test.ts: minus tracked, dismissed and the business itself; cache with no token; missing keys → nothing. db: "adds, dismisses idempotently and un-hides on re-add", "hidden competitors drop out of the next run's tracked brands", "a non-member, anon and a dfy_client cannot change competitors (42501)". Unit: the empty copy and the manual add form |
+| Questions: dots 3/3/3/1, failed '–' tooltip, location badge, drawer (focus trap, Esc, noreferrer links) | PASS | Unit "rows with per-engine counts, location badge, a failed '–' with the lead tooltip, and a drawer". Tooltip "This check failed. It doesn't count toward your numbers." is in COPY.md. Drawer links have rel="noopener noreferrer" (QuestionsView.tsx:117). Preview e2e "questions drawer: keyboard opens it, Tab stays inside, Esc closes and focus returns" at both widths |
+| History: rows → /app/runs/[id], CSV | PASS | Unit "one row per run, newest first: date, visibility + n, change, status; opens the run; CSV per run". Preview history-success shows "named in … of …" per row |
+| run_summaries parity with computeMetrics | PASS | CI db shell.test.ts "listRunSummaries matches computeMetrics on the same run, overall and per engine, with a deleted question"; also newest first, never free audits, non-member and anon get nothing |
+| Copy | PASS | unit "app shell copy uses only strings that are in docs/COPY.md" |
+
+
+First-run blocker (1c6a54e):
+
+| Blocker | Result | Evidence |
+|---|---|---|
+| Competitors page broke product rule 3: phone cards showed a bare % with no n (src/components/app/CompetitorsView.tsx:83), and there was no freshness or "API-measured, directional" at either width | FIXED by #47 (6ed31af) | re-run table above. History now carries the label too |
+
+### Blocking problems
+
+None.
+
 ## Step 7: Metrics + same-day audit + CSV/PNG export
 
 Checked 2026-11-05 on main at cea874b:
