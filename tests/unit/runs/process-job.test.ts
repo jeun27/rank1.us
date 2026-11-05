@@ -139,6 +139,7 @@ describe("processJob", () => {
       brands: null,
       first_position: null,
       error,
+      raw: null,
     });
     expect(citations).toEqual([]);
   });

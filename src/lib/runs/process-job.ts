@@ -52,7 +52,8 @@ export function toFinishAnswer(job: ClaimedJob, a: EngineAnswer): FinishAnswer {
     first_position: m ? m.first_position : null,
     brands: m ? m.brands : null,
     cost_usd: a.costUsd,
-    raw: a.raw ?? null,
+    // Failed calls keep only `error` (run_jobs.last_error); vendor error bodies never reach answers.raw.
+    raw: a.status === "failed" ? null : (a.raw ?? null),
     checked_at: a.checkedAt,
     ...(a.status === "failed" ? { error: (a.error ?? "failed").slice(0, 1000) } : {}),
   };
