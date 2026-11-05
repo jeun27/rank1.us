@@ -665,6 +665,7 @@ Changed
 - Migration 20261105000018 (+ .down.sql), additive:
   - workspaces.stripe_current_period_end / stripe_event_at and businesses.archive_at. All are service-write only, like the billing fields.
   - apply_stripe_subscription(p): one transaction. It finds the workspace by customer id or client_reference_id first (not_found is NOT recorded, so Stripe's retry can apply it once checkout links the customer), then records the event (duplicate → no-op), ignores stale events, archives due removals and only then sets ids/status/seats/period end.
+  - apply_stripe_subscription(p): one transaction. It records the event (duplicate → no-op), then finds the workspace by customer id or client_reference_id, ignores stale events, archives due removals and only then sets ids/status/seats/period end.
   - record_stripe_event. schedule_business_removal / cancel_business_removal / archive_scheduled_businesses. All service only, self-serve only (DFY untouched).
 - Queries (src/lib/queries/billing.ts):
   - getBillingState, listMyBusinesses (member client).
@@ -691,3 +692,38 @@ Changed
 - CI: test-db now starts Supabase WITH storage-api (removed from its -x list) so the buckets and signed URLs are tested for real.
 - Queries: src/lib/queries/reports.ts.
 - src/types/db.ts got the 0019 objects added by hand in the generator format.
+
+## Step 14 (data-pipeline): checkout, webhook and portal (branch feat/step14-billing)
+Step 14 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b; Build Pack not readable; reconcile later.
+Lead decisions (Step 14 brief):
+- Stripe test mode only, one $99 Price, quantity = active self-serve businesses (minimum 1); DFY never counts.
+- Hosted Checkout (no publishable key).
+- The webhook is the source of truth (signature over the raw body, idempotent via stripe_events, never trust success_url).
+- Add = quantity +1 with Stripe's default proration (INTEGRATIONS.md "confirm": kept default). Remove = quantity −1 at period end, then the business is archived.
+- Manage billing = Customer Portal.
+
+Changed
+- `stripe` (official SDK, 23.1.0) added; it is not an LLM SDK.
+- src/lib/stripe/client.ts: stripeClient with apiVersion pinned to the SDK's ("2026-10-28.endive"); assertTestMode refuses sk_live_/rk_live_ and a missing key before any call.
+- src/lib/stripe/billing.ts:
+  - createCheckoutSession (subscription mode, the price × quantity ≥ 1, client_reference_id = workspace, a stored customer reused);
+  - updateQuantity (+1, default proration; raises an attached removal schedule's phases too);
+  - scheduleRemoval;
+  - createPortalSession.
+- Removal mechanism: a Subscription Schedule (from_subscription, or the attached one). Phases [current, quantity N, until the item's current_period_end; next, quantity N−1, one month], end_behavior release. A second removal lowers the next phase again; it never goes below 1. In this API version current_period_end is on the subscription item, so that's where it's read.
+- src/lib/stripe/webhook.ts handleStripeWebhook (bad/missing/stale signature → 400):
+  - customer.subscription.* → apply_stripe_subscription {event_id, event_type, event_created, customer_id, subscription_id, status, quantity, current_period_end};
+  - checkout.session.completed → retrieves the subscription, then the same call with client_reference_id;
+  - invoice.paid / payment_failed → record_stripe_event only;
+  - unknown → 200 ignored.
+  - applied/duplicate/stale → 200 (logged). not_found → 500 "not_linked" (lead, after review): a subscription event can arrive before checkout.session.completed links the customer, 0018 leaves not_found unrecorded, and Stripe retries with its own backoff. An RPC error → 500 "apply_failed".
+  - checkout.session.completed retrieves the subscription (items come back by default) and applies the full state (status, quantity, period end) plus client_reference_id, so seats/status are right even with no later subscription event.
+  - Review (#73): every customer.subscription.* event also retrieves the subscription and applies Stripe's current state, not the event snapshot, because same-second created/updated events can leave a paid workspace "incomplete". event.created still drives the stale check. A failed retrieve → 500 (Stripe retries).
+  - Test changed, with reason: the not_found case moved from 200 to 500 not_linked (lead decision); an ordering test covers subscription-first then checkout.
+  - Logs: event type, id and outcome only.
+- .env.example: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY marked UNUSED (hosted Checkout).
+- Wiring (after #72):
+  - POST /api/stripe/webhook reads req.text() and verifies with stripe.webhooks.constructEvent + STRIPE_WEBHOOK_SECRET. It calls applyStripeSubscription / recordStripeEvent (service client). Unix times are converted to ISO for the RPC.
+  - A live key or a missing secret → 500 {error: "not_configured"}.
+- src/lib/stripe/service.ts (server-only): startCheckout(callerDb, quantity, urls), addBusinessSeat(callerDb), removeBusinessAtPeriodEnd(callerDb, businessId), openPortal(callerDb, returnUrl). Review (#73): each takes the caller's own client and derives the workspace from getBillingState(callerDb). Removal first checks the business is in listMyBusinesses(callerDb) (RLS), before any Stripe call or schedule_business_removal, so no cross-tenant archive. Stripe ids are read with the service client and never sent to the browser.
+- Stripe's `paused` subscription status is in 0018's SubscriptionStatus (backend added it), so a paused subscription applies instead of failing with 22023.

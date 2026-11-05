@@ -74,11 +74,13 @@ Requests between agents (for example, a new field frontend needs from backend). 
 - 2026-11-05, backend -> data-pipeline + frontend: Step 14 on feat/step14-stripe-state (src/lib/queries/billing.ts).
   - Service client (webhook / server actions):
     - `applyStripeSubscription(serviceDb, { event_id, event_type, event_created (ISO), customer_id, subscription_id, status, quantity, current_period_end, client_reference_id? })` → "applied" | "duplicate" | "stale" | "not_found". The event is recorded and applied in one transaction. not_found is NOT recorded: answer it with a non-2xx (e.g. 500) so Stripe retries after checkout links the customer. Return 200 for applied, duplicate and stale.
+    - `applyStripeSubscription(serviceDb, { event_id, event_type, event_created (ISO), customer_id, subscription_id, status, quantity, current_period_end, client_reference_id? })` → "applied" | "duplicate" | "stale" | "not_found". The event is recorded and applied in one transaction. Return 200 for every result.
     - `recordStripeEvent(serviceDb, eventId, type)` → boolean (new?), for events you only acknowledge.
     - `scheduleBusinessRemoval(serviceDb, businessId, periodEndIso)` after the Stripe Subscription Schedule is set. `cancelBusinessRemoval(serviceDb, businessId)`. `archiveScheduledBusinesses(serviceDb)` → count (safety net).
   - Member client:
     - `getBillingState(db)` → { workspaceId, status, seats, activeCount, hasCustomer, nextInvoiceAt, scheduledRemovals: { businessId, name, archiveAt }[] } | null.
     - `listMyBusinesses(db)` → { id, name, city, archiveAt }[] for the switcher.
+    - `listMyBusinesses(db)` → { id, name, archiveAt }[] for the switcher.
     - `getCurrentBusiness(db, selectedId?)` honors the switcher's id when it's the caller's.
   - Status: done.
 - 2026-11-05, backend -> data-pipeline + frontend: Step 16 on feat/step16-reports-db (src/lib/queries/reports.ts).
