@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Freshness } from "@/components/ui/Freshness";
 
 // One H1 per app page, full width (lead: nav + full-width, not 3-pane).
 export function Page({ title, children }: { title: string; children: ReactNode }) {
@@ -16,3 +17,15 @@ export const Section = ({ title, children, label }: { title: string; children: R
     {children}
   </section>
 );
+
+// PRODUCT.md rule 3: results show n + freshness and the "API-measured, directional" label.
+// Without a single check time (a list of runs), the label alone.
+export function Measured({ checkedAt, answers, now }: { checkedAt: string | null; answers?: number; now?: Date }) {
+  if (checkedAt && answers !== undefined && now)
+    return (
+      <div data-computed>
+        <Freshness checkedAt={checkedAt} answers={answers} now={now} />
+      </div>
+    );
+  return <p className="text-caption text-inkMuted">API-measured, directional</p>;
+}

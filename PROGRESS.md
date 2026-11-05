@@ -469,6 +469,10 @@ Changed
 - AuditView's Hero / EngineTable / Leaderboard are shared (exported). The onboarding lookup store moved to src/app/app/lookup-store.ts, so onboarding and Competitors share it.
 - The visibility line follows UI.md Chart (one jellyDeep 2px line) and the dataviz skill: no legend for one series, a hover tooltip with n, and an sr-only table.
 
+## Step 8 QA fix (frontend): rule 3 on Competitors and History (branch fix/step8-rule3, issue #37, QA #46)
+- PRODUCT.md rule 3: Competitors phone cards now show "{pct} (named in a of n answers)" like the desktop table. Competitors has the Freshness line ("Checked … ago · n answers · API-measured, directional") at both widths. History carries "API-measured, directional" once (its rows have their own dates).
+- A shared Measured component (src/components/app/Page.tsx) renders the Freshness line when there is one check time, and the label alone otherwise. Step 9's Sources page reuses it.
+
 ## Step 9 (frontend): sources page with location view (branch feat/step9-sources-page, issue #42)
 Step 9 built from ENG_HANDOFF_OVERNIGHT §6 + PRODUCT.md + docs/UI.md; Build Pack not readable; reconcile later.
 - /app/sources (nav after Questions): the latest complete/partial run's cited links through computeSources (#44).

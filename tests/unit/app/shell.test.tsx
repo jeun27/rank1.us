@@ -142,6 +142,18 @@ describe("Competitors (UI.md 4b, SoV only here)", () => {
     });
   });
 
+  it("rule 3: every number shows n, plus freshness and 'API-measured, directional' (phone cards too)", () => {
+    render(
+      <CompetitorsView latest={exampleLatest} tracked={exampleTracked} suggestions={[]} actions={actions} now={now} />,
+    );
+    const cards = screen.getByRole("list", { name: "Competitors" });
+    expect(within(cards).getByText("33% (named in 80 of 240 answers)")).toBeInTheDocument();
+    expect(within(cards).getByText("100% (named in 240 of 240 answers)")).toBeInTheDocument();
+    expect(
+      screen.getByText(/^Checked \d+ (min|h|d) ago · 240 answers · API-measured, directional$/),
+    ).toBeInTheDocument();
+  });
+
   it("no competitors: the 4b empty copy and the manual add form", async () => {
     render(<CompetitorsView latest={null} tracked={[]} suggestions={[]} actions={actions} now={now} />);
     expect(screen.getByText("No competitors yet. Add 3-5 local places to compare.")).toBeInTheDocument();
@@ -194,6 +206,11 @@ describe("History (UI.md 4b)", () => {
     );
     // 80 of 240 = 33% vs 72 of 240 = 30%.
     expect(within(rows[1]).getByText("+3 pts")).toBeInTheDocument();
+  });
+
+  it("rule 3: the page carries 'API-measured, directional' once", () => {
+    render(<HistoryView runs={exampleRuns} />);
+    expect(screen.getAllByText("API-measured, directional")).toHaveLength(1);
   });
 
   it("no runs: the 4b empty copy", () => {
