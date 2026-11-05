@@ -9,7 +9,17 @@
 - [x] 6. src/components/ui: Button (primary jellyDeep/white, secondary text link, final-CTA amber/ink), Card, Badge (success/error/warn/info), Banner (error/info), Table, StatNumber, EmptyState, LoadingState (Jelly squish), Freshness ("checked X h ago · n answers").
 - [x] 7. /dev/ui page shows every component and state. Deployed to a Vercel preview.
 
-## Step 1 (data-pipeline): seed
+## Step 1: Supabase schema, seed, types, queries (acceptance)
+- [ ] 1. Migrations create every table, index and RLS policy in docs/SCHEMA.md. RLS on for every table; access by workspace membership; service role only for engine writes, tokens and contact_requests.
+- [ ] 2. supabase/seed.sql: workspace "Example Agency", business "Example Ramen House" (Irvine, CA, ramen), 25 restaurant questions (short + long) from the templates, 5 example competitors, 2 weeks of example runs with answers and citations. Every seeded brand name starts with "Example".
+- [ ] 3. Seed also loads question_templates (20, section 4b), local_places for Irvine, CA (landmarks + areas incl. Eighteen Main), fix_rules R1-R15 + H1 (UNVERIFIED rules enabled=false). A1-A6 skipped until Jeun sends them.
+- [ ] 4. tests/fixtures/irvine_restaurants.csv saved (rating and review_count dropped) and loaded by a dev-only supabase/seed.dev.sql (never production) as competitor candidates and cluster-tagged places. No runs, answers or visibility for real names.
+- [ ] 5. tests/fixtures/irvine.ts exports the places (incl. Eighteen Main cluster, checked 11/4/26), the {dietary} and {occasion} lists. A template test fills every template for Example Ramen House: no unfilled slots, <= 25 active questions.
+- [ ] 6. src/types/db.ts generated. Typed queries in src/lib/queries/ for current workspace, businesses list, questions, latest run summary.
+- [ ] 7. RLS test: user A cannot read or write user B's workspace rows in any table.
+- [ ] 8. pnpm test, pnpm test:db, typecheck, lint, pnpm e2e green locally; Vercel preview builds and step 0 e2e still passes on it.
+
+### Step 1 (data-pipeline): seed
 - [x] Trimmed Irvine CSV fixture (718 rows, no rating/email/pitch columns) + typed loader.
 - [x] supabase/seed.sql: templates verbatim, Irvine places, fix_rules R1-R15 + H1, Example Agency / Example Ramen House with 25 questions, 5 competitors, 2 weekly runs x 250 answers, citations on fake domains.
 - [x] supabase/seed.dev.sql + `pnpm db:seed:dev`: CSV restaurants as hidden suggested competitors, clusters as unverified landmarks, no runs.
