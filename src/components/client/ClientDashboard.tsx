@@ -52,6 +52,12 @@ export function ClientDashboard({
       {business.name}
     </p>
   );
+  // The team can show fixes before the first run (site checks), so the list doesn't wait for one.
+  const fixList = fixes && (
+    <Section title={c.fixNext}>
+      <FixList {...fixes} canWrite={false} level={3} />
+    </Section>
+  );
   if (!latest)
     return (
       <Page title={c.dashboard}>
@@ -59,6 +65,7 @@ export function ClientDashboard({
         <Card>
           <p className="text-body-lg">{c.noChecks}</p>
         </Card>
+        {fixList}
       </Page>
     );
   const { run } = latest.results;
@@ -85,11 +92,7 @@ export function ClientDashboard({
       <Section title={c.history}>
         <HistoryTable runs={runs} linked={false} />
       </Section>
-      {fixes && (
-        <Section title={c.fixNext}>
-          <FixList {...fixes} canWrite={false} level={3} />
-        </Section>
-      )}
+      {fixList}
     </Page>
   );
 }
