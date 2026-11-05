@@ -1,5 +1,6 @@
 import {
   COUNTRY_NAMES,
+  apiBase,
   EngineError,
   arr,
   isObj,
@@ -43,7 +44,7 @@ export const perplexity: Adapter = (req, deps) => {
       };
       const json = await postJson(
         deps,
-        PERPLEXITY_URL,
+        apiBase(deps.env, deps.env.PERPLEXITY_API_URL, PERPLEXITY_URL),
         { Authorization: `Bearer ${key}` },
         body,
         PERPLEXITY_TIMEOUT_MS,
