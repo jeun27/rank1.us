@@ -40,6 +40,7 @@ export default defineConfig({
           TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY ?? "1x0000000000000000000000000000000AA",
           IP_HASH_SALT: process.env.IP_HASH_SALT ?? "e2e-canary-ip-hash-salt",
           ...supabaseEnv,
+          ENABLE_TEAM_WORKSPACE: "true",
         },
       },
 });

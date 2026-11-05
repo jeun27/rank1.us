@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { aurora, colors, radius, shadows } from "@/styles/tokens";
+import { aurora, colors, darkColors, radius, shadows } from "@/styles/tokens";
 
 const css = readFileSync("src/app/globals.css", "utf8");
 const theme = css.slice(css.indexOf("@theme"), css.indexOf("}", css.indexOf("@theme")));
@@ -33,6 +33,7 @@ describe("Tailwind theme matches docs/UI.md tokens", () => {
       fieldBorder: "rgb(30 35 32 / 0.5)",
       auroraAmber: "#E8B85A",
       auroraTeal: "#5FB8B3",
+      raised: "#FFFFFF",
     });
   });
 
@@ -58,7 +59,8 @@ describe("Tailwind theme matches docs/UI.md tokens", () => {
     expect(css).not.toMatch(/box-shadow/);
   });
 
-  it("has no dark mode, and the aurora ring is the only gradient", () => {
+  // Dark mode exists only as the team workspace theme (ENG_HANDOFF_STEP2 §3), set by data-theme, never by CSS media.
+  it("has no media-query dark mode, and the aurora ring is the only gradient", () => {
     expect(css).not.toMatch(/prefers-color-scheme/);
     expect(aurora).toBe("linear-gradient(90deg, #E8B85A, #5FB8B3, #279EF2)");
     expect(css).toContain(`--aurora: ${aurora};`);
@@ -86,6 +88,58 @@ describe("Tailwind theme matches docs/UI.md tokens", () => {
       for (const m of src.matchAll(/\bshadow-([\w-]+)/g))
         expect(Object.keys(shadows), `${file}: ${m[0]}`).toContain(m[1]);
       if (!file.endsWith("AuroraButton.tsx")) expect(src, file).not.toContain("aurora-ring");
+    }
+  });
+});
+
+const dark = css.slice(css.indexOf('[data-theme="dark"] {'), css.indexOf("}", css.indexOf('[data-theme="dark"] {')));
+const lum = (hex: string) => {
+  const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  const [r, g, b] = c.map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+const ratio = (a: string, b: string) => {
+  const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m);
+  return (x + 0.05) / (y + 0.05);
+};
+
+describe("team workspace dark theme", () => {
+  it("overrides every color token, and only inside [data-theme=dark]", () => {
+    expect(Object.keys(darkColors).sort()).toEqual(Object.keys(colors).sort());
+    for (const [name, value] of Object.entries(darkColors)) expect(dark).toContain(`--color-${name}: ${value};`);
+  });
+
+  // Text pairs the workspace and the Final set components use. AA: 4.5 for text, 3 for field edges.
+  const text: [keyof typeof colors, keyof typeof colors][] = [
+    ["ink", "paper"],
+    ["ink", "white"],
+    ["ink", "raised"],
+    ["inkMuted", "paper"],
+    ["inkMuted", "white"],
+    ["inkMuted", "raised"],
+    ["jellyDeep", "white"],
+    ["jellyDeep", "paper"],
+    ["jellyDeep", "raised"],
+    ["white", "jellyDeep"],
+    ["white", "jellyLoading"],
+    ["moss", "white"],
+    ["brick", "white"],
+    ["moss", "successBg"],
+    ["brick", "errorBg"],
+    ["warnText", "warnBg"],
+    ["jellyDeep", "infoBg"],
+  ];
+  it.each([
+    ["light", colors],
+    ["dark", darkColors],
+  ] as const)("%s: every text pair passes AA", (_, palette) => {
+    for (const [fg, bg] of text) expect(ratio(palette[fg], palette[bg]), `${fg} on ${bg}`).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("dark: the accent works as text and the field edge is visible", () => {
+    for (const bg of ["paper", "white", "raised"] as const) {
+      expect(ratio(darkColors.amber, darkColors[bg]), `amber on ${bg}`).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(darkColors.fieldBorder, darkColors[bg]), `fieldBorder on ${bg}`).toBeGreaterThanOrEqual(3);
     }
   });
 });
