@@ -3,6 +3,7 @@ import { metric } from "@/lib/metrics/compute";
 import type { Category } from "@/lib/runs/categorize";
 import type { Metric } from "@/types/metrics";
 import type { DbClient } from "./client";
+import { openFixes } from "./fixes";
 
 // Queries for the self-serve /app shell. All take the signed-in member's client, so RLS decides.
 
@@ -103,22 +104,24 @@ export type TopFix = {
   size: string;
   title: string;
   detail: string | null;
-  affected_answers: number;
+  // null for site rules; the UI hides it then.
+  affected_answers: number | null;
   status: "todo" | "doing";
 };
 
-// Open fixes (todo/doing), most affected answers first. Reads only the fixes row (never fix_rules.why_note).
+// The Dashboard's top open fixes, ranked like the fix list (size, then rule key), never tidy-ups (H1).
+// Reads only the fixes row (never fix_rules.why_note).
 export async function getTopFixes(db: DbClient, businessId: string, limit = 3): Promise<TopFix[]> {
-  const { data, error } = await db
-    .from("fixes")
-    .select("id, rule_key, size, title, detail, affected_answers, status")
-    .eq("business_id", businessId)
-    .in("status", ["todo", "doing"])
-    .order("affected_answers", { ascending: false })
-    .order("id")
-    .limit(limit);
-  if (error) throw error;
-  return data as TopFix[];
+  const { ranked } = await openFixes(db, businessId);
+  return ranked.slice(0, limit).map(({ id, rule_key, size, title, detail, affected_answers, status }) => ({
+    id,
+    rule_key,
+    size,
+    title,
+    detail,
+    affected_answers,
+    status,
+  }));
 }
 
 export type QuestionAnswer = {

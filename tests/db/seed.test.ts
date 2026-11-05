@@ -64,7 +64,7 @@ describe("supabase/seed.sql on a fresh db reset", () => {
     );
     expect(counts).toMatchObject({
       question_templates: 20,
-      fix_rules: 16,
+      fix_rules: 22,
       domain_categories: 5,
       workspaces: 1,
       workspace_members: 1,
@@ -85,11 +85,14 @@ describe("supabase/seed.sql on a fresh db reset", () => {
     expect(db).toEqual(TEMPLATES.map((t) => ({ ...t, slots: [...t.slots] })));
   });
 
-  it("fix_rules: R1-R15 + H1, no A rules, only R10, R11, R14, H1 enabled", async () => {
+  // Step 10 (lead): migration 0014 adds A1-A6 as disabled placeholders (Build Pack text unavailable).
+  it("fix_rules: R1-R15 + H1, A1-A6 disabled, only R10, R11, R14, H1 enabled", async () => {
     const r = await rows<{ key: string; enabled: boolean; unverified: string[]; grp: string; ai_lever: boolean }>(
       `select key, enabled, unverified, grp, ai_lever from public.fix_rules order by key`,
     );
-    expect(r.some((x) => x.key.startsWith("A"))).toBe(false);
+    const a = r.filter((x) => x.key.startsWith("A"));
+    expect(a.map((x) => x.key)).toEqual(["A1", "A2", "A3", "A4", "A5", "A6"]);
+    expect(a.every((x) => !x.enabled && x.grp === "answers" && x.ai_lever)).toBe(true);
     expect(
       r
         .filter((x) => x.enabled)

@@ -253,43 +253,54 @@ describe("getCurrentBusiness", () => {
 });
 
 describe("getTopFixes", () => {
-  it("returns open fixes by affected answers, at most the limit, never why_note", async () => {
+  it("returns open fixes ranked by size then rule key, never tidy-ups or why_note, at most the limit", async () => {
     const { user, businessId } = await selfServe("fixes-top", 1);
     const s = serviceClient();
-    must(
-      await s.from("fix_rules").upsert(
-        {
-          key: "R1",
-          grp: "restaurant",
-          title: "Test rule",
-          size: "S",
-          cadence: "weekly",
-          customer_copy: "Test copy",
-          why_note: "engineer-only secret",
-        },
-        { onConflict: "key", ignoreDuplicates: true },
-      ),
-    );
-    const fix = (title: string, affected_answers: number, status = "todo") => ({
-      business_id: businessId,
-      rule_key: "R1",
+    const rule = (key: string, grp = "restaurant") => ({
+      key,
+      grp,
+      title: `Rule ${key}`,
       size: "S",
-      title,
-      affected_answers,
+      cadence: "weekly",
+      customer_copy: "Copy",
+      why_note: "engineer-only secret",
+      ai_lever: key !== "H1",
+    });
+    must(
+      await s
+        .from("fix_rules")
+        .upsert([rule("R1"), rule("R10"), rule("R11"), rule("R12"), rule("R14"), rule("H1", "hygiene")], {
+          onConflict: "key",
+          ignoreDuplicates: true,
+        }),
+    );
+    const fix = (rule_key: string, size: string, status = "todo") => ({
+      business_id: businessId,
+      rule_key,
+      size,
+      title: `Fix ${rule_key}`,
       status,
     });
     must(
       await s
         .from("fixes")
-        .insert([fix("Fix A", 3), fix("Fix B", 9, "doing"), fix("Fix C", 5), fix("Fix D", 7, "done"), fix("Fix E", 1)]),
+        .insert([
+          fix("R11", "L"),
+          fix("R10", "M-L", "doing"),
+          fix("R14", "S"),
+          fix("H1", "S"),
+          fix("R1", "S-M"),
+          fix("R12", "S", "done"),
+        ]),
     );
 
     const top = await getTopFixes(user.db, businessId, 3);
-    expect(top.map((f) => [f.title, f.affected_answers, f.status])).toEqual([
-      ["Fix B", 9, "doing"],
-      ["Fix C", 5, "todo"],
-      ["Fix A", 3, "todo"],
+    expect(top.map((f) => [f.rule_key, f.size, f.status])).toEqual([
+      ["R14", "S", "todo"],
+      ["R1", "S-M", "todo"],
+      ["R10", "M-L", "doing"],
     ]);
+    expect(top[0].affected_answers).toBeNull();
     expect(JSON.stringify(top)).not.toContain("engineer-only secret");
     expect(Object.keys(top[0]).sort()).toEqual([
       "affected_answers",
@@ -300,6 +311,7 @@ describe("getTopFixes", () => {
       "status",
       "title",
     ]);
+    expect((await getTopFixes(user.db, businessId, 10)).map((f) => f.rule_key)).toEqual(["R14", "R1", "R10", "R11"]);
 
     const stranger = await newUser("fixes-stranger");
     expect(await getTopFixes(stranger.db, businessId)).toEqual([]);
