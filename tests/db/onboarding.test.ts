@@ -14,6 +14,7 @@ import { anonClient, must, newUser, serviceClient, type TestUser } from "./helpe
 const loose = (db: unknown) => db as SupabaseClient;
 const DENIED = "42501";
 const CHECK = "23514";
+const INVALID = "22023";
 
 const question = (i: number, extra: Partial<OnboardingInput["questions"][number]> = {}) => ({
   short_text: `best ramen in Irvine ${i}`,
@@ -274,7 +275,7 @@ describe("fixes visibility and writes by role (closes #9)", () => {
       workspace_name: "Example DFY Fixes",
       business: {
         name: "Example Udon House",
-        domain: null,
+        domain: "example-udon.test",
         cuisine: "udon",
         city: "Irvine",
         state: "CA",
@@ -355,5 +356,106 @@ describe("listLocalPlaces", () => {
       { name: "Beta Plaza", kind: "landmark" },
       { name: "Zeta Park", kind: "landmark" },
     ]);
+  });
+});
+
+describe("input validation (22023)", () => {
+  type Business = OnboardingInput["business"];
+  const BAD_BUSINESS: [string, Partial<Business>][] = [
+    ["missing name", { name: "" }],
+    ["blank city", { city: "  " }],
+    ["missing state", { state: null as never }],
+    ["missing country", { country: "" }],
+    ["missing domain", { domain: null }],
+    ["name over 200", { name: "x".repeat(201) }],
+    ["domain not a hostname", { domain: "not a domain" }],
+    ["domain with a scheme", { domain: "https://example-ramen.test" }],
+    ["domain over 253", { domain: `${"a".repeat(60)}.`.repeat(5) + "test" }],
+    ["city over 100", { city: "x".repeat(101) }],
+    ["state over 100", { state: "x".repeat(101) }],
+    ["cuisine over 60", { cuisine: "x".repeat(61) }],
+  ];
+
+  for (const [label, patch] of BAD_BUSINESS) {
+    it(`create_business_onboarding rejects ${label} and stores nothing`, async () => {
+      const { user, workspaceId } = await selfServe("invalid");
+      const bad = input();
+      Object.assign(bad.business, patch);
+      await expect(createBusinessOnboarding(user.db, bad)).rejects.toMatchObject({ code: INVALID });
+      expect(await rowsIn(workspaceId)).toEqual({ businesses: 0, competitors: 0, questions: 0 });
+    });
+
+    it(`create_dfy_client rejects ${label}`, async () => {
+      const team = await withRole("invalid-team", "team");
+      const business = { ...input().business, ...patch };
+      await expect(createDfyClient(team.db, { workspace_name: "Example Client", business })).rejects.toMatchObject({
+        code: INVALID,
+      });
+      expect(must(await serviceClient().from("workspaces").select("id").eq("owner_id", team.id))).toEqual([]);
+    });
+  }
+
+  it("accepts limits at the boundary", async () => {
+    const { user } = await selfServe("boundary");
+    const ok = input();
+    Object.assign(ok.business, {
+      name: "x".repeat(200),
+      city: "x".repeat(100),
+      cuisine: "x".repeat(60),
+      domain: "sub.example-ramen.test",
+    });
+    ok.questions[0] = question(1, { short_text: "x".repeat(500), long_text: "y".repeat(500) });
+    await createBusinessOnboarding(user.db, ok);
+  });
+
+  it("rejects question text over 500 or an empty short form", async () => {
+    for (const patch of [{ short_text: "x".repeat(501) }, { long_text: "x".repeat(501) }, { short_text: " " }]) {
+      const { user, workspaceId } = await selfServe("bad-question");
+      const questions = [question(1, patch), ...input().questions.slice(1)];
+      await expect(createBusinessOnboarding(user.db, input({ questions }))).rejects.toMatchObject({ code: INVALID });
+      expect(await rowsIn(workspaceId)).toEqual({ businesses: 0, competitors: 0, questions: 0 });
+    }
+  });
+
+  it("rejects a competitor with no name, a name over 200 or an invalid domain", async () => {
+    const bad = [
+      { name: "", source: "manual" as const },
+      { name: "x".repeat(201), source: "manual" as const },
+      { name: "Example Bar", domain: "bad domain", source: "maps" as const },
+    ];
+    for (const competitor of bad) {
+      const { user, workspaceId } = await selfServe("bad-competitor");
+      await expect(createBusinessOnboarding(user.db, input({ competitors: [competitor] }))).rejects.toMatchObject({
+        code: INVALID,
+      });
+      expect(await rowsIn(workspaceId)).toEqual({ businesses: 0, competitors: 0, questions: 0 });
+    }
+  });
+
+  it("accepts a competitor with a missing, null or empty domain and stores NULL", async () => {
+    const { user } = await selfServe("optional-domain");
+    const competitors = [
+      { name: "Example Missing", source: "maps" as const },
+      { name: "Example Null", domain: null, source: "maps" as const },
+      { name: "Example Empty", domain: "", source: "manual" as const },
+      { name: "Example Blank", domain: "  ", source: "manual" as const },
+    ];
+    const id = await createBusinessOnboarding(user.db, input({ competitors }));
+    const rows = must(
+      await serviceClient().from("competitors").select("name, domain").eq("business_id", id).order("name"),
+    );
+    expect(rows).toEqual([
+      { name: "Example Blank", domain: null },
+      { name: "Example Empty", domain: null },
+      { name: "Example Missing", domain: null },
+      { name: "Example Null", domain: null },
+    ]);
+  });
+
+  it("create_dfy_client rejects a workspace name over 200", async () => {
+    const team = await withRole("long-ws", "team");
+    await expect(
+      createDfyClient(team.db, { workspace_name: "x".repeat(201), business: input().business }),
+    ).rejects.toMatchObject({ code: INVALID });
   });
 });

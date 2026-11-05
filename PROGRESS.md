@@ -265,6 +265,10 @@ Review follow-ups (lead, 2026-11-05)
 - Fixes (closes #9): members of a business read its fixes when it is self-serve, fix_list_visible is on, or they are on the team. They write only when it is self-serve or they are on the team. A dfy_client never writes fixes.
 - Queries: createBusinessOnboarding, createDfyClient, getOnboardingState (onboarding.ts), listLocalPlaces (places.ts, verified only). Tests: tests/db/onboarding.test.ts.
 - Local DB tests run on a separate stack: in your own clone, set supabase/config.toml project_id (e.g. rank1-backend) and ports 55xxx, then `git update-index --skip-worktree supabase/config.toml` so it never gets committed.
+- create_business_onboarding and create_dfy_client validate input and raise 22023 with a clear message. Business: name, domain, city, state and country are required. name ≤ 200, domain a valid hostname ≤ 253, city/state/country ≤ 100, cuisine ≤ 60. Each question needs a short form, and both forms are ≤ 500. Each competitor needs a name ≤ 200, and its domain must be a valid hostname or empty. The DFY workspace_name is ≤ 200.
+- Business domain is required (lead): onboarding is domain-first ("Add your domain and I'll find the questions"), and readSite needs it. Competitor domain is optional, because Maps results can lack a website: missing, null or blank is stored as NULL and validated only when present.
+- Open: src/types/db.ts got the two 0009 functions added by hand in the generator format, because the pod disk was full and no local stack could run. Regenerate it with `pnpm db:types` in the next DB PR when a stack is available.
+- Open (Step 11/12 decision): a DFY workspace is owned by the team member who created it, so only that member (and anyone added to workspace_members) reaches it through RLS. Whether every team user sees every DFY client is still to decide.
 
 ## Step 5 (frontend): restaurant onboarding (branch feat/step5-onboarding, issue #18)
 Step 5 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
