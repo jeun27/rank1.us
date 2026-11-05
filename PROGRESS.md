@@ -362,3 +362,27 @@ Changed
 UNVERIFIED
 - The category domain lists and the mention stoplist are ours, not from any docs. The editorial vs listing split follows fix rules R12 vs R6/R7.
 - Ownership (lead, 2026-11-05): data-pipeline also owns the cron route and vercel.json crons. src/lib/runs/drain.ts: cronAuthorized (exact `Bearer ${CRON_SECRET}`, unset or blank secret → reject, per the Vercel Cron docs "Securing cron jobs"), batchSize (RUN_JOBS_BATCH, default 20, max 100), drainJobs (claims 5 at a time, processes each chunk in parallel, stops at the batch, an empty queue, or a 150 s budget, since live calls run up to ~130 s). vercel.json crons: /api/cron/run-jobs every minute. src/app/api/cron/run-jobs/route.ts: GET → 401 unless the header matches; claim_jobs failing → 500 with a short error; maxDuration 300 (cacheComponents rejects the `dynamic` segment config, and reading request headers already makes it dynamic). The team is on Vercel Pro; crons run on production only, which updates only at release.
+
+## Step 7 (backend): free audit jobs and result queries (branch feat/step7-free-audit-db, issue #33)
+- Step 7 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
+- Lead decisions:
+  - A free audit has no business row. Its jobs carry the question and location inline, and its brand list (site name or domain + up to 5 Maps competitors) is a service-only snapshot, reached only via the lead token, server-side.
+  - Inputs come without an LLM (readSite, Irvine CA defaults, findLocalCompetitors top 5, buildQuestions).
+  - AUDIT_DAILY_LIMIT caps leads per UTC day, and no keys means every job fails cleanly.
+  - Paid metrics count only answers with question_id not null. Free-audit answers all count.
+  - One Resend email per lead when the run ends complete/partial. Metrics are pure TypeScript.
+  - Free-audit jobs are claimed first (bounded by 5 audits/day = 1,250 jobs/day), so a same-day audit doesn't wait behind weekly runs.
+  - Notify state: notified_at / notify_sent / notify_attempts. Failed runs are marked once with sent=false, and a Resend outage stops after 5 tries.
+- Migration 20261105000012 (+ .down.sql):
+  - runs unique(id, kind). run_jobs.run_kind, backfilled, with FK (run_id, run_kind) → runs(id, kind). CHECK: free_audit ⇔ question_id null ⇔ inline question_text + location_level + country present.
+  - answers.job_id → run_jobs (on delete set null, backfilled, unique). recompute_run now joins answers to jobs by job_id, because free-audit answers have no question_id.
+  - free_audits (service only).
+  - create_free_audit(p jsonb): service only, validates (22023), idempotent per lead. One transaction: run + 3/3/3/1 jobs + snapshot + leads.run_id.
+  - create_run, recompute_run, complete_job and claim_jobs are redefined (the rollback restores the 0011 bodies).
+- Queries (src/lib/queries/results.ts):
+  - getRunResults (members, audit/weekly). getFreeAuditByToken (service, never returns email or token).
+  - getPreviousRun (audit/weekly, complete/partial).
+  - listUnnotifiedFreeAudits / markFreeAuditNotified / bumpFreeAuditNotifyAttempts.
+  - ClaimedJob.question.id is now string | null.
+- Tests: tests/db/free-audit.test.ts.
+- src/types/db.ts got the 0012 objects added by hand in the generator format (no local stack). Regenerate it with `pnpm db:types` when a stack is available.
