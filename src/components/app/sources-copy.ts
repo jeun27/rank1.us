@@ -6,6 +6,7 @@ export const sourcesCopy = {
   noLinks: (engine: string) => `No links cited by ${engine}`,
   location: "Location",
   allLocations: "All locations",
+  show: "Show",
   exact: "Exact",
   fallback: "Country fallback",
   fallbackTip: (engine: string) => `${engine} can't target a city yet, so we check it for the whole country.`,
