@@ -13,6 +13,8 @@ export type DomainFieldProps = {
   name?: string;
   // Shows the focus edge without real focus, for the /dev/ui gallery only.
   focused?: boolean;
+  // Client forms (onboarding) handle the domain themselves instead of a page submit.
+  onSubmit?: (value: string) => void;
 };
 
 // 2px jellyDeep edge drawn inside the border, so focus does not shift the layout.
@@ -31,13 +33,24 @@ export function DomainField({
   defaultValue,
   name = "domain",
   focused = false,
+  onSubmit,
 }: DomainFieldProps) {
   const id = useId();
   const error = state === "error" && Boolean(errorText);
   const loading = state === "loading";
   const edge = error ? "border-2 border-brick" : "border border-fieldBorder";
   return (
-    <form noValidate className="@container w-full max-w-110">
+    <form
+      noValidate
+      className="@container w-full max-w-110"
+      onSubmit={
+        onSubmit &&
+        ((e) => {
+          e.preventDefault();
+          onSubmit(String(new FormData(e.currentTarget).get(name) ?? ""));
+        })
+      }
+    >
       <div
         data-field
         className={`flex flex-col gap-1.5 rounded-banner bg-white p-1.5 shadow-field @min-[21rem]:h-15 @min-[21rem]:flex-row @min-[21rem]:items-center @min-[21rem]:gap-2.5 @min-[21rem]:rounded-full @min-[21rem]:pl-5 ${edge} ${focused ? focusEdge : focusWithinEdge}`}

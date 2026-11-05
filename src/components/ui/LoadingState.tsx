@@ -9,8 +9,9 @@ export function LoadingState({
   decorativeJelly,
 }: {
   message: string;
-  done: number;
-  total: number;
+  // Omit both when there is nothing to count (one lookup, not n answers).
+  done?: number;
+  total?: number;
   decorativeJelly?: boolean;
 }) {
   return (
@@ -24,7 +25,7 @@ export function LoadingState({
         <Spinner />
         <span className="text-ink">{message}</span>
       </p>
-      <ProgressBar done={done} total={total} />
+      {total !== undefined && <ProgressBar done={done ?? 0} total={total} />}
     </div>
   );
 }
