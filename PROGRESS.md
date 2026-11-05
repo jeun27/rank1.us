@@ -300,3 +300,5 @@ Doc differences
 - "Type 3 things you sell" (unreadable site): the three answers are shown and kept for the session but not saved. Neither the RPC nor SCHEMA.md has a field for them; the cuisine select is still required.
 - Questions are saved with active_form 'long' (Step 5 brief). Location level defaults to city; ChatGPT and Gemini show the UI.md tooltip copy at city and state level.
 - Local Supabase is off (pod disk full, lead 2026-11-05): DB-backed e2e (tests/e2e/onboarding.spec.ts) is gated by CI.
+- The server actions (readSite, findLocalCompetitors) run only for a signed-in user, and the browser never gets DataForSEO's raw error text (review on #23).
+- Open, before real DataForSEO keys go on: a per-user rate limit on the site read and the Maps lookup. It needs a persistent counter (a backend table or RPC); an in-memory one wouldn't hold across serverless instances. Tracked in #21.
