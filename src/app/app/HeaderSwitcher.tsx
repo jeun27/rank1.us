@@ -26,8 +26,7 @@ export async function HeaderSwitcher() {
       businesses={businesses.map((b, i) => ({
         id: b.id,
         name: b.name,
-        // listMyBusinesses has no city yet (asked backend); the row shows the city once it does.
-        city: null,
+        city: b.city,
         visibility: latest[i]?.visibility ?? null,
         active: checking,
       }))}

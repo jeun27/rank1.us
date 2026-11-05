@@ -688,7 +688,7 @@ Changed
 - Lead copy in COPY.md "Billing (lead, 2026-11-05)".
 - Wiring:
   - /app/billing reads getBillingState (#72); "paused" (a Stripe status UI.md doesn't name) shows as no plan, pending the lead;
-  - the header switcher (HeaderSwitcher in the /app layout) reads listMyBusinesses + each business's latest run summary;
+  - the header switcher (HeaderSwitcher in the /app layout) reads listMyBusinesses (name, city) + each business's latest run summary;
   - the cookie rank1_business (httpOnly, path /app) is set by selectBusinessAction after checking listMyBusinesses, and getCurrentBusiness(db, cookie) honors it in loadShell and the competitor actions;
   - Add/Remove failures reuse "We couldn't save that. Try again."; "We couldn't open billing…" is only for the Checkout/portal redirects (lead);
   - "Active"/"Paused" as screen-reader text are approved.
