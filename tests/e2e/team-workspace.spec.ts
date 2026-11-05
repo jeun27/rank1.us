@@ -14,12 +14,7 @@ const THEMES = ["light", "dark"] as const;
 const BG = { light: "rgb(247, 244, 238)", dark: "rgb(11, 11, 12)" };
 
 const isMobile = (page: Page) => page.viewportSize()!.width < 768;
-const MODEL_HOSTS = [
-  "api.anthropic.com",
-  "api.openai.com",
-  "generativelanguage.googleapis.com",
-  "api.perplexity.ai",
-];
+const MODEL_HOSTS = ["api.anthropic.com", "api.openai.com", "generativelanguage.googleapis.com", "api.perplexity.ai"];
 
 async function open(page: Page, theme: (typeof THEMES)[number]) {
   await page.clock.setFixedTime(NOW);
