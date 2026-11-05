@@ -8,7 +8,8 @@ test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
 async function freeAudit() {
   const db = admin();
   const email = `audit-${randomUUID()}@example.test`;
-  const token = `e2e-${randomUUID()}`;
+  // Real tokens are mixed-case base64url: the proxy must look them up exactly as written.
+  const token = `AbC-dEf_${randomUUID().replace(/-/g, "")}`;
   const { data: lead, error } = await db
     .from("leads")
     .insert({ email, domain: "exampleramen.test", token })
