@@ -50,6 +50,12 @@ function ContactDialog({ onClose }: { onClose: () => void }) {
     return () => d.close();
   }, []);
 
+  // Close the modal first: while it is open the page (and the link) is inert and cannot take focus.
+  function close() {
+    ref.current?.close();
+    onClose();
+  }
+
   function onKeyDown(e: KeyboardEvent<HTMLDialogElement>) {
     if (e.key !== "Tab" || !ref.current) return;
     const items = [...ref.current.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((el) => el.offsetParent !== null);
@@ -71,7 +77,7 @@ function ContactDialog({ onClose }: { onClose: () => void }) {
       aria-labelledby={titleId}
       onCancel={(e) => {
         e.preventDefault();
-        onClose();
+        close();
       }}
       onKeyDown={onKeyDown}
       className="m-0 h-dvh max-h-none w-full max-w-none overflow-y-auto bg-paper p-5 text-ink backdrop:bg-ink/60 md:m-auto md:h-auto md:max-h-[90dvh] md:max-w-lg md:rounded-surface md:p-8 md:shadow-card"
@@ -82,9 +88,9 @@ function ContactDialog({ onClose }: { onClose: () => void }) {
         </h2>
         <button
           type="button"
-          onClick={onClose}
+          onClick={close}
           aria-label={c.close}
-          className="-mt-1 -mr-2 inline-flex size-11 shrink-0 items-center justify-center rounded-full text-h3 text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+          className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-h3 text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
         >
           <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <path d="M3 3l10 10M13 3L3 13" />

@@ -120,4 +120,22 @@ Doc differences / decisions
 Known gaps
 - "Start for $99/mo" links to /sign-in, which doesn't exist yet (auth step).
 - OG image is [PLACEHOLDER], so og:image is omitted until a real image exists.
-- Merged origin/step2-forms (366ebf4). #audit renders AuditRequestForm, and every Contact us link is a ContactUsLink. The e2e tests mock /api/audit/request. The /api routes, /contact, /privacy and /terms come later on step2-forms.
+- Merged origin/step2-forms (366ebf4). #audit renders AuditRequestForm, and every Contact us link is a ContactUsLink. The e2e tests mock /api/audit/request. step2-forms (4137697) is now merged into step-2, so the /api routes, /contact, /privacy and /terms are included.
+
+## Step 2b (billing-auth): forms, contact, legal pages (branch step2-forms)
+Changed
+- AuditRequestForm (src/components/forms) and ContactUsLink + ContactForm (src/components/contact). The modal is a native `<dialog>` with a Tab trap, Esc to close and focus back on the link. It is full screen below md, and without JS the link goes to /contact.
+- POST /api/contact runs validate, honeypot (200, nothing stored), Turnstile siteverify with remoteip, then 3 per IP hash per rolling hour counted from contact_requests (429 on the 4th). It then inserts the row and sends through Resend, and sets emailed=true only after Resend returns 2xx. A Resend failure keeps the row and returns 502.
+- POST /api/audit/request (stub) runs the same validation, honeypot and Turnstile. AUDIT_DAILY_LIMIT caps leads per UTC day across all visitors (lead, 2026-11-05: spend cap, no per-IP limit). It inserts a leads row (normalized domain, ip_hash, random token) and returns 202 `{ status: "queued" }`.
+- /contact, /privacy and /terms (placeholders marked [LEGAL REVIEW NEEDED], with a last-updated date). /dev/forms previews AuditRequestForm on the ink band until the landing page hosts it (hidden in production like /dev/ui).
+- Queries: insertContactRequest, countRecentContactRequests, markContactRequestEmailed (contactRequests.ts), insertLead, countLeadsSince (leads.ts). src/lib/supabase/service.ts holds the service-role client.
+- New env name: IP_HASH_SALT (.env.example). The e2e build gets Cloudflare's public Turnstile test keys and a canary salt (playwright.config.ts webServer.env). tests/e2e/client-secrets.spec.ts greps .next/static for server-only names and values.
+- Vitest aliases `server-only` to an empty stub (tests/stubs) so tests can import route handlers.
+
+Doc differences
+- Next 16 with cacheComponents rejects `export const runtime = "nodejs"`, so the routes rely on the default Node.js runtime (comment in each route).
+- Brick field-error text fails contrast on the ink band. In AuditRequestForm the inline error is paper colored (the band's text color), the input keeps the 2px brick edge as an extra cue, and aria-invalid + aria-describedby carry the meaning, so color is not the only signal. The Banner stays white/brick (lead OK, 2026-11-05).
+- DomainField is unchanged (lead). AuditRequestForm uses its pill look through PillField with plain inputs and the "final" Button.
+- Validation is hand-rolled (src/lib/spam/validate.ts), shared by the browser and the routes. No new dependency.
+- Company is optional in the Contact form (contact_requests.company is nullable) and has no error: the input caps it at 100 characters and the server cuts anything longer. Name, Email, Tier and Message are required.
+- Form strings live in src/components/forms/copy.ts. tests/unit/forms/copy.test.ts fails on any [PLACEHOLDER] there, and on any string that is not in docs/COPY.md.

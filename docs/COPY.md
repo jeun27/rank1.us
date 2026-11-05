@@ -22,6 +22,26 @@ Every customer-facing string Rank1 may use, copied verbatim from build pack sect
 
 Progress percentages ("48%") are computed from n of d, so they are not copy.
 
+### Forms (lead, 2026-11-05)
+
+| Where | String |
+|---|---|
+| Contact field labels | "Name", "Email", "Company", "Tier", "Message" |
+| Contact submit (idle form of 'Sending…') | "Send" |
+| /contact H1 and modal title | "Contact us" |
+| Contact tier options (no dollar amounts) | "Agency bundle", "Done-for-you (custom)", "Other" |
+| Audit form labels | "Email", "Your domain" (no email placeholder) |
+| Audit domain placeholder | "yourbusiness.com" |
+| Audit success | "Got it. We'll email your audit to {email}." |
+| Email error (both forms) | "Add a valid email, like you@ramenhouse.com" |
+| Contact name error | "Add your name" |
+| Contact message error | "Add a message" |
+| Contact tier placeholder option and tier error | "Choose one" |
+| Contact company | Optional, no error string |
+| Audit Banner error | "That didn't send. Try again in a minute." |
+| Audit daily-cap 429 | "Free audits are full for today. Try again tomorrow." (a per-request 429 keeps "Too many tries. Try again in an hour.") |
+| Contact modal close button (aria-label) | "Close" |
+
 | Jelly | Rule |
 |---|---|
 | Footer credit | 12px flat Jelly + 'Powered by Rank1' (10px) ONLY on the free audit. Never on $99 plan reports. |

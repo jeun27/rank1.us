@@ -36,9 +36,11 @@ describe("validateContact", () => {
     const r = validateContact(good);
     expect(r).toEqual({ ok: true, data: { ...good, message: "Hi\nthere" } });
   });
-  it("company is optional (stored as null)", () => {
+  it("company is optional (stored as null) and never an error: over 100 characters is cut", () => {
     const r = validateContact({ ...good, company: "  " });
     expect(r.ok && r.data.company).toBeNull();
+    const long = validateContact({ ...good, company: "x".repeat(150) });
+    expect(long.ok && long.data.company).toBe("x".repeat(100));
   });
   it("collapses newlines in single-line fields", () => {
     const r = validateContact({ ...good, name: "Ana\r\nBcc: x" });
@@ -54,7 +56,7 @@ describe("validateContact", () => {
     expect(validateContact({})).toEqual({ ok: false, errors: ["name", "email", "tier", "message"] });
     expect(validateContact({ ...good, name: "x".repeat(101), company: "x".repeat(101), message: "x".repeat(5001) })).toEqual({
       ok: false,
-      errors: ["name", "company", "message"],
+      errors: ["name", "message"],
     });
     expect(validateContact({ ...good, email: ["ana@example.test"] })).toEqual({ ok: false, errors: ["email"] });
   });
