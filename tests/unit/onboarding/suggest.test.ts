@@ -82,6 +82,21 @@ describe("suggestCompetitors", () => {
     expect(names).not.toContain("Example Ramen House");
   });
 
+  it("works for a business without a domain or cuisine yet (getCurrentBusiness can return null)", async () => {
+    const find = findWith(maps);
+    const r = await suggestCompetitors(
+      {
+        business: { name: "Example Ramen House", domain: null, cuisine: null, city: "Irvine", state: "CA" },
+        tracked: [],
+        dismissed: [],
+      },
+      { store: store(), find },
+    );
+    expect(find).toHaveBeenCalledWith({ cuisine: "", city: "Irvine", state: "CA", limit: 20 });
+    expect(r.status).toBe("ok");
+    expect(r.items.map((i) => i.name)).not.toContain("Example Ramen House");
+  });
+
   it("serves a cached list without a token or a paid call", async () => {
     const cached = { status: "ok", items: [{ name: "Example Cached Place", cid: "1" }] };
     const s = store(cached);

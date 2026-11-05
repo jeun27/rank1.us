@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { seriesFromSummaries, type SeriesSummary } from "@/lib/metrics";
+import { metric, seriesFromSummaries, type SeriesSummary } from "@/lib/metrics";
 
 const s = (i: number, p: Partial<SeriesSummary> = {}): SeriesSummary => ({
   id: `run-${i}`,
@@ -7,7 +7,7 @@ const s = (i: number, p: Partial<SeriesSummary> = {}): SeriesSummary => ({
   status: "complete",
   started_at: `2026-10-${String(i).padStart(2, "0")}T14:00:00.000Z`,
   finished_at: `2026-10-${String(i).padStart(2, "0")}T14:40:00.000Z`,
-  visibility: { named: i, n: 20 },
+  visibility: metric(i, 20),
   ...p,
 });
 
@@ -53,7 +53,7 @@ describe("seriesFromSummaries", () => {
   });
 
   it("n = 0 → value null, never 0%", () => {
-    const { points } = seriesFromSummaries([s(2, { visibility: { named: 0, n: 0 } }), s(1)]);
+    const { points } = seriesFromSummaries([s(2, { visibility: metric(0, 0) }), s(1)]);
     expect(points[1].metric).toEqual({ value: null, numerator: 0, denominator: 0 });
   });
 

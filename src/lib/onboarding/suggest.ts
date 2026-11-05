@@ -8,7 +8,8 @@ import type { findLocalCompetitors } from "./competitors";
 export type KnownCompetitor = { name: string; domain?: string | null };
 
 export type SuggestInput = {
-  business: CompetitorLookup & { name?: string };
+  // getCurrentBusiness: { name, domain, cuisine, city, state, ... }
+  business: CompetitorLookup & { name?: string | null };
   tracked: KnownCompetitor[];
   dismissed: KnownCompetitor[];
 };
