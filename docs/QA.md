@@ -1,5 +1,49 @@
 # QA
 
+## Step 12: Client invites + DFY client dashboard
+
+Checked 2026-11-05 on main at 092636f:
+- #61 (35e1023): client invites and fix list visibility
+- #63 (092636f): DFY client dashboard and invites
+
+The sandbox Docker disk is full, so there was no local Supabase. test-db and e2e come from CI on main's push of 092636f (run 42095822788); the CI e2e stubs the admin invite, so I sent no invite emails. Unit, typecheck, lint, format and build ran locally in the sandbox. UI checks ran from the Mac on #63's preview at 8c5cf6a, whose app code is identical to 092636f (only PROGRESS.md differs).
+Preview: https://rank1-mqeak2e3m-bryan-flowhighlevels-projects.vercel.app (sha 8c5cf6a, READY).
+Sources: Jeun's ENG_HANDOFF_OVERNIGHT §3/§6 Step 12, the lead's brief (rank1-step12.md).
+
+Result: PASS. No blocking problems.
+
+### Commands
+
+| Command | Result |
+|---|---|
+| `pnpm test` (sandbox, 092636f) | PASS. 78 files, 943 tests passed |
+| `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build` (sandbox) | PASS |
+| CI on main push 092636f | PASS. test-db 17 files / 339 tests; e2e 320 passed, 2 skipped; test, typecheck, lint, format green |
+| `E2E_BASE_URL=<preview> pnpm e2e` (092636f tests) | PASS. 263 passed, 59 skipped (local-stack tests), 0 failed |
+
+### Checks
+
+| Check | Result | Evidence |
+|---|---|---|
+| New email → invited | PASS | CI db clients.test.ts "invites a new email: sends the invite with the callback URL and grants the client role + membership" |
+| Already this business's client → "Already invited." | PASS | db "says 'already invited' for this business's client, without a second invite"; the string is in COPY.md "Client invites (lead, 2026-11-05)" |
+| Any existing account → refused, nothing changed | PASS | db "refuses any existing account and changes nothing (self-serve, team, another business's client)"; client_invite_status and grant_dfy_client refuse other access ("This user already has other Rank1 access") |
+| Grant failure deletes the created user; a retry works | PASS | src/lib/queries/clients.ts deletes the just-invited user when grant_dfy_client fails; db "a failed grant deletes the just-invited user and returns error, so a retry starts clean"; "a failed invite returns error and creates nothing" |
+| Only the team can invite, remove access, toggle or list | PASS | client_invite_status, grant_dfy_client and revoke_dfy_client are service-role only and revoked from anon and authenticated; set_fix_list_visible and list_client_users check private.is_team_dfy_business. src/app/team/actions.ts `teamDfy` requires landing = team and a DFY business visible through RLS before any service-role call. db: "set_fix_list_visible toggles for team, and refuses self-serve, dfy_client and anon (42501)", listClientUsers 42501 for non-team callers and for a self-serve business, grant "refuses team users, other workspaces' members and self-serve businesses" |
+| /auth/callback accepts type invite | PASS | src/app/auth/callback/route.ts EMAIL_TYPES = magiclink, signup, email, invite; unit callback.test "verifies a token_hash link of type invite"; CI e2e "invite link → /client; fixes only when shown; Remove access → Nothing tracked yet." |
+| /client read-only: hero + n + Measured, 8-run line, engines, top 5, History; fix list only when fix_list_visible; no switcher, SoV, prices or write controls | PASS | preview /dev/client at 375 and 1280: H1 "Dashboard". With a run: "Checked … ago · n answers · API-measured, directional" and "named in a of n" on every number, History shown. "What to fix next" only in the fixes states, read-only (0 selects, 0 buttons). No share of voice, no $ amount and no email anywhere. Unit "fix list shown: the shared FixList, read-only"; e2e "read-only: no Status select, no competitor edits, no billing or prices" |
+| Empty states | PASS | no run: "No weekly checks yet. Your first one runs Monday."; access removed: "Nothing tracked yet." with no button (0 buttons); unit "access removed: 'Nothing tracked yet.' and no button" |
+| axe, no side scroll, keyboard | PASS | 0 violations and scrollWidth = viewport on success, fixes, partial, no-run, no-run-fixes and removed at 375 and 1280; e2e "/dev/client {state}: one H1, axe clean, no side scroll", "keyboard: every link and button on the client dashboard is reachable with Tab" |
+| /team Clients tab: list, Invite client, Remove access, "Show fix list to client"; approved error strings | PASS | preview /dev/team at 375 and 1280: Clients tab, "Invite client" with "Send invite", "Remove access", the "Show fix list to client" checkbox; axe clean, no side scroll. Unit clients-panel.test: Remove calls the action for that user, invalid email and error banners, the toggle reverts on failure, "COPY.md has the lead's Client invites strings" |
+| Client emails never on the client side or in logs | PASS | No email in /dev/client at either width; src/app/client and src/components/client never read an email. Emails come only from list_client_users (team only) in the team panel. clients.ts and the team actions log nothing and return status codes only ("never log or echo the email") |
+
+Not blocking:
+- If deleting the just-invited user also fails after a failed grant, the action returns "error" but the role-less account stays, and a retry for that email would then say "This email already has a Rank1 account." Rare (two Supabase Auth failures in a row).
+
+### Blocking problems
+
+None.
+
 ## Step 11: Team 3-pane shell + workspace + Copy context (re-run)
 
 Checked 2026-11-05 on main at d9afd3b:
