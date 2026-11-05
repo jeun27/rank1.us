@@ -273,17 +273,8 @@ test("every visible string, aria-label and title is in docs/COPY.md (data exclud
     });
     found.forEach((t) => seen.add(norm(t)));
   };
-  for (const name of [
-    "Dashboard",
-    "Questions",
-    "Competitors",
-    "Sources",
-    "Fix list",
-    "Experiments",
-    "Reports",
-    "History",
-    "Settings",
-  ]) {
+  // Every nav section (Experiments, Reports and Settings are hidden until Steps 15–17).
+  for (const name of ["Dashboard", "Questions", "Competitors", "Sources", "Fix list", "History"]) {
     await show(page, "Nav");
     await navTo(page, name);
     await collect();
@@ -299,7 +290,7 @@ test("every visible string, aria-label and title is in docs/COPY.md (data exclud
   expect([...seen].filter((v) => v && !inCopy(v))).toEqual([]);
 });
 
-test("no DFY clients: one H1 and the empty state, axe clean, dark nav", async ({ page }) => {
+test("no DFY clients: one H1 and the empty state, axe clean", async ({ page }) => {
   await page.goto("/dev/team?state=no-clients");
   await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
   await expect(page.getByText("No clients yet.", { exact: true })).toBeVisible();

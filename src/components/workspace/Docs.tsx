@@ -1,5 +1,8 @@
 "use client";
 import type { ReactNode } from "react";
+import { AddCompetitorForm, CompetitorSuggestions } from "@/components/app/CompetitorActions";
+import { appCopy } from "@/components/app/copy";
+import { FixList } from "@/components/fixes/FixList";
 import { Badge } from "@/components/ui/Badge";
 import { Freshness } from "@/components/ui/Freshness";
 import { Icon } from "@/components/ui/Icon";
@@ -21,7 +24,8 @@ import {
   type Selection,
 } from "@/lib/workspace/context";
 import type { DocSel } from "./DocPane";
-import { SECTION_ICON } from "./Sidebar";
+import { NAV_SECTIONS, SECTION_ICON } from "./Sidebar";
+import { useTeam, type TeamExtras } from "./team";
 
 const D = ({ children }: { children: ReactNode }) => <span data-computed>{children}</span>;
 
@@ -100,6 +104,25 @@ function Leaderboard({ view, top }: { view: WorkspaceView; top?: number }) {
   );
 }
 
+// Team writes for the selected client (existing RPCs; RLS decides).
+function CompetitorTools({ team }: { team: TeamExtras }) {
+  const actions = {
+    add: (c: Parameters<TeamExtras["actions"]["add"]>[1]) => team.actions.add(team.businessId, c),
+    dismiss: (c: Parameters<TeamExtras["actions"]["dismiss"]>[1]) => team.actions.dismiss(team.businessId, c),
+  };
+  return (
+    <>
+      {team.suggestions.length > 0 && (
+        <section aria-label={appCopy.suggested} className="flex flex-col gap-3">
+          <H>{appCopy.suggested}</H>
+          <CompetitorSuggestions suggestions={team.suggestions} actions={actions} />
+        </section>
+      )}
+      <AddCompetitorForm add={actions.add} />
+    </>
+  );
+}
+
 function Empty({ message }: { message: string }) {
   return (
     <div className="flex flex-col items-center gap-4 py-8 text-center">
@@ -118,6 +141,7 @@ function SectionDoc({
   section: (typeof SECTIONS)[number];
   onPick: (s: Selection) => void;
 }) {
+  const team = useTeam();
   switch (section) {
     case "dashboard":
     case "reports":
@@ -150,7 +174,23 @@ function SectionDoc({
         />
       );
     case "competitors":
-      return <Leaderboard view={view} />;
+      return (
+        <>
+          <Leaderboard view={view} />
+          {team && <CompetitorTools team={team} />}
+        </>
+      );
+    case "fixes":
+      return team ? (
+        <FixList
+          {...team.fixes}
+          level={3}
+          canWrite
+          onStatus={(id, status) => team.actions.status(team.businessId, id, status)}
+        />
+      ) : (
+        <Empty message={EMPTY.fixes!} />
+      );
     case "sources":
       return (
         <>
@@ -293,7 +333,7 @@ function DomainDoc({ view, domain }: { view: WorkspaceView; domain: string }) {
 function NewTab({ onPick }: { onPick: (s: Selection) => void }) {
   return (
     <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-      {SECTIONS.map((s) => (
+      {NAV_SECTIONS.map((s) => (
         <li key={s}>
           <button
             type="button"

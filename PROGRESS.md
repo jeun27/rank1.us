@@ -567,3 +567,14 @@ Changed
 - Nav: "What to fix next" after Sources. The Dashboard section heading links to /app/fixes (top 3 from getTopFixes, same ranking).
 - n fix (#57): the Freshness n comes from loadShell().latest.metrics, the same object the Dashboard hero renders. tests/unit/app/measured.test.tsx (the fixes n equals the Dashboard n with a no_overview answer) supersedes measured.test.ts, which only checked runMeasured against jobs_ok and went away with runMeasured.
 - QA #58 gallery fidelity (#57): the /dev/app fixes fixtures use the fix_rules titles and §5b copy filled for a made-up site, in bySize order (R14, R10, R11), with no answer count for site rules. The fixes states take n from the Dashboard gallery metrics (240). tests/unit/fixes/example-data.test.ts checks titles against seed.sql, details against COPY, and the order.
+
+## Step 11 (frontend): team workspace on real data (branch feat/step11-team-real, issue #54)
+
+- Step 11 built from ENG_HANDOFF_OVERNIGHT §3/§6 + issue #10. The Build Pack isn't readable, so reconcile later.
+- Lead decisions (brief): same 3-pane shell on real data behind ENABLE_TEAM_WORKSPACE (Production false); team sees every DFY business only, read through RLS (#56), never the service role; nav shows only pages with real data (Dashboard, Questions, Competitors, Sources, Fix list, History; Experiments/Reports/Settings hidden until Steps 15–17); Copy context = buildContextMarkdown (#55); Open in Claude = exactly https://claude.ai after the copy; team writes fix status and competitors through the existing RPCs.
+- /team?b=<id>: src/app/team/load.ts reads listDfyBusinesses → getWorkspaceRows (#11's panes), listRunSummaries (weekly runs, the same the panes count) + loadPaidRun → computeMetrics, getQuestionsWithLatestAnswers → computeSources, listFixes, listCompetitors + Maps suggestions. No b → the first client by name. An unknown, archived or self-serve b is a real 404 in the proxy (teamClient), with notFound() as the fallback.
+- Client switcher: a GET form (label "Client", "Show") at the top of the context pane, not the sidebar head (design note), so it stays usable when the sidebar is an icon rail between md and lg.
+- Fix list: the shared FixList (new level prop: h3 cards inside a workspace document). Competitors: the /app suggestions and add form, extracted into CompetitorActions.tsx and used by both. Team server actions re-check the client against listDfyBusinesses.
+- Lead copy: "No clients yet." (no add-client UI in /team), "Client"; the Open in Claude toast is now "Brief copied. Paste it in Claude."
+- #11's Example workspace moved to the /dev/team gallery (404 in production, no sign-in); team-workspace.spec runs there. tests/e2e/team-real.spec.ts covers the real /team (seeded DFY + self-serve businesses).
+- No LLM SDK: tests/unit/engines/no-llm-sdk.test.ts already guards the repo.

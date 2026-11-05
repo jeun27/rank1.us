@@ -44,7 +44,7 @@ function StatusControl({ fix, onStatus, onError }: { fix: FixView; onStatus: OnS
   );
 }
 
-// level: ranked cards sit under the page H1 (h2); Tidy-ups cards under its H2 (h3).
+// level: ranked cards sit under the page H1 (h2); Tidy-ups cards under its heading (h3). One deeper inside a document (team workspace).
 function FixCard({
   fix,
   canWrite,
@@ -56,9 +56,9 @@ function FixCard({
   canWrite: boolean;
   onStatus?: OnStatus;
   onError: () => void;
-  level: 2 | 3;
+  level: 2 | 3 | 4;
 }) {
-  const Heading = level === 2 ? "h2" : "h3";
+  const Heading = (["h2", "h3", "h4"] as const)[level - 2];
   return (
     <li className="flex flex-col gap-3 rounded-surface bg-white p-4 shadow-card md:p-6">
       <Heading data-computed className="text-ui font-semibold">
@@ -95,6 +95,7 @@ export function FixList({
   noDomain,
   canWrite,
   onStatus,
+  level = 2,
 }: {
   ranked: FixView[];
   tidyUps: FixView[];
@@ -102,9 +103,12 @@ export function FixList({
   noDomain: boolean;
   canWrite: boolean;
   onStatus?: OnStatus;
+  // The heading level of the ranked cards and of "Tidy-ups": 2 on a page, 3 inside a workspace document.
+  level?: 2 | 3;
 }) {
   const [failed, setFailed] = useState(false);
   const onError = () => setFailed(true);
+  const TidyHeading = level === 2 ? "h2" : "h3";
   if (!ranked.length && !tidyUps.length && !unchecked.length)
     return (
       <Card>
@@ -117,7 +121,7 @@ export function FixList({
       {ranked.length > 0 && (
         <ul aria-label={c.title} className="flex flex-col gap-3">
           {ranked.map((f) => (
-            <FixCard key={f.id} fix={f} canWrite={canWrite} onStatus={onStatus} onError={onError} level={2} />
+            <FixCard key={f.id} fix={f} canWrite={canWrite} onStatus={onStatus} onError={onError} level={level} />
           ))}
         </ul>
       )}
@@ -138,10 +142,17 @@ export function FixList({
       )}
       {tidyUps.length > 0 && (
         <section aria-label={c.tidyUps} className="flex flex-col gap-3">
-          <h2 className="font-display text-h3 font-semibold">{c.tidyUps}</h2>
+          <TidyHeading className="font-display text-h3 font-semibold">{c.tidyUps}</TidyHeading>
           <ul className="flex flex-col gap-3">
             {tidyUps.map((f) => (
-              <FixCard key={f.id} fix={f} canWrite={canWrite} onStatus={onStatus} onError={onError} level={3} />
+              <FixCard
+                key={f.id}
+                fix={f}
+                canWrite={canWrite}
+                onStatus={onStatus}
+                onError={onError}
+                level={level === 2 ? 3 : 4}
+              />
             ))}
           </ul>
         </section>

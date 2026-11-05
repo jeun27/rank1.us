@@ -20,6 +20,10 @@ export const SECTION_ICON: Record<Section, IconName> = {
   settings: "settings",
 };
 
+// Only pages with real data (lead, Step 11): Experiments, Reports and Settings come with Steps 15–17.
+const LATER = new Set<Section>(["experiments", "reports", "settings"]);
+export const NAV_SECTIONS = SECTIONS.filter((s) => !LATER.has(s));
+
 const focus = "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep";
 const row = `flex min-h-11 w-full items-center gap-3 rounded-card px-3 text-left text-caption font-semibold ${focus}`;
 const iconButton = `grid size-11 place-items-center rounded-card text-inkMuted hover:bg-raised hover:text-ink ${focus}`;
@@ -74,7 +78,7 @@ export function Sidebar(props: {
       </div>
 
       <ul className="flex flex-col gap-0.5">
-        {SECTIONS.map((s) => (
+        {NAV_SECTIONS.map((s) => (
           <li key={s}>
             <button
               type="button"

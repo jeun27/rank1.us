@@ -128,3 +128,20 @@ describe("team workspace on real data (Step 11)", () => {
     expect(copy).not.toContain("Paste it in Claude if the box is empty.");
   });
 });
+
+describe("Fix list context", () => {
+  it("doesn't say 'Nothing to fix yet' when the client has fixes", () => {
+    render(
+      <TeamProvider value={team()}>
+        <ContextPane
+          view={view}
+          section="fixes"
+          selection={{ kind: "section", section: "fixes" }}
+          now={NOW}
+          onSelect={() => {}}
+        />
+      </TeamProvider>,
+    );
+    expect(screen.queryByText("Nothing to fix yet. Run your first check.")).toBeNull();
+  });
+});

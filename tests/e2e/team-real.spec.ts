@@ -10,9 +10,9 @@ const isMobile = (page: Page) => page.viewportSize()!.width < 768;
 const show = async (page: Page, pane: "Nav" | "Context" | "Document") => {
   if (isMobile(page)) await page.getByRole("tab", { name: pane, exact: true }).click();
 };
-const must = <T>(r: { data: T | null; error: unknown }): T => {
+const must = <T>(r: { data: T; error: unknown }): NonNullable<T> => {
   if (r.error) throw r.error;
-  return r.data as T;
+  return r.data as NonNullable<T>;
 };
 
 // A workspace with one active business (DFY or self-serve) owned by a fresh user.
