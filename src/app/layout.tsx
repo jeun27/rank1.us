@@ -13,7 +13,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${publicSans.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${fraunces.variable} ${publicSans.variable} h-full antialiased`}
+    >
       <body className="min-h-full bg-paper font-sans text-body text-ink">{children}</body>
     </html>
   );

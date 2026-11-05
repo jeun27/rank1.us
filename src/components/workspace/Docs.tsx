@@ -1,0 +1,338 @@
+"use client";
+import type { ReactNode } from "react";
+import { Badge } from "@/components/ui/Badge";
+import { Freshness } from "@/components/ui/Freshness";
+import { Icon } from "@/components/ui/Icon";
+import { Jelly } from "@/components/ui/Jelly";
+import { StatNumber } from "@/components/ui/StatNumber";
+import { Table } from "@/components/ui/Table";
+import { ENGINES, ENGINE_LABEL, type WorkspaceView } from "@/lib/queries/workspace";
+import {
+  EMPTY,
+  SECTIONS,
+  SECTION_LABEL,
+  contextFor,
+  fallbackNote,
+  formatDate,
+  linksText,
+  namedText,
+  pointsChange,
+  visibilityText,
+  type Selection,
+} from "@/lib/workspace/context";
+import type { DocSel } from "./DocPane";
+import { SECTION_ICON } from "./Sidebar";
+
+const D = ({ children }: { children: ReactNode }) => <span data-computed>{children}</span>;
+
+function Doc({
+  title,
+  children,
+  view,
+  now,
+}: {
+  title: string;
+  children: ReactNode;
+  view: WorkspaceView;
+  now: Date | null;
+}) {
+  return (
+    <article className="flex max-w-prose flex-col gap-5">
+      <div className="flex flex-col gap-2">
+        <h2 data-computed className="text-h3 font-semibold">
+          {title}
+        </h2>
+        <p data-computed className="text-caption text-inkMuted">
+          {view.business.name}
+        </p>
+        {now && view.latest.checkedAt && (
+          <div data-computed>
+            <Freshness checkedAt={view.latest.checkedAt} answers={view.latest.answers} now={now} />
+          </div>
+        )}
+      </div>
+      {children}
+    </article>
+  );
+}
+
+const H = ({ children }: { children: string }) => <h3 className="text-ui font-semibold">{children}</h3>;
+
+function Summary({ view }: { view: WorkspaceView }) {
+  const change = pointsChange(view.latest.visibility, view.checks[1]?.visibility);
+  return (
+    <>
+      <div className="flex items-end gap-4" data-computed>
+        <StatNumber metric={view.latest.visibility} />
+        {change && <Badge tone="info">{change}</Badge>}
+      </div>
+      <Table
+        caption="Engine"
+        columns={[
+          { key: "e", header: "Engine" },
+          { key: "n", header: "Named", numeric: true },
+        ]}
+        rows={ENGINES.map((e) => ({ e: ENGINE_LABEL[e], n: <D>{namedText(view.latest.byEngine[e])}</D> }))}
+      />
+      <Leaderboard view={view} top={5} />
+    </>
+  );
+}
+
+function Leaderboard({ view, top }: { view: WorkspaceView; top?: number }) {
+  return (
+    <Table
+      caption="Competitors"
+      columns={[
+        { key: "b", header: "Business" },
+        { key: "n", header: "Named", numeric: true },
+      ]}
+      rows={view.competitors.slice(0, top).map((c) => ({
+        b: (
+          <span className="flex items-center gap-2">
+            <D>{c.name}</D>
+            {c.you && <Badge tone="info">You</Badge>}
+          </span>
+        ),
+        n: <D>{visibilityText(c.named)}</D>,
+      }))}
+    />
+  );
+}
+
+function Empty({ message }: { message: string }) {
+  return (
+    <div className="flex flex-col items-center gap-4 py-8 text-center">
+      <Jelly size={80} />
+      <p className="text-body-lg">{message}</p>
+    </div>
+  );
+}
+
+function SectionDoc({
+  view,
+  section,
+  onPick,
+}: {
+  view: WorkspaceView;
+  section: (typeof SECTIONS)[number];
+  onPick: (s: Selection) => void;
+}) {
+  switch (section) {
+    case "dashboard":
+    case "reports":
+      return (
+        <>
+          {section === "reports" && <p className="text-ui">{EMPTY.reports}</p>}
+          <Summary view={view} />
+        </>
+      );
+    case "questions":
+      return (
+        <Table
+          caption="Questions"
+          columns={[
+            { key: "q", header: "Question" },
+            { key: "n", header: "Named", numeric: true },
+          ]}
+          rows={view.questions.map((q) => ({
+            q: (
+              <button
+                type="button"
+                onClick={() => onPick({ kind: "question", id: q.id })}
+                className="min-h-11 text-left text-caption text-jellyDeep underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-jellyDeep"
+              >
+                <D>{q.text}</D>
+              </button>
+            ),
+            n: <D>{namedText(q.visibility)}</D>,
+          }))}
+        />
+      );
+    case "competitors":
+      return <Leaderboard view={view} />;
+    case "sources":
+      return (
+        <>
+          <Table
+            caption="Sources"
+            columns={[
+              { key: "e", header: "Engine" },
+              { key: "n", header: "Sources", numeric: true },
+            ]}
+            rows={ENGINES.map((e) => ({ e: ENGINE_LABEL[e], n: <D>{linksText(view.sources.byEngine[e])}</D> }))}
+          />
+          <ul className="flex flex-col divide-y divide-border border-y border-border text-caption">
+            {view.sources.domains.map((d) => (
+              <li key={d.domain} className="flex justify-between gap-4 py-2">
+                <D>{d.domain}</D>
+                <D>{linksText(d.links)}</D>
+              </li>
+            ))}
+          </ul>
+        </>
+      );
+    case "history":
+      return (
+        <Table
+          caption="History"
+          columns={[
+            { key: "d", header: "Checked" },
+            { key: "v", header: "Visibility", numeric: true },
+            { key: "c", header: "Change", numeric: true },
+          ]}
+          rows={view.checks.map((c, i) => ({
+            d: (
+              <span className="flex flex-wrap items-center gap-2">
+                <D>{formatDate(c.finishedAt)}</D>
+                {c.partial && (
+                  <Badge tone="warn">
+                    <D>{`${c.ok} of ${c.total} answers`}</D>
+                  </Badge>
+                )}
+              </span>
+            ),
+            v: <D>{visibilityText(c.visibility)}</D>,
+            c: <D>{pointsChange(c.visibility, view.checks[i + 1]?.visibility) ?? "–"}</D>,
+          }))}
+        />
+      );
+    case "settings":
+      return <Facts view={view} sel={{ kind: "section", section }} />;
+    default:
+      return <Empty message={EMPTY[section]!} />;
+  }
+}
+
+function Facts({ view, sel }: { view: WorkspaceView; sel: Selection }) {
+  return (
+    <dl className="flex flex-col gap-2 text-ui">
+      {contextFor(view, sel).facts.map((f) => (
+        <div key={f.label} className="flex flex-wrap justify-between gap-x-4 border-b border-border py-2">
+          <dt data-computed className="text-inkMuted">
+            {f.label}
+          </dt>
+          <dd data-computed className="tabular-nums">
+            {f.text}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function QuestionDoc({ view, id }: { view: WorkspaceView; id: string }) {
+  const q = view.questions.find((x) => x.id === id)!;
+  const links = q.answers.flatMap((a) => a.citations.map((c) => ({ ...c, engine: a.engine })));
+  return (
+    <>
+      <Facts view={view} sel={{ kind: "question", id }} />
+      <Table
+        caption="Named"
+        columns={[
+          { key: "e", header: "Engine" },
+          { key: "n", header: "Named" },
+        ]}
+        rows={q.answers.map((a) => ({
+          e: (
+            <span
+              className={a.fallbackCountry ? "text-inkMuted" : ""}
+              title={a.fallbackCountry ? fallbackNote(ENGINE_LABEL[a.engine]) : undefined}
+            >
+              <D>{`${ENGINE_LABEL[a.engine]} ${a.runIndex}`}</D>
+            </span>
+          ),
+          n: <D>{a.status === "ok" ? a.brands.join(", ") : "–"}</D>,
+        }))}
+      />
+      <H>Sources</H>
+      {links.length ? (
+        <ul className="flex flex-col gap-2">
+          {links.map((l) => (
+            <li key={l.url}>
+              <a
+                href={l.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-11 items-center gap-2 text-caption text-jellyDeep underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-jellyDeep"
+              >
+                <Icon name="link" className="size-4" />
+                <D>{`${l.domain} · ${ENGINE_LABEL[l.engine]}`}</D>
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p data-computed className="text-caption text-inkMuted">
+          {linksText(0)}
+        </p>
+      )}
+    </>
+  );
+}
+
+function DomainDoc({ view, domain }: { view: WorkspaceView; domain: string }) {
+  const rows = view.questions
+    .map((q) => ({ q, n: q.answers.reduce((s, a) => s + a.citations.filter((c) => c.domain === domain).length, 0) }))
+    .filter((r) => r.n > 0);
+  return (
+    <>
+      <Facts view={view} sel={{ kind: "domain", domain }} />
+      <Table
+        caption="Question"
+        columns={[
+          { key: "q", header: "Question" },
+          { key: "n", header: "Sources", numeric: true },
+        ]}
+        rows={rows.map((r) => ({ q: <D>{r.q.text}</D>, n: <D>{linksText(r.n)}</D> }))}
+      />
+    </>
+  );
+}
+
+function NewTab({ onPick }: { onPick: (s: Selection) => void }) {
+  return (
+    <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      {SECTIONS.map((s) => (
+        <li key={s}>
+          <button
+            type="button"
+            onClick={() => onPick({ kind: "section", section: s })}
+            className="flex min-h-11 w-full items-center gap-3 rounded-card border border-border px-3 text-left text-caption font-semibold hover:bg-raised focus-visible:outline-2 focus-visible:outline-jellyDeep"
+          >
+            <Icon name={SECTION_ICON[s]} className="size-4 text-inkMuted" />
+            {SECTION_LABEL[s]}
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export function DocView({
+  view,
+  sel,
+  now,
+  onPick,
+}: {
+  view: WorkspaceView;
+  sel: DocSel;
+  now: Date | null;
+  onPick: (s: Selection) => void;
+}) {
+  if (sel.kind === "new") return <NewTab onPick={onPick} />;
+  const title = contextFor(view, sel).title;
+  return (
+    <Doc title={title} view={view} now={now}>
+      {sel.kind === "section" ? (
+        <SectionDoc view={view} section={sel.section} onPick={onPick} />
+      ) : sel.kind === "question" ? (
+        <QuestionDoc view={view} id={sel.id} />
+      ) : sel.kind === "domain" ? (
+        <DomainDoc view={view} domain={sel.domain} />
+      ) : (
+        <Facts view={view} sel={sel} />
+      )}
+    </Doc>
+  );
+}
