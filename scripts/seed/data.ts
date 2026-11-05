@@ -6,6 +6,8 @@ import { exampleRamenHouseQuestions } from "../../tests/fixtures/example-ramen-h
 export const ENGINES = ["chatgpt", "gemini", "google_aio", "perplexity"] as const;
 export type Engine = (typeof ENGINES)[number];
 export const RUNS_PER_ENGINE: Record<Engine, number> = { chatgpt: 3, gemini: 3, google_aio: 3, perplexity: 1 };
+// Google AI Overview and Perplexity can target the city; ChatGPT and Gemini fall back to the country.
+export const cityLevel = (engine: Engine) => engine === "google_aio" || engine === "perplexity";
 
 export const BUSINESS = "Example Ramen House";
 export const COMPETITORS = [

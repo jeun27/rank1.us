@@ -5,7 +5,17 @@ import { IRVINE_PLACES } from "../../tests/fixtures/irvine";
 import { irvineRestaurants, type IrvineRestaurant } from "../../tests/fixtures/irvine_restaurants";
 
 import { fixRules } from "./fix-rules";
-import { BUSINESS, CITATION_DOMAINS, COMPETITORS, IDS, OWNER_EMAIL, id, seedRows, type AnswerSeed } from "./data";
+import {
+  BUSINESS,
+  CITATION_DOMAINS,
+  COMPETITORS,
+  IDS,
+  OWNER_EMAIL,
+  cityLevel,
+  id,
+  seedRows,
+  type AnswerSeed,
+} from "./data";
 export { BUSINESS, CITATION_DOMAINS, COMPETITORS, ENGINES, IDS, OWNER_EMAIL, RUNS_PER_ENGINE, WEEKS, id } from "./data";
 export type { AnswerSeed, Engine } from "./data";
 
@@ -150,7 +160,7 @@ values ('00000000-0000-0000-0000-000000000000', ${lit(IDS.owner)}, 'authenticate
       "answers",
       answers.map((a) => {
         const q = questionText(qById.get(a.question_id)!);
-        const exact = a.engine === "google_aio" || a.engine === "perplexity";
+        const exact = cityLevel(a.engine);
         return {
           id: lit(a.id),
           run_id: lit(a.run_id),
