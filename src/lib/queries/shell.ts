@@ -13,6 +13,8 @@ export type CurrentBusiness = {
   city: string;
   state: string;
   country: string;
+  // The workspace's subscription is active or trialing (the status itself is never returned).
+  paid: boolean;
 };
 
 // The oldest active self-serve business in the caller's workspace (oldest membership), or null.
@@ -31,7 +33,7 @@ export async function getCurrentBusiness(db: DbClient): Promise<CurrentBusiness 
   if (!member) return null;
   const { data, error: bizError } = await db
     .from("businesses")
-    .select("id, name, domain, cuisine, city, state, country")
+    .select("id, name, domain, cuisine, city, state, country, workspaces(subscription_status)")
     .eq("workspace_id", member.workspace_id)
     .eq("service", "self_serve")
     .is("archived_at", null)
@@ -40,7 +42,10 @@ export async function getCurrentBusiness(db: DbClient): Promise<CurrentBusiness 
     .limit(1)
     .maybeSingle();
   if (bizError) throw bizError;
-  return data;
+  if (!data) return null;
+  const { workspaces, ...business } = data;
+  const status = (workspaces as { subscription_status: string | null } | null)?.subscription_status;
+  return { ...business, paid: status === "active" || status === "trialing" };
 }
 
 export type RunSummary = {

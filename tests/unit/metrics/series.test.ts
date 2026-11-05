@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { metric, seriesFromSummaries, type SeriesSummary } from "@/lib/metrics";
+import type { RunSummary } from "@/lib/queries/shell";
 
 const s = (i: number, p: Partial<SeriesSummary> = {}): SeriesSummary => ({
   id: `run-${i}`,
@@ -12,6 +13,12 @@ const s = (i: number, p: Partial<SeriesSummary> = {}): SeriesSummary => ({
 });
 
 describe("seriesFromSummaries", () => {
+  it("accepts listRunSummaries rows as they are (type check)", () => {
+    const rows: RunSummary[] = [];
+    const accepted: SeriesSummary[] = rows;
+    expect(seriesFromSummaries(accepted)).toEqual({ points: [], visible: false });
+  });
+
   it("the latest 8 complete/partial runs, oldest → newest, Metric-shaped", () => {
     const rows = Array.from({ length: 10 }, (_, i) => s(i + 1)).reverse();
     const { points, visible } = seriesFromSummaries(rows);

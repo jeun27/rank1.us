@@ -208,7 +208,19 @@ describe("getCurrentBusiness", () => {
       city: "Irvine",
       state: "CA",
       country: "US",
+      paid: true,
     });
+    for (const [status, paid] of [
+      ["trialing", true],
+      ["past_due", false],
+      ["canceled", false],
+      [null, false],
+      ["active", true],
+    ] as const) {
+      must(await s.from("workspaces").update({ subscription_status: status }).eq("id", workspaceId));
+      expect((await getCurrentBusiness(user.db))?.paid, String(status)).toBe(paid);
+    }
+    expect(JSON.stringify(await getCurrentBusiness(user.db))).not.toContain("subscription");
     must(await s.from("businesses").update({ archived_at: new Date().toISOString() }).eq("id", businessId));
     expect((await getCurrentBusiness(user.db))?.name).toBe("Example Later");
 
