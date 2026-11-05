@@ -1,3 +1,4 @@
+import { notifyFreeAuditsWith } from "@/lib/audit/service";
 import { claimJobs } from "@/lib/queries/run-jobs";
 import { batchSize, cronAuthorized, drainJobs, processJob, serviceRunsDb } from "@/lib/runs";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -17,7 +18,9 @@ export async function GET(req: Request) {
       process: (job) => processJob(job, { db: runsDb }),
       batch: batchSize(),
     });
-    return Response.json(summary);
+    // Then email free audits that finished (one per lead; failed runs are marked without an email).
+    const notified = await notifyFreeAuditsWith(db);
+    return Response.json({ ...summary, notified });
   } catch (e) {
     const message =
       e instanceof Error ? e.message : typeof e === "object" && e && "message" in e ? String(e.message) : "error";

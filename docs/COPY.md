@@ -151,6 +151,15 @@ Labels for the 3 onboarding screens (4b Onboarding 1-3). State messages are the 
 | Location level options | "Country", "State", "City" |
 | Save failure | "We couldn't save your business. Try again." |
 
+## Audit email (lead, 2026-11-05)
+
+The free-audit completion email (Step 7). Sent once per lead when its run ends complete or partial; a failed run sends nothing.
+
+| Subject | "Your Rank1 audit is ready" |
+| Body | "Your free audit for {domain} is ready: {link}\n\nAPI-measured, directional. Results are based on {n} AI answers." |
+| {link} | NEXT_PUBLIC_SITE_URL + /audit/{token} |
+| {n} | successful answers (failed and no_overview excluded) |
+
 # 4b. App screens: every state
 
 Copy in quotes is exact. Every number shows n + checked X ago. Results labeled API-measured, directional.

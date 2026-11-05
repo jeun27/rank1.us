@@ -11,6 +11,14 @@ const q = vi.hoisted(() => ({
 vi.mock("@/lib/queries/contactRequests", async (real) => ({ ...(await real<object>()), ...q }));
 vi.mock("@/lib/queries/leads", () => q);
 vi.mock("@/lib/supabase/service", () => ({ createServiceClient: () => ({}) }));
+// after() needs a Next request scope; run the callback inline so the audit start is observable.
+const auditService = vi.hoisted(() => ({ startFreeAuditWith: vi.fn(async () => "run-1") }));
+vi.mock("@/lib/audit/service", () => auditService);
+const afterImpl = vi.hoisted(() => ({ fn: (task: () => unknown) => void task() }));
+vi.mock("next/server", async (real) => ({
+  ...(await real<object>()),
+  after: (task: () => unknown) => afterImpl.fn(task),
+}));
 
 import { POST as contactPOST } from "@/app/api/contact/route";
 import { POST as auditPOST } from "@/app/api/audit/request/route";
@@ -178,6 +186,24 @@ describe("POST /api/contact", () => {
 });
 
 describe("POST /api/audit/request", () => {
+  it("still answers 202 when after() can't schedule the audit (no request scope), and logs it", async () => {
+    const real = afterImpl.fn;
+    afterImpl.fn = () => {
+      throw new Error("`after` was called outside a request scope");
+    };
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const res = await post(auditPOST, audit);
+      expect(res.status).toBe(202);
+      expect(q.insertLead).toHaveBeenCalled();
+      expect(auditService.startFreeAuditWith).not.toHaveBeenCalled();
+      expect(err).toHaveBeenCalledWith("audit request: free audit not scheduled");
+    } finally {
+      afterImpl.fn = real;
+      err.mockRestore();
+    }
+  });
+
   it("202 queued, inserts a lead with the normalized domain, hashed IP and a random token", async () => {
     const res = await post(auditPOST, audit);
     expect(res.status).toBe(202);
@@ -189,6 +215,10 @@ describe("POST /api/audit/request", () => {
     expect(row.token).toMatch(/^[A-Za-z0-9_-]{43}$/);
     await post(auditPOST, audit);
     expect(q.insertLead.mock.calls[1][1].token).not.toBe(row.token);
+    expect(auditService.startFreeAuditWith).toHaveBeenCalledWith(expect.anything(), {
+      id: "lead-1",
+      domain: "ramenhouse.com",
+    });
     const since: Date = q.countLeadsSince.mock.calls[0][1];
     expect(since.getUTCHours() + since.getUTCMinutes() + since.getUTCSeconds()).toBe(0);
   });

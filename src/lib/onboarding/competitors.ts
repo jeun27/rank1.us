@@ -19,7 +19,7 @@ export async function findLocalCompetitors(
   deps: Partial<EngineDeps> = {},
 ): Promise<LocalCompetitorsResult> {
   const res = await mapsSearch(
-    { keyword: `${input.cuisine.trim()} restaurant`, city: input.city, state: input.state },
+    { keyword: `${input.cuisine.trim()} restaurant`.trim(), city: input.city, state: input.state },
     {
       fetch: deps.fetch ?? fetch,
       env: deps.env ?? process.env,
