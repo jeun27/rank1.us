@@ -472,7 +472,19 @@ Changed
 ## Step 8 QA fix (frontend): rule 3 on Competitors and History (branch fix/step8-rule3, issue #37, QA #46)
 - PRODUCT.md rule 3: Competitors phone cards now show "{pct} (named in a of n answers)" like the desktop table. Competitors has the Freshness line ("Checked … ago · n answers · API-measured, directional") at both widths. History carries "API-measured, directional" once (its rows have their own dates).
 - A shared Measured component (src/components/app/Page.tsx) renders the Freshness line when there is one check time, and the label alone otherwise. Step 9's Sources page reuses it.
+## Step 9 (data-pipeline): per-engine sources and location view (branch feat/step9-sources, issue #42)
+Step 9 built from ENG_HANDOFF_OVERNIGHT §6 + PRODUCT.md + docs/UI.md; Build Pack not readable; reconcile later.
+Lead decisions (Step 9 brief): /app/sources reads the latest complete/partial audit/weekly run. One card per engine with cited links by category (counts, never %), categories from citations.category only. Top domains ≤20. A location selector ("All locations" + each question target) filters the chart and the table. An engine's badge is "Country fallback" if any answer fell back. No SoV and no percentages on the page.
 
+Changed
+- src/lib/metrics/sources.ts computeSources({questions, location?}) over getQuestionsWithLatestAnswers' questions:
+  - links = citations of ok answers as stored (deduped per answer); deleted questions are already excluded by the query; a null/unknown category → other;
+  - engines in ENGINE_IDS order with all 6 categories in a fixed order (0s kept);
+  - locationSupport from that engine's non-failed answers: any fallback_country → fallback, all exact → exact, none → null;
+  - topDomains by bare domain (most-cited category, ties by the fixed order; engines in order), sorted by links desc then domain, ≤20;
+  - locations from questions with answers: key `level:country|state|city` (fields above the level dropped).
+- Labels match the Questions page badge (#40): "City", "State", "Country". Only when two targets share a level is the place added ("City · Irvine, CA"). An unknown location key → an empty result, never everything.
+- citations.category on getQuestionsWithLatestAnswers came from backend #43 (a57fbdf), merged into this branch.
 ## Step 9 (frontend): sources page with location view (branch feat/step9-sources-page, issue #42)
 Step 9 built from ENG_HANDOFF_OVERNIGHT §6 + PRODUCT.md + docs/UI.md; Build Pack not readable; reconcile later.
 - /app/sources (nav after Questions): the latest complete/partial run's cited links through computeSources (#44).
