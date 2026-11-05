@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { CUISINES } from "@/lib/onboarding/cuisines";
 
 const STATES = [
   "1 empty",
@@ -26,6 +27,9 @@ test("/dev/onboarding shows every 4b onboarding state, accessibly", async ({ pag
     state("1 error").getByRole("group", { name: "We couldn't read that site. Type 3 things you sell." }),
   ).toBeVisible();
   await expect(state("1 partial").getByLabel("Cuisine")).toHaveAttribute("data-attention", "true");
+  // The select lists CUISINES (#23), the same list the real page passes.
+  const options = await state("1 success").getByLabel("Cuisine").locator("option").allTextContents();
+  expect(options).toEqual(["", ...CUISINES]);
   await expect(state("2 loading").getByText("Finding ramen places in Irvine…")).toBeVisible();
   await expect(state("2 success").getByRole("checkbox", { name: /Example/ })).toHaveCount(5);
   await expect(state("2 partial").getByText("Add competitors by name.", { exact: true })).toBeVisible();

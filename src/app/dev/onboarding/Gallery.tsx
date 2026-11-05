@@ -2,6 +2,7 @@
 import { Badge } from "@/components/ui/Badge";
 import type { CompetitorSearch, LocalPlace, OnboardingActions } from "@/app/app/onboarding/contract";
 import { Onboarding, emptyDraft, type Draft } from "@/app/app/onboarding/Onboarding";
+import { CUISINES } from "@/lib/onboarding/cuisines";
 
 // Example data: invented places and brands. Lookups never resolve, so each state stays put.
 const places: LocalPlace[] = [
@@ -12,7 +13,6 @@ const places: LocalPlace[] = [
   { name: "Turtle Rock", kind: "area" },
   { name: "Woodbridge", kind: "area" },
 ];
-const cuisines = ["ramen", "sushi", "pho", "Korean BBQ", "hot pot", "dim sum", "Sichuan", "brunch"];
 const items = [
   "Example Noodle Bar",
   "Example Izakaya",
@@ -81,7 +81,7 @@ export function Gallery() {
           </p>
           <Onboarding
             places={places}
-            cuisines={cuisines}
+            cuisines={CUISINES}
             actions={{ ...actions, ...over }}
             initial={{ ...emptyDraft, ...patch }}
             syncUrl={false}
