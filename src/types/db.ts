@@ -624,7 +624,7 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: string
                            },
 "run_summaries":
-{ Args: { "p_business_id": string,"p_limit"?: number }; Returns: { "finished_at": string | null,"jobs_failed": number,"jobs_ok": number,"jobs_total": number,"kind": string,"n": number,"named": number,"per_engine": Json,"run_id": string,"started_at": string | null,"status": string }[]
+{ Args: { "p_business_id": string,"p_limit"?: number,"p_statuses"?: string[] }; Returns: { "finished_at": string | null,"jobs_failed": number,"jobs_ok": number,"jobs_total": number,"kind": string,"n": number,"named": number,"per_engine": Json,"run_id": string,"started_at": string | null,"status": string }[]
                            },
 "take_rate_token":
 { Args: { "p_kind": string }; Returns: boolean

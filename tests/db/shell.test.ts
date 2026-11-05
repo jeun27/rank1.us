@@ -172,6 +172,11 @@ describe("listRunSummaries", () => {
     expect(all[0].visibility).toEqual({ value: null, numerator: 0, denominator: 0 });
     expect(Object.keys(all[0].perEngine).sort()).toEqual([...ENGINE_IDS].sort());
     expect((await listRunSummaries(user.db, businessId, 2)).map((r) => r.id)).toEqual([ids[2], ids[1]]);
+    expect((await listRunSummaries(user.db, businessId, 2, ["complete", "partial"])).map((r) => r.id)).toEqual([
+      ids[2],
+      ids[0],
+    ]);
+    expect((await listRunSummaries(user.db, businessId, 8, ["failed"])).map((r) => r.id)).toEqual([ids[1]]);
   });
 
   it("a non-member and anon get nothing", async () => {

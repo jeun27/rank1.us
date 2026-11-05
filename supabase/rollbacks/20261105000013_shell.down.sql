@@ -2,7 +2,7 @@
 drop function if exists public.dismiss_competitor(uuid, jsonb);
 drop function if exists public.add_competitor(uuid, jsonb);
 drop function if exists private.match_competitor(uuid, jsonb);
-drop function if exists public.run_summaries(uuid, int);
+drop function if exists public.run_summaries(uuid, int, text[]);
 
 drop policy if exists competitors_select on public.competitors;
 drop policy if exists competitors_insert on public.competitors;

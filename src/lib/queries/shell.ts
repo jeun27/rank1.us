@@ -58,8 +58,18 @@ export type RunSummary = {
 };
 
 // Audit and weekly runs of a business, newest first, with visibility counts (public.run_summaries).
-export async function listRunSummaries(db: DbClient, businessId: string, limit = 8): Promise<RunSummary[]> {
-  const { data, error } = await db.rpc("run_summaries", { p_business_id: businessId, p_limit: limit });
+// Pass statuses (e.g. ["complete", "partial"]) to get the newest `limit` runs with those statuses only.
+export async function listRunSummaries(
+  db: DbClient,
+  businessId: string,
+  limit = 8,
+  statuses?: RunSummary["status"][],
+): Promise<RunSummary[]> {
+  const { data, error } = await db.rpc("run_summaries", {
+    p_business_id: businessId,
+    p_limit: limit,
+    ...(statuses ? { p_statuses: statuses } : {}),
+  });
   if (error) throw error;
   return (data ?? []).map((r) => {
     const per = r.per_engine as Record<EngineId, { named: number; n: number }>;

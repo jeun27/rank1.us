@@ -31,15 +31,16 @@ create policy competitors_update on public.competitors for update to authenticat
 create policy competitors_delete on public.competitors for delete to authenticated
   using (private.can_write_competitors(business_id));
 
--- Audit/weekly runs of a business, newest first, with visibility counts using computeMetrics'
--- exclusions: only ok answers whose question still exists; named = mentioned. RLS applies.
-create or replace function public.run_summaries(p_business_id uuid, p_limit int default 8)
+-- Audit/weekly runs of a business, newest first (optionally only some statuses), with visibility
+-- counts using computeMetrics' exclusions: ok answers whose question still exists; named = mentioned.
+create or replace function public.run_summaries(p_business_id uuid, p_limit int default 8, p_statuses text[] default null)
 returns table (run_id uuid, kind text, status text, jobs_total int, jobs_ok int, jobs_failed int,
                started_at timestamptz, finished_at timestamptz, named int, n int, per_engine jsonb)
 language sql stable security invoker set search_path = '' as $$
   with r as (
     select ru.* from public.runs ru
     where ru.business_id = p_business_id and ru.kind in ('audit', 'weekly')
+      and (p_statuses is null or ru.status = any (p_statuses))
     order by ru.started_at desc nulls last, ru.id
     limit greatest(coalesce(p_limit, 8), 0)
   ), c as (
@@ -138,9 +139,9 @@ end;
 $$;
 
 -- Supabase grants EXECUTE on new public functions to anon by default.
-revoke all on function public.run_summaries(uuid, int), public.add_competitor(uuid, jsonb),
+revoke all on function public.run_summaries(uuid, int, text[]), public.add_competitor(uuid, jsonb),
   public.dismiss_competitor(uuid, jsonb) from public, anon;
-grant execute on function public.run_summaries(uuid, int), public.add_competitor(uuid, jsonb),
+grant execute on function public.run_summaries(uuid, int, text[]), public.add_competitor(uuid, jsonb),
   public.dismiss_competitor(uuid, jsonb) to authenticated;
 revoke all on function private.match_competitor(uuid, jsonb) from public;
 grant execute on function private.match_competitor(uuid, jsonb) to authenticated;
