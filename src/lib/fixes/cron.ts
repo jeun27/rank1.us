@@ -1,6 +1,5 @@
+import { SITE_RULES } from "./evaluate";
 import { unchecked, type FixResult, type RuleKey } from "./types";
-
-const RULES: RuleKey[] = ["R10", "R11", "R14", "H1"];
 
 // The cron route's maxDuration is 300 s; fix checks start only with ≥60 s left (lead, 2026-11-05),
 // and only for one run per tick, inside evaluateFixes' 45 s crawl budget.
@@ -10,29 +9,59 @@ export type RunToCheck = { runId: string; businessId: string; domain: string | n
 
 export type FixCheckDeps = {
   next: () => Promise<RunToCheck | null>;
-  evaluate: (business: { domain: string | null }) => Promise<FixResult[]>;
+  // The enabled site rules (fix_rules.enabled, service role), read every tick.
+  enabledRules: () => Promise<RuleKey[]>;
+  evaluate: (business: { domain: string | null }, rules: RuleKey[]) => Promise<FixResult[]>;
   record: (businessId: string, runId: string, results: FixResult[]) => Promise<void>;
   timeLeftMs: () => number;
   log?: (line: string) => void;
 };
 
-export type FixCheckSummary = { checked: string | null; skipped?: "time" | "none"; error?: string };
+export type FixCheckSummary = {
+  checked: string | null;
+  skipped?: "time" | "none" | "no_rules";
+  fallback?: boolean;
+  error?: string;
+};
 
-// One closed paid run per tick: evaluate the site rules, then record all 4 (record_fix_results stores
-// fix_checks rows, so the run isn't listed again). An evaluate error still records 4 unchecked rows,
-// so no run is retried every tick. Never throws; only a failed record leaves the run listed.
+const codeOf = (e: unknown) => (typeof e === "object" && e && "code" in e ? String(e.code) : "error");
+
+// One closed paid run per tick, for the rules enabled right now. If recording fails (e.g. a rule was
+// disabled mid-tick), it retries once with every enabled rule unchecked 'error' and no new crawl, so the
+// run gets its fix_checks rows and a site is never re-crawled every minute. Never throws.
 export async function checkFixesForOneRun(deps: FixCheckDeps): Promise<FixCheckSummary> {
   const log = deps.log ?? ((l: string) => console.error(l));
   if (deps.timeLeftMs() < MIN_TIME_LEFT_MS) return { checked: null, skipped: "time" };
+  let run: RunToCheck | null;
+  let rules: RuleKey[];
   try {
-    const run = await deps.next();
-    if (!run) return { checked: null, skipped: "none" };
-    const results = await deps.evaluate({ domain: run.domain }).catch(() => RULES.map((r) => unchecked(r, "error")));
+    rules = (await deps.enabledRules()).filter((r) => SITE_RULES.includes(r));
+    if (!rules.length) return { checked: null, skipped: "no_rules" };
+    run = await deps.next();
+  } catch (e) {
+    log(`fix check: failed (${codeOf(e)})`);
+    return { checked: null, error: codeOf(e) };
+  }
+  if (!run) return { checked: null, skipped: "none" };
+  const results = await deps
+    .evaluate({ domain: run.domain }, rules)
+    .then((rs) => rs.filter((r) => rules.includes(r.rule_key)))
+    .catch(() => rules.map((r) => unchecked(r, "error")));
+  try {
     await deps.record(run.businessId, run.runId, results);
     return { checked: run.runId };
-  } catch (e) {
-    const code = typeof e === "object" && e && "code" in e ? String(e.code) : "error";
-    log(`fix check: failed (${code})`);
-    return { checked: null, error: code };
+  } catch (first) {
+    log(`fix check: record failed (${codeOf(first)}), marking unchecked`);
+    try {
+      await deps.record(
+        run.businessId,
+        run.runId,
+        rules.map((r) => unchecked(r, "error")),
+      );
+      return { checked: run.runId, fallback: true };
+    } catch (e) {
+      log(`fix check: failed (${codeOf(e)})`);
+      return { checked: null, error: codeOf(e) };
+    }
   }
 }

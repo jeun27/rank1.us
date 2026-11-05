@@ -487,5 +487,6 @@ Changed
   - R14 (each bot's group else *, "/" and "/menu");
   - H1 (Restaurant / FoodEstablishment family / Menu JSON-LD or hasMenu on home + menu);
   - evaluateFixes (R10, R11, R14, H1 order; unchecked reasons no_domain, robots_disallowed, site_unreachable, robots_unreachable, menu_not_found, menu_ambiguous, no_html_menu, error);
-  - checkFixesForOneRun (cron.ts): always records all 4 enabled rules per run (an evaluate error → 4 unchecked rows, reason error), so backend's fix_checks marker means no run is retried every tick.
+  - checkFixesForOneRun (cron.ts): always records every enabled rule per run (an evaluate error → unchecked rows, reason error), so with backend's fix_checks marker no run is retried every tick.
+- Re-crawl guards (lead, 2026-11-05): (1) the enabled rules are read from fix_rules at run time (service role), and only those are evaluated and recorded; the R11 crawl is skipped when R11 is off. (2) If record_fix_results fails (e.g. 22023 after a rule was disabled), it retries once in the same tick with every enabled rule unchecked 'error' and no new crawl, so the run gets marked.
 - The copy templates are the SCHEMA §5b customer copy verbatim (a test reads docs/SCHEMA.md); detail is set only for fix.
