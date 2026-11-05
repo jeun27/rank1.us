@@ -10,9 +10,17 @@ vi.mock("@/lib/queries/auth", () => ({
   getLanding: (...a: unknown[]) => getLanding(...a),
 }));
 
+// The request's cookies, as next/headers would expose them inside a route handler.
+let jar = new Map<string, string>();
+const cookieSet = vi.fn();
+vi.mock("next/headers", () => ({
+  cookies: async () => ({ has: (n: string) => jar.has(n), set: (...a: unknown[]) => cookieSet(...a) }),
+}));
+
 const { GET } = await import("@/app/auth/callback/route");
 
 const call = async (qs: string, cookie?: string) => {
+  jar = new Map(cookie ? [cookie.split("=") as [string, string]] : []);
   const res = await GET(
     new NextRequest(`http://localhost:3000/auth/callback${qs}`, { headers: cookie ? { cookie } : {} }),
   );
@@ -102,15 +110,13 @@ describe("/auth/callback", () => {
   });
 
   it("takes next from the sign-in cookie for email links, and clears it", async () => {
-    const res = await GET(
-      new NextRequest("http://localhost:3000/auth/callback?token_hash=th&type=magiclink", {
-        headers: { cookie: "rank1_next=%2Fapp%2Fbilling" },
-      }),
-    );
-    expect(new URL(res.headers.get("location")!).pathname).toBe("/app/billing");
-    const cleared = res.cookies.get("rank1_next");
-    expect(cleared?.value).toBe("");
-    expect(cleared?.path).toBe("/auth");
+    expect(await call("?token_hash=th&type=magiclink", "rank1_next=%2Fapp%2Fbilling")).toBe("/app/billing");
+    expect(cookieSet).toHaveBeenCalledWith("rank1_next", "", { path: "/auth", maxAge: 0 });
+  });
+
+  it("leaves cookies alone when there is no next cookie", async () => {
+    await call("?code=abc");
+    expect(cookieSet).not.toHaveBeenCalled();
   });
 
   it("ignores an unsafe next in the cookie", async () => {

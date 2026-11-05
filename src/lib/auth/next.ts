@@ -4,6 +4,9 @@ const AREAS = ["/app", "/team", "/client"] as const;
 const inArea = (path: string, area: string) =>
   path === area || path.startsWith(`${area}/`) || path.startsWith(`${area}?`);
 
+// Holds next between the magic-link form and /auth/callback, so the emailed link carries no query string.
+export const NEXT_COOKIE = "rank1_next";
+
 export const isProtected = (path: string) => AREAS.some((a) => inArea(path, a));
 
 export const signInPath = (path: string, search = "") => `/signin?next=${encodeURIComponent(path + search)}`;

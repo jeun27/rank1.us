@@ -239,7 +239,8 @@ test("the email link opened in another browser still lands on next, from the coo
   await page.getByRole("button", { name: c.sendLink }).click();
   await expect(page.getByRole("main").getByRole("status")).toHaveText(c.linkSent(user.email));
   const next = (await page.context().cookies()).find((k) => k.name === "rank1_next");
-  expect(next).toMatchObject({ value: "/app/billing", httpOnly: true, sameSite: "Lax", path: "/auth" });
+  expect(next).toMatchObject({ httpOnly: true, sameSite: "Lax", path: "/auth" });
+  expect(decodeURIComponent(next!.value)).toBe("/app/billing"); // Next URL-encodes cookie values
 
   // Same browser: next comes from the cookie, and the cookie is used up.
   await openMagicLink(page, user.email);

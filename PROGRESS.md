@@ -168,7 +168,8 @@ Blocked/open
 Changed
 - `src/proxy.ts` (Next 16 renamed middleware.ts to proxy.ts) + `src/lib/supabase/middleware.ts`: refreshes the session with getClaims on every non-static request, keeps the no-store cache headers, and sends signed-out `/app`, `/team` and `/client` visitors to `/signin?next=<path>`.
 - `/signin`: "Continue with Google" (primary, full width) and an email magic link (secondary). Strings are in COPY.md "Auth (lead, 2026-11-05)".
-- `/auth/callback`: takes `?code` (Google and PKCE email links) or `?token_hash&type` (admin links and custom email templates). Then ensureSelfServeWorkspace → getLanding → team `/team`, dfy_client `/client`, onboarding `/app/onboarding`, dashboard `/app`. `next` is honored only when it's a same-origin path in the user's own area or a public page.
+- `/auth/callback`: Google returns `?code` (PKCE exchange). Email links are `?token_hash&type` (magiclink, signup or email) checked with verifyOtp, so they work in another browser or on another device. No code and no token_hash (for example tokens in a #fragment), or a failed check, shows the expired-link banner, never the Google one. The hosted email templates are in HANDOFF.md (lead applies them).
+- The magic-link form sends `emailRedirectTo = <origin>/auth/callback` with no query string, and first POSTs next to `/auth/next`. That stores it in a 10-minute httpOnly SameSite=Lax cookie (`rank1_next`, path /auth, same safeNext check), which the callback reads once and clears. Then ensureSelfServeWorkspace → getLanding → team `/team`, dfy_client `/client`, onboarding `/app/onboarding`, dashboard `/app`. `next` is honored only when it's a same-origin path in the user's own area or a public page.
 - `POST /auth/signout` and the Account menu (details/summary, works without JS) on the /app and /client headers and in #11's workspace sidebar (new `user` icon).
 - Role gates (AreaGate in the /app and /client layouts and the /team page): `/app` is for self-serve owners and members, `/team` for team and `/client` for dfy_client. A wrong role goes to its own home (review of #14).
 - Without NEXT_PUBLIC_SUPABASE_URL and the anon key (Supabase not connected on Vercel yet), the proxy passes public pages through and still sends the app areas to /signin, instead of every page returning 500 (review of #14).
@@ -202,7 +203,6 @@ Intended behavior changes (lead, 2026-11-05), not loosened tests
 Doc differences
 - The brief says `middleware.ts`. Next 16 calls it `proxy.ts` (node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md), so that's the file.
 - Cache Components is on, so /signin reads its query inside Suspense (the frame prerenders).
-- Email links carry `via=email`, so a failed email link shows the link banner instead of the Google one.
 - `supabase/config.toml`: added `http://localhost:3000/**` to additional_redirect_urls so local email links can come back to localhost.
 
 ## Team workspace shell (frontend, branch feat/team-workspace, issue #10)

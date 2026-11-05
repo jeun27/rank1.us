@@ -11,13 +11,8 @@ import { createClient } from "@/lib/supabase/client";
 
 type Notice = { tone: "error" | "info"; text: string } | null;
 
-const callback = (next: string | null, via?: "email") => {
-  const q = new URLSearchParams();
-  if (next) q.set("next", next);
-  if (via) q.set("via", via);
-  const qs = q.toString();
-  return `${location.origin}/auth/callback${qs ? `?${qs}` : ""}`;
-};
+const callback = (next: string | null) =>
+  `${location.origin}/auth/callback${next ? `?next=${encodeURIComponent(next)}` : ""}`;
 
 // Auth serves raw JSON when a provider is off, so check first and show the banner instead.
 // One check per page load; a failed fetch isn't kept, so "Try again" really retries.
@@ -71,9 +66,16 @@ export function SignInForm({ next, error }: { next: string | null; error?: "goog
     setEmailError(undefined);
     setSending(true);
     setNotice(null);
+    // The emailed link may open in another browser, so next goes in a server cookie, not the link. If this
+    // fails the link still signs in, it just lands on the default home.
+    await fetch("/auth/next", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ next }),
+    }).catch(() => {});
     const { error } = await createClient().auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: callback(next, "email") },
+      options: { emailRedirectTo: `${location.origin}/auth/callback` },
     });
     setSending(false);
     setNotice(error ? { tone: "error", text: c.sendError } : { tone: "info", text: c.linkSent(email) });
