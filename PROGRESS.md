@@ -101,3 +101,20 @@ Changed test assertions (old → new; none removed)
 - e2e dev-ui: heading list adds DomainField, AuroraButton, ProgressBar, Final set; heading lookup is now `exact: true` ("Button" also matched "AuroraButton").
 - e2e dev-ui-example-data: Example data label list adds DomainField, ProgressBar, Final set.
 - New tests: tests/unit/ui/final-set.test.tsx (DomainField 4 states, AuroraButton, ProgressBar math and 0/0, Freshness clock); e2e reduced motion, Final set computed styles (focus ring, aurora, #316FC5, 48% fill), narrow/wide field layout.
+
+## Step 2b (billing-auth): forms, contact, legal pages (branch step2-forms)
+Changed
+- AuditRequestForm (src/components/forms) and ContactUsLink + ContactForm (src/components/contact). The modal is a native `<dialog>` with a Tab trap, Esc to close and focus back on the link. It is full screen below md, and without JS the link goes to /contact.
+- POST /api/contact runs validate, honeypot (200, nothing stored), Turnstile siteverify with remoteip, then 3 per IP hash per rolling hour counted from contact_requests (429 on the 4th). It then inserts the row and sends through Resend, and sets emailed=true only after Resend returns 2xx. A Resend failure keeps the row and returns 502.
+- POST /api/audit/request (stub) runs the same validation, honeypot and Turnstile. AUDIT_DAILY_LIMIT caps leads per UTC day across all visitors (lead, 2026-11-05: spend cap, no per-IP limit). It inserts a leads row (normalized domain, ip_hash, random token) and returns 202 `{ status: "queued" }`.
+- /contact, /privacy and /terms (placeholders marked [LEGAL REVIEW NEEDED], with a last-updated date). /dev/forms previews AuditRequestForm on the ink band until the landing page hosts it (hidden in production like /dev/ui).
+- Queries: insertContactRequest, countRecentContactRequests, markContactRequestEmailed (contactRequests.ts), insertLead, countLeadsSince (leads.ts). src/lib/supabase/service.ts holds the service-role client.
+- New env name: IP_HASH_SALT (.env.example). The e2e build gets Cloudflare's public Turnstile test keys and a canary salt (playwright.config.ts webServer.env). tests/e2e/client-secrets.spec.ts greps .next/static for server-only names and values.
+- Vitest aliases `server-only` to an empty stub (tests/stubs) so tests can import route handlers.
+
+Doc differences
+- Next 16 with cacheComponents rejects `export const runtime = "nodejs"`, so the routes rely on the default Node.js runtime (comment in each route).
+- Brick field-error text fails contrast on the ink band. In AuditRequestForm the inline error takes the band's text color, the input keeps the 2px brick edge, and the Banner stays white/brick.
+- DomainField is unchanged (lead). AuditRequestForm uses its pill look through PillField with plain inputs and the "final" Button.
+- Validation is hand-rolled (src/lib/spam/validate.ts), shared by the browser and the routes. No new dependency.
+- Company is optional in the Contact form (contact_requests.company is nullable). Name, Email, Tier and Message are required.

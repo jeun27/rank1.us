@@ -22,6 +22,18 @@ Every customer-facing string Rank1 may use, copied verbatim from build pack sect
 
 Progress percentages ("48%") are computed from n of d, so they are not copy.
 
+### Forms (lead, 2026-11-05)
+
+| Where | String |
+|---|---|
+| Contact field labels | "Name", "Email", "Company", "Tier", "Message" |
+| Contact submit (idle form of 'Sending…') | "Send" |
+| /contact H1 and modal title | "Contact us" |
+| Contact tier options (no dollar amounts) | "Agency bundle", "Done-for-you (custom)", "Other" |
+| Audit form labels | "Email", "Your domain" (no email placeholder) |
+| Audit domain placeholder | "yourbusiness.com" |
+| Audit success | "Got it. We'll email your audit to {email}." (proposed by lead, pending Jeun) |
+
 | Jelly | Rule |
 |---|---|
 | Footer credit | 12px flat Jelly + 'Powered by Rank1' (10px) ONLY on the free audit. Never on $99 plan reports. |
