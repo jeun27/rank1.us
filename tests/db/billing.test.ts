@@ -135,6 +135,25 @@ describe("apply_stripe_subscription", () => {
     );
   });
 
+  it("not_found records nothing, so Stripe's retry applies once the customer is linked", async () => {
+    const { workspaceId } = await workspace("stripe-early");
+    const customer = `cus_${randomUUID()}`;
+    const early = event({ customer_id: customer, status: "active", quantity: 1 });
+    expect(await applyStripeSubscription(serviceClient(), early)).toBe("not_found");
+    expect(must(await serviceClient().from("stripe_events").select("event_id").eq("event_id", early.event_id))).toEqual(
+      [],
+    );
+
+    // Checkout links the customer to the workspace (stored by the service role, no event time yet).
+    must(await serviceClient().from("workspaces").update({ stripe_customer_id: customer }).eq("id", workspaceId));
+    expect(await applyStripeSubscription(serviceClient(), early)).toBe("applied");
+    expect(await ws(workspaceId)).toMatchObject({ subscription_status: "active", seats_quantity: 1 });
+    expect(
+      must(await serviceClient().from("stripe_events").select("event_id").eq("event_id", early.event_id)),
+    ).toHaveLength(1);
+    expect(await applyStripeSubscription(serviceClient(), early)).toBe("duplicate");
+  });
+
   it("rejects a bad status or missing ids (22023) without recording the event, so a retry works", async () => {
     const { workspaceId } = await workspace("stripe-bad");
     const bad = event({ client_reference_id: workspaceId, status: "paused" as never });

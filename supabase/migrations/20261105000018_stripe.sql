@@ -24,8 +24,8 @@ end;
 $$;
 revoke all on function private.archive_due_businesses(uuid) from public;
 
--- Service role only. Records the Stripe event and applies its subscription state in one
--- transaction, so a failed apply never leaves the event marked as seen. Due removals are
+-- Service role only. Records the Stripe event and applies its subscription state in one transaction;
+-- an unknown workspace (not_found) or a failed apply never marks the event seen. Due removals are
 -- archived before seats change. Returns 'applied' | 'duplicate' | 'stale' | 'not_found'.
 create or replace function public.apply_stripe_subscription(p jsonb) returns text
 language plpgsql security definer set search_path = '' as $$
@@ -48,13 +48,7 @@ begin
     raise exception 'Quantity must not be negative' using errcode = 'invalid_parameter_value';
   end if;
 
-  insert into public.stripe_events (event_id, type) values (p ->> 'event_id', p ->> 'event_type')
-  on conflict (event_id) do nothing
-  returning event_id into inserted;
-  if inserted is null then
-    return 'duplicate';
-  end if;
-
+  -- Find the workspace before recording: a not_found event stays unrecorded so Stripe's retry can apply it.
   select * into ws from public.workspaces where stripe_customer_id = p ->> 'customer_id' for update;
   if not found and nullif(p ->> 'client_reference_id', '') is not null then
     select * into ws from public.workspaces
@@ -63,6 +57,13 @@ begin
   end if;
   if ws.id is null then
     return 'not_found';
+  end if;
+
+  insert into public.stripe_events (event_id, type) values (p ->> 'event_id', p ->> 'event_type')
+  on conflict (event_id) do nothing
+  returning event_id into inserted;
+  if inserted is null then
+    return 'duplicate';
   end if;
   if ws.stripe_event_at is not null and created < ws.stripe_event_at then
     return 'stale';

@@ -664,7 +664,7 @@ Changed
   - While a removal is scheduled, the business still counts as active until archive_at. At renewal the archive happens first, then seats.
 - Migration 20261105000018 (+ .down.sql), additive:
   - workspaces.stripe_current_period_end / stripe_event_at and businesses.archive_at. All are service-write only, like the billing fields.
-  - apply_stripe_subscription(p): one transaction. It records the event (duplicate → no-op), then finds the workspace by customer id or client_reference_id, ignores stale events, archives due removals and only then sets ids/status/seats/period end.
+  - apply_stripe_subscription(p): one transaction. It finds the workspace by customer id or client_reference_id first (not_found is NOT recorded, so Stripe's retry can apply it once checkout links the customer), then records the event (duplicate → no-op), ignores stale events, archives due removals and only then sets ids/status/seats/period end.
   - record_stripe_event. schedule_business_removal / cancel_business_removal / archive_scheduled_businesses. All service only, self-serve only (DFY untouched).
 - Queries (src/lib/queries/billing.ts):
   - getBillingState, listMyBusinesses (member client).
