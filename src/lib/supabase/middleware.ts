@@ -4,6 +4,15 @@ import { isProtected, signInPath } from "@/lib/auth/next";
 
 // Refreshes the session cookie on every request and sends signed-out visitors of /app, /team and /client to /signin.
 export async function updateSession(request: NextRequest) {
+  const { pathname, search } = request.nextUrl;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  // Supabase not connected (createServerClient would throw): public pages still work, app areas stay closed.
+  if (!url || !key)
+    return isProtected(pathname)
+      ? NextResponse.redirect(new URL(signInPath(pathname, search), request.url))
+      : NextResponse.next({ request });
+
   let response = NextResponse.next({ request });
   let cacheHeaders: Record<string, string> = {};
   const supabase = createServerClient(
@@ -24,7 +33,6 @@ export async function updateSession(request: NextRequest) {
 
   // getClaims verifies the JWT; nothing may run between createServerClient and this call.
   const { data } = await supabase.auth.getClaims();
-  const { pathname, search } = request.nextUrl;
   if (!data?.claims && isProtected(pathname)) {
     const redirect = NextResponse.redirect(new URL(signInPath(pathname, search), request.url));
     response.cookies.getAll().forEach((c) => redirect.cookies.set(c));

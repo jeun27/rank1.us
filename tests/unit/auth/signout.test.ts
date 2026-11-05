@@ -5,8 +5,13 @@ const signOut = vi.fn();
 vi.mock("@/lib/supabase/server", () => ({ createClient: async () => ({ auth: { signOut } }) }));
 const { POST } = await import("@/app/auth/signout/route");
 
-const post = (headers: Record<string, string>) =>
-  POST(new NextRequest("http://localhost:3000/auth/signout", { method: "POST", headers }));
+const post = (headers: Record<string, string | undefined>) =>
+  POST(
+    new NextRequest("http://localhost:3000/auth/signout", {
+      method: "POST",
+      headers: headers as Record<string, string>,
+    }),
+  );
 
 beforeEach(() => signOut.mockReset());
 
