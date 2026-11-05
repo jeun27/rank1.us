@@ -2,25 +2,26 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { getBillingState, listMyBusinesses, scheduleBusinessRemoval } from "@/lib/queries/billing";
+import { getBillingState, listMyBusinesses } from "@/lib/queries/billing";
+import { addBusinessSeat, openPortal, removeBusinessAtPeriodEnd, startCheckout } from "@/lib/stripe/service";
 import { createClient } from "@/lib/supabase/server";
-import { createServiceClient } from "@/lib/supabase/service";
 import { BUSINESS_COOKIE } from "../current";
-import { createCheckoutSession, createPortalSession, scheduleRemoval, updateQuantity } from "./stripe";
 
 const PAID = new Set(["active", "trialing", "past_due", "unpaid"]);
 
-// The workspace comes from the session, never the browser. Stripe redirects happen outside try, since
-// redirect() throws by design.
-async function state() {
-  const db = await createClient();
-  return { db, billing: await getBillingState(db) };
-}
+// The caller's own client: data-pipeline's helpers find the workspace from it (RLS). Stripe redirects
+// happen outside try, since redirect() throws by design. Errors return codes only (nothing logged).
+const back = () => {
+  const site = process.env.NEXT_PUBLIC_SITE_URL;
+  if (!site) throw new Error("NEXT_PUBLIC_SITE_URL is not set");
+  return `${site.replace(/\/$/, "")}/app/billing`;
+};
 
-async function goToCheckout(workspaceId: string, quantity: number) {
+async function goToCheckout(quantity: number) {
   let url: string;
   try {
-    ({ url } = await createCheckoutSession({ workspaceId, quantity: Math.max(1, quantity) }));
+    const db = await createClient();
+    url = await startCheckout(db, Math.max(1, quantity), { success: back(), cancel: back() });
   } catch {
     return { error: "checkout" };
   }
@@ -28,17 +29,15 @@ async function goToCheckout(workspaceId: string, quantity: number) {
 }
 
 export async function checkoutAction() {
-  const { billing } = await state();
+  const billing = await getBillingState(await createClient());
   if (!billing) return { error: "no_workspace" };
-  return goToCheckout(billing.workspaceId, billing.activeCount);
+  return goToCheckout(billing.activeCount);
 }
 
 export async function portalAction() {
-  const { billing } = await state();
-  if (!billing?.hasCustomer) return { error: "no_customer" };
   let url: string;
   try {
-    ({ url } = await createPortalSession({ workspaceId: billing.workspaceId }));
+    url = await openPortal(await createClient(), back());
   } catch {
     return { error: "portal" };
   }
@@ -48,27 +47,25 @@ export async function portalAction() {
 // +1 seat with Stripe's default proration (lead), or Checkout for an unpaid workspace. The webhook raises
 // seats_quantity; the switcher polls seatsAction until it does.
 export async function addBusinessAction() {
-  const { billing } = await state();
+  const db = await createClient();
+  const billing = await getBillingState(db);
   if (!billing) return { error: "no_workspace" };
-  if (!billing.status || !PAID.has(billing.status)) return goToCheckout(billing.workspaceId, billing.activeCount + 1);
+  if (!billing.status || !PAID.has(billing.status)) return goToCheckout(billing.activeCount + 1);
   try {
-    await updateQuantity({ workspaceId: billing.workspaceId, quantity: billing.seats + 1 });
+    await addBusinessSeat(db);
   } catch {
     return { error: "add" };
   }
 }
 
 export async function seatsAction(): Promise<number> {
-  return (await state()).billing?.seats ?? 0;
+  return (await getBillingState(await createClient()))?.seats ?? 0;
 }
 
-// Quantity -1 at period end; the business is archived then and its data stays read-only.
+// Quantity −1 at period end; the business is archived then and its data stays read-only.
 export async function removeBusinessAction(businessId: string) {
-  const { db, billing } = await state();
-  if (!billing || !(await listMyBusinesses(db)).some((b) => b.id === businessId)) return { error: "not_found" };
   try {
-    const { archiveAt } = await scheduleRemoval({ workspaceId: billing.workspaceId, businessId });
-    await scheduleBusinessRemoval(createServiceClient(), businessId, archiveAt);
+    await removeBusinessAtPeriodEnd(await createClient(), businessId);
   } catch {
     return { error: "remove" };
   }

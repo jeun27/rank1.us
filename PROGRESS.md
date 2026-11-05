@@ -728,4 +728,4 @@ Changed
   - the cookie rank1_business (httpOnly, path /app) is set by selectBusinessAction after checking listMyBusinesses, and getCurrentBusiness(db, cookie) honors it in loadShell and the competitor actions;
   - Add/Remove failures reuse "We couldn't save that. Try again."; "We couldn't open billing…" is only for the Checkout/portal redirects (lead);
   - "Active"/"Paused" as screen-reader text are approved.
-- Stripe calls: src/app/app/billing/stripe.ts stands in for data-pipeline's createCheckoutSession / createPortalSession / updateQuantity / scheduleRemoval under the agreed names, throwing until that branch lands (the UI then shows its failure copy). Swap the import when it merges.
+- Stripe calls: data-pipeline's #73 helpers (src/lib/stripe: startCheckout, openPortal, addBusinessSeat, removeBusinessAtPeriodEnd) with the caller's own client. Checkout success/cancel and the portal return to NEXT_PUBLIC_SITE_URL/app/billing. The interim stand-in module is gone.
