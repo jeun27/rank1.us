@@ -1,5 +1,52 @@
 # QA
 
+## Step 8: Self-serve shell (Dashboard, Competitors, Questions, History)
+
+Checked 2026-11-05 on main at 1c6a54e:
+- #38 (a91c6eb): self-serve shell queries
+- #41 (f91a8ad): competitor suggestions and visibility series
+- #43 (4feb18b): sources fields and shell lint
+- #40 (1c6a54e): self-serve shell and pages
+
+The sandbox Docker disk is full, so there was no local Supabase. test-db and e2e come from CI on main's push of 1c6a54e (run 42053783602). Unit, typecheck, lint, format and build ran locally in the sandbox. The UI checks ran from the Mac on #40's preview at 138cf81, whose tree is identical to 1c6a54e. No live paid calls, fake Example data only.
+Preview: https://rank1-o1xmctq6w-bryan-flowhighlevels-projects.vercel.app (sha 138cf81, READY).
+Sources: Jeun's ENG_HANDOFF_OVERNIGHT §6 Step 8, the lead's brief (rank1-step8.md), docs/UI.md 4b rows Dashboard / Competitors / Questions / History, docs/PRODUCT.md rule 3.
+
+Result: FAIL. 1 blocking problem: the Competitors page breaks product rule 3 (n + freshness + "API-measured, directional"). Listed at the end.
+
+### Commands
+
+| Command | Result |
+|---|---|
+| `pnpm test` (sandbox, 1c6a54e) | PASS. 65 files, 831 tests passed |
+| `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build` (sandbox) | PASS |
+| CI on main push 1c6a54e | PASS. test-db 14 files / 307 tests; e2e 250 passed, 2 skipped; test, typecheck, lint, format green |
+| `E2E_BASE_URL=<preview> pnpm e2e` (1c6a54e tests) | PASS. 182 passed, 70 skipped (local-stack tests), 0 failed, including 48 app-shell tests: all 22 /dev/app states with one H1, axe clean and no side scroll at 375 and 1280, the drawer keyboard test, and 44px tap targets |
+
+### Checks
+
+| Check | Result | Evidence |
+|---|---|---|
+| Nav: only existing pages; content full width | PASS | src/components/app/AppNav.tsx links exactly /app, /app/competitors, /app/questions, /app/history, /app/billing (all exist under src/app/app). Unit "lists Dashboard, Competitors, Questions, History, Billing and marks the current one", "is hidden during onboarding". Gallery pages are single-column full width |
+| SoV only on Competitors | PASS | `shareOfVoice` is rendered only in src/components/app/CompetitorsView.tsx. Dashboard uses `Leaderboard top={5} change={false}` without SoV. Preview: "share of voice" only on competitors-success. Unit "leaderboard top 5 without SoV" |
+| Dashboard: hero + n + change; 8-run line hidden under 2 runs; per-engine; top 5; "What to fix next" without why_note; partial badge; empty / unpaid / first-check states | PASS | Unit Dashboard tests: no business, no run yet (paid first-check / unpaid "Start for $99/mo"), success, partial + no fixes + under 2 runs. series.test.ts "hidden with fewer than 2 points", "the latest 8 complete/partial runs", "n = 0 → value null". getTopFixes "never why_note" (db), and no component reads why_note. Preview dashboard-success: n ("named in … of …"), "checked … ago" and "API-measured, directional" at both widths |
+| Competitors: You row pinned; 'too few answers' under n<10; suggestions with Add / Not a competitor (dismissed not re-suggested); manual add; dfy_client can't write | PASS except the rule 3 blocker below | Phones: cards sort the You row first (CompetitorsView.tsx:67-69); desktop table has the infoBg You tag. Preview shows "too few answers" for Example Izakaya. suggest.test.ts: minus tracked, dismissed and the business itself; cache with no token; missing keys → nothing. db: "adds, dismisses idempotently and un-hides on re-add", "hidden competitors drop out of the next run's tracked brands", "a non-member, anon and a dfy_client cannot change competitors (42501)". Unit: the empty copy and the manual add form |
+| Questions: dots 3/3/3/1, failed '–' tooltip, location badge, drawer (focus trap, Esc, noreferrer links) | PASS | Unit "rows with per-engine counts, location badge, a failed '–' with the lead tooltip, and a drawer". Tooltip "This check failed. It doesn't count toward your numbers." is in COPY.md. Drawer links have rel="noopener noreferrer" (QuestionsView.tsx:117). Preview e2e "questions drawer: keyboard opens it, Tab stays inside, Esc closes and focus returns" at both widths |
+| History: rows → /app/runs/[id], CSV | PASS | Unit "one row per run, newest first: date, visibility + n, change, status; opens the run; CSV per run". Preview history-success shows "named in … of …" per row |
+| run_summaries parity with computeMetrics | PASS | CI db shell.test.ts "listRunSummaries matches computeMetrics on the same run, overall and per engine, with a deleted question"; also newest first, never free audits, non-member and anon get nothing |
+| Copy | PASS | unit "app shell copy uses only strings that are in docs/COPY.md" |
+
+Not blocking:
+- History rows show date + n but no "API-measured, directional" label. The fix for the blocker could add it here too.
+
+### Blocking problems
+
+1. The Competitors page breaks product rule 3 ("Every metric shows its sample size … and freshness … Results carry the label 'API-measured, directional'"). Preview /dev/app?state=competitors-success:
+   - On phones the leaderboard cards show a bare % with no n: "33%", "100%" (src/components/app/CompetitorsView.tsx:83, `formatPercent(b.metric)`). The desktop table shows "(named in a of n answers)".
+   - At both widths the page has no freshness ("checked … ago") and no "API-measured, directional". CompetitorsView renders neither Hero nor Freshness; Dashboard gets both through Hero.
+
+   Fix: show the n on the phone cards (as the desktop table does), and add `Freshness` and the label to the Competitors page.
+
 ## Step 7: Metrics + same-day audit + CSV/PNG export
 
 Checked 2026-11-05 on main at cea874b:
