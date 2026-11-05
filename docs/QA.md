@@ -1,5 +1,43 @@
 # QA
 
+## Step 6: Run orchestration + mention detection (3/3/3/1)
+
+Checked 2026-11-05 on main at cd57c03: #26 (7cdc6b7, run jobs and orchestration RPCs) and #27 (cd57c03, job worker, mention detection, citation categories). The sandbox Docker disk is full, so there was no local Supabase. test-db and e2e come from CI on main's push of cd57c03 (run 42034578435). Unit, typecheck, lint, format and build ran locally in the sandbox. The cron 401 check ran from the Mac on #27's preview at 247a400. Its app code is identical to cd57c03: the only differences are a PROGRESS.md line and #29's two e2e skip lines. No live paid calls.
+Preview: https://rank1-1x17lu5xu-bryan-flowhighlevels-projects.vercel.app (git ref feat/step6-worker, sha 247a400, READY).
+Sources: Jeun's ENG_HANDOFF_OVERNIGHT §6 Step 6 and the lead's brief (rank1-step6.md).
+
+Result: PASS. No blocking problems.
+
+### Commands
+
+| Command | Result |
+|---|---|
+| `pnpm test` (sandbox, cd57c03) | PASS. 48 files, 709 tests passed |
+| `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build` (sandbox) | PASS |
+| CI on main push cd57c03 | PASS. test-db 12 files / 284 tests; e2e 168 passed, 2 skipped; test, typecheck, lint, format green |
+| CI on #26 (420bb15) and #27 (247a400) before merge | PASS. 9 of 9 each |
+
+### Checks
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| 1 | create_run: 10 jobs per active question (3/3/3/1, 250 for 25); refuses unpaid non-DFY and non-members; 1 audit per business per 24 h; 1 open run | PASS | supabase/migrations/20261105000011_run_jobs.sql: jobs_total = n × 10 and one job per question × (chatgpt 3, gemini 3, google_aio 3, perplexity 1). subscription_status must be active or trialing unless service = 'dfy' (P0402); a non-member or anon gets 42501; a queued or running run blocks a new one (P0409); a member's second audit in a rolling 24 h gets P0429, and failed audits don't count. tests/db/run-jobs.test.ts, all green in CI: "makes 10 jobs per active question, 3/3/3/1 by engine: 250 for 25 questions", "refuses unpaid workspaces with P0402, unless the business is dfy", "refuses non-members and anon with 42501", "refuses a second run while one is queued or running (P0409)", "a member gets one audit per business per rolling 24 h (P0429)", "a failed audit does not count, and the cap resets after 24 h", "weekly runs are service role only" |
+| 2 | Jobs unreadable by users | PASS | run_jobs has RLS on, ALL revoked from anon and authenticated, and no policies. claim_jobs, finish_job and job_error are revoked from authenticated (service role only). Test: "members and anon cannot read or write jobs, or call the worker functions" |
+| 3 | Mention detection has no LLM; tests cover aliases, case/diacritics, possessives, & vs and, substring false positives, domains, ordering | PASS | `git grep` for openai, @anthropic-ai, @google/genai, @google/generative-ai, cohere-ai, @mistralai, langchain, ai imports in src and package.json: 0 matches. src/lib/runs/mentions.ts is text matching only. tests/unit/runs/mentions.test.ts covers every listed case: aliases, case and diacritics, possessives (straight and curly), & vs 'and', substring false positives, a shorter brand inside a longer one, domains (bare and distinctive label, stoplist under 5 characters), and ordering by first appearance |
+| 4 | Citations deduped by normalized URL | PASS | src/lib/runs/citations.ts `normalizeUrl` (lowercase host, no trailing slash, no utm_*, no #fragment) and `toStoredCitations` (keeps the first, renumbers positions). Unit: categorize.test.ts and process-job.test.ts ("deduped, categorized citations"). DB: finish_job "stores the answer and citations, deduping repeated URLs" |
+| 5 | GET /api/cron/run-jobs is 401 without the bearer, on a preview | PASS | preview: no Authorization 401 `{"error":"unauthorized"}`; `Bearer wrong` 401; empty bearer 401; Basic auth 401; POST 405. `cronAuthorized` (src/lib/runs/drain.ts:10) also refuses when CRON_SECRET is unset. CRON_SECRET is set on Vercel for preview and production |
+| 6 | vercel.json cron is `* * * * *` | PASS | vercel.json `crons: [{ "path": "/api/cron/run-jobs", "schedule": "* * * * *" }]` |
+
+Also verified (brief): claim_jobs uses `FOR UPDATE SKIP LOCKED` and re-claims a stale lock (10 minutes), with at most 3 attempts. finish_job is atomic and idempotent. no_overview counts as ok, and failed answers are stored as failed. Run status is complete, partial or failed with finished_at. All covered by CI db tests ("is exclusive under parallel calls", "re-claims … and fails it after 3 attempts", "is atomic", "is idempotent", the status mixes).
+
+Not blocking:
+- `cronAuthorized` compares the header with `===`, not a constant-time compare. Low risk for a 1-minute cron with a long random secret.
+- After a valid bearer, a claim error returns up to 200 characters of the database error text in the 500 body. Only the cron caller sees it.
+
+### Blocking problems
+
+None.
+
 ## Step 4: Engine adapters with fixtures + /admin/test (re-run)
 
 Checked 2026-11-05: the adapters on main at d4962b9 (#16), and /admin/test in PR #19 (feat/admin-engine-test), first at d201823 and re-checked at 3241698, its head. 3241698 = c21ac6f (proxy gates match the normalized path) + a merge of main (#20). The sandbox Docker disk is full, so per the lead there was no local Supabase. test:db and e2e come from CI on #19 (9 of 9 green at d201823 and again at 3241698). Unit, typecheck, lint, format, smoke and build ran locally in the sandbox. The 404 checks ran from the Mac on the Vercel previews of d201823 and 3241698.
