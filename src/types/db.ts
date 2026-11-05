@@ -78,14 +78,14 @@ isOneToOne: false
                   ]
                 },"businesses": {
                   Row: {
-                    "aliases": (string)[],"archived_at": string | null,"brand_color": string | null,"city": string,"country": string,"cuisine": string | null,"domain": string | null,"fix_list_visible": boolean,"ga4_property_id": string | null,"id": string,"logo_path": string | null,"name": string,"report_recipients": (string)[],"service": string,"state": string,"vertical": string,"workspace_id": string
+                    "aliases": (string)[],"archived_at": string | null,"brand_color": string | null,"city": string,"country": string,"created_at": string,"cuisine": string | null,"domain": string | null,"fix_list_visible": boolean,"ga4_property_id": string | null,"id": string,"logo_path": string | null,"name": string,"report_recipients": (string)[],"service": string,"state": string,"vertical": string,"workspace_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "aliases"?: (string)[],"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"name": string,"report_recipients"?: (string)[],"service"?: string,"state"?: string,"vertical"?: string,"workspace_id": string
+                    "aliases"?: (string)[],"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"name": string,"report_recipients"?: (string)[],"service"?: string,"state"?: string,"vertical"?: string,"workspace_id": string
                   }
                   Update: {
-                    "aliases"?: (string)[],"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"name"?: string,"report_recipients"?: (string)[],"service"?: string,"state"?: string,"vertical"?: string,"workspace_id"?: string
+                    "aliases"?: (string)[],"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"name"?: string,"report_recipients"?: (string)[],"service"?: string,"state"?: string,"vertical"?: string,"workspace_id"?: string
                   }
                   Relationships: [
                     {
@@ -590,7 +590,10 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "claim_jobs":
+            "add_competitor":
+{ Args: { "p": Json,"p_business_id": string }; Returns: string
+                           },
+"claim_jobs":
 { Args: { "p_limit": number }; Returns: Json[]
                            },
 "create_business_onboarding":
@@ -605,6 +608,9 @@ isOneToOne: false
 "create_run":
 { Args: { "p_business_id": string,"p_kind": string }; Returns: string
                            },
+"dismiss_competitor":
+{ Args: { "p": Json,"p_business_id": string }; Returns: string
+                           },
 "ensure_self_serve_workspace":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
@@ -616,6 +622,9 @@ isOneToOne: false
                            },
 "my_landing":
 { Args: Record<PropertyKey, never>; Returns: string
+                           },
+"run_summaries":
+{ Args: { "p_business_id": string,"p_limit"?: number,"p_statuses"?: string[] }; Returns: { "finished_at": string | null,"jobs_failed": number,"jobs_ok": number,"jobs_total": number,"kind": string,"n": number,"named": number,"per_engine": Json,"run_id": string,"started_at": string | null,"status": string }[]
                            },
 "take_rate_token":
 { Args: { "p_kind": string }; Returns: boolean
