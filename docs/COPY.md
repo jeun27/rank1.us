@@ -173,6 +173,19 @@ The free-audit completion email (Step 7). Sent once per lead when its run ends c
 | {link} | NEXT_PUBLIC_SITE_URL + /audit/{token} |
 | {n} | successful answers (failed and no_overview excluded) |
 
+## App shell (lead, 2026-11-05)
+
+Strings for the self-serve /app shell (Step 8): the nav and the Dashboard, Competitors, Questions and History pages. State messages are the 4b strings.
+
+| Where | String |
+|---|---|
+| Nav (label) | "App" |
+| Section titles | "Visibility", "Competitors", "What to fix next", "Suggested competitors", "Share of voice" |
+| Suggested competitor buttons | "Add", "Not a competitor" |
+| Questions: failed answer ('–' tooltip) | "This check failed. It doesn't count toward your numbers." |
+| Questions drawer | "Close" |
+| History status | "Complete", "Failed" |
+
 # 4b. App screens: every state
 
 Copy in quotes is exact. Every number shows n + checked X ago. Results labeled API-measured, directional.

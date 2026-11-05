@@ -418,6 +418,15 @@ Changed
 - Queries (src/lib/queries/shell.ts): getCurrentBusiness (self_serve only), listRunSummaries, getTopFixes, getQuestionsWithLatestAnswers, listCompetitors, addCompetitor, dismissSuggestion. Tests: tests/db/shell.test.ts, including the parity test against computeMetrics.
 - src/types/db.ts got the 0013 objects added by hand in the generator format (no local stack). Regenerate it with `pnpm db:types` when a stack is available.
 
+## Step 8 (data-pipeline): competitor suggestions and visibility series (branch feat/step8-suggestions)
+Step 8 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
+Lead decisions (Step 8 brief): suggested competitors = findLocalCompetitors for the business cuisine/city (existing cache + maps_lookup token) minus tracked and dismissed; keys missing → nothing shown. The 8-run line = the latest 8 complete/partial audit+weekly runs; fewer than 2 → hidden. Free audits never appear in /app.
+- One paid lookup serves both (lead, 2026-11-05): the 24 h cache holds the full Maps list (≤20, Maps order), keyed cuisine|city|state|domain with no limit in the key. src/lib/onboarding/lookup.ts lookupCompetitors does that. Onboarding's findCompetitorsAction shows the first 5, as before. findLocalCompetitors takes an optional `limit` (default 5, unchanged). withLimits moved from src/app/app/onboarding/limits.ts to src/lib/onboarding/limits.ts, and the old path re-exports it.
+- Test changed, with reason: tests/unit/onboarding/actions.test.ts now expects findLocalCompetitors to be called with `{ ...q, limit: 20 }` (was `q`), because onboarding's lookup fills the shared cache. A new test checks onboarding still returns only the top 5 while the cache keeps all of them.
+
+Changed
+- src/lib/onboarding/suggest.ts suggestCompetitors({business, tracked, dismissed}, {store}): drops Maps items whose bare domain or normalized name (detectMentions' normalize) matches a tracked or dismissed competitor or the business; first of each domain/name kept; Maps order; ≤5. limited / missing_keys / error → no items. Never throws.
+- src/lib/metrics/series.ts seriesFromSummaries(summaries): {points: {runId, at, metric: Metric}[] oldest → newest, visible: ≥2}.
 ## Step 7 (frontend): audit progress, results and exports (branch feat/step7-audit, issue #33)
 - /app/runs/[runId] (members, through RLS getRunResults) and /audit/[token] (service role, getFreeAuditByToken) share AuditView: UI.md 4b Audit progress and Audit results. The free page adds the 'Start for $99/mo' card and the Powered by Rank1 credit; the paid page never shows the credit.
 - Per-engine progress comes from run.jobs_total (3q/3q/3q/q) and the answers so far (lead: run_jobs has no member read path). While a run is queued or running, the page refreshes every 5 s.
@@ -435,3 +444,14 @@ Lead decisions (Step 8 brief): suggested competitors = findLocalCompetitors for 
 Changed
 - src/lib/onboarding/suggest.ts suggestCompetitors({business, tracked, dismissed}, {store}): drops Maps items whose bare domain or normalized name (detectMentions' normalize) matches a tracked or dismissed competitor or the business; first of each domain/name kept; Maps order; ≤5. limited / missing_keys / error → no items. Never throws.
 - src/lib/metrics/series.ts seriesFromSummaries(summaries): takes listRunSummaries rows (RunSummary, #38) and passes their visibility Metric through. Returns {points: {runId, at, metric}[] oldest → newest, visible: ≥2}, keeping only complete/partial audit+weekly runs as a safety net. Callers use listRunSummaries(db, id, 8, ["complete", "partial"]), which filters before the limit.
+
+## Step 8 (frontend): self-serve shell and pages (branch feat/step8-shell, issue #37)
+- /app layout: AppNav (aria-label "App"), a left rail at md+ and a sideways-scrolling row on phones, with only the pages that exist (Dashboard, Competitors, Questions, History, Billing). Hidden on /app/onboarding.
+- Dashboard (lead):
+  - no business → the 4b empty + 'Add my business' → /app/onboarding;
+  - a business with no complete/partial run → paid "No weekly checks yet. Your first one runs Monday." or unpaid 'Start for $99/mo' → /app/billing (CurrentBusiness.paid, #38);
+  - otherwise hero + change + the partial warn badge, the 8-run line (hidden under 2 runs), per engine, leaderboard top 5 (visibility only, no SoV), and "What to fix next" (top 3 fixes, or the Fix list empty copy with no link).
+- Competitors: SoV only here, the leaderboard (You row first on phones), Suggested competitors (suggestCompetitors through the shared lookup store: 24 h cache + maps_lookup token) with Add / Not a competitor, and manual add. The business always comes from the session in the server actions.
+- Questions: read-only, with per-engine dots for the latest run, the failed '–' tooltip (lead copy), the location badge, and a modal drawer (focus trap, Esc, focus returns, noreferrer links). History: every audit/weekly run newest first, linking to /app/runs/[id] with Download CSV.
+- AuditView's Hero / EngineTable / Leaderboard are shared (exported). The onboarding lookup store moved to src/app/app/lookup-store.ts, so onboarding and Competitors share it.
+- The visibility line follows UI.md Chart (one jellyDeep 2px line) and the dataviz skill: no legend for one series, a hover tooltip with n, and an sr-only table.

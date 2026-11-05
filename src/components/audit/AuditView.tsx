@@ -112,59 +112,18 @@ function Results({
   exportBase: string;
   now: Date;
 }) {
-  const okEngine = (e: (typeof ENGINES)[number]) => results.answers.some((a) => a.engine === e && a.status === "ok");
   const firstUrl = (domain: string) => results.citations.find((x) => x.domain === domain)?.url;
   const download =
     "inline-flex min-h-11 items-center gap-2 px-1.5 text-ui font-semibold text-jellyDeep underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
   return (
     <>
-      <Card>
-        <div data-computed className="flex flex-col gap-3">
-          <StatNumber metric={metrics.visibility} />
-          {metrics.freshness && (
-            <Freshness checkedAt={metrics.freshness} answers={metrics.visibility.denominator} now={now} />
-          )}
-        </div>
-      </Card>
+      <Hero metrics={metrics} now={now} />
 
-      <Table
-        caption={c.engine}
-        columns={[
-          { key: "e", header: c.engine },
-          { key: "n", header: c.named, numeric: true },
-        ]}
-        rows={ENGINES.map((e) => ({
-          e: <span className={okEngine(e) ? "" : "text-inkMuted"}>{ENGINE_LABEL[e]}</span>,
-          n: okEngine(e) ? (
-            <D>{namedText(metrics.visibility.byEngine[e])}</D>
-          ) : (
-            <D>
-              <span className="text-inkMuted">{c.noAnswers(ENGINE_LABEL[e])}</span>
-            </D>
-          ),
-        }))}
-      />
+      <EngineTable results={results} metrics={metrics} />
 
       <section className="flex flex-col gap-3">
         <h2 className="font-display text-h3 font-semibold">{c.competitors}</h2>
-        <Table
-          caption={c.competitors}
-          columns={[
-            { key: "b", header: c.business },
-            { key: "v", header: c.visibility, numeric: true },
-            { key: "c", header: c.change, numeric: true },
-          ]}
-          rows={metrics.leaderboard.map((b) => ({
-            b: (
-              <span className="flex items-center gap-2">
-                <D>{b.name}</D>
-                {b.kind === "business" && <Badge tone="info">{c.you}</Badge>}
-              </span>
-            ),
-            v: b.tooFew ? c.tooFew : <D>{`${formatPercent(b.metric)} (${namedText(b.metric)})`}</D>,
-            c: <D>{points(b.change)}</D>,
-          }))}
-        />
+        <Leaderboard metrics={metrics} />
       </section>
 
       {metrics.sources.length > 0 && (
@@ -207,5 +166,67 @@ function Results({
         </a>
       </div>
     </>
+  );
+}
+
+// Shared with the self-serve Dashboard and Competitors pages (Step 8).
+export function Hero({ metrics, now, children }: { metrics: Metrics; now: Date; children?: ReactNode }) {
+  return (
+    <Card>
+      <div data-computed className="flex flex-col gap-3">
+        <StatNumber metric={metrics.visibility} />
+        {children}
+        {metrics.freshness && (
+          <Freshness checkedAt={metrics.freshness} answers={metrics.visibility.denominator} now={now} />
+        )}
+      </div>
+    </Card>
+  );
+}
+
+export function EngineTable({ results, metrics }: { results: RunResults; metrics: Metrics }) {
+  const okEngine = (e: (typeof ENGINES)[number]) => results.answers.some((a) => a.engine === e && a.status === "ok");
+  return (
+    <Table
+      caption={c.engine}
+      columns={[
+        { key: "e", header: c.engine },
+        { key: "n", header: c.named, numeric: true },
+      ]}
+      rows={ENGINES.map((e) => ({
+        e: <span className={okEngine(e) ? "" : "text-inkMuted"}>{ENGINE_LABEL[e]}</span>,
+        n: okEngine(e) ? (
+          <D>{namedText(metrics.visibility.byEngine[e])}</D>
+        ) : (
+          <D>
+            <span className="text-inkMuted">{c.noAnswers(ENGINE_LABEL[e])}</span>
+          </D>
+        ),
+      }))}
+    />
+  );
+}
+
+// top: the Dashboard's top 5. change: false drops the change column (Dashboard: visibility only).
+export function Leaderboard({ metrics, top, change = true }: { metrics: Metrics; top?: number; change?: boolean }) {
+  return (
+    <Table
+      caption={c.competitors}
+      columns={[
+        { key: "b", header: c.business },
+        { key: "v", header: c.visibility, numeric: true },
+        ...(change ? [{ key: "c", header: c.change, numeric: true }] : []),
+      ]}
+      rows={metrics.leaderboard.slice(0, top).map((b) => ({
+        b: (
+          <span className="flex items-center gap-2">
+            <D>{b.name}</D>
+            {b.kind === "business" && <Badge tone="info">{c.you}</Badge>}
+          </span>
+        ),
+        v: b.tooFew ? c.tooFew : <D>{`${formatPercent(b.metric)} (${namedText(b.metric)})`}</D>,
+        c: <D>{points(b.change)}</D>,
+      }))}
+    />
   );
 }
