@@ -1,5 +1,6 @@
 -- Reverts 20261105000019_reports.sql. The storage buckets are left in place (delete them through
 -- the Storage API); reports rows and their columns' data are dropped with the columns.
+drop function if exists public.set_report_settings(uuid, text, text[]);
 drop function if exists public.can_write_business(uuid);
 drop function if exists public.finish_report(uuid, text, text, text[], text);
 drop function if exists public.claim_reports(int);
@@ -18,7 +19,7 @@ alter table public.reports
   drop column if exists locked_at,
   drop column if exists attempts;
 
-grant insert (logo_path), update (logo_path) on table public.businesses to authenticated;
+grant insert (logo_path), update (logo_path, id, workspace_id) on table public.businesses to authenticated;
 alter table public.businesses drop constraint if exists businesses_logo_path_check;
 alter table public.businesses drop constraint if exists businesses_report_recipients_check;
 alter table public.businesses drop constraint if exists businesses_brand_color_check;
@@ -31,6 +32,7 @@ drop policy if exists businesses_select on public.businesses;
 drop policy if exists businesses_member on public.businesses;
 create policy businesses_member on public.businesses for all to authenticated
   using (private.is_member(workspace_id)) with check (private.is_member(workspace_id));
+drop function if exists private.member_can_write_business(uuid);
 drop function if exists private.can_write_business(uuid);
 drop function if exists private.is_dfy_client();
 revoke usage on schema private from service_role;

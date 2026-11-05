@@ -18,13 +18,15 @@ begin
 end;
 $$;
 
--- Businesses write gate. SELECT stays for members (+ team on DFY, 0015). Writes: self-serve
--- members (never a dfy_client), or the team on a DFY business. Definer RPCs are unaffected.
+-- Businesses write gate. SELECT stays for members (+ team on DFY, 0015). RLS writes are for
+-- self-serve members only (never a dfy_client); the team changes a DFY business only through
+-- definer RPCs (set_report_settings, set_fix_list_visible). id/workspace_id/service: service role.
 create or replace function private.is_dfy_client() returns boolean
 language sql stable security definer set search_path = '' as $$
   select exists (select 1 from public.user_roles where user_id = (select auth.uid()) and role = 'dfy_client');
 $$;
 
+-- Server-side checks (report settings, logo upload): self-serve members, or the team on DFY.
 create or replace function private.can_write_business(b uuid) returns boolean
 language sql stable security definer set search_path = '' as $$
   select exists (
@@ -35,8 +37,18 @@ language sql stable security definer set search_path = '' as $$
   );
 $$;
 
-revoke all on function private.is_dfy_client(), private.can_write_business(uuid) from public;
-grant execute on function private.is_dfy_client(), private.can_write_business(uuid) to authenticated;
+create or replace function private.member_can_write_business(b uuid) returns boolean
+language sql stable security definer set search_path = '' as $$
+  select exists (
+    select 1 from public.businesses bz
+    where bz.id = b and bz.service = 'self_serve' and private.is_member(bz.workspace_id) and not private.is_dfy_client()
+  );
+$$;
+
+revoke all on function private.is_dfy_client(), private.can_write_business(uuid),
+  private.member_can_write_business(uuid) from public;
+grant execute on function private.is_dfy_client(), private.can_write_business(uuid),
+  private.member_can_write_business(uuid) to authenticated;
 
 drop policy if exists businesses_member on public.businesses;
 drop policy if exists businesses_select on public.businesses;
@@ -48,11 +60,12 @@ create policy businesses_select on public.businesses for select to authenticated
 create policy businesses_insert on public.businesses for insert to authenticated
   with check (service = 'self_serve' and private.is_member(workspace_id) and not private.is_dfy_client());
 create policy businesses_update on public.businesses for update to authenticated
-  using (private.can_write_business(id))
-  with check ((service = 'self_serve' and private.is_member(workspace_id) and not private.is_dfy_client())
-              or (private.is_team() and service = 'dfy'));
+  using (private.member_can_write_business(id))
+  with check (service = 'self_serve' and private.is_member(workspace_id) and not private.is_dfy_client());
 create policy businesses_delete on public.businesses for delete to authenticated
-  using (private.can_write_business(id));
+  using (private.member_can_write_business(id));
+-- A business never moves workspace or changes id through the API (service role only).
+revoke update (id, workspace_id) on table public.businesses from authenticated;
 
 -- Report settings. logo_path is set only by the server after a validated upload.
 create or replace function private.valid_recipients(r text[]) returns boolean
@@ -201,6 +214,28 @@ begin
 end;
 $$;
 
+-- Report settings for self-serve members (never a dfy_client) or the team on a DFY business.
+-- Emails are trimmed, lowercased and deduped; the CHECKs reject a bad color or recipients (23514).
+create or replace function public.set_report_settings(p_business_id uuid, p_brand_color text, p_report_recipients text[])
+returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  if not private.can_write_business(p_business_id) then
+    raise exception 'Not allowed to change this business' using errcode = 'insufficient_privilege';
+  end if;
+  update public.businesses
+  set brand_color = p_brand_color,
+      report_recipients = coalesce(array(
+        select e from (
+          select lower(btrim(x)) as e, min(o) as first_at
+          from unnest(p_report_recipients) with ordinality as t(x, o)
+          where btrim(coalesce(x, '')) <> ''
+          group by lower(btrim(x))
+        ) d order by first_at), '{}')
+  where id = p_business_id;
+end;
+$$;
+
 -- Whether the caller may change this business (report settings, logo). For server-side checks.
 create or replace function public.can_write_business(p_business_id uuid) returns boolean
 language sql stable security definer set search_path = '' as $$
@@ -210,8 +245,8 @@ $$;
 -- Supabase grants EXECUTE on new public functions to anon by default.
 revoke all on function public.enqueue_monthly_reports(date), public.claim_reports(int),
   public.finish_report(uuid, text, text, text[], text) from public, anon, authenticated;
-revoke all on function public.can_write_business(uuid) from public, anon;
-grant execute on function public.can_write_business(uuid) to authenticated;
+revoke all on function public.can_write_business(uuid), public.set_report_settings(uuid, text, text[]) from public, anon;
+grant execute on function public.can_write_business(uuid), public.set_report_settings(uuid, text, text[]) to authenticated;
 -- The recipients CHECK runs as the writer, so the service role needs the private schema too.
 grant usage on schema private to service_role;
 revoke all on function private.valid_recipients(text[]) from public;

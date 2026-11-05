@@ -57,24 +57,22 @@ export async function getReportSettings(db: DbClient, businessId: string): Promi
   };
 }
 
-// Saves brand color and recipients with the caller's client (self-serve members, or the team on
-// DFY). Emails are trimmed, lowercased and deduped. Errors: 23514 bad color or recipients
-// (more than 10, or an invalid email), 42501/no rows when the caller can't change it.
+// Saves brand color and/or recipients through set_report_settings (self-serve members, or the
+// team on a DFY business; never a dfy_client). Emails are trimmed, lowercased and deduped.
+// Errors: 23514 bad color or recipients (more than 10, or invalid), 42501 not allowed.
 export async function setReportSettings(
   db: DbClient,
   businessId: string,
   settings: { brand_color?: string | null; report_recipients?: string[] },
 ): Promise<void> {
-  const patch: { brand_color?: string | null; report_recipients?: string[] } = {};
-  if (settings.brand_color !== undefined) patch.brand_color = settings.brand_color;
-  if (settings.report_recipients !== undefined) {
-    patch.report_recipients = [
-      ...new Set(settings.report_recipients.map((e) => e.trim().toLowerCase()).filter(Boolean)),
-    ];
-  }
-  const { data, error } = await db.from("businesses").update(patch).eq("id", businessId).select("id");
+  const current = await getReportSettings(db, businessId);
+  if (!current) throw Object.assign(new Error("Not allowed to change this business"), { code: "42501" });
+  const { error } = await db.rpc("set_report_settings", {
+    p_business_id: businessId,
+    p_brand_color: settings.brand_color === undefined ? current.brand_color : settings.brand_color,
+    p_report_recipients: settings.report_recipients ?? current.report_recipients,
+  });
   if (error) throw error;
-  if (data.length === 0) throw Object.assign(new Error("Not allowed to change this business"), { code: "42501" });
 }
 
 const LOGO_TYPES: { type: "image/png" | "image/jpeg"; ext: string; magic: number[] }[] = [

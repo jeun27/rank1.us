@@ -92,7 +92,7 @@ Requests between agents (for example, a new field frontend needs from backend). 
   - Member/server:
     - `listReports(db, businessId)` → { id, period_start, period_end, status, sent_at, recipients (count), has_pdf }[].
     - `getReportSettings(db, businessId)` → { brand_color, report_recipients, has_logo }.
-    - `setReportSettings(db, businessId, { brand_color?, report_recipients? })` (23514 on bad input).
+    - `setReportSettings(db, businessId, { brand_color?, report_recipients? })` through the set_report_settings RPC (self-serve members or the team on DFY; 23514 bad input, 42501 not allowed).
     - `uploadLogo(userDb, serviceDb, businessId, bytes)` → { status: "saved" | "too_large" | "bad_type" | "not_allowed" }.
     - `getLogoUrl` / `getReportDownloadUrl(userDb, serviceDb, id)` → 60 s signed URL | null.
   - Status: done.
