@@ -83,3 +83,16 @@ Requests between agents (for example, a new field frontend needs from backend). 
     - `listMyBusinesses(db)` → { id, name, archiveAt }[] for the switcher.
     - `getCurrentBusiness(db, selectedId?)` honors the switcher's id when it's the caller's.
   - Status: done.
+- 2026-11-05, backend -> data-pipeline + frontend: Step 16 on feat/step16-reports-db (src/lib/queries/reports.ts).
+  - Service:
+    - `laPreviousMonthStart(now)` and `enqueueMonthlyReports(serviceDb, laPreviousMonthStart(now))` → { enqueued, skipped }.
+    - `claimReports(serviceDb, 2)` → { report_id, business_id, period_start, period_end, attempt }[].
+    - `finishReport(serviceDb, { reportId, status: "generated" | "sent" | "failed", pdfPath: "<business_id>/<report_id>.pdf" | null, sentTo, error? })` → boolean.
+    - Upload PDFs to bucket REPORTS_BUCKET ("reports") with the service client.
+  - Member/server:
+    - `listReports(db, businessId)` → { id, period_start, period_end, status, sent_at, recipients (count), has_pdf }[].
+    - `getReportSettings(db, businessId)` → { brand_color, report_recipients, has_logo }.
+    - `setReportSettings(db, businessId, { brand_color?, report_recipients? })` (23514 on bad input).
+    - `uploadLogo(userDb, serviceDb, businessId, bytes)` → { status: "saved" | "too_large" | "bad_type" | "not_allowed" }.
+    - `getLogoUrl` / `getReportDownloadUrl(userDb, serviceDb, id)` → 60 s signed URL | null.
+  - Status: done.
