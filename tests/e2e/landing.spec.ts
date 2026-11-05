@@ -231,11 +231,11 @@ test("#audit holds the real audit form on the ink band; a mocked 202 shows succe
   await expect(audit.getByLabel("Your domain")).toBeVisible();
   const submit = audit.getByRole("button", { name: "Get my free audit" });
   expect(await submit.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(217, 142, 43)");
-  await audit.getByLabel("Email").fill("owner@example.com");
+  await audit.getByLabel("Email").fill("owner@example.test");
   await audit.getByLabel("Your domain").fill("ramenhouse.com");
   await submit.click();
-  await expect(audit.getByRole("status")).toHaveText("Got it. We'll email your audit to owner@example.com.");
-  expect(body).toMatchObject({ email: "owner@example.com", domain: "ramenhouse.com" });
+  await expect(audit.getByRole("status")).toHaveText("Got it. We'll email your audit to owner@example.test.");
+  expect(body).toMatchObject({ email: "owner@example.test", domain: "ramenhouse.com" });
 });
 
 test("Contact us in the header, pricing and footer opens the Contact us dialog", async ({ page }) => {

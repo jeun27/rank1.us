@@ -18,9 +18,9 @@ describe("normalizeDomain", () => {
 
 describe("validateAudit", () => {
   it("accepts and normalizes", () => {
-    expect(validateAudit({ email: " owner@ramenhouse.com ", domain: "www.RamenHouse.com" })).toEqual({
+    expect(validateAudit({ email: " owner@example.test ", domain: "www.RamenHouse.com" })).toEqual({
       ok: true,
-      data: { email: "owner@ramenhouse.com", domain: "ramenhouse.com" },
+      data: { email: "owner@example.test", domain: "ramenhouse.com" },
     });
   });
   it("names each bad field", () => {
