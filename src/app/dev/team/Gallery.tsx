@@ -20,7 +20,7 @@ const extras: TeamExtras = {
   formAction: "/dev/team",
   input: null,
   fixes: { ranked: exampleFixes, tidyUps: exampleTidyUps, unchecked: exampleUnchecked.slice(0, 1), noDomain: false },
-  suggestions: exampleSuggestions,
+  loadSuggestions: async () => exampleSuggestions,
   actions: { status: noop, add: noop, dismiss: noop },
 };
 

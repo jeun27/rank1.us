@@ -17,7 +17,8 @@ export type TeamExtras = {
   hidden?: Record<string, string>;
   input: ContextInput | null;
   fixes: { ranked: FixView[]; tidyUps: FixView[]; unchecked: { rule_key: string; title: string }[]; noDomain: boolean };
-  suggestions: LocalCompetitor[];
+  // Maps suggestions cost a maps_lookup token: fetched only when the Competitors view opens.
+  loadSuggestions: (businessId: string) => Promise<LocalCompetitor[]>;
   actions: {
     status: (businessId: string, fixId: string, status: FixStatus) => Result;
     add: (businessId: string, c: CompetitorInput) => Result;

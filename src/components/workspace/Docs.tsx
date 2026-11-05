@@ -1,5 +1,5 @@
 "use client";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { AddCompetitorForm, CompetitorSuggestions } from "@/components/app/CompetitorActions";
 import { appCopy } from "@/components/app/copy";
 import { FixList } from "@/components/fixes/FixList";
@@ -9,6 +9,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Jelly } from "@/components/ui/Jelly";
 import { StatNumber } from "@/components/ui/StatNumber";
 import { Table } from "@/components/ui/Table";
+import type { LocalCompetitor } from "@/lib/onboarding/types";
 import { ENGINES, ENGINE_LABEL, type WorkspaceView } from "@/lib/queries/workspace";
 import {
   EMPTY,
@@ -110,12 +111,24 @@ function CompetitorTools({ team }: { team: TeamExtras }) {
     add: (c: Parameters<TeamExtras["actions"]["add"]>[1]) => team.actions.add(team.businessId, c),
     dismiss: (c: Parameters<TeamExtras["actions"]["dismiss"]>[1]) => team.actions.dismiss(team.businessId, c),
   };
+  const [suggestions, setSuggestions] = useState<LocalCompetitor[]>([]);
+  const { businessId, loadSuggestions } = team;
+  useEffect(() => {
+    let live = true;
+    loadSuggestions(businessId).then(
+      (items) => live && setSuggestions(items),
+      () => {},
+    );
+    return () => {
+      live = false;
+    };
+  }, [businessId, loadSuggestions]);
   return (
     <>
-      {team.suggestions.length > 0 && (
+      {suggestions.length > 0 && (
         <section aria-label={appCopy.suggested} className="flex flex-col gap-3">
           <H>{appCopy.suggested}</H>
-          <CompetitorSuggestions suggestions={team.suggestions} actions={actions} />
+          <CompetitorSuggestions suggestions={suggestions} actions={actions} />
         </section>
       )}
       <AddCompetitorForm add={actions.add} />
