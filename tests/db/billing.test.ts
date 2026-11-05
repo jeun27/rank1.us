@@ -343,6 +343,10 @@ describe("billing state and the current business", () => {
   it("getCurrentBusiness honors the caller's own selection, else the oldest", async () => {
     const { user, businessIds } = await workspace("stripe-switch", 2);
     const other = await workspace("stripe-switch-other");
+    expect(await listMyBusinesses(user.db)).toEqual([
+      { id: businessIds[0], name: "Example Ramen House", city: "Irvine", archiveAt: null },
+      { id: businessIds[1], name: "Example Business 1", city: "Irvine", archiveAt: null },
+    ]);
     expect((await getCurrentBusiness(user.db))?.id).toBe(businessIds[0]);
     expect((await getCurrentBusiness(user.db, businessIds[1]))?.id).toBe(businessIds[1]);
     expect((await getCurrentBusiness(user.db, other.businessIds[0]))?.id).toBe(businessIds[0]);

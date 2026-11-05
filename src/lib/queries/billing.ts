@@ -61,7 +61,7 @@ export async function getBillingState(db: DbClient): Promise<BillingState | null
   };
 }
 
-export type MyBusiness = { id: string; name: string; archiveAt: string | null };
+export type MyBusiness = { id: string; name: string; city: string; archiveAt: string | null };
 
 // The switcher's list: the caller's active self-serve businesses, oldest first.
 export async function listMyBusinesses(db: DbClient): Promise<MyBusiness[]> {
@@ -79,14 +79,14 @@ export async function listMyBusinesses(db: DbClient): Promise<MyBusiness[]> {
   if (!member) return [];
   const { data, error: bizError } = await db
     .from("businesses")
-    .select("id, name, archive_at")
+    .select("id, name, city, archive_at")
     .eq("workspace_id", member.workspace_id)
     .eq("service", "self_serve")
     .is("archived_at", null)
     .order("created_at")
     .order("id");
   if (bizError) throw bizError;
-  return data.map((b) => ({ id: b.id, name: b.name, archiveAt: b.archive_at }));
+  return data.map((b) => ({ id: b.id, name: b.name, city: b.city, archiveAt: b.archive_at }));
 }
 
 export type StripeSubscriptionEvent = {
