@@ -417,3 +417,12 @@ Changed
   - add_competitor / dismiss_competitor: invoker RPCs with a per-business lock. They match by domain, else name, un-hide on re-add, are idempotent on dismiss, and validate with 22023.
 - Queries (src/lib/queries/shell.ts): getCurrentBusiness (self_serve only), listRunSummaries, getTopFixes, getQuestionsWithLatestAnswers, listCompetitors, addCompetitor, dismissSuggestion. Tests: tests/db/shell.test.ts, including the parity test against computeMetrics.
 - src/types/db.ts got the 0013 objects added by hand in the generator format (no local stack). Regenerate it with `pnpm db:types` when a stack is available.
+
+## Step 7 (frontend): audit progress, results and exports (branch feat/step7-audit, issue #33)
+- /app/runs/[runId] (members, through RLS getRunResults) and /audit/[token] (service role, getFreeAuditByToken) share AuditView: UI.md 4b Audit progress and Audit results. The free page adds the 'Start for $99/mo' card and the Powered by Rank1 credit; the paid page never shows the credit.
+- Per-engine progress comes from run.jobs_total (3q/3q/3q/q) and the answers so far (lead: run_jobs has no member read path). While a run is queued or running, the page refreshes every 5 s.
+- Exports: export.csv (toCsv) and export.png (next/og, 1200×630) under both routes, with Content-Disposition attachment, Cache-Control no-store, noindex and a [a-z0-9.-] filename. An unknown run or token is a 404.
+- Token privacy (lead): /audit/* sends Referrer-Policy: no-referrer and X-Robots-Tag: noindex, nofollow (next.config headers), the page has robots noindex,nofollow, cited links use rel="noopener noreferrer", and the lead email is never rendered.
+- /dev/audit?state=… shows every state with Example data (404 in production).
+- Real 404s: these pages stream inside Suspense, and notFound() there still sends a 200. So the proxy (src/lib/supabase/middleware.ts, the same pattern as /admin) rewrites to a 404 first. A run not readable by the visitor's session (RLS) or an unknown audit token (service role) gets the 404. The exports are route handlers and 404 on their own. The route is matched on the normalized path, but the token or run id comes from the raw path, because normalizePath lowercases and tokens are mixed-case base64url (review on #35).
+- Doc difference: citations.category is typed string in the result query and Category in computeMetrics. The loader casts it, because Step 6 stores only categorize() values.
