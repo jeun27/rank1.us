@@ -1,5 +1,106 @@
 # QA
 
+## Step 6: Run orchestration + mention detection (3/3/3/1)
+
+Checked 2026-11-05 on main at cd57c03: #26 (7cdc6b7, run jobs and orchestration RPCs) and #27 (cd57c03, job worker, mention detection, citation categories). The sandbox Docker disk is full, so there was no local Supabase. test-db and e2e come from CI on main's push of cd57c03 (run 42034578435). Unit, typecheck, lint, format and build ran locally in the sandbox. The cron 401 check ran from the Mac on #27's preview at 247a400. Its app code is identical to cd57c03: the only differences are a PROGRESS.md line and #29's two e2e skip lines. No live paid calls.
+Preview: https://rank1-1x17lu5xu-bryan-flowhighlevels-projects.vercel.app (git ref feat/step6-worker, sha 247a400, READY).
+Sources: Jeun's ENG_HANDOFF_OVERNIGHT §6 Step 6 and the lead's brief (rank1-step6.md).
+
+Result: PASS. No blocking problems.
+
+### Commands
+
+| Command | Result |
+|---|---|
+| `pnpm test` (sandbox, cd57c03) | PASS. 48 files, 709 tests passed |
+| `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build` (sandbox) | PASS |
+| CI on main push cd57c03 | PASS. test-db 12 files / 284 tests; e2e 168 passed, 2 skipped; test, typecheck, lint, format green |
+| CI on #26 (420bb15) and #27 (247a400) before merge | PASS. 9 of 9 each |
+
+### Checks
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| 1 | create_run: 10 jobs per active question (3/3/3/1, 250 for 25); refuses unpaid non-DFY and non-members; 1 audit per business per 24 h; 1 open run | PASS | supabase/migrations/20261105000011_run_jobs.sql: jobs_total = n × 10 and one job per question × (chatgpt 3, gemini 3, google_aio 3, perplexity 1). subscription_status must be active or trialing unless service = 'dfy' (P0402); a non-member or anon gets 42501; a queued or running run blocks a new one (P0409); a member's second audit in a rolling 24 h gets P0429, and failed audits don't count. tests/db/run-jobs.test.ts, all green in CI: "makes 10 jobs per active question, 3/3/3/1 by engine: 250 for 25 questions", "refuses unpaid workspaces with P0402, unless the business is dfy", "refuses non-members and anon with 42501", "refuses a second run while one is queued or running (P0409)", "a member gets one audit per business per rolling 24 h (P0429)", "a failed audit does not count, and the cap resets after 24 h", "weekly runs are service role only" |
+| 2 | Jobs unreadable by users | PASS | run_jobs has RLS on, ALL revoked from anon and authenticated, and no policies. claim_jobs, finish_job and job_error are revoked from authenticated (service role only). Test: "members and anon cannot read or write jobs, or call the worker functions" |
+| 3 | Mention detection has no LLM; tests cover aliases, case/diacritics, possessives, & vs and, substring false positives, domains, ordering | PASS | `git grep` for openai, @anthropic-ai, @google/genai, @google/generative-ai, cohere-ai, @mistralai, langchain, ai imports in src and package.json: 0 matches. src/lib/runs/mentions.ts is text matching only. tests/unit/runs/mentions.test.ts covers every listed case: aliases, case and diacritics, possessives (straight and curly), & vs 'and', substring false positives, a shorter brand inside a longer one, domains (bare and distinctive label, stoplist under 5 characters), and ordering by first appearance |
+| 4 | Citations deduped by normalized URL | PASS | src/lib/runs/citations.ts `normalizeUrl` (lowercase host, no trailing slash, no utm_*, no #fragment) and `toStoredCitations` (keeps the first, renumbers positions). Unit: categorize.test.ts and process-job.test.ts ("deduped, categorized citations"). DB: finish_job "stores the answer and citations, deduping repeated URLs" |
+| 5 | GET /api/cron/run-jobs is 401 without the bearer, on a preview | PASS | preview: no Authorization 401 `{"error":"unauthorized"}`; `Bearer wrong` 401; empty bearer 401; Basic auth 401; POST 405. `cronAuthorized` (src/lib/runs/drain.ts:10) also refuses when CRON_SECRET is unset. CRON_SECRET is set on Vercel for preview and production |
+| 6 | vercel.json cron is `* * * * *` | PASS | vercel.json `crons: [{ "path": "/api/cron/run-jobs", "schedule": "* * * * *" }]` |
+
+Also verified (brief): claim_jobs uses `FOR UPDATE SKIP LOCKED` and re-claims a stale lock (10 minutes), with at most 3 attempts. finish_job is atomic and idempotent. no_overview counts as ok, and failed answers are stored as failed. Run status is complete, partial or failed with finished_at. All covered by CI db tests ("is exclusive under parallel calls", "re-claims … and fails it after 3 attempts", "is atomic", "is idempotent", the status mixes).
+
+Not blocking:
+- `cronAuthorized` compares the header with `===`, not a constant-time compare. Low risk for a 1-minute cron with a long random secret.
+- After a valid bearer, a claim error returns up to 200 characters of the database error text in the 500 body. Only the cron caller sees it.
+
+### Blocking problems
+
+None.
+
+## Step 5: Local competitors + restaurant onboarding (re-run)
+
+Checked 2026-11-05: the merged backend and data-pipeline work on main, plus the onboarding UI in PR #21 (feat/step5-onboarding) at b8453fd, its head:
+- #20 (227a30f): onboarding RPCs, seat rule, DFY create, fixes RLS
+- #23 (a7e6d31): Maps adapter, readSite, suggestQuestions, CUISINES
+- #24 (57c0000): take_rate_token, lookup_cache
+
+The sandbox Docker disk is full, so per the lead there was no local Supabase. test:db and e2e come from CI on #21 (run 42028278532 at b8453fd). Unit, typecheck, lint, format and build ran locally in the sandbox. The preview checks ran on the Mac from a temporary detached worktree of b8453fd (removed afterwards). No live Maps, site or engine calls (no keys).
+Preview: https://rank1-9uifpq0e4-bryan-flowhighlevels-projects.vercel.app (sha b8453fd, READY).
+Sources: Jeun's ENG_HANDOFF_OVERNIGHT §6 Step 5, the lead's brief (rank1-step5.md), docs/UI.md 4b Onboarding 1/2/3.
+
+Result: PASS. The first run's blocker (4 admin e2e failures on the preview) is fixed by #29 on main (e893356). No blocking problems.
+
+Re-run 2026-11-05: #21 is still at b8453fd, behind main and showing merge conflicts on GitHub, so its own e2e files don't have #29 yet. As agreed with the lead, I ran #21's tests with main's tests/e2e/admin-test.spec.ts (the only e2e file #29 changes: 2 `test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase")` lines) against #21's preview as-is. Once #21 merges main, its head sha changes and needs a fresh CI run and Visuals comment.
+
+### Commands
+
+| Command | Result |
+|---|---|
+| `pnpm test` (sandbox) | PASS. 47 files, 665 tests passed |
+| `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build` (sandbox) | PASS |
+| CI on #21 at b8453fd | PASS. 9 of 9; test-db 11 files / 261 tests, e2e 176 passed |
+| `E2E_BASE_URL=<preview> pnpm e2e` (first run, #21 tests) | FAIL. 114 passed, 60 skipped, 4 failed: tests/e2e/admin-test.spec.ts:48 and :56 × 2 viewports, "Local Supabase is not running" |
+| `E2E_BASE_URL=<preview> pnpm e2e` (re-run, #21 tests + main's admin-test.spec.ts) | PASS. 114 passed, 64 skipped, 0 failed. The 4 admin tests now skip; dev-onboarding.spec.ts ("every 4b onboarding state, accessibly") passes at 375 and 1280; the onboarding specs that need local Supabase skip |
+
+### Acceptance
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| 1 | Restaurant template; ≤25 questions; short + long; location level per question, greyed where an engine can't, with tooltip copy | PASS | onboarding.test.tsx "lists the template questions (25 max), tracked, city level, both forms editable", "city and state levels grey ChatGPT and Gemini with the tooltip copy; country doesn't"; cuisines-questions.test.ts (never > 25); preview gallery step 3 shows the filled templates and "{Engine} can't target a city yet, so we check it for the whole country." |
+| 2 | Maps local competitors: top 5 pre-ticked, manual add, <3 partial, 0 empty, error/missing_keys fallback | PASS | maps.test.ts (docs field names, top 5 in Maps order, own domain excluded, missing_keys without a request); onboarding.test.tsx step 2 cases for 5 ticked, < 3 + manual prompt, none → empty message, error and missing_keys → message + manual form |
+| 3 | readSite: robots, 1 MB stream cap, SSRF guard; unreadable → "Type 3 things you sell"; cuisine not found → highlighted select | PASS | read-site.test.ts: robots Disallow / and /menu, Rank1 group rules, 1 MB stream cut and Content-Length refusal, private-address refusal (v4, v6, mapped, NAT64), same-site redirects only, timeout → unreadable. Code: siteHost rejects IP literals and internal names, DNS check before every hop, manual redirects. onboarding.test.tsx: unreadable → 3 inputs; no cuisine → highlighted select, Next off |
+| 4 | Finish setup saves business + competitors + questions atomically → /app | PASS | onboarding.test.ts (db): creates all three; "is atomic: a bad question rolls back the business and competitors"; > 25 active rejected, nothing stored. finishAction redirects to /app (actions.test.ts). CI e2e "a new owner sets up a business in 3 steps and lands on /app" |
+| 5 | Unpaid workspace: exactly 1 business; 2nd blocked; DFY exempt | PASS | db: "0 seats: the first active business is allowed, the second is blocked (service role too)", "an unpaid workspace cannot onboard a second business", "dfy businesses are exempt", "2 paid seats: two, not three" |
+| 6 | create_dfy_client: service='dfy', fix_list_visible=false, team-only | PASS | db: "a team user creates a client workspace and a hidden-fix-list dfy business"; "self-serve and dfy_client users are denied; anon too"; smuggled service / fix_list_visible ignored |
+| 7 | Fix list: team sees and edits; dfy_client only when visible, never writes; self-serve unchanged | PASS | db "fixes visibility and writes by role (closes #9)": the 3 cases |
+| 8 | Rate limits: read_site 10/h, maps 5/h + 20/day; 24 h cache, no token on a hit; over limit → fallbacks; only onboarding users trigger lookups | PASS | take_rate_token fixes the limits in SQL with a per-user advisory lock. db rate-limits.test.ts covers 10/h, 5/h, 20/24 h, parallel calls, no caller limits and no direct table access. lookup_cache is per user, kind and key, service-role only. actions.test.ts covers signed out, team, dfy_client and dashboard users getting fallbacks with no fetch or Maps call, the over-limit fallback, and a cache hit with no token and no paid call. limits.test.ts: failed or keyless results count but aren't cached |
+| 9 | All 4b states: mobile < 768, 44px targets, axe clean, copy in COPY.md, Example data only, no LLM | PASS | preview /dev/onboarding at 375 and 1280: axe 0 violations, scrollWidth equals viewport, all 102 checkbox labels 44 or 56 px tall. CI e2e "tap targets are at least 44px on every step" and keyboard-only. Every visible string, aria-label and title is in COPY.md or is a COPY.md/UI.md template filled with Example data (question forms, the tooltip, "Finding ramen places in Irvine…"), a cuisine option or a gallery label. onboarding/copy.test.ts passed. Gallery brands are "Example …" with example.test domains, and places are the UI.md Irvine list. No LLM: no-llm-sdk.test.ts passed, and no LLM name in the page |
+
+### Extra checks
+
+| Check | Result | Evidence |
+|---|---|---|
+| Signed-out /app/onboarding | PASS | preview: 307 to /signin?next=%2Fapp%2Fonboarding |
+| Real magic-link onboarding on the preview | NOT RUN | needs a mailbox or the hosted service-role key. The full flow is CI e2e "a new owner sets up a business in 3 steps and lands on /app" on the local stack |
+| No secrets in .next/static | PASS | 31 files: no server-only env name or secret pattern; no api.dataforseo.com, maps/live, take_rate_token or lookup_cache in the client bundle |
+| "Visuals for <sha>" matches the head | PASS | newest #21 comment is "Visuals for b8453fd", and the head is b8453fd |
+
+Not blocking:
+- readSite checks DNS, then fetch resolves again (a small DNS-rebinding window). Low risk: only a name and a cuisine come back to the user.
+- A same-site redirect may change the port (e.g. :8080) on the same public host.
+- At state level the greyed tooltip still says "can't target a city yet" (the only UI.md copy).
+
+First-run blocker:
+
+| Blocker | Result | Evidence |
+|---|---|---|
+| e2e on the preview: tests/e2e/admin-test.spec.ts:48 and :56 had no preview skip | FIXED on main by #29 (e893356) | re-run above: 0 failed, the 4 tests skip |
+
+### Blocking problems
+
+None.
+
 ## Step 4: Engine adapters with fixtures + /admin/test (re-run)
 
 Checked 2026-11-05: the adapters on main at d4962b9 (#16), and /admin/test in PR #19 (feat/admin-engine-test), first at d201823 and re-checked at 3241698, its head. 3241698 = c21ac6f (proxy gates match the normalized path) + a merge of main (#20). The sandbox Docker disk is full, so per the lead there was no local Supabase. test:db and e2e come from CI on #19 (9 of 9 green at d201823 and again at 3241698). Unit, typecheck, lint, format, smoke and build ran locally in the sandbox. The 404 checks ran from the Mac on the Vercel previews of d201823 and 3241698.

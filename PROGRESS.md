@@ -308,6 +308,21 @@ UNVERIFIED / open
 - Test widened, with reason: tests/unit/engines/fixtures-privacy.test.ts now allows `(www\.)?example-[a-z0-9-]+\.test` links (it was `example-[a-z0-9]+\.test`). The Maps fixtures need hyphenated Example brand hosts (example-ramen-house.test) and a www form to test own-domain exclusion. Only example-*.test hosts are allowed, as before. Net tightening in the same test: the docs-URL exception now applies only inside the `_synthetic` note (it used to apply anywhere in the file), every synthetic file must carry that note, and title/name/source_name fields in synthetic files must start with "Example".
 - admin-test.spec.ts: the 2 local-stack tests (service-role founder seeding) now skip when E2E_BASE_URL is set (preview runs), same as auth.spec.ts; public admin checks still run on previews. CI runs them in full (QA #28).
 
+## Step 5 (frontend): restaurant onboarding (branch feat/step5-onboarding, issue #18)
+Step 5 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
+
+Changed
+- src/app/app/onboarding: Onboarding.tsx (client, 3 steps, step in ?step= so the browser Back walks the steps), contract.ts (the types agreed with backend and data-pipeline), copy.ts.
+- /dev/onboarding: every 4b onboarding state with Example data (404 in production, like /dev/ui), for visuals and axe.
+- DomainField takes an optional onSubmit (client forms). LoadingState's progress bar is optional (one lookup has nothing to count).
+
+Doc differences
+- "Type 3 things you sell" (unreadable site): the three answers are shown and kept for the session but not saved. Neither the RPC nor SCHEMA.md has a field for them; the cuisine select is still required.
+- Questions are saved with active_form 'long' (Step 5 brief). Location level defaults to city; ChatGPT and Gemini show the UI.md tooltip copy at city and state level.
+- Local Supabase is off (pod disk full, lead 2026-11-05): DB-backed e2e (tests/e2e/onboarding.spec.ts) is gated by CI.
+- The server actions (readSite, findLocalCompetitors) run only for a signed-in user, and the browser never gets DataForSEO's raw error text (review on #23).
+- Lookup limits (lead, 2026-11-05): per signed-in self-serve owner, readSite 10/hour and Maps 5/hour + 20/24 h (take_rate_token, #24). Over the limit the actions return the existing fallbacks. Identical ok lookups (same domain, or same cuisine + city + state) come from lookup_cache for 24 h with no token taken. The cache is written with the service client, so users can't forge results.
+
 ## Step 6 (backend): run jobs and orchestration RPCs (branch feat/step6-run-jobs, issue #25)
 - Step 6 built from ENG_HANDOFF_OVERNIGHT §6 + CLAUDE.md + docs/*; Build Pack not readable; reconcile later.
 - Lead decisions:
@@ -371,6 +386,7 @@ UNVERIFIED
   - ClaimedJob.question.id is now string | null.
 - Tests: tests/db/free-audit.test.ts.
 - src/types/db.ts got the 0012 objects added by hand in the generator format (no local stack). Regenerate it with `pnpm db:types` when a stack is available.
+
 ## Step 7 (data-pipeline): metrics, CSV, free-audit pipeline (branch feat/step7-metrics)
 Step 7 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
 Lead decisions (Step 7 brief): a free audit has no business row; its brand list is a service-only snapshot reached by the lead token. Inputs are readSite → findLocalCompetitors → buildQuestions, with no LLM. AUDIT_DAILY_LIMIT caps leads, and the audit starts only after the lead row is stored. Paid-run metrics count only answers whose question still exists. One email per lead (idempotency key = lead id, from CONTACT_FROM_EMAIL). Metrics are pure TypeScript.

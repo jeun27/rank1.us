@@ -137,12 +137,24 @@ Strings for /admin/test, the founder-only engine test page (Step 4). Anyone else
 | Result labels | "Status", "Answer", "Cited links", "Location", "Cost (USD)" |
 | Location values | "Exact", "Country fallback" |
 
+## Onboarding (lead, 2026-11-05)
+
+Labels for the 3 onboarding screens (4b Onboarding 1-3). State messages are the 4b strings. Place, dietary and occasion names come from docs/UI.md lists and local_places.
+
+| Where | String |
+|---|---|
+| Step indicator | "Step 1 of 3", "Step 2 of 3", "Step 3 of 3" |
+| Buttons | "Next", "Back", "Finish setup" |
+| Business fields | "Business name", "Cuisine", "City", "State", "Landmarks", "Areas", "Dietary", "Occasion" |
+| Competitor fields | "Rating", "Domain", "Add competitor", "Remove" |
+| Question fields | "Track", "Short form", "Long form", "Location level" |
+| Location level options | "Country", "State", "City" |
+| Save failure | "We couldn't save your business. Try again." |
+
 ## Audit email (lead, 2026-11-05)
 
 The free-audit completion email (Step 7). Sent once per lead when its run ends complete or partial; a failed run sends nothing.
 
-| Where | String |
-|---|---|
 | Subject | "Your Rank1 audit is ready" |
 | Body | "Your free audit for {domain} is ready: {link}\n\nAPI-measured, directional. Results are based on {n} AI answers." |
 | {link} | NEXT_PUBLIC_SITE_URL + /audit/{token} |
