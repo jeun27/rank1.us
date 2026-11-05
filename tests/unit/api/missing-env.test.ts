@@ -4,10 +4,24 @@ import { POST as contactPOST } from "@/app/api/contact/route";
 
 // The real service client (not mocked) with no Supabase env: both routes fail the same clean way.
 const IP = "203.0.113.7";
-const contact = { name: "Ana Example", email: "visitor@example.test", industry: "Restaurant", tier: "Other", message: "Secret message", "cf-turnstile-response": "tok", website: "" };
+const contact = {
+  name: "Ana Example",
+  email: "visitor@example.test",
+  industry: "Restaurant",
+  tier: "Other",
+  message: "Secret message",
+  "cf-turnstile-response": "tok",
+  website: "",
+};
 const audit = { email: "owner@example.test", domain: "ramenhouse.com", "cf-turnstile-response": "tok", website: "" };
 const post = (handler: (r: Request) => Promise<Response>, body: unknown) =>
-  handler(new Request("http://localhost/api", { method: "POST", headers: { "x-forwarded-for": IP }, body: JSON.stringify(body) }));
+  handler(
+    new Request("http://localhost/api", {
+      method: "POST",
+      headers: { "x-forwarded-for": IP },
+      body: JSON.stringify(body),
+    }),
+  );
 
 let log: ReturnType<typeof vi.spyOn>;
 
@@ -17,7 +31,10 @@ beforeEach(() => {
   vi.stubEnv("TURNSTILE_SECRET_KEY", "test-secret");
   vi.stubEnv("IP_HASH_SALT", "salt");
   vi.stubEnv("AUDIT_DAILY_LIMIT", "10");
-  vi.stubGlobal("fetch", vi.fn(async () => Response.json({ success: true })));
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => Response.json({ success: true })),
+  );
   log = vi.spyOn(console, "error").mockImplementation(() => {});
 });
 afterEach(() => {
@@ -38,6 +55,7 @@ describe("missing Supabase env", () => {
     expect(log.mock.calls[0]).toHaveLength(1);
     expect(log.mock.calls[0][0]).toMatch(/^[a-z /]+: [a-z ]+$/);
     const logged = JSON.stringify(log.mock.calls);
-    for (const s of ["visitor@example.test", "owner@example.test", "Secret message", IP, "supabase"]) expect(logged).not.toContain(s);
+    for (const s of ["visitor@example.test", "owner@example.test", "Secret message", IP, "supabase"])
+      expect(logged).not.toContain(s);
   });
 });

@@ -61,9 +61,15 @@ describe("AuditRequestForm", () => {
     expect(busy).toHaveAttribute("aria-busy", "true");
     const [url, init] = fetch.mock.calls[0];
     expect(url).toBe("/api/audit/request");
-    expect(JSON.parse(init!.body as string)).toMatchObject({ email: "owner@example.test", domain: "www.ramenhouse.com", website: "" });
+    expect(JSON.parse(init!.body as string)).toMatchObject({
+      email: "owner@example.test",
+      domain: "www.ramenhouse.com",
+      website: "",
+    });
     release();
-    expect(await screen.findByRole("status")).toHaveTextContent("Got it. We'll email your audit to owner@example.test.");
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "Got it. We'll email your audit to owner@example.test.",
+    );
     expect(screen.queryByRole("button")).toBeNull();
   });
 
@@ -106,8 +112,11 @@ describe("ContactForm", () => {
 
   it("has Name, Email, Company, Tier, Message, and exactly the three tiers with no dollar amounts", () => {
     render(<ContactForm />);
-    for (const l of ["Name", "Email", "Company", "Tier", "Message"]) expect(screen.getByLabelText(l)).toBeInTheDocument();
-    const options = [...(screen.getByLabelText("Tier") as HTMLSelectElement).options].filter((o) => !o.disabled).map((o) => o.textContent);
+    for (const l of ["Name", "Email", "Company", "Tier", "Message"])
+      expect(screen.getByLabelText(l)).toBeInTheDocument();
+    const options = [...(screen.getByLabelText("Tier") as HTMLSelectElement).options]
+      .filter((o) => !o.disabled)
+      .map((o) => o.textContent);
     expect(options).toEqual(["Agency bundle", "Done-for-you (custom)", "Other"]);
     expect((screen.getByLabelText("Tier") as HTMLSelectElement).options[0]).toHaveTextContent("Choose one");
     expect(screen.getByLabelText("Tier").textContent).not.toMatch(/\$/);
@@ -118,7 +127,14 @@ describe("ContactForm", () => {
     const select = screen.getByLabelText("Industry") as HTMLSelectElement;
     expect(select).toBeRequired();
     expect(select.options[0]).toHaveTextContent("Pick your industry.");
-    expect([...select.options].filter((o) => !o.disabled).map((o) => o.textContent)).toEqual(["Restaurant", "HVAC", "Plumbing", "Roofing", "Pest control", "Other"]);
+    expect([...select.options].filter((o) => !o.disabled).map((o) => o.textContent)).toEqual([
+      "Restaurant",
+      "HVAC",
+      "Plumbing",
+      "Roofing",
+      "Pest control",
+      "Other",
+    ]);
     expect(screen.queryByLabelText("Your industry (optional)")).toBeNull();
     await userEvent.selectOptions(select, "Other");
     const other = screen.getByLabelText("Your industry (optional)");
@@ -140,7 +156,10 @@ describe("ContactForm", () => {
     await userEvent.type(screen.getByLabelText("Message"), "Hi");
     await userEvent.click(screen.getByRole("button", { name: "Send" }));
     await screen.findByRole("status");
-    expect(JSON.parse(fetch.mock.calls[0][1]!.body as string)).toMatchObject({ industry: "Other", industry_other: "Pool service" });
+    expect(JSON.parse(fetch.mock.calls[0][1]!.body as string)).toMatchObject({
+      industry: "Other",
+      industry_other: "Pool service",
+    });
   });
 
   it("client error: inline errors on empty required fields, no request", async () => {
@@ -169,7 +188,11 @@ describe("ContactForm", () => {
     await fillAll();
     expect(screen.getByRole("button", { name: "Sending…" })).toBeDisabled();
     expect(fetch.mock.calls[0][0]).toBe("/api/contact");
-    expect(JSON.parse(fetch.mock.calls[0][1]!.body as string)).toMatchObject({ name: "Ana Example", tier: "Done-for-you (custom)", message: "Hi" });
+    expect(JSON.parse(fetch.mock.calls[0][1]!.body as string)).toMatchObject({
+      name: "Ana Example",
+      tier: "Done-for-you (custom)",
+      message: "Hi",
+    });
     release();
     expect(await screen.findByRole("status")).toHaveTextContent("Thanks. We'll reply by email within 2 business days.");
   });
@@ -187,7 +210,10 @@ describe("ContactForm", () => {
   });
 
   it("a network failure shows the send error", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => Promise.reject(new Error("offline"))));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Promise.reject(new Error("offline"))),
+    );
     render(<ContactForm />);
     await fillAll();
     expect(await screen.findByRole("alert")).toHaveTextContent("That didn't send. Try again in a minute.");

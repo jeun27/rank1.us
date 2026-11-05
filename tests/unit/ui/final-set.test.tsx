@@ -23,8 +23,16 @@ describe("DomainField", () => {
     expect(input).not.toHaveAttribute("aria-invalid");
     expect(input).not.toHaveAttribute("aria-describedby");
     for (const c of [
-      "@min-[21rem]:h-15", "@min-[21rem]:rounded-full", "@min-[21rem]:flex-row", "rounded-banner", "flex-col",
-      "bg-white", "border", "border-fieldBorder", "shadow-field", "focus-within:outline-jellyDeep",
+      "@min-[21rem]:h-15",
+      "@min-[21rem]:rounded-full",
+      "@min-[21rem]:flex-row",
+      "rounded-banner",
+      "flex-col",
+      "bg-white",
+      "border",
+      "border-fieldBorder",
+      "shadow-field",
+      "focus-within:outline-jellyDeep",
     ]) {
       expect(field()).toContain(c);
     }
@@ -65,7 +73,8 @@ describe("AuroraButton", () => {
     render(<AuroraButton loading>Opening Google…</AuroraButton>);
     const b = screen.getByRole("button", { name: "Opening Google…" });
     const cls = b.className.split(" ");
-    for (const c of ["aurora-ring", "rounded-full", "shadow-aurora", "text-jellyDeep", "h-12.5"]) expect(cls).toContain(c);
+    for (const c of ["aurora-ring", "rounded-full", "shadow-aurora", "text-jellyDeep", "h-12.5"])
+      expect(cls).toContain(c);
     expect(b).toBeDisabled();
     expect(b).toHaveAttribute("aria-busy", "true");
     expect(b.querySelector("[data-spinner]")!.getAttribute("class")).toContain("motion-reduce:animate-none");

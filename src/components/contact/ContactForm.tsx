@@ -11,9 +11,7 @@ import { Turnstile } from "@/components/forms/Turnstile";
 import { INDUSTRIES, INDUSTRY_OTHER_MAX, TIERS, validateContact, type ContactField } from "@/lib/spam/validate";
 
 type State =
-  | { kind: "idle" | "submitting" }
-  | { kind: "error"; fields: ContactField[]; banner?: string }
-  | { kind: "success" };
+  { kind: "idle" | "submitting" } | { kind: "error"; fields: ContactField[]; banner?: string } | { kind: "success" };
 
 // industry_other has no string: the input caps it at 60 and only shows for "Other", so only a crafted request trips it.
 const fieldError: Partial<Record<ContactField, string>> = {
@@ -24,7 +22,8 @@ const fieldError: Partial<Record<ContactField, string>> = {
   message: c.messageError,
 };
 const FIELDS: ContactField[] = ["name", "email", "industry", "industry_other", "tier", "message"];
-const box = "w-full bg-white text-ui text-ink shadow-field outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep";
+const box =
+  "w-full bg-white text-ui text-ink shadow-field outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep";
 const boxEdge = (error?: string) => (error ? "border-2 border-brick" : "border border-fieldBorder");
 
 // Contact us form, used on /contact and in the ContactUsLink modal.
@@ -53,7 +52,8 @@ export function ContactForm() {
     if (res.status === 200) {
       setState({ kind: "success" });
       requestAnimationFrame(() => success.current?.focus());
-    } else if (res.status === 400) showErrors(res.errors.filter((f): f is ContactField => FIELDS.includes(f as ContactField)));
+    } else if (res.status === 400)
+      showErrors(res.errors.filter((f): f is ContactField => FIELDS.includes(f as ContactField)));
     else showErrors([], res.status === 429 ? c.tooMany : c.sendError);
   }
 
@@ -70,10 +70,25 @@ export function ContactForm() {
   const submitting = state.kind === "submitting";
 
   return (
-    <form ref={form} noValidate onSubmit={onSubmit} className="relative flex flex-col gap-4" aria-busy={submitting || undefined}>
+    <form
+      ref={form}
+      noValidate
+      onSubmit={onSubmit}
+      className="relative flex flex-col gap-4"
+      aria-busy={submitting || undefined}
+    >
       {state.kind === "error" && state.banner && <Banner tone="error">{state.banner}</Banner>}
       <PillField label={c.nameLabel} name="name" autoComplete="name" required maxLength={100} error={err("name")} />
-      <PillField label={c.emailLabel} name="email" type="email" autoComplete="email" inputMode="email" spellCheck={false} required error={err("email")} />
+      <PillField
+        label={c.emailLabel}
+        name="email"
+        type="email"
+        autoComplete="email"
+        inputMode="email"
+        spellCheck={false}
+        required
+        error={err("email")}
+      />
       <PillField label={c.companyLabel} name="company" autoComplete="organization" maxLength={100} />
       <SelectField
         label={c.industryLabel}
@@ -85,9 +100,20 @@ export function ContactForm() {
         onChange={setIndustry}
       />
       {industry === "Other" && (
-        <PillField label={c.industryOtherLabel} name="industry_other" maxLength={INDUSTRY_OTHER_MAX} error={err("industry_other")} />
+        <PillField
+          label={c.industryOtherLabel}
+          name="industry_other"
+          maxLength={INDUSTRY_OTHER_MAX}
+          error={err("industry_other")}
+        />
       )}
-      <SelectField label={c.tierLabel} name="tier" placeholder={c.tierPlaceholder} options={TIERS} error={err("tier")} />
+      <SelectField
+        label={c.tierLabel}
+        name="tier"
+        placeholder={c.tierPlaceholder}
+        options={TIERS}
+        error={err("tier")}
+      />
       <div>
         <label htmlFor={messageId} className="mb-1.5 block text-caption font-semibold">
           {c.messageLabel}

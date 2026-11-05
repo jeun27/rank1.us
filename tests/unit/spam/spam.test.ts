@@ -52,7 +52,8 @@ describe("rate limit windows", () => {
   it("AUDIT_DAILY_LIMIT must be a whole number", () => {
     expect(auditDailyLimit("50")).toBe(50);
     expect(auditDailyLimit("0")).toBe(0);
-    for (const bad of [undefined, "", "abc", "-1", "2.5"]) expect(() => auditDailyLimit(bad)).toThrow(/AUDIT_DAILY_LIMIT/);
+    for (const bad of [undefined, "", "abc", "-1", "2.5"])
+      expect(() => auditDailyLimit(bad)).toThrow(/AUDIT_DAILY_LIMIT/);
   });
 });
 
@@ -76,7 +77,9 @@ describe("readBody", () => {
 
 describe("verifyTurnstile", () => {
   function mockFetch(json: unknown) {
-    const fn = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(async () => new Response(JSON.stringify(json)));
+    const fn = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(
+      async () => new Response(JSON.stringify(json)),
+    );
     vi.stubGlobal("fetch", fn);
     return fn;
   }
@@ -88,7 +91,11 @@ describe("verifyTurnstile", () => {
     const [url, init] = fetch.mock.calls[0];
     expect(url).toBe(SITEVERIFY_URL);
     expect(init?.method).toBe("POST");
-    expect(JSON.parse(init?.body as string)).toEqual({ secret: "test-secret", response: "tok", remoteip: "203.0.113.7" });
+    expect(JSON.parse(init?.body as string)).toEqual({
+      secret: "test-secret",
+      response: "tok",
+      remoteip: "203.0.113.7",
+    });
 
     mockFetch({ success: false, "error-codes": ["invalid-input-response"] });
     expect(await verifyTurnstile("tok", "203.0.113.7")).toBe(false);
@@ -108,7 +115,10 @@ describe("verifyTurnstile", () => {
     expect(await verifyTurnstile("", "203.0.113.7")).toBe(false);
     expect(await verifyTurnstile("x".repeat(2049), "203.0.113.7")).toBe(false);
     expect(fetch).not.toHaveBeenCalled();
-    vi.stubGlobal("fetch", vi.fn(async () => Promise.reject(new Error("offline"))));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Promise.reject(new Error("offline"))),
+    );
     expect(await verifyTurnstile("tok", "203.0.113.7")).toBe(false);
   });
 });

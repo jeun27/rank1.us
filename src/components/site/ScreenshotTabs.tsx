@@ -3,13 +3,24 @@
 import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 
 // WAI-ARIA tabs with automatic activation: Left/Right wrap, Home/End jump.
-export function ScreenshotTabs({ labelledBy, tabs }: { labelledBy: string; tabs: { label: string; panel: ReactNode }[] }) {
+export function ScreenshotTabs({
+  labelledBy,
+  tabs,
+}: {
+  labelledBy: string;
+  tabs: { label: string; panel: ReactNode }[];
+}) {
   const [active, setActive] = useState(0);
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const onKeyDown = (e: KeyboardEvent) => {
     const last = tabs.length - 1;
-    const next = { ArrowRight: active === last ? 0 : active + 1, ArrowLeft: active === 0 ? last : active - 1, Home: 0, End: last }[e.key];
+    const next = {
+      ArrowRight: active === last ? 0 : active + 1,
+      ArrowLeft: active === 0 ? last : active - 1,
+      Home: 0,
+      End: last,
+    }[e.key];
     if (next === undefined) return;
     e.preventDefault();
     setActive(next);
@@ -18,7 +29,12 @@ export function ScreenshotTabs({ labelledBy, tabs }: { labelledBy: string; tabs:
 
   return (
     <div className="rounded-surface border border-ink bg-white">
-      <div role="tablist" aria-labelledby={labelledBy} onKeyDown={onKeyDown} className="flex flex-wrap border-b border-ink">
+      <div
+        role="tablist"
+        aria-labelledby={labelledBy}
+        onKeyDown={onKeyDown}
+        className="flex flex-wrap border-b border-ink"
+      >
         {tabs.map((t, i) => (
           <button
             key={t.label}

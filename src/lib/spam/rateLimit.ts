@@ -13,4 +13,5 @@ export function auditDailyLimit(raw = process.env.AUDIT_DAILY_LIMIT): number {
   return n;
 }
 
-export const honeypotFilled = (body: Record<string, unknown>) => typeof body[HONEYPOT_FIELD] === "string" && body[HONEYPOT_FIELD] !== "";
+export const honeypotFilled = (body: Record<string, unknown>) =>
+  typeof body[HONEYPOT_FIELD] === "string" && body[HONEYPOT_FIELD] !== "";

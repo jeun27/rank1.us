@@ -4,7 +4,8 @@ import { LegalPlaceholder } from "@/components/contact/LegalPlaceholder";
 
 export const metadata: Metadata = { title: "Privacy - Rank1" };
 
-const link = "text-jellyDeep underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
+const link =
+  "text-jellyDeep underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
 
 // Placeholder copy (exempt from COPY.md): only the topics in the step 2 brief.
 export default function PrivacyPage() {
@@ -18,15 +19,14 @@ export default function PrivacyPage() {
       <section>
         <h2>Google Analytics (GA4)</h2>
         <p>
-          If you link GA4, Rank1 asks for read-only access (the analytics.readonly scope). It is used only to show AI-referred traffic in
-          your reports.
+          If you link GA4, Rank1 asks for read-only access (the analytics.readonly scope). It is used only to show
+          AI-referred traffic in your reports.
         </p>
       </section>
       <section>
         <h2>Deleting your data</h2>
         <p>
-          You can ask us to delete your data through the{" "}
-          <ContactUsLink className={link}>Contact us</ContactUsLink>{" "}
+          You can ask us to delete your data through the <ContactUsLink className={link}>Contact us</ContactUsLink>{" "}
           form.
         </p>
       </section>

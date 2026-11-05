@@ -39,7 +39,8 @@ test("landing: one H1, 9 sections in order (social proof hidden), axe clean", as
 test("every visible string is in docs/COPY.md (fixture data excluded)", async ({ page }) => {
   await page.goto("/");
   // Open every FAQ and tab so hidden copy is checked too.
-  for (const d of await page.locator("details").all()) await d.evaluate((el) => ((el as HTMLDetailsElement).open = true));
+  for (const d of await page.locator("details").all())
+    await d.evaluate((el) => ((el as HTMLDetailsElement).open = true));
   const lines: string[] = [];
   for (const tab of await page.getByRole("tab").all()) {
     await tab.click();
@@ -68,7 +69,7 @@ test("every visible string is in docs/COPY.md (fixture data excluded)", async ({
   expect(missing).toEqual([]);
 });
 
-test("every aria-label, title and alt is in docs/COPY.md (alt=\"\" is fine)", async ({ page }) => {
+test('every aria-label, title and alt is in docs/COPY.md (alt="" is fine)', async ({ page }) => {
   await page.goto("/");
   const attrs = await page.evaluate(() =>
     [...document.querySelectorAll("[aria-label], [title], [alt]")].flatMap((el) =>
@@ -77,7 +78,8 @@ test("every aria-label, title and alt is in docs/COPY.md (alt=\"\" is fine)", as
   );
   expect(attrs.length).toBeGreaterThan(0);
   // Whole words or phrases only, so a short label like "Main" can't pass by sitting inside "domain".
-  const inCopy = (v: string) => new RegExp(`(^|[^a-z0-9])${norm(v).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^a-z0-9]|$)`).test(COPY);
+  const inCopy = (v: string) =>
+    new RegExp(`(^|[^a-z0-9])${norm(v).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^a-z0-9]|$)`).test(COPY);
   const missing = attrs.filter(({ v }) => v.trim() !== "" && !inCopy(v)).map(({ a, v }) => `${a}="${v}"`);
   expect(missing).toEqual([]);
 });
@@ -143,7 +145,12 @@ test("at most one jellyDeep primary button in the viewport at any scroll positio
       const vh = window.innerHeight;
       return [...document.querySelectorAll<HTMLElement>("a, button")].filter((el) => {
         const r = el.getBoundingClientRect();
-        return el.offsetParent !== null && r.bottom > 0 && r.top < vh && getComputedStyle(el).backgroundColor === "rgb(26, 95, 191)";
+        return (
+          el.offsetParent !== null &&
+          r.bottom > 0 &&
+          r.top < vh &&
+          getComputedStyle(el).backgroundColor === "rgb(26, 95, 191)"
+        );
       }).length;
     });
     expect(n, `scrollY ${y}`).toBeLessThanOrEqual(1);
@@ -197,9 +204,11 @@ test("comparison: Rank1 column pinned; the only horizontal scroll on the page", 
 
 test("tap targets are at least 44px tall", async ({ page }) => {
   await page.goto("/");
-  const small = await page.locator("a:visible, button:visible, summary:visible").evaluateAll((els) =>
-    els.map((e) => ({ text: e.textContent?.trim(), h: e.getBoundingClientRect().height })).filter((x) => x.h < 44),
-  );
+  const small = await page
+    .locator("a:visible, button:visible, summary:visible")
+    .evaluateAll((els) =>
+      els.map((e) => ({ text: e.textContent?.trim(), h: e.getBoundingClientRect().height })).filter((x) => x.h < 44),
+    );
   expect(small).toEqual([]);
 });
 
@@ -208,11 +217,21 @@ test("links point at the right places", async ({ page }) => {
   const hero = page.locator("#hero");
   await expect(hero.getByRole("link", { name: "Get my free audit" })).toHaveAttribute("href", "#audit");
   await expect(hero.getByRole("link", { name: "See pricing" })).toHaveAttribute("href", "#pricing");
-  await expect(page.locator("#pricing").getByRole("link", { name: "Start for $99/mo" })).toHaveAttribute("href", "/sign-in");
-  await expect(page.locator("#pricing").getByRole("link", { name: "Get my free audit first" })).toHaveAttribute("href", "#audit");
-  await expect(page.locator("#comparison").getByRole("link", { name: "Start with a free audit" })).toHaveAttribute("href", "#audit");
+  await expect(page.locator("#pricing").getByRole("link", { name: "Start for $99/mo" })).toHaveAttribute(
+    "href",
+    "/sign-in",
+  );
+  await expect(page.locator("#pricing").getByRole("link", { name: "Get my free audit first" })).toHaveAttribute(
+    "href",
+    "#audit",
+  );
+  await expect(page.locator("#comparison").getByRole("link", { name: "Start with a free audit" })).toHaveAttribute(
+    "href",
+    "#audit",
+  );
   await expect(page.locator("#audit form")).toHaveCount(1);
-  for (const link of await page.getByRole("link", { name: "Contact us" }).all()) await expect(link).toHaveAttribute("href", "/contact");
+  for (const link of await page.getByRole("link", { name: "Contact us" }).all())
+    await expect(link).toHaveAttribute("href", "/contact");
   const footer = page.locator("footer").getByRole("link");
   await expect(footer).toHaveText(["Pricing", "FAQ", "Contact us", "Privacy", "Terms"]);
   await expect(page.locator("body")).not.toContainText("@");

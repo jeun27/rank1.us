@@ -17,13 +17,21 @@ const cell = "border-b border-border px-3 py-3 text-left";
 export function ComparisonTable() {
   return (
     <Section id="comparison" title="Built for one business, not 500 brands.">
-      <div data-scroll-exempt tabIndex={0} className="overflow-x-auto rounded-surface bg-white shadow-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep">
+      <div
+        data-scroll-exempt
+        tabIndex={0}
+        className="overflow-x-auto rounded-surface bg-white shadow-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+      >
         <table aria-labelledby="comparison-title" className="w-full min-w-[34rem] table-fixed border-collapse">
           <thead>
             <tr>
               <td className={`${cell} w-28 md:w-auto`} />
               {columns.map((c) => (
-                <th key={c} scope="col" className={`${cell} text-caption font-semibold ${c === "Rank1" ? `${rank1} text-jellyDeep` : "text-inkMuted"}`}>
+                <th
+                  key={c}
+                  scope="col"
+                  className={`${cell} text-caption font-semibold ${c === "Rank1" ? `${rank1} text-jellyDeep` : "text-inkMuted"}`}
+                >
                   {c}
                 </th>
               ))}
@@ -32,7 +40,9 @@ export function ComparisonTable() {
           <tbody>
             {rows.map(([label, manual, enterprise, ours]) => (
               <tr key={label}>
-                <th scope="row" className={`${cell} font-semibold`}>{label}</th>
+                <th scope="row" className={`${cell} font-semibold`}>
+                  {label}
+                </th>
                 <td className={cell}>{manual}</td>
                 <td className={cell}>{enterprise}</td>
                 <td className={`${cell} ${rank1} text-moss`}>{ours}</td>
@@ -41,9 +51,13 @@ export function ComparisonTable() {
           </tbody>
         </table>
       </div>
-      <p className="mt-3 text-caption text-inkMuted">Enterprise column is a general description, not a specific product.</p>
+      <p className="mt-3 text-caption text-inkMuted">
+        Enterprise column is a general description, not a specific product.
+      </p>
       <div className="mt-8">
-        <Button variant="secondary" href="#audit">Start with a free audit</Button>
+        <Button variant="secondary" href="#audit">
+          Start with a free audit
+        </Button>
       </div>
     </Section>
   );

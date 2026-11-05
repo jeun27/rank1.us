@@ -9,7 +9,11 @@ const CHECK_VIOLATION = "23514";
 const NOT_NULL_VIOLATION = "23502";
 
 const contact = (extra: Record<string, unknown>) =>
-  loose(serviceClient()).from("contact_requests").insert({ name: "Ana Example", email: "ana@example.test", ...extra }).select().single();
+  loose(serviceClient())
+    .from("contact_requests")
+    .insert({ name: "Ana Example", email: "ana@example.test", ...extra })
+    .select()
+    .single();
 
 describe("#22 contact_requests.industry", () => {
   for (const industry of ["Restaurant", "HVAC", "Plumbing", "Roofing", "Pest control", "Other"]) {
@@ -46,7 +50,10 @@ describe("#22 contact_requests.industry", () => {
   it("rejects industry_other unless industry is Other", async () => {
     expect((await contact({ industry: "Restaurant", industry_other: "Bakery" })).error?.code).toBe(CHECK_VIOLATION);
     const row = must(await contact({ industry: "Other", industry_other: "Bakery" }));
-    const { error } = await loose(serviceClient()).from("contact_requests").update({ industry: "HVAC" }).eq("id", row.id);
+    const { error } = await loose(serviceClient())
+      .from("contact_requests")
+      .update({ industry: "HVAC" })
+      .eq("id", row.id);
     expect(error?.code).toBe(CHECK_VIOLATION);
   });
 });
@@ -66,12 +73,16 @@ describe("#23 fix list visibility", () => {
   });
 
   it("new businesses are self_serve with the fix list flag off", async () => {
-    const [biz] = must(await selfServe.db.from("businesses").select("service, fix_list_visible").eq("id", fs.businessId));
+    const [biz] = must(
+      await selfServe.db.from("businesses").select("service, fix_list_visible").eq("id", fs.businessId),
+    );
     expect(biz).toEqual({ service: "self_serve", fix_list_visible: false });
   });
 
   it("a self-serve member sees their fixes", async () => {
-    expect(must(await selfServe.db.from("fixes").select("id").eq("business_id", fs.businessId))).toEqual([{ id: fs.fixId }]);
+    expect(must(await selfServe.db.from("fixes").select("id").eq("business_id", fs.businessId))).toEqual([
+      { id: fs.fixId },
+    ]);
   });
 
   it("a dfy member sees no fixes until the service role sets fix_list_visible", async () => {
@@ -83,29 +94,40 @@ describe("#23 fix list visibility", () => {
   });
 
   it("the service role always sees fixes", async () => {
-    const rows = must(await serviceClient().from("fixes").select("id").in("business_id", [fs.businessId, fd.businessId]));
+    const rows = must(
+      await serviceClient().from("fixes").select("id").in("business_id", [fs.businessId, fd.businessId]),
+    );
     expect(rows.map((r) => r.id).sort()).toEqual([fs.fixId, fd.fixId].sort());
   });
 
   it("an owner cannot update service or fix_list_visible", async () => {
-    for (const [field, value] of [["service", "dfy"], ["fix_list_visible", true]] as const) {
-      const { error } = await loose(dfy.db).from("businesses").update({ [field]: value }).eq("id", fd.businessId);
+    for (const [field, value] of [
+      ["service", "dfy"],
+      ["fix_list_visible", true],
+    ] as const) {
+      const { error } = await loose(dfy.db)
+        .from("businesses")
+        .update({ [field]: value })
+        .eq("id", fd.businessId);
       expect(error?.code).toBe(RLS_DENIED);
     }
     const { error } = await loose(selfServe.db).from("businesses").update({ service: "dfy" }).eq("id", fs.businessId);
     expect(error?.code).toBe(RLS_DENIED);
-    const [biz] = must(await serviceClient().from("businesses").select("service, fix_list_visible").eq("id", fd.businessId));
+    const [biz] = must(
+      await serviceClient().from("businesses").select("service, fix_list_visible").eq("id", fd.businessId),
+    );
     expect(biz).toEqual({ service: "dfy", fix_list_visible: false });
   });
 
   it("an owner cannot set service or fix_list_visible on insert, but can still edit other fields", async () => {
     must(await serviceClient().from("workspaces").update({ seats_quantity: 2 }).eq("id", fs.workspaceId));
     for (const extra of [{ service: "dfy" }, { fix_list_visible: true }]) {
-      const { error } = await loose(selfServe.db).from("businesses").insert({ workspace_id: fs.workspaceId, name: "Example Two", ...extra });
+      const { error } = await loose(selfServe.db)
+        .from("businesses")
+        .insert({ workspace_id: fs.workspaceId, name: "Example Two", ...extra });
       expect(error?.code).toBe(RLS_DENIED);
     }
     must(await selfServe.db.from("businesses").update({ name: "Example Renamed" }).eq("id", fs.businessId));
     must(await selfServe.db.from("businesses").insert({ workspace_id: fs.workspaceId, name: "Example Two" }));
   });
 });
-

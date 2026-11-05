@@ -31,7 +31,9 @@ export function Pricing() {
         <div className="mt-6 flex flex-wrap items-center gap-4">
           {/* /sign-in arrives with the auth step (PROGRESS.md known gap). */}
           <Button href="/sign-in">Start for $99/mo</Button>
-          <Button variant="secondary" href="#audit">Get my free audit first</Button>
+          <Button variant="secondary" href="#audit">
+            Get my free audit first
+          </Button>
         </div>
       </div>
       <p className="mt-6">Agency? $99 per business, white-label included. {contact}</p>

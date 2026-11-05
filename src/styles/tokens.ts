@@ -26,8 +26,10 @@ export const colors = {
 
 // [font-size px, line-height px]; mobile -> md+ where UI.md gives two sizes.
 export const type = {
-  display: [40, 44], displayMd: [56, 60],
-  h2: [28, 34], h2Md: [36, 42],
+  display: [40, 44],
+  displayMd: [56, 60],
+  h2: [28, 34],
+  h2Md: [36, 42],
   h3: [20, 26],
   hero: [48, 52],
   body: [16, 24],

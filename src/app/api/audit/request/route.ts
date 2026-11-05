@@ -20,7 +20,8 @@ export async function POST(req: Request) {
   if (honeypotFilled(body)) return queued();
 
   const ip = clientIp(req);
-  if (!(await verifyTurnstile(body[TURNSTILE_FIELD], ip))) return Response.json({ error: "turnstile" }, { status: 403 });
+  if (!(await verifyTurnstile(body[TURNSTILE_FIELD], ip)))
+    return Response.json({ error: "turnstile" }, { status: 403 });
 
   try {
     const db = createServiceClient();

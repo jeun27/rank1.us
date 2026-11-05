@@ -6,9 +6,15 @@ export const LEGAL_UPDATED = "2026-11-05";
 
 // Placeholder legal page: the review marker first, then the last-updated date.
 export function LegalPlaceholder({ title, children }: { title: string; children: ReactNode }) {
-  const updated = new Date(`${LEGAL_UPDATED}T00:00:00Z`).toLocaleDateString("en-US", { dateStyle: "long", timeZone: "UTC" });
+  const updated = new Date(`${LEGAL_UPDATED}T00:00:00Z`).toLocaleDateString("en-US", {
+    dateStyle: "long",
+    timeZone: "UTC",
+  });
   return (
-    <SimplePage title={title} notice={<p className="bg-warnBg px-5 py-3 text-center font-semibold text-warnText">{LEGAL_MARKER}</p>}>
+    <SimplePage
+      title={title}
+      notice={<p className="bg-warnBg px-5 py-3 text-center font-semibold text-warnText">{LEGAL_MARKER}</p>}
+    >
       <p className="mb-8 text-caption text-inkMuted">
         Last updated <time dateTime={LEGAL_UPDATED}>{updated}</time>
       </p>

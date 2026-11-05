@@ -25,7 +25,9 @@ export function HowItWorks() {
         </ol>
       </div>
       <div className="mt-8">
-        <Button variant="secondary" href="#audit">Get my free audit</Button>
+        <Button variant="secondary" href="#audit">
+          Get my free audit
+        </Button>
       </div>
     </Section>
   );

@@ -3,7 +3,10 @@ import { Section } from "./Section";
 // Answers are COPY.md's exact phrases, capitalized with a closing period (lead, 2026-11-05).
 const faqs: [string, string][] = [
   ["Which AI engines?", "ChatGPT, Gemini, Google AI Overview, Perplexity"],
-  ["What does visibility % mean?", "the share of answers where AI names your business, always shown with the sample size"],
+  [
+    "What does visibility % mean?",
+    "the share of answers where AI names your business, always shown with the sample size",
+  ],
   ["How long is setup?", "about 5 minutes"],
   ["Can I white-label?", "yes; the $99 plan includes white-label reports with your own logo and no Rank1 credit"],
   ["Do I need GA4?", "optional; adds traffic to the report"],

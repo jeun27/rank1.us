@@ -15,12 +15,33 @@ vi.mock("@/lib/supabase/service", () => ({ createServiceClient: () => ({}) }));
 import { POST as contactPOST } from "@/app/api/contact/route";
 import { POST as auditPOST } from "@/app/api/audit/request/route";
 
-const contact = { name: "Ana Example", email: "visitor@example.test", company: "Example Ramen Co", industry: "Other", industry_other: "Pool service", tier: "Other", message: "Secret message", "cf-turnstile-response": "tok", website: "" };
-const audit = { email: "owner@example.test", domain: "https://www.RamenHouse.com/", "cf-turnstile-response": "tok", website: "" };
+const contact = {
+  name: "Ana Example",
+  email: "visitor@example.test",
+  company: "Example Ramen Co",
+  industry: "Other",
+  industry_other: "Pool service",
+  tier: "Other",
+  message: "Secret message",
+  "cf-turnstile-response": "tok",
+  website: "",
+};
+const audit = {
+  email: "owner@example.test",
+  domain: "https://www.RamenHouse.com/",
+  "cf-turnstile-response": "tok",
+  website: "",
+};
 const IP = "203.0.113.7";
 
 const post = (handler: (r: Request) => Promise<Response>, body: unknown) =>
-  handler(new Request("http://localhost/api", { method: "POST", headers: { "x-forwarded-for": IP, "user-agent": "vitest" }, body: JSON.stringify(body) }));
+  handler(
+    new Request("http://localhost/api", {
+      method: "POST",
+      headers: { "x-forwarded-for": IP, "user-agent": "vitest" },
+      body: JSON.stringify(body),
+    }),
+  );
 
 let turnstileOk = true;
 let resendOk = true;
@@ -69,7 +90,16 @@ describe("POST /api/contact", () => {
     expect(res.status).toBe(200);
     expect(calledHosts()).toEqual(["challenges.cloudflare.com", "api.resend.com"]);
     const row = q.insertContactRequest.mock.calls[0][1];
-    expect(row).toMatchObject({ name: "Ana Example", email: "visitor@example.test", company: "Example Ramen Co", industry: "Other", industry_other: "Pool service", tier: "Other", message: "Secret message", user_agent: "vitest" });
+    expect(row).toMatchObject({
+      name: "Ana Example",
+      email: "visitor@example.test",
+      company: "Example Ramen Co",
+      industry: "Other",
+      industry_other: "Pool service",
+      tier: "Other",
+      message: "Secret message",
+      user_agent: "vitest",
+    });
     const sent = JSON.parse(fetchMock.mock.calls[1][1].body);
     expect(sent.text).toContain("Industry: Other – Pool service");
     expect(row.ip_hash).toMatch(/^[0-9a-f]{64}$/);
@@ -82,7 +112,12 @@ describe("POST /api/contact", () => {
   });
 
   it("400 when industry is missing, not an option, or Other text breaks the rules", async () => {
-    for (const bad of [{ industry: "" }, { industry: "Dental" }, { industry: "HVAC", industry_other: "Pool" }, { industry_other: "x".repeat(61) }]) {
+    for (const bad of [
+      { industry: "" },
+      { industry: "Dental" },
+      { industry: "HVAC", industry_other: "Pool" },
+      { industry_other: "x".repeat(61) },
+    ]) {
       const res = await post(contactPOST, { ...contact, ...bad });
       expect(res.status).toBe(400);
     }

@@ -34,7 +34,11 @@ export async function sendEmail(email: Email, idempotencyKey: string): Promise<b
   try {
     const res = await fetch(RESEND_URL, {
       method: "POST",
-      headers: { authorization: `Bearer ${key}`, "content-type": "application/json", "idempotency-key": idempotencyKey },
+      headers: {
+        authorization: `Bearer ${key}`,
+        "content-type": "application/json",
+        "idempotency-key": idempotencyKey,
+      },
       body: JSON.stringify(email),
     });
     if (!res.ok) console.error("resend: send failed", res.status);

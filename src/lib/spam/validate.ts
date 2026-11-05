@@ -18,8 +18,7 @@ export type Result<T, F extends string> = { ok: true; data: T } | { ok: false; e
 export type AuditInput = { email: string; domain: string };
 // Same industry rule as ContactRequestInsert: free text only goes with "Other".
 export type ContactInput = { name: string; email: string; company: string | null; tier: Tier; message: string } & (
-  | { industry: Exclude<Industry, "Other">; industry_other: null }
-  | { industry: "Other"; industry_other: string | null }
+  { industry: Exclude<Industry, "Other">; industry_other: null } | { industry: "Other"; industry_other: string | null }
 );
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -38,7 +37,11 @@ export function isEmail(raw: unknown): boolean {
 export function normalizeDomain(raw: unknown): string | null {
   let v = str(raw).toLowerCase();
   v = v.replace(/^[a-z][a-z0-9+.-]*:\/\//, "");
-  v = v.split(/[/?#]/)[0].replace(/:\d+$/, "").replace(/\.$/, "").replace(/^www\./, "");
+  v = v
+    .split(/[/?#]/)[0]
+    .replace(/:\d+$/, "")
+    .replace(/\.$/, "")
+    .replace(/^www\./, "");
   if (v.length === 0 || v.length > 253) return null;
   const labels = v.split(".");
   if (labels.length < 2 || !labels.every((l) => LABEL.test(l))) return null;
@@ -70,13 +73,17 @@ export function validateContact(body: Record<string, unknown>): Result<ContactIn
   if (!isEmail(body.email)) errors.push("email");
   if (!industry) errors.push("industry");
   // Free text only goes with "Other", and only up to 60 characters.
-  else if (industryOther && (industry !== "Other" || industryOther.length > INDUSTRY_OTHER_MAX)) errors.push("industry_other");
+  else if (industryOther && (industry !== "Other" || industryOther.length > INDUSTRY_OTHER_MAX))
+    errors.push("industry_other");
   if (!tier) errors.push("tier");
   if (!message || message.length > 5000) errors.push("message");
   if (errors.length) return { ok: false, errors };
   const base = { name, email: str(body.email), company: company || null, tier: tier!, message };
   return {
     ok: true,
-    data: industry === "Other" ? { ...base, industry, industry_other: industryOther || null } : { ...base, industry: industry!, industry_other: null },
+    data:
+      industry === "Other"
+        ? { ...base, industry, industry_other: industryOther || null }
+        : { ...base, industry: industry!, industry_other: null },
   };
 }

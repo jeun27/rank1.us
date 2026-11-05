@@ -30,7 +30,9 @@ describe("hero card numbers", () => {
   it("the hero renders the computed text next to the Example data label", () => {
     const { container } = render(<Hero />);
     expect(container.querySelector("[data-hero-text]")?.textContent).toBe(heroCardText(heroThisWeek, heroLastWeek));
-    expect(within(container.querySelector("[data-hero-card]") as HTMLElement).getByText("Example data")).toBeInTheDocument();
+    expect(
+      within(container.querySelector("[data-hero-card]") as HTMLElement).getByText("Example data"),
+    ).toBeInTheDocument();
   });
 });
 
@@ -57,7 +59,10 @@ describe("social proof flag", () => {
 });
 
 describe("ScreenshotTabs", () => {
-  const tabs = ["Dashboard", "Monthly report", "Audit CSV"].map((label) => ({ label, panel: <p>{`${label} panel`}</p> }));
+  const tabs = ["Dashboard", "Monthly report", "Audit CSV"].map((label) => ({
+    label,
+    panel: <p>{`${label} panel`}</p>,
+  }));
   it("moves with arrow keys, wraps, and supports Home/End", async () => {
     const user = userEvent.setup();
     render(<ScreenshotTabs labelledBy="shots" tabs={tabs} />);
@@ -84,6 +89,8 @@ describe("ScreenshotTabs", () => {
 describe("FAQ answers", () => {
   it("capitalize the COPY.md phrase and add a closing period, nothing else", () => {
     expect(sentence("about 5 minutes")).toBe("About 5 minutes.");
-    expect(sentence("ChatGPT, Gemini, Google AI Overview, Perplexity")).toBe("ChatGPT, Gemini, Google AI Overview, Perplexity.");
+    expect(sentence("ChatGPT, Gemini, Google AI Overview, Perplexity")).toBe(
+      "ChatGPT, Gemini, Google AI Overview, Perplexity.",
+    );
   });
 });

@@ -57,7 +57,13 @@ export function AuditRequestForm() {
   const errors = state.kind === "error" ? state.fields : [];
   const submitting = state.kind === "submitting";
   return (
-    <form ref={form} noValidate onSubmit={onSubmit} className="relative flex w-full max-w-160 flex-col gap-4" aria-busy={submitting || undefined}>
+    <form
+      ref={form}
+      noValidate
+      onSubmit={onSubmit}
+      className="relative flex w-full max-w-160 flex-col gap-4"
+      aria-busy={submitting || undefined}
+    >
       {state.kind === "error" && state.banner && <Banner tone="error">{state.banner}</Banner>}
       <div className="flex flex-col gap-3 md:flex-row md:items-start">
         <PillField

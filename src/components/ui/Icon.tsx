@@ -66,7 +66,15 @@ export function Spinner({ className }: { className?: string }) {
       fill="none"
       className={["size-4 shrink-0 animate-spin motion-reduce:animate-none", className].filter(Boolean).join(" ")}
     >
-      <circle cx="8" cy="8" r="6.9" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeDasharray="32.5 43.4" />
+      <circle
+        cx="8"
+        cy="8"
+        r="6.9"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeDasharray="32.5 43.4"
+      />
     </svg>
   );
 }

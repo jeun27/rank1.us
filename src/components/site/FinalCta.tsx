@@ -10,7 +10,9 @@ export function FinalCta() {
           <h2 id="audit-title" className="font-display text-h2 font-semibold md:text-h2-md">
             Find out if AI names your business first.
           </h2>
-          <p className="mt-4 text-body-lg">Free same-day audit as CSV and PNG (includes a small &apos;Powered by Rank1&apos; credit).</p>
+          <p className="mt-4 text-body-lg">
+            Free same-day audit as CSV and PNG (includes a small &apos;Powered by Rank1&apos; credit).
+          </p>
           <div className="mt-6">
             <AuditRequestForm />
           </div>

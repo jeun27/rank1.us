@@ -17,7 +17,8 @@ describe("Irvine restaurants CSV fixture", () => {
   });
 
   it("has no rating, review, email, instagram, pitch or enrichment columns", () => {
-    const banned = /rating|review|email|instagram|^ig_|priority|pitch|top150|^enrich_|_source$|^google_name$|^google_address$|^enr_phone$|chain_basis/;
+    const banned =
+      /rating|review|email|instagram|^ig_|priority|pitch|top150|^enrich_|_source$|^google_name$|^google_address$|^enr_phone$|chain_basis/;
     expect(irvineRestaurantsHeader.filter((h) => banned.test(h))).toEqual([]);
   });
 
