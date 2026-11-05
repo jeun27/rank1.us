@@ -14,6 +14,12 @@ const THEMES = ["light", "dark"] as const;
 const BG = { light: "rgb(247, 244, 238)", dark: "rgb(11, 11, 12)" };
 
 const isMobile = (page: Page) => page.viewportSize()!.width < 768;
+const MODEL_HOSTS = [
+  "api.anthropic.com",
+  "api.openai.com",
+  "generativelanguage.googleapis.com",
+  "api.perplexity.ai",
+];
 
 async function open(page: Page, theme: (typeof THEMES)[number]) {
   await page.clock.setFixedTime(NOW);
@@ -125,7 +131,12 @@ test("the prompt template is added to the brief; nothing calls a model", async (
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
     `${dashboardBrief}\n## Prompt template\n\nDraft 3 fixes.\n`,
   );
-  expect([...hosts].filter((h) => h !== new URL(page.url()).host)).toEqual([]);
+  // No model API is ever called from the browser.
+  expect([...hosts].filter((h) => MODEL_HOSTS.includes(h))).toEqual([]);
+  // Nothing else leaves the site either. Deployed previews (E2E_BASE_URL) get Vercel's preview toolbar
+  // injected from vercel.live; only that exact host is ignored there (QA #62).
+  const allowed = new Set([new URL(page.url()).host, ...(process.env.E2E_BASE_URL ? ["vercel.live"] : [])]);
+  expect([...hosts].filter((h) => !allowed.has(h))).toEqual([]);
 });
 
 test("document tabs: roving focus, Home/End, Delete closes, +, expand and split, Esc", async ({ page }) => {
