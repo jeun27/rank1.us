@@ -57,6 +57,20 @@ test("questions drawer: keyboard opens it, Tab stays inside, Esc closes and focu
   await expect(row).toBeFocused();
 });
 
+// PRODUCT.md rule 3: every number shows n + freshness; results are "API-measured, directional".
+test("rule 3 on Competitors (both widths) and History", async ({ page }) => {
+  await page.goto("/dev/app?state=competitors-success");
+  await expect(
+    page
+      .getByText(/named in 80 of 240 answers/)
+      .locator("visible=true")
+      .first(),
+  ).toBeVisible();
+  await expect(page.getByText(/Checked .* ago · \d+ answers · API-measured, directional/)).toBeVisible();
+  await page.goto("/dev/app?state=history-success");
+  await expect(page.getByText("API-measured, directional", { exact: true })).toBeVisible();
+});
+
 test("tap targets are at least 44px on every page", async ({ page }) => {
   for (const state of ["dashboard-success", "competitors-success", "questions-success", "history-success"]) {
     await page.goto(`/dev/app?state=${state}`);
