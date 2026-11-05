@@ -179,6 +179,7 @@ describe("GET /api/cron/run-jobs", () => {
   it("drains monthly reports last, after the fix checks, with the time left of maxDuration", async () => {
     let t = 1_000_000;
     vi.spyOn(Date, "now").mockImplementation(() => t);
+    q.claimJobs.mockResolvedValue([]);
     fixes.checkFixesWith.mockImplementation(async () => {
       t += 100_000;
       return FIXES;
