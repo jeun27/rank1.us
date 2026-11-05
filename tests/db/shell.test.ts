@@ -342,7 +342,22 @@ describe("getQuestionsWithLatestAnswers", () => {
     );
     expect(JSON.stringify(questions)).not.toContain("vendor");
     const cited = all.find((a) => a.citations.length > 0)!;
-    expect(cited.citations.map((c) => c.position)).toEqual([1, 2]);
+    expect(cited.citations).toEqual([
+      {
+        url: "https://example-guide.test/a",
+        domain: "example-guide.test",
+        title: null,
+        position: 1,
+        category: "news_blog",
+      },
+      {
+        url: "https://www.yelp.com/biz/example",
+        domain: "yelp.com",
+        title: "Example",
+        position: 2,
+        category: "review_directory",
+      },
+    ]);
 
     const stranger = await newUser("questions-stranger");
     expect(await getQuestionsWithLatestAnswers(stranger.db, businessId)).toEqual({ run: null, questions: [] });

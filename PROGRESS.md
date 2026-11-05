@@ -448,4 +448,4 @@ Changed
   - topDomains by bare domain (most-cited category, ties by the fixed order; engines in order), sorted by links desc then domain, ≤20;
   - locations from questions with answers: key `level:country|state|city` (fields above the level dropped).
 - Labels match the Questions page badge (#40): "City", "State", "Country". Only when two targets share a level is the place added ("City · Irvine, CA"). An unknown location key → an empty result, never everything.
-- HANDOFF to backend: add citations.category to getQuestionsWithLatestAnswers (lead: in their "fix(db): sources fields and shell lint" PR).
+- citations.category on getQuestionsWithLatestAnswers came from backend #43 (a57fbdf), merged into this branch.
