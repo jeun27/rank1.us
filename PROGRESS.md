@@ -161,3 +161,34 @@ Blocked/open
 - Migration 20261105000008 (+ .down.sql): `user_roles` (team | dfy_client; no row = self-serve; readable only by self; service role writes). `ensure_self_serve_workspace()` returns the caller's workspace, or creates one with the caller as owner on first sign-in, behind a per-user advisory lock. Team and dfy_client get null. `my_landing()` returns team | dfy_client | onboarding | dashboard. Both are executable by authenticated only (anon EXECUTE revoked).
 - Queries: ensureSelfServeWorkspace, getLanding (src/lib/queries/auth.ts). Tests: tests/db/roles.test.ts.
 - Open: auto-created workspaces start at seats_quantity 0, so onboarding cannot insert a business until checkout. Lead settles this in Step 5.
+
+## Step 3 (billing-auth): sign in + role routing (branch feat/step3-auth, issue #12)
+- Step 3 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
+
+Changed
+- `src/proxy.ts` (Next 16 renamed middleware.ts to proxy.ts) + `src/lib/supabase/middleware.ts`: refreshes the session with getClaims on every non-static request, keeps the no-store cache headers, and sends signed-out `/app`, `/team` and `/client` visitors to `/signin?next=<path>`.
+- `/signin`: "Continue with Google" (primary, full width) and an email magic link (secondary). Strings are in COPY.md "Auth (lead, 2026-11-05)".
+- `/auth/callback`: takes `?code` (Google and PKCE email links) or `?token_hash&type` (admin links and custom email templates). Then ensureSelfServeWorkspace → getLanding → team `/team`, dfy_client `/client`, onboarding `/app/onboarding`, dashboard `/app`. `next` is honored only when it's a same-origin path in the user's own area or a public page.
+- `POST /auth/signout` and the Account menu (details/summary, works without JS) on the /app and /client layouts.
+- Landing: "Start for $99/mo" → `/signin?next=/app/billing` (was a 404 to /sign-in). Header "Log in" → `/signin`. `/app/billing` is the paywall stub: the Pricing card, the button disabled, "Checkout isn't open yet."
+- Placeholders with one H1 + the Dashboard EmptyState: `/app/onboarding`, `/client`.
+- e2e (tests/e2e/auth.spec.ts) sign in through the admin generateLink API on the local stack (no Mailpit). The CI e2e job now starts lean Supabase, and playwright.config.ts reads the local keys from `supabase status`.
+
+Blocked/open
+- `/app` (dashboard placeholder) and the `/team` Account menu wait for PR #11 to move the team workspace from /app to /team.
+- Hosted Google provider is OFF. Until Jeun turns it on, the Google button shows the error banner (it checks /auth/v1/settings first, because Auth answers a disabled provider with raw JSON).
+- Auth e2e run on the local build only (they need the local service-role key). "Google works on preview" is a manual check after the steps below.
+
+Google Cloud console steps (for Jeun, sign-in only, no GA4 scopes yet)
+1. https://console.cloud.google.com → pick or create the Rank1 project.
+2. Google Auth Platform → Branding: app name "Rank1", your support email, authorized domains `rank1.us` and `supabase.co`.
+3. Audience: External. While it's in Testing, add the test Google accounts. Data access: only `openid`, `.../auth/userinfo.email` and `.../auth/userinfo.profile`.
+4. Clients → Create client → Web application. Authorized JavaScript origins: `https://rank1.us`, `http://localhost:3000`. Authorized redirect URI: `https://yqllnopnwlqspnbqgwfh.supabase.co/auth/v1/callback`.
+5. Copy the client ID and secret into Supabase → Authentication → Sign In / Providers → Google, and enable it. Never put them in the repo or .env files.
+6. Check it: open a Vercel preview → Log in → Continue with Google → you land on /app/onboarding (new) or /app.
+
+Doc differences
+- The brief says `middleware.ts`. Next 16 calls it `proxy.ts` (node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md), so that's the file.
+- Cache Components is on, so /signin reads its query inside Suspense (the frame prerenders).
+- Email links carry `via=email`, so a failed email link shows the link banner instead of the Google one.
+- `supabase/config.toml`: added `http://localhost:3000/**` to additional_redirect_urls so local email links can come back to localhost.

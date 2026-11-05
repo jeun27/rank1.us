@@ -87,8 +87,12 @@ jobs:
         with: { node-version: 22, cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
+      # Sign-in e2e need Auth; playwright.config.ts reads the local keys from `supabase status`.
+      - run: pnpm exec supabase start -x realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
       # playwright.config.ts runs `pnpm build && pnpm start` as its web server.
       - run: pnpm e2e
+      - if: always()
+        run: pnpm exec supabase stop --no-backup
 
   # PR commits only: a push to main is a squash commit GitHub writes, not ours.
   signoff:
