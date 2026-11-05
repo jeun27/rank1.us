@@ -13,11 +13,13 @@ describe("vercel.json", () => {
     expect(Object.keys(config.git.deploymentEnabled)).toEqual(["main"]);
   });
 
-  it("pins both crons: the job worker every minute, the weekly check at Monday 13:00 and 14:00 UTC", () => {
+  it("pins the crons: the job worker every minute, the weekly check Monday and the monthly report on the 1st", () => {
     // Monday 06:00 America/Los_Angeles is 13:00 UTC in PDT and 14:00 UTC in PST; the route gates on LA time.
+    // The 1st at 07:00 LA is 14:00 UTC in PDT and 15:00 UTC in PST (Step 16), gated the same way.
     expect(config.crons).toEqual([
       { path: "/api/cron/run-jobs", schedule: "* * * * *" },
       { path: "/api/cron/weekly", schedule: "0 13,14 * * 1" },
+      { path: "/api/cron/monthly-report", schedule: "0 14,15 1 * *" },
     ]);
   });
 });

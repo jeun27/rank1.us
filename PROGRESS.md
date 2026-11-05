@@ -708,3 +708,24 @@ Changed
   - A live key or a missing secret → 500 {error: "not_configured"}.
 - src/lib/stripe/service.ts (server-only): startCheckout(callerDb, quantity, urls), addBusinessSeat(callerDb), removeBusinessAtPeriodEnd(callerDb, businessId), openPortal(callerDb, returnUrl). Review (#73): each takes the caller's own client and derives the workspace from getBillingState(callerDb). Removal first checks the business is in listMyBusinesses(callerDb) (RLS), before any Stripe call or schedule_business_removal, so no cross-tenant archive. Stripe ids are read with the service client and never sent to the browser.
 - Stripe's `paused` subscription status is in 0018's SubscriptionStatus (backend added it), so a paused subscription applies instead of failing with 22023.
+
+## Step 16 (data-pipeline): white-label PDF and monthly send (branch feat/step16-report-pdf)
+- Step 16 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b; Build Pack not readable; reconcile later.
+
+Lead decisions (2026-11-05)
+- Reports go to businesses whose workspace is active/trialing, or DFY: one per business per LA calendar month, for the previous month. Idempotent (enqueue_monthly_reports, 0019).
+- /api/cron/monthly-report at "0 14,15 1 * *" UTC, gated to the 1st at 07:xx America/Los_Angeles. It only enqueues. The per-minute run-jobs drain renders and sends at most 2 reports per tick, each only with ≥60 s of maxDuration left.
+- Content is stored data only (no LLM): logo or name + month, visibility with n and the change vs the previous month's last run, per engine, top 5 competitors, top 10 sources, open fixes (title + detail), the month's weekly checks, the "API-measured, directional" label + freshness. The brand color is used for accents only and falls back to ink when it fails 4.5:1 on white.
+- White-label: no product name, logo or "Powered by" in the PDF (text and metadata) or the email. From = the business name at REPORT_FROM_EMAIL (existing env name).
+- Copy: subject, body and headings exactly as COPY.md "Report (lead, 2026-11-05)".
+- No GA4 section in the PDF, not even a placeholder, until Step 15 exists.
+- Logos: PNG/JPEG only. SVG is rejected, not sanitized (data-pipeline's call, approved).
+
+Changed
+- `@react-pdf/renderer` (INTEGRATIONS.md) renders src/lib/reports/document.tsx (Helvetica, A4; title/author/creator/producer = the business name).
+- src/lib/reports: month.ts (window + month label), contrast.ts (WCAG accent fallback), copy.ts, data.ts (buildReportData picks stored fields by name; monthRuns picks the month's runs by LA date), email.ts (Resend payload with the PDF attached; Idempotency-Key = report id), process.ts (processReports drain hook, runMonthly), service.ts (service wiring + sendTestReport).
+- Errors leave a report 'rendering'. claim_reports retries it after 10 minutes and marks it failed after 3 attempts, so a Resend or Storage hiccup never loses a month and Resend's idempotency key prevents a double send. No recipients → status generated (stored, nothing sent).
+- sendTestReport (for 'Send test to me'): last month's report to the signed-in user's own email only, read with the caller's client (RLS), never stored. The idempotency key dedupes double clicks within a minute.
+- run-jobs drains reports after the fix checks. vercel.json gains the monthly cron, and tests/unit/vercel-config.test.ts pins all 3 crons.
+- Logs carry counts and PG codes only.
+
