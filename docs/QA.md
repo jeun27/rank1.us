@@ -1,5 +1,52 @@
 # QA
 
+## Step 7: Metrics + same-day audit + CSV/PNG export
+
+Checked 2026-11-05 on main at cea874b:
+- #34 (12eb3c3): free audit jobs and result queries
+- #36 (205b612): metrics, CSV and free audit pipeline
+- #35 (cea874b): audit progress, results and exports
+
+The sandbox Docker disk is full, so there was no local Supabase. test-db and e2e come from CI on main's push of cea874b (run 42044513854). Unit, typecheck, lint, format and build ran locally in the sandbox. The UI checks ran from the Mac on #35's preview at efc029d, whose tree is identical to cea874b. No live paid calls, fake Example data only, and no real lead was created.
+Preview: https://rank1-he9qxzzvc-bryan-flowhighlevels-projects.vercel.app (git ref feat/step7-audit, sha efc029d, READY).
+Sources: Jeun's ENG_HANDOFF_OVERNIGHT §6 Step 7, the lead's brief (rank1-step7.md), docs/UI.md 4b rows "Audit progress" (151) and "Audit results (paid + free)" (152).
+
+Result: PASS. No blocking problems.
+
+### Commands
+
+| Command | Result |
+|---|---|
+| `pnpm test` (sandbox, cea874b) | PASS. 62 files, 803 tests passed |
+| `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build` (sandbox) | PASS |
+| CI on main push cea874b | PASS. test-db 13 files / 297 tests; e2e 200 passed, 2 skipped; test, typecheck, lint, format green |
+| CI on #34 (fe72b00), #36 (260a58d), #35 (efc029d) before merge | PASS. 9 of 9 each |
+| `E2E_BASE_URL=<preview> pnpm e2e` (cea874b tests) | PASS. 134 passed, 68 skipped (local-stack tests), 0 failed |
+
+### Checks
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| 1 | Metrics: failed + no_overview excluded; deleted question's answers excluded on paid runs; SoV; leaderboard "too few answers" under n < 10; change vs previous | PASS | src/lib/metrics/compute.ts: `counted` keeps status ok only, plus question_id not null on paid runs (free audits count all). SoV = answers naming the business / tracked-brand mentions (each brand once per answer). The leaderboard sets `tooFew` when n < 10, and change = floored points vs the previous run. tests/unit/metrics/compute.test.ts: "failed and no_overview leave the denominator", "a partial run", "paid runs skip answers of deleted questions; free audits count them", "tooFew under 10 answers", "ties: business first", "change = whole points (floored) vs the previous run; null without one", SoV "zero mentions anywhere → value null, not 0%", sources from ok answers only. db: getPreviousRun returns the latest earlier complete/partial run |
+| 2 | CSV: brief's columns, RFC 4180, formula guard (= + - @) | PASS | src/lib/metrics/csv.ts: columns question, engine, run_index, status, mentioned, first_position, location_used, location_supported, checked_at, cited_domains (unique, citation order, "; " joined); CRLF; quotes cells with , " or line breaks and doubles quotes; prefixes `'` to cells starting with = + - @ tab or CR. csv.test.ts covers fixed columns + CRLF, quoting, `=HYPERLINK("x")`, `+1+1`, `-2`, `@SUM(A1)`, tab and CR, and safe cells left alone |
+| 3a | POST /api/audit/request still 202, unchanged copy | PASS | route stores the lead, then schedules the audit with next/server `after()`, and answers 202 `{status:"queued"}` either way (routes.test.ts "still answers 202 when after() can't schedule the audit"). The success copy is unchanged since #21 (src/components/forms/copy.ts diff: 0 lines; e2e "Got it. We'll email your audit to owner@example.test." passed). Preview without a Turnstile token: 403 `{"error":"turnstile"}`, so I created no real lead |
+| 3b | free_audits / run_jobs unreadable by anon/authenticated; create_free_audit service-only | PASS | Migration 0012: free_audits has RLS on, ALL revoked, no policies. create_free_audit checks `auth.role() = 'service_role'` and is revoked from public, anon and authenticated. db free-audit.test.ts: "refuses signed-in users and anon (42501)", "no free-audit row is readable by signed-in users or anon", "is atomic: invalid input stores nothing", "a paid job still requires question_id, and a free job may not have one"; run-jobs.test.ts: jobs unreadable |
+| 3c | Notify: complete/partial email once; failed marked sent=false; 5-attempt cap; no email/token in logs | PASS | src/lib/audit/notify.ts: one Resend email per lead (idempotency key = lead id), COPY.md subject and body, failed run → markNotified(sent=false) and no email, send failure → bump attempts. `listUnnotifiedFreeAudits` filters notify_attempts < 5 (MAX_NOTIFY_ATTEMPTS = 5). Runs after each cron drain (src/app/api/cron/run-jobs/route.ts). Unit notify.test.ts: complete and partial send, failed not emailed, send failure bumps, missing env skips, a throwing query doesn't stop the loop, "log lines never contain the email, token or domain". db: "stops listing a run after 5 failed attempts", "lists finished runs once; marking removes them" |
+| 4a | /dev/audit states per UI.md 151/152 at 375 + 1280 with axe | PASS | preview e2e "/dev/audit {progress, progress-error, results, partial, failed, free-progress, free-results}: one H1, axe clean, no side scroll" on both viewports; "keyboard reaches both downloads, and cited links carry no referrer"; "tap targets are at least 44px on the results page". "API-measured, directional" is on every results state |
+| 4b | /audit/<unknown> → 404 with Referrer-Policy: no-referrer + noindex | PASS | preview: /audit/NoSuchTokenAbC123 (and lowercased) → 404, `referrer-policy: no-referrer`, `x-robots-tag: noindex, nofollow`, `<meta name="robots" content="noindex">`. Same headers on its export.csv / export.png 404s (plus no-store). e2e "an unknown audit token is a 404, sent with no referrer and not indexed" passed local and preview |
+| 4c | Mixed-case token handling | PASS | CI e2e tests/e2e/audit-db.spec.ts builds a mixed-case token (`AbC-dEf_…`) and loads /audit/<token> with status 200, no-referrer and noindex/nofollow. It also checks the lead email isn't on the page and downloads CSV and PNG |
+| 4d | Another workspace's /app/runs/<id> → 404 | PASS | CI e2e "paid run: the member sees results and downloads; anyone else gets a 404"; db "getRunResults … null for others". Preview signed out: /app/runs/<id> and its export.csv → 307 /signin?next=… |
+| 4e | Powered-by credit + paywall card only on free | PASS | preview /dev/audit: "Powered by Rank1" only on free-progress and free-results, "Start for $99/mo" only on free-results, neither on any paid state. e2e asserts the credit count per state, and audit-db.spec.ts sees the credit on a real free audit |
+| 4f | Export headers: attachment, no-store | PASS | unit exports.test.ts "downloads are attachments, never cached, never indexed" and "every /audit page and export sends Referrer-Policy: no-referrer"; CI e2e: free CSV `content-disposition: attachment; filename="rank1-audit-exampleramen.test.csv"`, `cache-control: no-store`, PNG 200 |
+
+Not blocking:
+- /dev/audit shows its fake numbers without a visible "Example data" badge. /dev/ui and /dev/onboarding have one. Every brand is "Example …" with .test domains, the numbers come from src/components/audit/example-data.ts through computeMetrics, and the page 404s in production.
+- With no cuisine found, the generic templates' {cuisine} slot reads "restaurants" (lead, 2026-11-05). The brief said to use the generic templates only, so this records the decision.
+
+### Blocking problems
+
+None.
+
 ## Step 6: Run orchestration + mention detection (3/3/3/1)
 
 Checked 2026-11-05 on main at cd57c03: #26 (7cdc6b7, run jobs and orchestration RPCs) and #27 (cd57c03, job worker, mention detection, citation categories). The sandbox Docker disk is full, so there was no local Supabase. test-db and e2e come from CI on main's push of cd57c03 (run 42034578435). Unit, typecheck, lint, format and build ran locally in the sandbox. The cron 401 check ran from the Mac on #27's preview at 247a400. Its app code is identical to cd57c03: the only differences are a PROGRESS.md line and #29's two e2e skip lines. No live paid calls.
