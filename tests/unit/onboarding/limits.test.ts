@@ -91,7 +91,7 @@ describe("onboarding lookup limits (lead, 2026-11-05)", () => {
   });
 
   it("failed or keyless results count against the limit but are never cached", async () => {
-    const { store, events, cache, clock } = memoryStore();
+    const { store, events, cache } = memoryStore();
     const run = vi.fn(async () => ({ status: "error", items: [] }));
     await withLimits(store, "maps_lookup", "same", run, isOk);
     await withLimits(store, "maps_lookup", "same", run, isOk);
