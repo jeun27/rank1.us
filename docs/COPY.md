@@ -46,6 +46,23 @@ Progress percentages ("48%") are computed from n of d, so they are not copy.
 | Contact industry empty option and error (Jeun #22) | "Pick your industry." |
 | Contact industry "Other" text label, optional, max 60 characters (Jeun #22) | "Your industry (optional)" |
 
+### Auth (lead, 2026-11-05)
+
+| Where | String |
+|---|---|
+| /signin H1 | "Sign in to Rank1" |
+| Google button (primary) | "Continue with Google" |
+| Magic-link email label | "Email" (invalid email reuses the forms email error) |
+| Magic-link button (secondary) | "Email me a sign-in link" |
+| Link sent | "Check your email. We sent a sign-in link to {email}." |
+| Link didn't send | "That link didn't send. Try again in a minute." |
+| Email link expired or already used | "That sign-in link expired. Enter your email for a new one." |
+| Sign-in not configured (/signin?error=config) | "Sign-in isn't available right now. Try again in a few minutes." |
+| Account menu label and item | "Account", "Sign out" |
+| Landing header link to /signin | "Log in" |
+| /app/billing paywall stub: Pricing card copy, "Start for $99/mo" disabled, caption | "Checkout isn't open yet." |
+| Placeholder H1s | /app/onboarding "Add your business", /app "Dashboard", /client "Dashboard", /app/billing "Billing" |
+
 | Jelly | Rule |
 |---|---|
 | Footer credit | 12px flat Jelly + 'Powered by Rank1' (10px) ONLY on the free audit. Never on $99 plan reports. |

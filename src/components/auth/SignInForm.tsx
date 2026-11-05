@@ -1,0 +1,99 @@
+"use client";
+
+import { useState, type FormEvent } from "react";
+import { PillField } from "@/components/forms/PillField";
+import { AuroraButton } from "@/components/ui/AuroraButton";
+import { Banner } from "@/components/ui/Banner";
+import { Button } from "@/components/ui/Button";
+import { authCopy as c } from "@/lib/auth/copy";
+import { isEmail } from "@/lib/spam/validate";
+import { createClient } from "@/lib/supabase/client";
+
+type Notice = { tone: "error" | "info"; text: string } | null;
+
+const callback = (next: string | null) =>
+  `${location.origin}/auth/callback${next ? `?next=${encodeURIComponent(next)}` : ""}`;
+
+// Auth serves raw JSON when a provider is off, so check first and show the banner instead.
+// One check per page load; a failed fetch isn't kept, so "Try again" really retries.
+let googleCheck: Promise<boolean> | undefined;
+function googleEnabled() {
+  googleCheck ??= fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/settings`, {
+    headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! },
+  })
+    .then(async (res) => {
+      if (!res.ok) throw new Error(`settings ${res.status}`);
+      return (await res.json()).external?.google === true;
+    })
+    .catch(() => {
+      googleCheck = undefined;
+      return false;
+    });
+  return googleCheck;
+}
+
+export type SignInError = "google" | "link" | "config";
+const ERROR_TEXT: Record<SignInError, string> = { google: c.googleError, link: c.linkExpired, config: c.configError };
+
+export function SignInForm({ next, error }: { next: string | null; error?: SignInError }) {
+  const [notice, setNotice] = useState<Notice>(error ? { tone: "error", text: ERROR_TEXT[error] } : null);
+  const [opening, setOpening] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [emailError, setEmailError] = useState<string>();
+
+  async function google() {
+    setOpening(true);
+    setNotice(null);
+    if (!(await googleEnabled())) {
+      setOpening(false);
+      setNotice({ tone: "error", text: c.googleError });
+      return;
+    }
+    // On success the browser leaves for Google, so the loading label stays up.
+    const { error } = await createClient().auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: callback(next) },
+    });
+    if (error) {
+      setOpening(false);
+      setNotice({ tone: "error", text: c.googleError });
+    }
+  }
+
+  async function emailLink(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const email = String(new FormData(e.currentTarget).get("email") ?? "").trim();
+    if (!isEmail(email)) return setEmailError(c.emailError);
+    setEmailError(undefined);
+    setSending(true);
+    setNotice(null);
+    // The emailed link may open in another browser, so next goes in a server cookie, not the link. If this
+    // fails the link still signs in, it just lands on the default home.
+    await fetch("/auth/next", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ next }),
+    }).catch(() => {});
+    const { error } = await createClient().auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: `${location.origin}/auth/callback` },
+    });
+    setSending(false);
+    setNotice(error ? { tone: "error", text: c.sendError } : { tone: "info", text: c.linkSent(email) });
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      {notice && <Banner tone={notice.tone}>{notice.text}</Banner>}
+      <AuroraButton onClick={google} loading={opening} className="w-full">
+        {opening ? c.openingGoogle : c.google}
+      </AuroraButton>
+      <form noValidate onSubmit={emailLink} className="flex flex-col gap-3">
+        <PillField label={c.emailLabel} name="email" type="email" autoComplete="email" error={emailError} />
+        <Button type="submit" variant="secondary" disabled={sending} className="self-start">
+          {c.sendLink}
+        </Button>
+      </form>
+    </div>
+  );
+}

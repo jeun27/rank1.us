@@ -1,6 +1,8 @@
 "use client";
 import Link from "next/link";
+import { AccountMenu } from "@/components/auth/AppHeader";
 import { Icon, type IconName } from "@/components/ui/Icon";
+import { authCopy } from "@/lib/auth/copy";
 import type { WorkspaceView } from "@/lib/queries/workspace";
 import { SECTIONS, SECTION_LABEL, type Section } from "@/lib/workspace/context";
 import type { Theme } from "@/lib/workspace/prefs";
@@ -107,9 +109,19 @@ export function Sidebar(props: {
         </ul>
       </div>
 
-      <div
-        className={`mt-auto flex items-center justify-between gap-1 ${collapsed ? "md:flex-col" : "md:max-lg:flex-col"}`}
-      >
+      <div className="mt-auto">
+        <AccountMenu
+          summary={
+            <>
+              <Icon name="user" className="size-4 shrink-0" />
+              <span className={label}>{authCopy.account}</span>
+            </>
+          }
+          summaryClassName={`${row} cursor-pointer list-none text-inkMuted hover:bg-raised hover:text-ink`}
+          popupClassName="bottom-full left-0 mb-1"
+        />
+      </div>
+      <div className={`flex items-center justify-between gap-1 ${collapsed ? "md:flex-col" : "md:max-lg:flex-col"}`}>
         <Link href="/contact" aria-label="Help" className={iconButton}>
           <Icon name="help" className="size-4" />
         </Link>

@@ -162,6 +162,51 @@ Blocked/open
 - Queries: ensureSelfServeWorkspace, getLanding (src/lib/queries/auth.ts). Tests: tests/db/roles.test.ts.
 - Open: auto-created workspaces start at seats_quantity 0, so onboarding cannot insert a business until checkout. Lead settles this in Step 5.
 
+## Step 3 (billing-auth): sign in + role routing (branch feat/step3-auth, issue #12)
+- Step 3 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
+
+Changed
+- `src/proxy.ts` (Next 16 renamed middleware.ts to proxy.ts) + `src/lib/supabase/middleware.ts`: refreshes the session with getClaims on every non-static request, keeps the no-store cache headers, and sends signed-out `/app`, `/team` and `/client` visitors to `/signin?next=<path>`.
+- `/signin`: "Continue with Google" (primary, full width) and an email magic link (secondary). Strings are in COPY.md "Auth (lead, 2026-11-05)".
+- `/auth/callback`: Google returns `?code` (PKCE exchange). Email links are `?token_hash&type` (magiclink, signup or email) checked with verifyOtp, so they work in another browser or on another device. No code and no token_hash (for example tokens in a #fragment), or a failed check, shows the expired-link banner, never the Google one. The hosted email templates are in HANDOFF.md (lead applies them).
+- The magic-link form sends `emailRedirectTo = <origin>/auth/callback` with no query string, and first POSTs next to `/auth/next`. That stores it in a 10-minute httpOnly SameSite=Lax cookie (`rank1_next`, path /auth, same safeNext check), which the callback reads once and clears. Then ensureSelfServeWorkspace → getLanding → team `/team`, dfy_client `/client`, onboarding `/app/onboarding`, dashboard `/app`. `next` is honored only when it's a same-origin path in the user's own area or a public page.
+- `POST /auth/signout` and the Account menu (details/summary, works without JS) on the /app and /client headers and in #11's workspace sidebar (new `user` icon).
+- Role gates (AreaGate in the /app and /client layouts and the /team page): `/app` is for self-serve owners and members, `/team` for team and `/client` for dfy_client. A wrong role goes to its own home (review of #14).
+- Without NEXT_PUBLIC_SUPABASE_URL and the anon key (Supabase not connected on Vercel yet), the proxy passes public pages through and still sends the app areas to /signin, instead of every page returning 500 (review of #14).
+- "Continue with Google" is the AuroraButton (UI.md "Aurora button": the one gradient, Google sign-in only), including 'Opening Google…'. The magic-link submit stays secondary (QA, PR #17).
+- `/auth/callback` and `POST /auth/signout` redirect to `/signin?error=config` instead of an empty 500 when the Supabase env is missing. /signin then shows "Sign-in isn't available right now. Try again in a few minutes." (lead, COPY.md Auth).
+- Local-stack e2e (10 in auth.spec.ts, all of team-workspace.spec.ts) skip when E2E_BASE_URL is set ("needs local Supabase", same pattern as client-secrets.spec.ts). The 10 public auth checks still run on a preview (QA, PR #17).
+- `POST /auth/next` has the same same-origin check as sign out (shared `isSameOrigin`), so another site can't plant a next for the user.
+- `/auth/callback` rejects `type=invite` on purpose. Step 12 (client invites) adds invite links and must add `invite` to EMAIL_TYPES then (lead, 2026-11-05).
+- `POST /auth/signout` accepts only same-origin requests (Sec-Fetch-Site, or else Origin), so another site's form can't sign a user out.
+- `/team` (#11's workspace): team role only. Signed out goes to /signin, and any other role goes to its own home. With ENABLE_TEAM_WORKSPACE off, a team user gets the placeholder.
+- Landing: "Start for $99/mo" → `/signin?next=/app/billing` (was a 404 to /sign-in). Header "Log in" → `/signin`. `/app/billing` is the paywall stub: the Pricing card, the button disabled, "Checkout isn't open yet."
+- Placeholders with one H1 + the Dashboard EmptyState: `/app`, `/app/onboarding`, `/client`.
+- e2e (tests/e2e/auth.spec.ts) sign in through the admin generateLink API on the local stack (no Mailpit). The CI e2e job now starts lean Supabase, and playwright.config.ts reads the local keys from `supabase status`.
+
+Blocked/open
+- Hosted Google provider is OFF. Until Jeun turns it on, the Google button shows the error banner (it checks /auth/v1/settings first, because Auth answers a disabled provider with raw JSON).
+- Auth e2e run on the local build only (they need the local service-role key). "Google works on preview" is a manual check after the steps below.
+
+Google Cloud console steps (for Jeun, sign-in only, no GA4 scopes yet)
+1. https://console.cloud.google.com → pick or create the Rank1 project.
+2. Google Auth Platform → Branding: app name "Rank1", your support email, authorized domains `rank1.us` and `supabase.co`.
+3. Audience: External. While it's in Testing, add the test Google accounts. Data access: only `openid`, `.../auth/userinfo.email` and `.../auth/userinfo.profile`.
+4. Clients → Create client → Web application. Authorized JavaScript origins: `https://rank1.us`, `http://localhost:3000`. Authorized redirect URI: `https://yqllnopnwlqspnbqgwfh.supabase.co/auth/v1/callback`.
+5. Copy the client ID and secret into Supabase → Authentication → Sign In / Providers → Google, and enable it. Never put them in the repo or .env files.
+6. Check it: open a Vercel preview → Log in → Continue with Google → you land on /app/onboarding (new) or /app.
+
+Intended behavior changes (lead, 2026-11-05), not loosened tests
+- Removed tests/unit/auth/team-gate.test.tsx: its team-only cases are covered by tests/unit/auth/area-gate.test.tsx (every role × area allow/redirect pair); no coverage lost.
+- tests/e2e/team-workspace.spec.ts: `/app` returned 404 and now sends signed-out visitors to `/signin?next=%2Fapp`. Its `/team` visits now sign in a seeded team user first.
+- tests/unit/workspace/gate.test.ts → gate.test.tsx: with the flag off (the same 5 values) /team was a 404 and now shows the placeholder to a team user. "true" still renders the workspace.
+- tests/e2e/landing.spec.ts: "Start for $99/mo" pointed at `/sign-in` (a known 404) and now points at `/signin?next=/app/billing`.
+
+Doc differences
+- The brief says `middleware.ts`. Next 16 calls it `proxy.ts` (node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md), so that's the file.
+- Cache Components is on, so /signin reads its query inside Suspense (the frame prerenders).
+- `supabase/config.toml`: added `http://localhost:3000/**` to additional_redirect_urls so local email links can come back to localhost.
+
 ## Team workspace shell (frontend, branch feat/team-workspace, issue #10)
 Changed
 - /team: 3-pane team workspace like Profound's Wrenfield demo (sidebar 240px, context and document panes split 50/50 by a keyboard-resizable divider). Example data only (Example Ramen House seed), read-only. Off unless ENABLE_TEAM_WORKSPACE=true.

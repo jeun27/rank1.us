@@ -219,8 +219,9 @@ test("links point at the right places", async ({ page }) => {
   await expect(hero.getByRole("link", { name: "See pricing" })).toHaveAttribute("href", "#pricing");
   await expect(page.locator("#pricing").getByRole("link", { name: "Start for $99/mo" })).toHaveAttribute(
     "href",
-    "/sign-in",
+    "/signin?next=/app/billing",
   );
+  await expect(page.getByRole("banner").getByRole("link", { name: "Log in" })).toHaveAttribute("href", "/signin");
   await expect(page.locator("#pricing").getByRole("link", { name: "Get my free audit first" })).toHaveAttribute(
     "href",
     "#audit",
