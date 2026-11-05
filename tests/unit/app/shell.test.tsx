@@ -42,6 +42,7 @@ describe("AppNav (lead: only pages that exist; Step 9 adds Sources after Questio
       ["Competitors", "/app/competitors"],
       ["Questions", "/app/questions"],
       ["Sources", "/app/sources"],
+      ["What to fix next", "/app/fixes"],
       ["History", "/app/history"],
       ["Billing", "/app/billing"],
     ]);
@@ -86,6 +87,7 @@ describe("Dashboard (UI.md 4b)", () => {
     expect(screen.getByRole("table", { name: "Competitors" })).toBeInTheDocument();
     expect(screen.queryByText("Share of voice")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "What to fix next" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "What to fix next" })).toHaveAttribute("href", "/app/fixes");
     expect(screen.getAllByRole("listitem").filter((li) => li.textContent?.includes("Example data: "))).toHaveLength(3);
     const line = screen.getByRole("table", { name: "Visibility" });
     expect(within(line).getAllByRole("row")).toHaveLength(9);

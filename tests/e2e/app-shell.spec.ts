@@ -26,6 +26,12 @@ const STATES = [
   "sources-empty",
   "sources-loading",
   "sources-error",
+  "fixes-success",
+  "fixes-partial",
+  "fixes-readonly",
+  "fixes-empty",
+  "fixes-loading",
+  "fixes-error",
   "history-success",
   "history-partial",
   "history-empty",
@@ -88,6 +94,16 @@ test("rule 3 on Competitors (both widths) and History", async ({ page }) => {
   await expect(page.getByText("API-measured, directional", { exact: true })).toBeVisible();
   await page.goto("/dev/app?state=sources-success");
   await expect(page.getByText(/Checked .* ago · \d+ answers · API-measured, directional/)).toBeVisible();
+});
+
+test("fixes: each Status select is keyboard reachable; read-only has none", async ({ page }) => {
+  await page.goto("/dev/app?state=fixes-success");
+  const selects = page.getByLabel("Status");
+  await expect(selects).toHaveCount(4);
+  await selects.first().focus();
+  await expect(selects.first()).toBeFocused();
+  await page.goto("/dev/app?state=fixes-readonly");
+  await expect(page.getByLabel("Status")).toHaveCount(0);
 });
 
 test("tap targets are at least 44px on every page", async ({ page }) => {

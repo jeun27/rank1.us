@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { Freshness } from "@/components/ui/Freshness";
+import { Icon } from "@/components/ui/Icon";
 
 // One H1 per app page, full width (lead: nav + full-width, not 3-pane).
 export function Page({ title, children }: { title: string; children: ReactNode }) {
@@ -11,9 +13,31 @@ export function Page({ title, children }: { title: string; children: ReactNode }
   );
 }
 
-export const Section = ({ title, children, label }: { title: string; children: ReactNode; label?: string }) => (
+export const Section = ({
+  title,
+  children,
+  label,
+  href,
+}: {
+  title: string;
+  children: ReactNode;
+  label?: string;
+  href?: string;
+}) => (
   <section aria-label={label} className="flex flex-col gap-3">
-    <h2 className="font-display text-h3 font-semibold">{title}</h2>
+    <h2 className="font-display text-h3 font-semibold">
+      {href ? (
+        <Link
+          href={href}
+          className="inline-flex min-h-11 items-center gap-2 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-jellyDeep"
+        >
+          {title}
+          <Icon name="arrowRight" className="size-4" />
+        </Link>
+      ) : (
+        title
+      )}
+    </h2>
     {children}
   </section>
 );

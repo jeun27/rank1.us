@@ -197,6 +197,17 @@ Strings for /app/sources (Step 9). State messages are the 4b Sources strings; th
 | Location selector | "Location" (label), "All locations" |
 | Top domains table headers | "Domain", "Category", "Links", "Engines" |
 
+## Fix list (lead, 2026-11-05)
+
+Strings for /app/fixes (Step 10) and the shared fix list (team and client areas later). State messages are the 4b Fix list strings. Fix titles and details are fixes.title / fixes.detail (the SCHEMA §5b customer copy, filled).
+
+| Where | String |
+|---|---|
+| Page H1 and Dashboard section | "What to fix next" |
+| Section | "Tidy-ups" |
+| Status labels | "To do", "Doing", "Done" (select label "Status") |
+| Status save failed | "We couldn't save that. Try again." |
+
 # 4b. App screens: every state
 
 Copy in quotes is exact. Every number shows n + checked X ago. Results labeled API-measured, directional.
