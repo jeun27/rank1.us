@@ -236,3 +236,45 @@ describe("state codes and API URL overrides", () => {
     expect(p.mock.calls[0][0]).toBe("http://127.0.0.1:4599/pplx");
   });
 });
+
+describe("API URL overrides cannot redirect keys", () => {
+  const pdoc = fixture("perplexity/docs-quickstart-web-search.json");
+  const gdoc = fixture("gemini/docs-live-advanced.json");
+  const urls = async (env: Record<string, string>) => {
+    const d = fakeFetch(gdoc);
+    const p = fakeFetch(pdoc);
+    await runEngine("gemini", irvine("country"), { fetch: d, env: { ...KEYS, ...env }, now: NOW });
+    await runEngine("perplexity", irvine("country"), { fetch: p, env: { ...KEYS, ...env }, now: NOW });
+    return [d.mock.calls[0][0], p.mock.calls[0][0]];
+  };
+  const official = [
+    "https://api.dataforseo.com/v3/ai_optimization/gemini/llm_scraper/live/advanced",
+    "https://api.perplexity.ai/v1/agent",
+  ];
+  const local = { DATAFORSEO_API_URL: "http://127.0.0.1:4599/v3", PERPLEXITY_API_URL: "http://localhost:4599/pplx" };
+
+  it("ignores overrides on Vercel production, even loopback ones", async () => {
+    expect(await urls({ ...local, VERCEL_ENV: "production", NODE_ENV: "production" })).toEqual(official);
+  });
+
+  it("ignores non-loopback hosts in every environment", async () => {
+    for (const NODE_ENV of ["production", "development", "test"]) {
+      const remote = {
+        DATAFORSEO_API_URL: "https://evil.example.test/v3",
+        PERPLEXITY_API_URL: "http://10.0.0.5/p",
+        NODE_ENV,
+      };
+      expect(await urls(remote)).toEqual(official);
+      expect(
+        await urls({ DATAFORSEO_API_URL: "not a url", PERPLEXITY_API_URL: "http://127.0.0.1.evil.test/p", NODE_ENV }),
+      ).toEqual(official);
+    }
+  });
+
+  it("accepts loopback overrides off Vercel production (local e2e on `next start`)", async () => {
+    expect(await urls({ ...local, NODE_ENV: "production", VERCEL_ENV: "preview" })).toEqual([
+      "http://127.0.0.1:4599/v3/ai_optimization/gemini/llm_scraper/live/advanced",
+      "http://localhost:4599/pplx",
+    ]);
+  });
+});

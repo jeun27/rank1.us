@@ -25,7 +25,7 @@ export type EngineAnswer = {
 };
 
 // Reads DATAFORSEO_LOGIN, DATAFORSEO_PASSWORD, PERPLEXITY_API_KEY, PERPLEXITY_MODEL and the
-// DATAFORSEO_API_URL / PERPLEXITY_API_URL overrides (e2e points them at a local fake).
+// DATAFORSEO_API_URL / PERPLEXITY_API_URL overrides (loopback only, never on Vercel production; see apiBase).
 export type EngineEnv = Record<string, string | undefined>;
 
 export type EngineDeps = {

@@ -61,6 +61,18 @@ export const US_STATES: Record<string, string> = {
 // Unknown codes return undefined, so the caller falls back instead of sending a guess.
 export const stateName = (state?: string) => (state ? US_STATES[state.toUpperCase()] : undefined);
 
+// Base-URL overrides exist only for local e2e. Ignored on Vercel production, and only a loopback host is
+// ever accepted, so engine keys can't be sent anywhere but the official hosts or this machine.
+export function apiBase(env: Record<string, string | undefined>, override: string | undefined, official: string) {
+  if (!override || env.VERCEL_ENV === "production") return official;
+  try {
+    const host = new URL(override).hostname;
+    return ["127.0.0.1", "localhost", "[::1]"].includes(host) ? override.replace(/\/$/, "") : official;
+  } catch {
+    return official;
+  }
+}
+
 export class EngineError extends Error {
   constructor(
     message: string,
