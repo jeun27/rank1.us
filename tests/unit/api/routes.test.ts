@@ -8,14 +8,14 @@ const q = vi.hoisted(() => ({
   countLeadsSince: vi.fn(),
   insertLead: vi.fn(),
 }));
-vi.mock("@/lib/queries/contactRequests", () => q);
+vi.mock("@/lib/queries/contactRequests", async (real) => ({ ...(await real<object>()), ...q }));
 vi.mock("@/lib/queries/leads", () => q);
 vi.mock("@/lib/supabase/service", () => ({ createServiceClient: () => ({}) }));
 
 import { POST as contactPOST } from "@/app/api/contact/route";
 import { POST as auditPOST } from "@/app/api/audit/request/route";
 
-const contact = { name: "Ana Example", email: "visitor@example.test", company: "Example Ramen Co", tier: "Other", message: "Secret message", "cf-turnstile-response": "tok", website: "" };
+const contact = { name: "Ana Example", email: "visitor@example.test", company: "Example Ramen Co", industry: "Other", industry_other: "Pool service", tier: "Other", message: "Secret message", "cf-turnstile-response": "tok", website: "" };
 const audit = { email: "owner@example.test", domain: "https://www.RamenHouse.com/", "cf-turnstile-response": "tok", website: "" };
 const IP = "203.0.113.7";
 
@@ -69,7 +69,9 @@ describe("POST /api/contact", () => {
     expect(res.status).toBe(200);
     expect(calledHosts()).toEqual(["challenges.cloudflare.com", "api.resend.com"]);
     const row = q.insertContactRequest.mock.calls[0][1];
-    expect(row).toMatchObject({ name: "Ana Example", email: "visitor@example.test", company: "Example Ramen Co", tier: "Other", message: "Secret message", user_agent: "vitest" });
+    expect(row).toMatchObject({ name: "Ana Example", email: "visitor@example.test", company: "Example Ramen Co", industry: "Other", industry_other: "Pool service", tier: "Other", message: "Secret message", user_agent: "vitest" });
+    const sent = JSON.parse(fetchMock.mock.calls[1][1].body);
+    expect(sent.text).toContain("Industry: Other – Pool service");
     expect(row.ip_hash).toMatch(/^[0-9a-f]{64}$/);
     expect(JSON.stringify(row)).not.toContain(IP);
     expect(q.countRecentContactRequests.mock.calls[0][1]).toBe(row.ip_hash);
@@ -77,6 +79,14 @@ describe("POST /api/contact", () => {
     expect(Date.now() - since.getTime()).toBeGreaterThanOrEqual(3_600_000 - 1000);
     expect(Date.now() - since.getTime()).toBeLessThanOrEqual(3_600_000 + 1000);
     expect(q.markContactRequestEmailed).toHaveBeenCalledWith({}, "row-1");
+  });
+
+  it("400 when industry is missing, not an option, or Other text breaks the rules", async () => {
+    for (const bad of [{ industry: "" }, { industry: "Dental" }, { industry: "HVAC", industry_other: "Pool" }, { industry_other: "x".repeat(61) }]) {
+      const res = await post(contactPOST, { ...contact, ...bad });
+      expect(res.status).toBe(400);
+    }
+    expect(q.insertContactRequest).not.toHaveBeenCalled();
   });
 
   it("400 with field names on bad input, before anything else", async () => {

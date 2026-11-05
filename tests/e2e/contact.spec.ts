@@ -6,6 +6,7 @@ test.beforeEach(async ({ page }) => stubTurnstile(page));
 async function fill(scope: Page | ReturnType<Page["getByRole"]>) {
   await scope.getByLabel("Name").fill("Ana Example");
   await scope.getByLabel("Email").fill("visitor@example.test");
+  await scope.getByLabel("Industry", { exact: true }).selectOption("Restaurant");
   await scope.getByLabel("Tier").selectOption("Other");
   await scope.getByLabel("Message").fill("Example data");
 }
@@ -30,7 +31,9 @@ test("/contact: empty submit shows inline errors and sends nothing", async ({ pa
   const bodies = await mockApi(page, "/api/contact", 200, { ok: true });
   await page.goto("/contact");
   await page.getByRole("button", { name: "Send" }).click();
-  for (const l of ["Name", "Email", "Tier", "Message"]) await expect(page.getByLabel(l)).toHaveAttribute("aria-invalid", "true");
+  for (const l of ["Name", "Email", "Industry", "Tier", "Message"]) await expect(page.getByLabel(l, { exact: true })).toHaveAttribute("aria-invalid", "true");
+  await expect(page.getByLabel("Industry", { exact: true })).toHaveAccessibleDescription("Pick your industry.");
+  await expect(page.locator("p", { hasText: "Pick your industry." })).toBeVisible();
   await expect(page.getByLabel("Name")).toBeFocused();
   expect(bodies).toHaveLength(0);
   await expectAxeClean(page);
@@ -121,3 +124,44 @@ test.describe("without JavaScript", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Contact us");
   });
 });
+
+// Industry (Jeun #22): required select; "Other" adds an optional text input. Same form on /contact and in the modal.
+for (const where of ["/contact", "modal"] as const) {
+  test(`${where}: Industry is required, Other shows "Your industry (optional)", axe clean`, async ({ page }, info) => {
+    const bodies = await mockApi(page, "/api/contact", 200, { ok: true });
+    if (where === "/contact") await page.goto("/contact");
+    else {
+      await page.goto("/privacy");
+      await page.getByRole("link", { name: "Contact us" }).click();
+    }
+    const scope = where === "modal" ? page.getByRole("dialog", { name: "Contact us" }) : page.locator("main");
+    const industry = scope.getByLabel("Industry", { exact: true });
+    await expect(industry).toHaveAttribute("required", "");
+    await expect(industry.locator("option").first()).toHaveText("Pick your industry.");
+    expect(await industry.locator("option:not([disabled])").allTextContents()).toEqual(["Restaurant", "HVAC", "Plumbing", "Roofing", "Pest control", "Other"]);
+    await expect(scope).not.toContainText("$");
+    expect((await industry.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+
+    await scope.getByLabel("Name").fill("Ana Example");
+    await scope.getByLabel("Email").fill("visitor@example.test");
+    await scope.getByLabel("Tier").selectOption("Other");
+    await scope.getByLabel("Message").fill("Example data");
+    await scope.getByRole("button", { name: "Send" }).click();
+    await expect(industry).toHaveAttribute("aria-invalid", "true");
+    await expect(industry).toHaveAccessibleDescription("Pick your industry.");
+    expect(bodies).toHaveLength(0);
+
+    const other = scope.getByLabel("Your industry (optional)");
+    await expect(other).toHaveCount(0);
+    await industry.selectOption("Other");
+    await expect(other).toBeVisible();
+    await expect(other).toHaveAttribute("maxlength", "60");
+    await expectAxeClean(page);
+    await page.screenshot({ path: `test-results/screenshots/contact-industry-${where === "modal" ? "modal-" : ""}${info.project.name}.png`, fullPage: where !== "modal" });
+
+    await other.fill("Pool service");
+    await scope.getByRole("button", { name: "Send" }).click();
+    await expect(scope.getByRole("status")).toHaveText("Thanks. We'll reply by email within 2 business days.");
+    expect(bodies[0]).toMatchObject({ industry: "Other", industry_other: "Pool service" });
+  });
+}

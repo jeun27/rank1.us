@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeDomain, TIERS, validateAudit, validateContact } from "@/lib/spam/validate";
+import { INDUSTRIES, normalizeDomain, TIERS, validateAudit, validateContact } from "@/lib/spam/validate";
 
 describe("normalizeDomain", () => {
   it.each([
@@ -30,11 +30,30 @@ describe("validateAudit", () => {
 });
 
 describe("validateContact", () => {
-  const good = { name: "Ana Example", email: "ana@example.test", company: "Example Ramen Co", tier: "Agency bundle", message: "Hi\nthere" };
+  const good = { name: "Ana Example", email: "ana@example.test", company: "Example Ramen Co", industry: "Restaurant", tier: "Agency bundle", message: "Hi\nthere" };
 
   it("accepts a full form and keeps message newlines", () => {
     const r = validateContact(good);
-    expect(r).toEqual({ ok: true, data: { ...good, message: "Hi\nthere" } });
+    expect(r).toEqual({ ok: true, data: { ...good, industry_other: null, message: "Hi\nthere" } });
+  });
+  it("industry (Jeun #22): required, exactly the six options, no dental, no dollar amounts", () => {
+    expect(INDUSTRIES).toEqual(["Restaurant", "HVAC", "Plumbing", "Roofing", "Pest control", "Other"]);
+    for (const i of INDUSTRIES) expect(i).not.toMatch(/\$|\d|dental/i);
+    for (const i of INDUSTRIES) expect(validateContact({ ...good, industry: i }).ok).toBe(true);
+    const { industry: _drop, ...noIndustry } = good;
+    void _drop;
+    expect(validateContact(noIndustry)).toEqual({ ok: false, errors: ["industry"] });
+    expect(validateContact({ ...good, industry: "" })).toEqual({ ok: false, errors: ["industry"] });
+    expect(validateContact({ ...good, industry: "Dental" })).toEqual({ ok: false, errors: ["industry"] });
+  });
+  it("Other text: optional, up to 60 characters, only with Other", () => {
+    const other = validateContact({ ...good, industry: "Other", industry_other: "  Pool service " });
+    expect(other.ok && other.data.industry_other).toBe("Pool service");
+    const blank = validateContact({ ...good, industry: "Other", industry_other: "  " });
+    expect(blank.ok && blank.data.industry_other).toBeNull();
+    expect(validateContact({ ...good, industry: "Other", industry_other: "x".repeat(60) }).ok).toBe(true);
+    expect(validateContact({ ...good, industry: "Other", industry_other: "x".repeat(61) })).toEqual({ ok: false, errors: ["industry_other"] });
+    expect(validateContact({ ...good, industry: "HVAC", industry_other: "Pool service" })).toEqual({ ok: false, errors: ["industry_other"] });
   });
   it("company is optional (stored as null) and never an error: over 100 characters is cut", () => {
     const r = validateContact({ ...good, company: "  " });
@@ -53,7 +72,7 @@ describe("validateContact", () => {
     expect(validateContact({ ...good, tier: "Enterprise" })).toEqual({ ok: false, errors: ["tier"] });
   });
   it("rejects empty, too long and wrong types", () => {
-    expect(validateContact({})).toEqual({ ok: false, errors: ["name", "email", "tier", "message"] });
+    expect(validateContact({})).toEqual({ ok: false, errors: ["name", "email", "industry", "tier", "message"] });
     expect(validateContact({ ...good, name: "x".repeat(101), company: "x".repeat(101), message: "x".repeat(5001) })).toEqual({
       ok: false,
       errors: ["name", "message"],

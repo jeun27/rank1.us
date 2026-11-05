@@ -98,6 +98,7 @@ describe("ContactForm", () => {
   const fillAll = async () => {
     await userEvent.type(screen.getByLabelText("Name"), "Ana Example");
     await userEvent.type(screen.getByLabelText("Email"), "visitor@example.test");
+    await userEvent.selectOptions(screen.getByLabelText("Industry"), "Restaurant");
     await userEvent.selectOptions(screen.getByLabelText("Tier"), "Done-for-you (custom)");
     await userEvent.type(screen.getByLabelText("Message"), "Hi");
     await userEvent.click(screen.getByRole("button", { name: "Send" }));
@@ -112,6 +113,36 @@ describe("ContactForm", () => {
     expect(screen.getByLabelText("Tier").textContent).not.toMatch(/\$/);
   });
 
+  it("Industry (Jeun #22): required select with the six options; Other shows the optional text input", async () => {
+    render(<ContactForm />);
+    const select = screen.getByLabelText("Industry") as HTMLSelectElement;
+    expect(select).toBeRequired();
+    expect(select.options[0]).toHaveTextContent("Pick your industry.");
+    expect([...select.options].filter((o) => !o.disabled).map((o) => o.textContent)).toEqual(["Restaurant", "HVAC", "Plumbing", "Roofing", "Pest control", "Other"]);
+    expect(screen.queryByLabelText("Your industry (optional)")).toBeNull();
+    await userEvent.selectOptions(select, "Other");
+    const other = screen.getByLabelText("Your industry (optional)");
+    expect(other).toHaveAttribute("maxlength", "60");
+    expect(other).not.toBeRequired();
+    await userEvent.selectOptions(select, "HVAC");
+    expect(screen.queryByLabelText("Your industry (optional)")).toBeNull();
+  });
+
+  it("posts industry and the Other text", async () => {
+    const { fetch, release } = pendingFetch(200, { ok: true });
+    release();
+    render(<ContactForm />);
+    await userEvent.type(screen.getByLabelText("Name"), "Ana Example");
+    await userEvent.type(screen.getByLabelText("Email"), "visitor@example.test");
+    await userEvent.selectOptions(screen.getByLabelText("Industry"), "Other");
+    await userEvent.type(screen.getByLabelText("Your industry (optional)"), "Pool service");
+    await userEvent.selectOptions(screen.getByLabelText("Tier"), "Other");
+    await userEvent.type(screen.getByLabelText("Message"), "Hi");
+    await userEvent.click(screen.getByRole("button", { name: "Send" }));
+    await screen.findByRole("status");
+    expect(JSON.parse(fetch.mock.calls[0][1]!.body as string)).toMatchObject({ industry: "Other", industry_other: "Pool service" });
+  });
+
   it("client error: inline errors on empty required fields, no request", async () => {
     const fetch = vi.fn();
     vi.stubGlobal("fetch", fetch);
@@ -120,6 +151,7 @@ describe("ContactForm", () => {
     for (const [l, msg] of [
       ["Name", "Add your name"],
       ["Email", "Add a valid email, like you@ramenhouse.com"],
+      ["Industry", "Pick your industry."],
       ["Tier", "Choose one"],
       ["Message", "Add a message"],
     ]) {

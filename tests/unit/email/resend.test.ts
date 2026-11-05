@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { contactEmail, RESEND_URL, sendEmail } from "@/lib/email/resend";
 
-const visitor = { name: "Ana Example", email: "visitor@example.test", company: "Example Ramen Co", tier: "Agency bundle" as const, message: "Hello\nthere" };
+const visitor = { name: "Ana Example", email: "visitor@example.test", company: "Example Ramen Co", industry: "Restaurant" as const, industry_other: null, tier: "Agency bundle" as const, message: "Hello\nthere" };
 const env = { CONTACT_FROM_EMAIL: "from@example.test", CONTACT_TO_EMAIL: "to@example.test" };
 
 afterEach(() => {
@@ -17,8 +17,13 @@ describe("contactEmail", () => {
       to: "to@example.test",
       reply_to: "visitor@example.test",
       subject: "Contact us: Agency bundle from Example Ramen Co",
-      text: "Name: Ana Example\nEmail: visitor@example.test\nCompany: Example Ramen Co\nTier: Agency bundle\n\nHello\nthere",
+      text: "Name: Ana Example\nEmail: visitor@example.test\nCompany: Example Ramen Co\nIndustry: Restaurant\nTier: Agency bundle\n\nHello\nthere",
     });
+  });
+  it("adds the Other text after the industry, as plain text with no html body", () => {
+    const e = contactEmail({ ...visitor, industry: "Other", industry_other: "Pool <b>& spa</b>" }, env)!;
+    expect(e.text).toContain("\nIndustry: Other – Pool <b>& spa</b>\n");
+    expect(e).not.toHaveProperty("html");
   });
   it("uses the name when there is no company", () => {
     expect(contactEmail({ ...visitor, company: null }, env)?.subject).toBe("Contact us: Agency bundle from Ana Example");

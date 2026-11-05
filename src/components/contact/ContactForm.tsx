@@ -8,20 +8,24 @@ import { Honeypot } from "@/components/forms/Honeypot";
 import { PillField } from "@/components/forms/PillField";
 import { postForm } from "@/components/forms/postForm";
 import { Turnstile } from "@/components/forms/Turnstile";
-import { TIERS, validateContact, type ContactField } from "@/lib/spam/validate";
+import { INDUSTRIES, INDUSTRY_OTHER_MAX, TIERS, validateContact, type ContactField } from "@/lib/spam/validate";
 
 type State =
   | { kind: "idle" | "submitting" }
   | { kind: "error"; fields: ContactField[]; banner?: string }
   | { kind: "success" };
 
-const fieldError: Record<ContactField, string> = {
+// industry_other has no string: the input caps it at 60 and only shows for "Other", so only a crafted request trips it.
+const fieldError: Partial<Record<ContactField, string>> = {
   name: c.nameError,
   email: c.emailError,
+  industry: c.industryError,
   tier: c.tierError,
   message: c.messageError,
 };
-const FIELDS: ContactField[] = ["name", "email", "tier", "message"];
+const FIELDS: ContactField[] = ["name", "email", "industry", "industry_other", "tier", "message"];
+const box = "w-full bg-white text-ui text-ink shadow-field outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep";
+const boxEdge = (error?: string) => (error ? "border-2 border-brick" : "border border-fieldBorder");
 
 // Contact us form, used on /contact and in the ContactUsLink modal.
 export function ContactForm() {
@@ -29,7 +33,7 @@ export function ContactForm() {
   const [resets, setResets] = useState(0);
   const form = useRef<HTMLFormElement>(null);
   const success = useRef<HTMLParagraphElement>(null);
-  const tierId = useId();
+  const [industry, setIndustry] = useState("");
   const messageId = useId();
 
   function showErrors(fields: ContactField[], banner?: string) {
@@ -64,8 +68,6 @@ export function ContactForm() {
   const errors = state.kind === "error" ? state.fields : [];
   const err = (f: ContactField) => (errors.includes(f) ? fieldError[f] : undefined);
   const submitting = state.kind === "submitting";
-  const boxEdge = (f: ContactField) => (err(f) ? "border-2 border-brick" : "border border-fieldBorder");
-  const box = "w-full bg-white text-ui text-ink shadow-field outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep";
 
   return (
     <form ref={form} noValidate onSubmit={onSubmit} className="relative flex flex-col gap-4" aria-busy={submitting || undefined}>
@@ -73,34 +75,19 @@ export function ContactForm() {
       <PillField label={c.nameLabel} name="name" autoComplete="name" required maxLength={100} error={err("name")} />
       <PillField label={c.emailLabel} name="email" type="email" autoComplete="email" inputMode="email" spellCheck={false} required error={err("email")} />
       <PillField label={c.companyLabel} name="company" autoComplete="organization" maxLength={100} />
-      <div>
-        <label htmlFor={tierId} className="mb-1.5 block text-caption font-semibold">
-          {c.tierLabel}
-        </label>
-        <select
-          id={tierId}
-          name="tier"
-          required
-          defaultValue=""
-          aria-invalid={err("tier") ? true : undefined}
-          aria-describedby={err("tier") ? `${tierId}-error` : undefined}
-          className={`h-12 rounded-full px-5 ${box} ${boxEdge("tier")}`}
-        >
-          <option value="" disabled>
-            {c.tierPlaceholder}
-          </option>
-          {TIERS.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
-        {err("tier") && (
-          <p id={`${tierId}-error`} className="mt-1.5 text-caption text-brick">
-            {err("tier")}
-          </p>
-        )}
-      </div>
+      <SelectField
+        label={c.industryLabel}
+        name="industry"
+        placeholder={c.industryPlaceholder}
+        options={INDUSTRIES}
+        error={err("industry")}
+        value={industry}
+        onChange={setIndustry}
+      />
+      {industry === "Other" && (
+        <PillField label={c.industryOtherLabel} name="industry_other" maxLength={INDUSTRY_OTHER_MAX} error={err("industry_other")} />
+      )}
+      <SelectField label={c.tierLabel} name="tier" placeholder={c.tierPlaceholder} options={TIERS} error={err("tier")} />
       <div>
         <label htmlFor={messageId} className="mb-1.5 block text-caption font-semibold">
           {c.messageLabel}
@@ -113,7 +100,7 @@ export function ContactForm() {
           maxLength={5000}
           aria-invalid={err("message") ? true : undefined}
           aria-describedby={err("message") ? `${messageId}-error` : undefined}
-          className={`block resize-y rounded-banner px-5 py-3 ${box} ${boxEdge("message")}`}
+          className={`block resize-y rounded-banner px-5 py-3 ${box} ${boxEdge(err("message"))}`}
         />
         {err("message") && (
           <p id={`${messageId}-error`} className="mt-1.5 text-caption text-brick">
@@ -127,5 +114,50 @@ export function ContactForm() {
         {submitting ? c.sending : c.send}
       </Button>
     </form>
+  );
+}
+
+type SelectProps = {
+  label: string;
+  name: string;
+  placeholder: string;
+  options: readonly string[];
+  error?: string;
+  value?: string;
+  onChange?: (v: string) => void;
+};
+
+// Required pill select whose disabled first option is the placeholder.
+function SelectField({ label, name, placeholder, options, error, value, onChange }: SelectProps) {
+  const id = useId();
+  return (
+    <div>
+      <label htmlFor={id} className="mb-1.5 block text-caption font-semibold">
+        {label}
+      </label>
+      <select
+        id={id}
+        name={name}
+        required
+        {...(onChange ? { value, onChange: (e) => onChange(e.target.value) } : { defaultValue: "" })}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? `${id}-error` : undefined}
+        className={`h-12 rounded-full px-5 ${box} ${boxEdge(error)}`}
+      >
+        <option value="" disabled>
+          {placeholder}
+        </option>
+        {options.map((o) => (
+          <option key={o} value={o}>
+            {o}
+          </option>
+        ))}
+      </select>
+      {error && (
+        <p id={`${id}-error`} className="mt-1.5 text-caption text-brick">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }

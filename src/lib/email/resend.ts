@@ -14,7 +14,16 @@ export function contactEmail(c: ContactInput, env: Record<string, string | undef
     to: env.CONTACT_TO_EMAIL,
     reply_to: c.email,
     subject: `Contact us: ${c.tier} from ${c.company ?? c.name}`,
-    text: [`Name: ${c.name}`, `Email: ${c.email}`, `Company: ${c.company ?? "-"}`, `Tier: ${c.tier}`, "", c.message].join("\n"),
+    // Plain text only (no html field), so visitor input cannot inject markup.
+    text: [
+      `Name: ${c.name}`,
+      `Email: ${c.email}`,
+      `Company: ${c.company ?? "-"}`,
+      `Industry: ${c.industry}${c.industry_other ? ` – ${c.industry_other}` : ""}`,
+      `Tier: ${c.tier}`,
+      "",
+      c.message,
+    ].join("\n"),
   };
 }
 

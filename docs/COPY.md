@@ -41,6 +41,10 @@ Progress percentages ("48%") are computed from n of d, so they are not copy.
 | Audit Banner error | "That didn't send. Try again in a minute." |
 | Audit daily-cap 429 | "Free audits are full for today. Try again tomorrow." (a per-request 429 keeps "Too many tries. Try again in an hour.") |
 | Contact modal close button (aria-label) | "Close" |
+| Contact industry label (Jeun #22) | "Industry" |
+| Contact industry options (Jeun #22, no dollar amounts) | "Restaurant", "HVAC", "Plumbing", "Roofing", "Pest control", "Other" |
+| Contact industry empty option and error (Jeun #22) | "Pick your industry." |
+| Contact industry "Other" text label, optional, max 60 characters (Jeun #22) | "Your industry (optional)" |
 
 | Jelly | Rule |
 |---|---|

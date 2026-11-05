@@ -46,6 +46,7 @@ const contact = (tag: string) => ({
   name: "Ana Example",
   email: `${tag}@example.test`,
   company: "Example Ramen Co",
+  industry: "Restaurant",
   tier: "Agency bundle",
   message: "Example data",
   "cf-turnstile-response": "tok",
@@ -62,8 +63,14 @@ describe("POST /api/contact (local Supabase)", () => {
     expect(res.status).toBe(200);
     const rows = await rowsFor(ip);
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ name: "Ana Example", company: "Example Ramen Co", tier: "Agency bundle", emailed: true });
+    expect(rows[0]).toMatchObject({ name: "Ana Example", company: "Example Ramen Co", industry: "Restaurant", industry_other: null, tier: "Agency bundle", emailed: true });
     expect(thirdParty).toEqual(["challenges.cloudflare.com", "api.resend.com"]);
+  });
+
+  it("stores industry Other with its text", async () => {
+    const ip = newIp();
+    expect((await post(contactPOST, ip, { ...contact(randomUUID()), industry: "Other", industry_other: "Pool service" })).status).toBe(200);
+    expect((await rowsFor(ip))[0]).toMatchObject({ industry: "Other", industry_other: "Pool service" });
   });
 
   it("keeps the row with emailed=false when Resend fails", async () => {
@@ -90,7 +97,7 @@ describe("POST /api/contact (local Supabase)", () => {
     must(
       await serviceClient()
         .from("contact_requests")
-        .insert([1, 2, 3].map(() => ({ name: "Old", email: "old@example.test", ip_hash: hashIp(ip), created_at: old }))),
+        .insert([1, 2, 3].map(() => ({ name: "Old", email: "old@example.test", industry: "Restaurant", ip_hash: hashIp(ip), created_at: old }))),
     );
     expect((await post(contactPOST, ip, contact(randomUUID()))).status).toBe(200);
   });
