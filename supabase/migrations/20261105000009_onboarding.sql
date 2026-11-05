@@ -71,6 +71,42 @@ create policy fixes_update on public.fixes for update to authenticated
 create policy fixes_delete on public.fixes for delete to authenticated
   using (private.can_write_fixes(business_id));
 
+-- Shared input checks for the onboarding RPCs. Raises 22023 (invalid_parameter_value).
+create function private.check_business_input(b jsonb) returns void
+language plpgsql immutable set search_path = '' as $$
+declare
+  f text;
+begin
+  foreach f in array array['name', 'domain', 'city', 'state', 'country'] loop
+    if coalesce(btrim(b ->> f), '') = '' then
+      raise exception 'business.% is required', f using errcode = 'invalid_parameter_value';
+    end if;
+  end loop;
+  if char_length(b ->> 'name') > 200 then
+    raise exception 'business.name must be at most 200 characters' using errcode = 'invalid_parameter_value';
+  end if;
+  if not private.is_hostname(b ->> 'domain') then
+    raise exception 'business.domain must be a valid hostname' using errcode = 'invalid_parameter_value';
+  end if;
+  if char_length(b ->> 'city') > 100 or char_length(b ->> 'state') > 100 or char_length(b ->> 'country') > 100 then
+    raise exception 'business.city, state and country must be at most 100 characters' using errcode = 'invalid_parameter_value';
+  end if;
+  if char_length(b ->> 'cuisine') > 60 then
+    raise exception 'business.cuisine must be at most 60 characters' using errcode = 'invalid_parameter_value';
+  end if;
+end;
+$$;
+
+-- Hostname: at most 253 characters, labels of 1-63 letters, digits or inner hyphens, a dot-separated TLD.
+create function private.is_hostname(d text) returns boolean
+language sql immutable set search_path = '' as $$
+  select d is not null and char_length(d) <= 253
+    and d ~* '^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]([a-z0-9-]{0,61}[a-z0-9])?$';
+$$;
+
+revoke all on function private.check_business_input(jsonb), private.is_hostname(text) from public;
+grant execute on function private.check_business_input(jsonb), private.is_hostname(text) to authenticated;
+
 -- Onboarding: business + competitors + questions in one transaction, as the caller, so RLS,
 -- the businesses column grants and both limit triggers apply. Only listed fields are read.
 create function public.create_business_onboarding(p jsonb) returns uuid
@@ -88,6 +124,19 @@ begin
   where m.user_id = uid order by m.created_at, m.workspace_id limit 1;
   if ws is null then
     raise exception 'No workspace for this user' using errcode = 'insufficient_privilege';
+  end if;
+  perform private.check_business_input(b);
+  if exists (select 1 from jsonb_to_recordset(coalesce(p -> 'competitors', '[]')) as c(name text, domain text)
+             where coalesce(btrim(c.name), '') = '' or char_length(c.name) > 200
+                or (c.domain is not null and not private.is_hostname(c.domain))) then
+    raise exception 'Each competitor needs a name of at most 200 characters and a valid domain or none'
+      using errcode = 'invalid_parameter_value';
+  end if;
+  if exists (select 1 from jsonb_to_recordset(coalesce(p -> 'questions', '[]')) as q(short_text text, long_text text)
+             where coalesce(btrim(q.short_text), '') = '' or char_length(q.short_text) > 500
+                or char_length(q.long_text) > 500) then
+    raise exception 'Each question needs a short form, and both forms must be at most 500 characters'
+      using errcode = 'invalid_parameter_value';
   end if;
   if (select count(*) from jsonb_array_elements(coalesce(p -> 'questions', '[]')) q
       where coalesce((q ->> 'active')::boolean, true)) > 25 then
@@ -129,6 +178,10 @@ declare
 begin
   if uid is null or not exists (select 1 from public.user_roles where user_id = uid and role = 'team') then
     raise exception 'Only the Rank1 team can create DFY clients' using errcode = 'insufficient_privilege';
+  end if;
+  perform private.check_business_input(b);
+  if char_length(p ->> 'workspace_name') > 200 then
+    raise exception 'workspace_name must be at most 200 characters' using errcode = 'invalid_parameter_value';
   end if;
   insert into public.workspaces (name, owner_id)
   values (coalesce(nullif(p ->> 'workspace_name', ''), b ->> 'name'), uid)

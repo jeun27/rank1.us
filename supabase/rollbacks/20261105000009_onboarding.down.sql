@@ -1,6 +1,8 @@
 -- Reverts 20261105000009_onboarding.sql
 drop function if exists public.create_dfy_client(jsonb);
 drop function if exists public.create_business_onboarding(jsonb);
+drop function if exists private.check_business_input(jsonb);
+drop function if exists private.is_hostname(text);
 
 drop policy if exists fixes_insert on public.fixes;
 drop policy if exists fixes_update on public.fixes;
