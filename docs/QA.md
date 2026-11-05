@@ -1,6 +1,6 @@
 # QA
 
-## Step 5: Local competitors + restaurant onboarding
+## Step 5: Local competitors + restaurant onboarding (re-run)
 
 Checked 2026-11-05: the merged backend and data-pipeline work on main, plus the onboarding UI in PR #21 (feat/step5-onboarding) at b8453fd, its head:
 - #20 (227a30f): onboarding RPCs, seat rule, DFY create, fixes RLS
@@ -11,7 +11,9 @@ The sandbox Docker disk is full, so per the lead there was no local Supabase. te
 Preview: https://rank1-9uifpq0e4-bryan-flowhighlevels-projects.vercel.app (sha b8453fd, READY).
 Sources: Jeun's ENG_HANDOFF_OVERNIGHT §6 Step 5, the lead's brief (rank1-step5.md), docs/UI.md 4b Onboarding 1/2/3.
 
-Result: FAIL. 1 blocking problem: e2e against the preview is red. It isn't caused by #21's code. Listed at the end.
+Result: PASS. The first run's blocker (4 admin e2e failures on the preview) is fixed by #29 on main (e893356). No blocking problems.
+
+Re-run 2026-11-05: #21 is still at b8453fd, behind main and showing merge conflicts on GitHub, so its own e2e files don't have #29 yet. As agreed with the lead, I ran #21's tests with main's tests/e2e/admin-test.spec.ts (the only e2e file #29 changes: 2 `test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase")` lines) against #21's preview as-is. Once #21 merges main, its head sha changes and needs a fresh CI run and Visuals comment.
 
 ### Commands
 
@@ -20,7 +22,8 @@ Result: FAIL. 1 blocking problem: e2e against the preview is red. It isn't cause
 | `pnpm test` (sandbox) | PASS. 47 files, 665 tests passed |
 | `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build` (sandbox) | PASS |
 | CI on #21 at b8453fd | PASS. 9 of 9; test-db 11 files / 261 tests, e2e 176 passed |
-| `E2E_BASE_URL=<preview> pnpm e2e` | FAIL. 114 passed, 60 skipped, 4 failed. All 4 are tests/e2e/admin-test.spec.ts:48 and :56 (×2 viewports), with "Local Supabase is not running". The onboarding specs pass or skip cleanly, and dev-onboarding.spec.ts passes on both viewports |
+| `E2E_BASE_URL=<preview> pnpm e2e` (first run, #21 tests) | FAIL. 114 passed, 60 skipped, 4 failed: tests/e2e/admin-test.spec.ts:48 and :56 × 2 viewports, "Local Supabase is not running" |
+| `E2E_BASE_URL=<preview> pnpm e2e` (re-run, #21 tests + main's admin-test.spec.ts) | PASS. 114 passed, 64 skipped, 0 failed. The 4 admin tests now skip; dev-onboarding.spec.ts ("every 4b onboarding state, accessibly") passes at 375 and 1280; the onboarding specs that need local Supabase skip |
 
 ### Acceptance
 
@@ -50,9 +53,15 @@ Not blocking:
 - A same-site redirect may change the port (e.g. :8080) on the same public host.
 - At state level the greyed tooltip still says "can't target a city yet" (the only UI.md copy).
 
+First-run blocker:
+
+| Blocker | Result | Evidence |
+|---|---|---|
+| e2e on the preview: tests/e2e/admin-test.spec.ts:48 and :56 had no preview skip | FIXED on main by #29 (e893356) | re-run above: 0 failed, the 4 tests skip |
+
 ### Blocking problems
 
-1. e2e against the preview is red: tests/e2e/admin-test.spec.ts:48 ("another signed-in user gets a 404") and :56 ("the founder sees the form…") use the local service-role helpers without the `test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase")` every other local-stack test has. This came in with #19 (on main), not #21. My Step 4 report missed it because e2e came from CI only. Add the skip, in #21 or a small PR.
+None.
 
 ## Step 4: Engine adapters with fixtures + /admin/test (re-run)
 
