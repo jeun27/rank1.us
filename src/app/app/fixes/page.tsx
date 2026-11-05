@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { loadShell } from "@/components/app/load";
-import { Measured, Page } from "@/components/app/Page";
+import { Measured, Page, runMeasured } from "@/components/app/Page";
 import { FixList } from "@/components/fixes/FixList";
 import { fixCopy as c } from "@/components/fixes/copy";
 import { listFixes } from "@/lib/queries/fixes";
@@ -14,10 +14,9 @@ export default async function FixesPage() {
   const { db, business, runs } = await loadShell();
   if (!business) redirect("/app");
   const { ranked, tidyUps, unchecked } = await listFixes(db, business.id);
-  const run = runs[0];
   return (
     <Page title={c.title}>
-      <Measured checkedAt={run?.finished_at ?? null} answers={run?.jobs_ok} now={new Date()} />
+      <Measured {...runMeasured(runs[0])} now={new Date()} />
       <FixList
         ranked={ranked}
         tidyUps={tidyUps}

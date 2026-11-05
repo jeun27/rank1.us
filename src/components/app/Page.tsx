@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { Freshness } from "@/components/ui/Freshness";
 import { Icon } from "@/components/ui/Icon";
+import type { RunSummary } from "@/lib/queries/shell";
 
 // One H1 per app page, full width (lead: nav + full-width, not 3-pane).
 export function Page({ title, children }: { title: string; children: ReactNode }) {
@@ -53,3 +54,10 @@ export function Measured({ checkedAt, answers, now }: { checkedAt: string | null
     );
   return <p className="text-caption text-inkMuted">API-measured, directional</p>;
 }
+
+// A run's freshness: n is its visibility denominator (ok answers with a question), the same n the
+// Dashboard and History show. Not jobs_ok, which also counts no_overview answers.
+export const runMeasured = (run: RunSummary | undefined) => ({
+  checkedAt: run?.finished_at ?? null,
+  answers: run?.visibility.denominator,
+});
