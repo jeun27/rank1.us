@@ -5,7 +5,7 @@ import { Dashboard } from "@/components/app/Dashboard";
 import { HistoryView } from "@/components/app/HistoryView";
 import { QuestionsView } from "@/components/app/QuestionsView";
 import { SourcesView } from "@/components/app/SourcesView";
-import { Page } from "@/components/app/Page";
+import { Measured, Page } from "@/components/app/Page";
 import { FixList } from "@/components/fixes/FixList";
 import { exampleFixes as fixes, exampleTidyUps, exampleUnchecked } from "@/components/fixes/example-data";
 import { ErrorState, Skeleton } from "@/components/app/states";
@@ -117,16 +117,19 @@ export const STATES: Record<string, () => React.ReactNode> = {
   "sources-error": () => <ErrorState title="Sources" message={results} reset={() => {}} />,
   "fixes-success": () => (
     <Page title="What to fix next">
+      <Measured {...fresh} />
       <FixList ranked={fixes} tidyUps={exampleTidyUps} unchecked={[]} noDomain={false} canWrite onStatus={noop} />
     </Page>
   ),
   "fixes-partial": () => (
     <Page title="What to fix next">
+      <Measured {...fresh} />
       <FixList ranked={fixes.slice(1, 2)} tidyUps={[]} unchecked={exampleUnchecked} noDomain canWrite onStatus={noop} />
     </Page>
   ),
   "fixes-readonly": () => (
     <Page title="What to fix next">
+      <Measured {...fresh} />
       <FixList ranked={fixes} tidyUps={exampleTidyUps} unchecked={[]} noDomain={false} canWrite={false} />
     </Page>
   ),
