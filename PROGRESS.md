@@ -674,6 +674,25 @@ Changed
 - Cleanup: merged the doubled "## Step 12 (backend)" section (the second copy was fully contained in the first; no line lost).
 - src/types/db.ts got the 0018 columns and functions added by hand in the generator format.
 
+## Step 16 (backend): monthly reports, storage and report settings (branch feat/step16-reports-db, issue #75)
+- Step 16 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b; Build Pack not readable; reconcile later.
+- Step 15 (GA4) is skipped until the founder's Google OAuth client exists. The report's GA4 section is "not connected" (hidden + 'Connect GA4').
+- Lead decisions:
+  - Who: active/trialing workspaces or DFY businesses, one report per business per LA calendar month, for the previous month. Idempotent.
+  - When: /api/cron/monthly-report at "0 14,15 1 * *" UTC, gated to the 1st at 07:xx LA. The drain renders and sends at most 2 per tick.
+  - Content is stored data only. Brand color is used for accents with an AA fallback to ink. White-label: no Rank1 name, logo, Jelly or "Powered by" in the PDF or email. From = business name <REPORT_FROM_EMAIL>.
+  - Recipients ≤ 10 validated emails. Send test → own email only. No recipients → generated, not sent.
+  - Storage: private "reports" and "logos" buckets (logos PNG/JPEG ≤ 512 KB; SVG rejected).
+- Migration 20261105000019 (+ .down.sql), additive and re-runnable:
+  - Buckets created when storage.buckets exists. No storage.objects policies: the server checks access with the caller's client, then uploads or signs 60 s URLs with the service client.
+  - Businesses write gate (maintainer OK, lead 2026-11-05; reviewer fix): SELECT for members (+ team on DFY, 0015). RLS INSERT/UPDATE/DELETE for self-serve members only (never a dfy_client). The team changes a DFY business only through definer RPCs (set_report_settings, set_fix_list_visible), so it can never move (workspace_id) or delete one. id/workspace_id/service are service-role only (column grants). Before this, the Step 1 FOR ALL member policy let a dfy_client UPDATE its business.
+  - Report settings CHECKs (NOT VALID, for legacy rows): brand_color hex, report_recipients ≤ 10 lowercase emails, logo_path under the business id. logo_path is no longer member-writable.
+  - reports: attempts/locked_at/last_error, the status check, unique (business, period_start). The member policy is now SELECT only (+ team read on DFY).
+  - enqueue_monthly_reports / claim_reports / finish_report (service only). set_report_settings(business, color, recipients): a definer RPC for self-serve members or the team on DFY (trims, lowercases, dedupes; CHECKs reject bad input). public.can_write_business for server-side checks (logo upload).
+- CI: test-db now starts Supabase WITH storage-api (removed from its -x list) so the buckets and signed URLs are tested for real.
+- Queries: src/lib/queries/reports.ts.
+- src/types/db.ts got the 0019 objects added by hand in the generator format.
+
 ## Step 14 (data-pipeline): checkout, webhook and portal (branch feat/step14-billing)
 Step 14 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b; Build Pack not readable; reconcile later.
 Lead decisions (Step 14 brief):
