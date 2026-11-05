@@ -5,11 +5,10 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
+import { locationLabel } from "@/lib/metrics";
 import type { QuestionsWithLatestAnswers, QuestionWithAnswers } from "@/lib/queries/shell";
 import { appCopy as c } from "./copy";
 import { Page } from "./Page";
-
-const LEVEL = { country: "Country", state: "State", city: "City" } as const;
 
 // One dot per answer of the latest run: filled = named, ring = not named, '–' = failed (not counted).
 function Dots({ q }: { q: QuestionWithAnswers }) {
@@ -166,7 +165,7 @@ export function QuestionsView({ data }: { data: QuestionsWithLatestAnswers }) {
                 <span data-computed className="text-ui font-semibold">
                   {x.text}
                 </span>
-                <Badge tone="info">{LEVEL[x.location_level]}</Badge>
+                <Badge tone="info">{locationLabel(x.location_level)}</Badge>
               </span>
               <Dots q={x} />
             </button>
