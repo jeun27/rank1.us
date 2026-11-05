@@ -19,8 +19,9 @@ export type CurrentBusiness = {
   paid: boolean;
 };
 
-// The oldest active self-serve business in the caller's workspace (oldest membership), or null.
-export async function getCurrentBusiness(db: DbClient): Promise<CurrentBusiness | null> {
+// The caller's current business: `selectedId` when it is one of their workspace's active self-serve
+// businesses (the switcher's choice), else the oldest one. Null without a business.
+export async function getCurrentBusiness(db: DbClient, selectedId?: string | null): Promise<CurrentBusiness | null> {
   const { data: auth } = await db.auth.getUser();
   if (!auth.user) return null;
   const { data: member, error } = await db
@@ -40,12 +41,11 @@ export async function getCurrentBusiness(db: DbClient): Promise<CurrentBusiness 
     .eq("service", "self_serve")
     .is("archived_at", null)
     .order("created_at")
-    .order("id")
-    .limit(1)
-    .maybeSingle();
+    .order("id");
   if (bizError) throw bizError;
-  if (!data) return null;
-  const { workspaces, ...business } = data;
+  const picked = data.find((b) => b.id === selectedId) ?? data[0];
+  if (!picked) return null;
+  const { workspaces, ...business } = picked;
   const status = (workspaces as { subscription_status: string | null } | null)?.subscription_status;
   return { ...business, paid: status === "active" || status === "trialing" };
 }

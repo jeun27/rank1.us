@@ -591,20 +591,6 @@ Changed
 
 - tests/e2e/team-workspace.spec.ts "nothing calls a model": on deployed previews (E2E_BASE_URL set) the exact host vercel.live is ignored, because Vercel injects its preview toolbar (vercel.live/_next-live/feedback/feedback.js) into every preview page. Every other host still fails the test, and it now also asserts that no request goes to api.anthropic.com, api.openai.com, generativelanguage.googleapis.com or api.perplexity.ai.
 
-## Step 12 (backend): client invites and fix list visibility (branch feat/step12-client-invites, issue #59)
-- Step 12 built from ENG_HANDOFF_OVERNIGHT §3/§6 + Step 3 routing; Build Pack not readable; reconcile later.
-- Lead decisions:
-  - No invites table. A team user invites by email for a DFY business (Supabase Auth admin invite, redirectTo NEXT_PUBLIC_SITE_URL/auth/callback), then the service role grants dfy_client + workspace membership.
-  - Any existing Rank1 account is refused ("This email already has a Rank1 account."), and this business's client gets "Already invited.".
-  - One business per client user (lead, 2026-11-05); reconcile with Build Pack. An existing client of another DFY business counts as an existing account.
-  - Remove access drops the membership and keeps the role. The fix list toggle is team-only.
-  - /client is read-only. Emails never go in logs or error messages, only status codes.
-- Migration 20261105000016 (+ .down.sql), additive and re-runnable:
-  - Service only: client_invite_status, grant_dfy_client (idempotent; refuses team users, members of other workspaces and non-DFY businesses) and revoke_dfy_client (never an owner).
-  - Team only: set_fix_list_visible and list_client_users (emails for team only).
-- Queries (server only, src/lib/queries/clients.ts): inviteClient (injectable invite fn; CI has no mail server), removeClient, listClientUsers, setFixListVisible. Tests: tests/db/clients.test.ts.
-- src/types/db.ts got the 0016 functions added by hand in the generator format. Regenerate it with `pnpm db:types` when a stack is available.
-
 ## Step 12 (frontend): DFY client dashboard and invites (branch feat/step12-client, issue #59)
 
 - Step 12 built from ENG_HANDOFF_OVERNIGHT §3/§6 + Step 3 routing. The Build Pack isn't readable, so reconcile later.
@@ -667,6 +653,25 @@ Changed
 - /api/cron/run-jobs 500: {error: "claim_failed"} with only the PG code logged (was `claim_jobs: <DB message>`). Test changed with reason: cron-route.test.ts expects the new body and checks that the log has no DB text; same strictness, new expected body (lead).
 - vercel.json crons adds {path: "/api/cron/weekly", schedule: "0 13,14 * * 1"}; vercel-config.test.ts pins both crons.
 - src/app/api/cron/weekly/route.ts (maxDuration 60): 401 unless authorized; outside the window → 200 {skipped: "outside_window"} without creating a DB client; inside → enqueueWeeklyRuns + pruneEphemeral (service client, backend #0017) via runWeekly.
+
+## Step 14 (backend): stripe subscription state (branch feat/step14-stripe-state, issue #71)
+- Step 14 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b; Build Pack not readable; reconcile later.
+- Lead decisions:
+  - Hosted Checkout (no publishable key) with quantity = active self-serve businesses (min 1). DFY never counts or sees billing.
+  - The webhook is the source of truth: signature check, then the stripe_events idempotency, then a service-only update.
+  - Add = quantity +1 with Stripe's default proration. Remove = quantity −1 at period end through a Subscription Schedule (phase 1: current quantity until current_period_end, phase 2: quantity − 1; data-pipeline implements it), and the business is archived at the period end.
+  - Manage billing = Customer Portal. The switcher picks the current business (default oldest). Weekly checks pause unless active/trialing.
+  - While a removal is scheduled, the business still counts as active until archive_at. At renewal the archive happens first, then seats.
+- Migration 20261105000018 (+ .down.sql), additive:
+  - workspaces.stripe_current_period_end / stripe_event_at and businesses.archive_at. All are service-write only, like the billing fields.
+  - apply_stripe_subscription(p): one transaction. It finds the workspace by customer id or client_reference_id first (not_found is NOT recorded, so Stripe's retry can apply it once checkout links the customer), then records the event (duplicate → no-op), ignores stale events, archives due removals and only then sets ids/status/seats/period end.
+  - record_stripe_event. schedule_business_removal / cancel_business_removal / archive_scheduled_businesses. All service only, self-serve only (DFY untouched).
+- Queries (src/lib/queries/billing.ts):
+  - getBillingState, listMyBusinesses (member client).
+  - applyStripeSubscription, recordStripeEvent, scheduleBusinessRemoval, cancelBusinessRemoval, archiveScheduledBusinesses (service client).
+  - getCurrentBusiness(db, selectedId?) honors a selected id that's one of the caller's active self-serve businesses, else the oldest.
+- Cleanup: merged the doubled "## Step 12 (backend)" section (the second copy was fully contained in the first; no line lost).
+- src/types/db.ts got the 0018 columns and functions added by hand in the generator format.
 
 ## Step 14 (frontend): billing page and business switcher (branch feat/step14-billing-ui)
 
