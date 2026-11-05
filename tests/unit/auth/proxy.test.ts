@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
 let claims: { sub: string } | null = null;
@@ -20,9 +20,31 @@ vi.mock("@supabase/ssr", () => ({
 
 const { proxy, config } = await import("@/proxy");
 
+describe("proxy without Supabase env (not connected yet)", () => {
+  beforeEach(() => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "");
+  });
+  afterEach(() => vi.unstubAllEnvs());
+
+  it.each(["/", "/contact", "/signin", "/api/audit/request"])("passes public %s straight through", async (p) => {
+    const res = await proxy(req(p));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("location")).toBeNull();
+  });
+
+  it.each(["/app", "/team/x", "/client"])("still sends %s to /signin", async (p) => {
+    const res = await proxy(req(p));
+    expect(res.status).toBe(307);
+    expect(new URL(res.headers.get("location")!).pathname).toBe("/signin");
+  });
+});
+
 const req = (path: string) => new NextRequest(`http://localhost:3000${path}`);
 
 beforeEach(() => {
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "http://sb.test");
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon");
   claims = null;
   refreshed = [];
 });

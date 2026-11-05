@@ -183,3 +183,29 @@ test("a signed-in owner gets the /app dashboard placeholder", async ({ page }) =
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Dashboard");
   await expectAxeClean(page);
 });
+
+for (const [role, area, home] of [
+  ["team", "/app", "/team"],
+  ["team", "/app/billing", "/team"],
+  [undefined, "/client", "/app/onboarding"],
+  ["dfy_client", "/app", "/client"],
+] as const) {
+  test(`a ${role ?? "self-serve"} user who opens ${area} is sent to ${home}`, async ({ page }) => {
+    const user = await newUser("wrong-area", role);
+    await openMagicLink(page, user.email);
+    await page.goto(area);
+    await expect(page).toHaveURL(new RegExp(`${home}$`));
+  });
+}
+
+test("a cross-site sign-out post is refused and the session stays", async ({ page }) => {
+  const user = await newUser("csrf");
+  await openMagicLink(page, user.email);
+  const res = await page.request.post("/auth/signout", {
+    headers: { origin: "https://evil.test", "sec-fetch-site": "cross-site" },
+    maxRedirects: 0,
+  });
+  expect(res.status()).toBe(403);
+  await page.goto("/app/onboarding");
+  expect(new URL(page.url()).pathname).toBe("/app/onboarding");
+});
