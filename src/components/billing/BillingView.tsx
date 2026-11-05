@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { billingCopy as c } from "./copy";
 
-export type BillingStatus = "active" | "trialing" | "past_due" | "canceled" | "unpaid" | "incomplete" | null;
+export type BillingStatus =
+  "active" | "trialing" | "past_due" | "canceled" | "unpaid" | "incomplete" | "incomplete_expired" | null;
 export type BillingState = { status: BillingStatus; seats: number; nextInvoiceAt: string | null };
 type Open = () => Promise<{ error: string } | undefined | void>;
 
