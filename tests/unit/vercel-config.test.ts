@@ -10,7 +10,6 @@ describe("vercel.json", () => {
   });
 
   it("keeps preview deploys for other branches", () => {
-    expect(config.git.deploymentEnabled).not.toBe(false);
     expect(Object.keys(config.git.deploymentEnabled)).toEqual(["main"]);
   });
 });

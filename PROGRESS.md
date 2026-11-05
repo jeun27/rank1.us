@@ -101,3 +101,6 @@ Changed test assertions (old → new; none removed)
 - e2e dev-ui: heading list adds DomainField, AuroraButton, ProgressBar, Final set; heading lookup is now `exact: true` ("Button" also matched "AuroraButton").
 - e2e dev-ui-example-data: Example data label list adds DomainField, ProgressBar, Final set.
 - New tests: tests/unit/ui/final-set.test.tsx (DomainField 4 states, AuroraButton, ProgressBar math and 0/0, Freshness clock); e2e reduced motion, Final set computed styles (focus ring, aurora, #316FC5, 48% fill), narrow/wide field layout.
+
+## Release gate (PR #5)
+- Merged is not live (Jeun 2026-11-05): main deploys are disabled in vercel.json; releases are tagged and deployed on request.
