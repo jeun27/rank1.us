@@ -15,12 +15,12 @@ Blocked
 Doc differences
 - Next.js 16 ships its own AGENTS.md telling agents to read node_modules/next/dist/docs before writing code. Kept as is.
 - Tailwind v4 has no tailwind.config.js. The theme is the @theme block in src/app/globals.css; tests/unit/tokens.test.ts fails if it drifts from tokens.ts.
-- CLAUDE.md says "commit after every green step". Jeun's PR rules say never push to main. Each step is committed on its own branch and merged through a PR.
+- CLAUDE.md (now docs/PRODUCT.md) says "commit after every green step". Jeun's PR rules say never push to main. Each step is committed on its own branch and merged through a PR.
 - Freshness follows UI.md exactly ("Checked 14 h ago · 250 answers · API-measured, directional"), not the shorter step 0 wording. Under 1 h shows "min", 48 h and over shows "d".
 - Percentages are rounded down (2 of 3 = 66%), so a stat is never shown higher than measured.
 - Jelly is a single raster with no separate eyes, so: no blink in the loading squish, no eye direction, no worried expression. All wait for jelly.svg.
 - /dev/ui is a gallery, so it shows several primary buttons and several Jellys. Real screens keep one of each.
-- Logo (Jeun, 2026-11-05): header = bar mark + "Rank1" wordmark, favicon = bar app icon instead of UI.md's Jelly drop. CLAUDE.md product bullet and UI.md Favicon row updated, Logo row added. Default Next.js favicon.ico removed.
+- Logo (Jeun, 2026-11-05): header = bar mark + "Rank1" wordmark, favicon = bar app icon instead of UI.md's Jelly drop. docs/PRODUCT.md (was CLAUDE.md) product bullet and UI.md Favicon row updated, Logo row added. Default Next.js favicon.ico removed.
 - Landing hero card copy ('34% of 160 answers, +6 pts') must be computed from example fixtures when the landing step is built: 55 of 160 floors to 34%.
 
 ## Step 1 (backend): schema, RLS, types, queries (branch step1-schema)
@@ -67,7 +67,7 @@ Doc differences
 
 ## Components v2: Final set (branch components-v2)
 Changed
-- Jeun adopted the "Final set" component design (2026-11-05). CLAUDE.md `<design>`, docs/UI.md (tokens, shape/shadow/gradient tokens, Components table, contrast notes) and docs/COPY.md (Final set strings) record it.
+- Jeun adopted the "Final set" component design (2026-11-05). docs/PRODUCT.md (was CLAUDE.md) `<design>`, docs/UI.md (tokens, shape/shadow/gradient tokens, Components table, contrast notes) and docs/COPY.md (Final set strings) record it.
 - Tokens: white, jellyLoading, fieldBorder, auroraAmber, auroraTeal; radius surface 24, banner 28; 7 shadow tokens; the aurora gradient. tokens.ts and the @theme block stay in sync (tokens.test.ts).
 - src/components/ui: Button (pill primary, loading, disabled with lock, secondary link with arrow), Card, Banner, Freshness, EmptyState, LoadingState updated. New: DomainField, AuroraButton, ProgressBar, Icon (inline lucide SVG paths, no icon library).
 - /dev/ui: new sections for DomainField, AuroraButton and ProgressBar, plus a "Final set" layout like the design. Screenshots: docs/qa/components-v2-375.png, docs/qa/components-v2-1280.png.
@@ -76,7 +76,7 @@ Doc differences
 - Rule change (Jeun 2026-11-05): primary buttons and fields are pills. Before: radius 8, pills only for badges.
 - Rule change (Jeun 2026-11-05): soft shadows from the shadow tokens only. Before: no drop shadows.
 - Rule change (Jeun 2026-11-05): one gradient, the aurora ring on the Google sign-in button. Before: no gradients.
-- Final set difference: the design file uses Open Sans and Space Grotesk. Kept Public Sans and Fraunces (CLAUDE.md product spec).
+- Final set difference: the design file uses Open Sans and Space Grotesk. Kept Public Sans and Fraunces (docs/PRODUCT.md product spec, was CLAUDE.md).
 - Final set difference: the design file fills buttons, fields, banners and cards with faint gradients (#2667DD→#1A5AC4, white→near-white). They are solid jellyDeep / white, so the aurora stays the only gradient.
 - Final set difference: loading button is solid jellyLoading #316FC5 (white 4.99:1), not jellyDeep at 85% opacity (4.29:1).
 - Final set difference: field edge is fieldBorder ink 50% (3.18:1, WCAG 1.4.11), not ink 10% (1.22:1).

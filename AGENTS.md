@@ -1,3 +1,5 @@
+Read README.md → Working Guidelines, and docs/PRODUCT.md, before every step.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 ## This is NOT the Next.js you know
