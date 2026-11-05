@@ -646,6 +646,9 @@ isOneToOne: false
 "dismiss_competitor":
 { Args: { "p": Json,"p_business_id": string }; Returns: string
                            },
+"enqueue_weekly_runs":
+{ Args: { "p_week_start": string }; Returns: Json
+                           },
 "ensure_self_serve_workspace":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
@@ -663,6 +666,9 @@ isOneToOne: false
                            },
 "my_landing":
 { Args: Record<PropertyKey, never>; Returns: string
+                           },
+"prune_ephemeral":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "record_fix_results":
 { Args: { "p_business_id": string,"p_results": Json,"p_run_id": string }; Returns: undefined
