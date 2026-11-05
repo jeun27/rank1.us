@@ -105,7 +105,7 @@ Table headers in the landing page's "What you see on Monday." mock panels. The p
 
 ## Team workspace (lead, 2026-11-05)
 
-Strings for the /team team workspace shell (ENG_HANDOFF_STEP2 §3). Nav labels are the 4b screen names; data in the panes is Example data.
+Strings for the /team team workspace shell (ENG_HANDOFF_STEP2 §3). Nav labels are the 4b screen names. Step 11: /team shows real DFY data; Example data only in the /dev/team gallery.
 
 | Where | String |
 |---|---|
@@ -114,12 +114,14 @@ Strings for the /team team workspace shell (ENG_HANDOFF_STEP2 §3). Nav labels a
 | Sidebar group | "Recents" |
 | Sidebar buttons (labels) | "Help", "Dark theme", "Collapse sidebar" |
 | Context pane | "Prompt template", "Copy context", "Copied", "Open in Claude" |
-| After Open in Claude | "Brief copied. Paste it in Claude if the box is empty." |
+| After Open in Claude | "Brief copied. Paste it in Claude." |
 | Clipboard blocked (either button) | "Couldn't copy. Allow clipboard access and try again." |
 | Pane divider (label) | "Resize panes" |
 | Document tabs | "Document", "New tab", "Close tab", "Expand", "Split" |
 | Phone tab bar | "Nav", "Context", "Document" |
-| Every pane | "Example data" |
+| Every pane (gallery only) | "Example data" |
+| Client switcher (Step 11) | "Client" (label), "Show" (submit) |
+| No DFY clients (Step 11) | "No clients yet." |
 
 ## Admin (lead, 2026-11-05)
 

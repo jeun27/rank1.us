@@ -216,3 +216,18 @@ test("sources location form: Show submits ?location= and the choice is kept; All
   await page.waitForURL((u) => u.searchParams.get("location") === "");
   await expect(page.getByLabel("Location")).toHaveValue("");
 });
+
+// QA #58: the fixes gallery's n is the Dashboard gallery's n (one run, one count).
+test("fixes gallery freshness n equals the Dashboard gallery n", async ({ page }) => {
+  const n = async (state: string) => {
+    await page.goto(`/dev/app?state=${state}`);
+    const t = await page
+      .getByText(/\d[\d,]* answers ·/)
+      .first()
+      .textContent();
+    return t?.match(/(\d[\d,]*) answers/)?.[1];
+  };
+  const dashboard = await n("dashboard-success");
+  expect(dashboard).toBeDefined();
+  expect(await n("fixes-success")).toBe(dashboard);
+});

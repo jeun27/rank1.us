@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import { authCopy as c } from "@/lib/auth/copy";
 import { expectAxeClean, expectNoSideScroll } from "./helpers/forms";
 import { admin, newUser, openMagicLink, workspacesOwnedBy } from "./helpers/auth";
+import { seedBusiness } from "./helpers/team";
 
 const path = (url: string) => {
   const u = new URL(url);
@@ -123,6 +124,7 @@ test("first self-serve sign-in makes one workspace with the user as owner and la
 
 test("a seeded team user lands on /team with no self-serve workspace", async ({ page }) => {
   test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
+  await seedBusiness("dfy", "Example DFY Ramen");
   const user = await newUser("team", "team");
   await openMagicLink(page, user.email, "/app/billing");
   expect(new URL(page.url()).pathname).toBe("/team");
@@ -171,6 +173,7 @@ test("sign out from the Account menu, then /app is closed again", async ({ page 
 
 test("a team user signs out from the workspace sidebar", async ({ page }) => {
   test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
+  await seedBusiness("dfy", "Example DFY Ramen");
   const user = await newUser("team-out", "team");
   await openMagicLink(page, user.email);
   if (page.viewportSize()!.width < 768) await page.getByRole("tab", { name: "Nav", exact: true }).click();

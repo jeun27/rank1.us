@@ -22,9 +22,31 @@ export function resultTarget(pathname: string): { kind: "run" | "audit"; key: st
   }
 }
 
+// /team?b=<id> streams too (Step 11): the client id, when the path is /team.
+export function teamClient(pathname: string, params: URLSearchParams): string | null {
+  return normalizePath(pathname) === "/team" ? params.get("b") || null : null;
+}
+
 // Paid runs are checked with the visitor's session (RLS), tokens with the service role (leads has
 // no reader). Exports are route handlers and 404 on their own.
-async function missingResult(pathname: string, supabase: ReturnType<typeof createServerClient>, signedIn: boolean) {
+async function missingResult(
+  pathname: string,
+  params: URLSearchParams,
+  supabase: ReturnType<typeof createServerClient>,
+  signedIn: boolean,
+) {
+  // A DFY client the signed-in team user can read (RLS); anything else is gone. Flag off: the placeholder.
+  const client = teamClient(pathname, params);
+  if (client && signedIn && process.env.ENABLE_TEAM_WORKSPACE === "true") {
+    const { data, error } = await supabase
+      .from("businesses")
+      .select("id")
+      .eq("id", client)
+      .eq("service", "dfy")
+      .is("archived_at", null)
+      .maybeSingle();
+    return Boolean(error) || !data;
+  }
   const target = resultTarget(pathname);
   if (target?.kind === "run" && signedIn) {
     const { data, error } = await supabase
@@ -84,7 +106,10 @@ export async function updateSession(request: NextRequest) {
 
   // getClaims verifies the JWT; nothing may run between createServerClient and this call.
   const { data } = await supabase.auth.getClaims();
-  if ((admin && !isFounder(data?.claims?.email)) || (await missingResult(pathname, supabase, Boolean(data?.claims)))) {
+  if (
+    (admin && !isFounder(data?.claims?.email)) ||
+    (await missingResult(pathname, request.nextUrl.searchParams, supabase, Boolean(data?.claims)))
+  ) {
     const hidden = notFound();
     response.cookies.getAll().forEach((c) => hidden.cookies.set(c));
     response = hidden;

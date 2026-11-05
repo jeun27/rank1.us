@@ -64,3 +64,15 @@ describe("proxy: /audit/<token>", () => {
     expect((await run("/audit/not-a-token")).status).toBe(404);
   });
 });
+
+// Step 11: /team?b=<id> streams too, so an unknown or non-DFY client must 404 before the page sends a 200.
+describe("teamClient: the ?b= of /team", () => {
+  it("returns the client id of /team only", async () => {
+    const { teamClient } = await import("@/lib/supabase/middleware");
+    expect(teamClient("/team", new URLSearchParams("b=abc-123"))).toBe("abc-123");
+    expect(teamClient("/Team/", new URLSearchParams("b=abc-123"))).toBe("abc-123");
+    expect(teamClient("/team", new URLSearchParams(""))).toBeNull();
+    expect(teamClient("/team", new URLSearchParams("b="))).toBeNull();
+    expect(teamClient("/app", new URLSearchParams("b=abc-123"))).toBeNull();
+  });
+});
