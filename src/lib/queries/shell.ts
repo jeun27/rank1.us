@@ -1,5 +1,6 @@
 import { ENGINE_IDS, type EngineId } from "@/lib/engines/types";
 import { metric } from "@/lib/metrics/compute";
+import type { Category } from "@/lib/runs/categorize";
 import type { Metric } from "@/types/metrics";
 import type { DbClient } from "./client";
 
@@ -129,7 +130,8 @@ export type QuestionAnswer = {
   location_used: string | null;
   location_supported: "exact" | "fallback_country" | null;
   checked_at: string;
-  citations: { url: string; domain: string; title: string | null; position: number }[];
+  // Only links the engine returned; category from the rules or a manual override (Step 6).
+  citations: { url: string; domain: string; title: string | null; position: number; category: Category | null }[];
 };
 
 export type QuestionWithAnswers = {
@@ -181,7 +183,7 @@ export async function getQuestionsWithLatestAnswers(
     const { data, error } = await db
       .from("answers")
       .select(
-        "question_id, engine, run_index, status, mentioned, text, location_used, location_supported, checked_at, citations(url, domain, title, position)",
+        "question_id, engine, run_index, status, mentioned, text, location_used, location_supported, checked_at, citations(url, domain, title, position, category)",
       )
       .eq("run_id", latest.data.id)
       .not("question_id", "is", null)
@@ -233,7 +235,13 @@ export async function listCompetitors(
     .order("name")
     .order("id");
   if (error) throw error;
-  const row = ({ hidden: _hidden, ...c }: (typeof data)[number]) => c as CompetitorRow;
+  const row = (c: (typeof data)[number]): CompetitorRow => ({
+    id: c.id,
+    name: c.name,
+    domain: c.domain,
+    source: c.source as CompetitorRow["source"],
+    rating: c.rating,
+  });
   return { tracked: data.filter((c) => !c.hidden).map(row), dismissed: data.filter((c) => c.hidden).map(row) };
 }
 
