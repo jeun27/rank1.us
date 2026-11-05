@@ -124,7 +124,8 @@ async function readCapped(res: Response, ctrl: AbortController): Promise<string 
   return new TextDecoder().decode(Buffer.concat(chunks));
 }
 
-type Page = { status: number; type: string; body: string };
+export type SitePage = { url: string; status: number; type: string; body: string };
+type Page = SitePage;
 
 // GET with a timeout and a size cap. Follows same-site redirects only (www and http/https variants).
 async function get(
@@ -150,7 +151,9 @@ async function get(
         continue;
       }
       const body = await readCapped(res, ctrl);
-      return body === null ? null : { status: res.status, type: res.headers.get("content-type") ?? "", body };
+      return body === null
+        ? null
+        : { url: url.toString(), status: res.status, type: res.headers.get("content-type") ?? "", body };
     } catch {
       return null;
     } finally {
@@ -160,8 +163,10 @@ async function get(
   return null;
 }
 
-// robots.txt rules for Rank1 (its own group if present, else '*'). Longest match wins; Allow wins ties.
-export function robotsAllows(robots: string, path: string): boolean {
+// robots.txt rules for an agent (Rank1 by default): its own group if present, else '*'. Longest match
+// wins; Allow wins ties.
+export function robotsAllows(robots: string, path: string, agent = "rank1"): boolean {
+  const me = agent.toLowerCase();
   const groups: { agents: string[]; rules: { allow: boolean; path: string }[] }[] = [];
   let current: (typeof groups)[number] | null = null;
   for (const line of robots.split(/\r?\n/)) {
@@ -175,7 +180,7 @@ export function robotsAllows(robots: string, path: string): boolean {
       current.rules.push({ allow: key === "allow", path: m[2] });
     }
   }
-  const mine = groups.filter((g) => g.agents.some((a) => a !== "*" && "rank1".startsWith(a)));
+  const mine = groups.filter((g) => g.agents.some((a) => a !== "*" && me.startsWith(a)));
   const rules = (mine.length ? mine : groups.filter((g) => g.agents.includes("*"))).flatMap((g) => g.rules);
   let best: { allow: boolean; len: number } = { allow: true, len: -1 };
   for (const r of rules) {
@@ -235,33 +240,88 @@ export function matchCuisine(text: string): string | undefined {
   return best?.cuisine;
 }
 
-const isHtml = (p: Page | null): p is Page => !!p && p.status >= 200 && p.status < 300 && /html/i.test(p.type);
+export type RobotsState = { status: "ok" | "missing" | "error"; text: string };
 
-// Reads the home page and /menu (robots.txt respected) for a name and a cuisine. No LLM; never throws.
-export async function readSite(domain: string, deps: ReadSiteDeps = {}): Promise<SiteRead> {
+export type SiteFetcher = {
+  host: string;
+  base: URL;
+  robots: RobotsState;
+  // Rank1's own robots rules for a path (missing or failed robots.txt = allow all).
+  allowed: (path: string) => boolean;
+  // A same-site page through the guard, cached; null when blocked, failed or over budget.
+  page: (pathOrUrl: string) => Promise<SitePage | null>;
+  used: () => { requests: number; exhausted: boolean };
+};
+
+export type FetcherOptions = ReadSiteDeps & { maxRequests?: number; budgetMs?: number; now?: () => number };
+
+// The guarded fetcher readSite and the fix checks share: SSRF/DNS guard, same-site redirects, size
+// cap, per-request timeout, Rank1 UA, robots.txt obeyed, plus an optional request and time budget.
+export async function createSiteFetcher(domain: string, opts: FetcherOptions = {}): Promise<SiteFetcher | null> {
   const host = siteHost(domain);
-  if (!host) return { status: "unreadable" };
+  if (!host) return null;
   const d: Required<ReadSiteDeps> = {
-    fetch: deps.fetch ?? fetch,
-    lookup: deps.lookup ?? ((h) => dnsLookup(h, { all: true })),
-    timeoutMs: deps.timeoutMs ?? TIMEOUT_MS,
+    fetch: opts.fetch ?? fetch,
+    lookup: opts.lookup ?? ((h) => dnsLookup(h, { all: true })),
+    timeoutMs: opts.timeoutMs ?? TIMEOUT_MS,
   };
+  const now = opts.now ?? Date.now;
+  const started = now();
   const ok = new Map<string, Promise<boolean>>();
   const lookupOk = (h: string) => {
     if (!ok.has(h)) ok.set(h, publicHost(h, d.lookup));
     return ok.get(h)!;
   };
+  let requests = 0;
+  let exhausted = false;
+  const spend = () => {
+    if (requests >= (opts.maxRequests ?? Infinity) || now() - started >= (opts.budgetMs ?? Infinity)) {
+      exhausted = true;
+      return false;
+    }
+    requests++;
+    return true;
+  };
   const base = new URL(`https://${host}/`);
-  const robots = await get(new URL("/robots.txt", base), d, lookupOk);
-  const rules = robots && robots.status >= 200 && robots.status < 300 ? robots.body : "";
-  if (!robotsAllows(rules, "/")) return { status: "unreadable" };
-  const home = await get(base, d, lookupOk);
-  if (!isHtml(home)) return { status: "unreadable" };
-  const menu = robotsAllows(rules, "/menu") ? await get(new URL("/menu", base), d, lookupOk) : null;
+  const r = spend() ? await get(new URL("/robots.txt", base), d, lookupOk) : null;
+  const robots: RobotsState =
+    r && r.status >= 200 && r.status < 300
+      ? { status: "ok", text: r.body }
+      : r && r.status >= 400 && r.status < 500
+        ? { status: "missing", text: "" }
+        : { status: "error", text: "" };
+  const allowed = (path: string) => robotsAllows(robots.text, path);
+  const cache = new Map<string, Promise<SitePage | null>>();
+  const page = (pathOrUrl: string) => {
+    let url: URL;
+    try {
+      url = new URL(pathOrUrl, base);
+    } catch {
+      return Promise.resolve(null);
+    }
+    url.hash = "";
+    const key = url.toString();
+    if (bare(url.hostname) !== bare(host) || !allowed(url.pathname + url.search)) return Promise.resolve(null);
+    if (!cache.has(key)) cache.set(key, spend() ? get(url, d, lookupOk) : Promise.resolve(null));
+    return cache.get(key)!;
+  };
+  return { host, base, robots, allowed, page, used: () => ({ requests, exhausted }) };
+}
+
+export const isHtmlPage = (p: SitePage | null): p is SitePage =>
+  !!p && p.status >= 200 && p.status < 300 && /html/i.test(p.type);
+
+// Reads the home page and /menu (robots.txt respected) for a name and a cuisine. No LLM; never throws.
+export async function readSite(domain: string, deps: ReadSiteDeps = {}): Promise<SiteRead> {
+  const f = await createSiteFetcher(domain, deps);
+  if (!f || !f.allowed("/")) return { status: "unreadable" };
+  const home = await f.page("/");
+  if (!isHtmlPage(home)) return { status: "unreadable" };
+  const menu = await f.page("/menu");
   const text = [
     meta(home.body, "description") ?? "",
     pageText(home.body),
-    isHtml(menu) ? pageText(menu.body) : "",
+    isHtmlPage(menu) ? pageText(menu.body) : "",
   ].join(" ");
   const name = siteName(home.body);
   const cuisine = matchCuisine(text);

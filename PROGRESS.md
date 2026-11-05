@@ -476,20 +476,6 @@ Changed
 - PRODUCT.md rule 3: Competitors phone cards now show "{pct} (named in a of n answers)" like the desktop table. Competitors has the Freshness line ("Checked … ago · n answers · API-measured, directional") at both widths. History carries "API-measured, directional" once (its rows have their own dates).
 - A shared Measured component (src/components/app/Page.tsx) renders the Freshness line when there is one check time, and the label alone otherwise. Step 9's Sources page reuses it.
 
-## Step 9 (data-pipeline): per-engine sources and location view (branch feat/step9-sources, issue #42)
-Step 9 built from ENG_HANDOFF_OVERNIGHT §6 + PRODUCT.md + docs/UI.md; Build Pack not readable; reconcile later.
-Lead decisions (Step 9 brief): /app/sources reads the latest complete/partial audit/weekly run. One card per engine with cited links by category (counts, never %), categories from citations.category only. Top domains ≤20. A location selector ("All locations" + each question target) filters the chart and the table. An engine's badge is "Country fallback" if any answer fell back. No SoV and no percentages on the page.
-
-Changed
-- src/lib/metrics/sources.ts computeSources({questions, location?}) over getQuestionsWithLatestAnswers' questions:
-  - links = citations of ok answers as stored (deduped per answer); deleted questions are already excluded by the query; a null/unknown category → other;
-  - engines in ENGINE_IDS order with all 6 categories in a fixed order (0s kept);
-  - locationSupport from that engine's non-failed answers: any fallback_country → fallback, all exact → exact, none → null;
-  - topDomains by bare domain (most-cited category, ties by the fixed order; engines in order), sorted by links desc then domain, ≤20;
-  - locations from questions with answers: key `level:country|state|city` (fields above the level dropped).
-- Labels match the Questions page badge (#40): "City", "State", "Country". Only when two targets share a level is the place added ("City · Irvine, CA"). An unknown location key → an empty result, never everything.
-- citations.category on getQuestionsWithLatestAnswers came from backend #43 (a57fbdf), merged into this branch.
-
 ## Step 10 (backend): fix results and status (branch feat/step10-fix-results, issue #48)
 - Step 10 built from ENG_HANDOFF_OVERNIGHT §4/§6 + SCHEMA.md §5b; Build Pack not readable; A1–A6 seeded disabled; reconcile later.
 - Lead decisions:
@@ -526,6 +512,25 @@ Step 9 built from ENG_HANDOFF_OVERNIGHT §6 + PRODUCT.md + docs/UI.md; Build Pac
   - Solid: Reddit jellyDeep, YouTube amber, Review sites jelly, News and blogs warnText. These four pass every pair.
   - Striped (45° SVG texture; CSS gradients are aurora-only): Social jellyDeep, Other inkMuted (neutral). Texture tells them from the solid fills, and the two striped fills pass separation from each other (ΔE 16.8).
   - Every segment's count is also shown as text under its bar.
+## Step 10 (data-pipeline): site checks R10, R11, R14 and H1 (branch feat/step10-site-checks)
+Step 10 built from ENG_HANDOFF_OVERNIGHT §4/§6 + SCHEMA.md §5b; Build Pack not readable; A1–A6 seeded disabled; reconcile later.
+Lead decisions (Step 10 brief): detectors only for the enabled rules R10, R11, R14 and H1, using our own fetch, with no paid calls and no LLM. Detection runs once per paid run after it closes complete/partial, from the cron drain, never for free audits. No domain → every site rule is unchecked. fix = upsert, ok = auto-resolve, unchecked = leave as is. R14 fixes only for OAI-SearchBot and PerplexityBot; GPTBot and Google-Extended are info only.
+- Time budget (lead): at most 1 run per cron tick, a 45 s crawl budget, started only with ≥60 s left of the cron route's maxDuration (300 s).
+- R10 no-menu case: reconcile with Build Pack. No menu page, or an ambiguous HTML menu (<5 prices and <3 images) → unchecked, reason menu_not_found / menu_ambiguous. No new copy.
+
+Changed
+- src/lib/onboarding/read-site.ts: createSiteFetcher(domain, {maxRequests, budgetMs}), readSite's guarded fetcher (SSRF/DNS guard, same-site redirects, 1 MB, 10 s, Rank1 UA, robots obeyed), plus page caching, a request/time budget, the final page URL, and robots status ok | missing | error. robotsAllows(text, path, agent = "rank1"). readSite now uses the fetcher, with the same behavior.
+- src/lib/fixes:
+  - R10 (menu link by text/href, else /menu; PDF/image by href or content-type; ≥5 prices = a text menu);
+  - R11 (dish names = text before the first price; ≤20 same-site pages; covered = in H1–H3 or FAQ text incl. FAQPage/Question/Answer JSON-LD; first 5 uncovered in the copy);
+  - R14 (each bot's group else *, "/" and "/menu");
+  - H1 (Restaurant / FoodEstablishment family / Menu JSON-LD or hasMenu on home + menu);
+  - evaluateFixes (R10, R11, R14, H1 order; unchecked reasons no_domain, robots_disallowed, site_unreachable, robots_unreachable, menu_not_found, menu_ambiguous, no_html_menu, error);
+  - checkFixesForOneRun (cron.ts): always records every enabled rule per run (an evaluate error → unchecked rows, reason error), so with backend's fix_checks marker no run is retried every tick.
+- Re-crawl guards (lead, 2026-11-05): (1) the enabled rules are read from fix_rules at run time (service role), and only those are evaluated and recorded; the R11 crawl is skipped when R11 is off. (2) If record_fix_results fails (e.g. 22023 after a rule was disabled), it retries once in the same tick with every enabled rule unchecked 'error' and no new crawl, so the run gets marked.
+- The copy templates are the SCHEMA §5b customer copy verbatim (a test reads docs/SCHEMA.md); detail is set only for fix.
+- Wiring (after #50): src/lib/fixes/service.ts reads fix_rules.enabled (service role) and uses listRunsNeedingFixChecks(db, 1) and recordFixResults. GET /api/cron/run-jobs runs it after the drain and notify, with time left = maxDuration (300 s) − elapsed since the request started, and returns `fixes`.
+- PROGRESS.md: the duplicate "## Step 9 (data-pipeline)" section on main (a merge leftover) is merged into one copy, with no line dropped.
 
 ## Step 10 (frontend): What to fix next page (branch feat/step10-fixes-page, issue #48)
 
