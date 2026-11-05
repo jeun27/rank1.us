@@ -50,10 +50,10 @@ describe("BusinessSwitcher", () => {
     expect(within(list).getAllByText("34% · 250 answers")).toHaveLength(2);
     expect(within(list).getAllByText("Irvine")).toHaveLength(2);
     expect(within(list).getByText("Paused")).toBeInTheDocument();
-    await userEvent.click(within(list).getByRole("button", { name: /Example Business 2/ }));
-    expect(p.actions.select).toHaveBeenCalledWith("b2");
-    expect(screen.getByText("Need 10+ businesses or done-for-you?")).toBeInTheDocument();
+    expect(screen.getByText("Need 10+ businesses or done-for-you?", { exact: false })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Contact us." })).toHaveAttribute("href", "/contact");
+    await userEvent.click(within(list).getByRole("button", { name: /^Example Business 2/ }));
+    expect(p.actions.select).toHaveBeenCalledWith("b2");
   });
 
   it("search shows only with more than 8 businesses, and filters by name", async () => {
@@ -65,8 +65,8 @@ describe("BusinessSwitcher", () => {
     await userEvent.click(screen.getByRole("button", { name: "Example Ramen House ▾" }));
     await userEvent.type(screen.getByLabelText("Search businesses"), "Business 9");
     const list = screen.getByRole("list", { name: "Business switcher" });
-    expect(within(list).getAllByRole("button", { name: /Example Business 9/ })).toHaveLength(1);
-    expect(within(list).queryByRole("button", { name: /Example Ramen House/ })).toBeNull();
+    expect(within(list).getAllByRole("button", { name: /^Example Business 9/ })).toHaveLength(1);
+    expect(within(list).queryByRole("button", { name: /^Example Ramen House/ })).toBeNull();
   });
 
   it("Add: the exact dialog, then 'Adding your business…' until the seat lands, then onboarding", async () => {
@@ -83,7 +83,7 @@ describe("BusinessSwitcher", () => {
     await userEvent.click(within(dialog).getByRole("button", { name: "Add business" }));
     expect(p.actions.add).toHaveBeenCalledTimes(1);
     expect(await screen.findByText("Adding your business…")).toBeInTheDocument();
-    await act(async () => vi.advanceTimersByTime(4100));
+    await act(async () => vi.advanceTimersByTimeAsync(4100));
     expect(push).toHaveBeenCalledWith("/app/onboarding");
   });
 
@@ -94,7 +94,7 @@ describe("BusinessSwitcher", () => {
     await userEvent.click(screen.getByRole("button", { name: "+ Add a business ($99/mo)" }));
     vi.useFakeTimers({ shouldAdvanceTime: true });
     await userEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Add business" }));
-    await act(async () => vi.advanceTimersByTime(31_000));
+    await act(async () => vi.advanceTimersByTimeAsync(31_000));
     expect(screen.getByText("Adding your business…")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
     expect(screen.queryByRole("alert")).toBeNull();

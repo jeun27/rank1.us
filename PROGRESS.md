@@ -667,3 +667,17 @@ Changed
 - /api/cron/run-jobs 500: {error: "claim_failed"} with only the PG code logged (was `claim_jobs: <DB message>`). Test changed with reason: cron-route.test.ts expects the new body and checks that the log has no DB text; same strictness, new expected body (lead).
 - vercel.json crons adds {path: "/api/cron/weekly", schedule: "0 13,14 * * 1"}; vercel-config.test.ts pins both crons.
 - src/app/api/cron/weekly/route.ts (maxDuration 60): 401 unless authorized; outside the window → 200 {skipped: "outside_window"} without creating a DB client; inside → enqueueWeeklyRuns + pruneEphemeral (service client, backend #0017) via runWeekly.
+
+## Step 14 (frontend): billing page and business switcher (branch feat/step14-billing-ui)
+
+- Step 14 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b. The Build Pack isn't readable, so reconcile later.
+- Lead decisions: hosted Checkout and Customer Portal (server actions redirect; no publishable key); quantity = active self-serve businesses; the webhook is the source of truth; amounts in the UI are only the UI.md x $99 math.
+- BillingView: no plan (null/canceled/incomplete) → the Pricing card + 'Start for $99/mo' (Checkout); past_due → the failed banner + 'Update card' (portal) + the "Past due" badge; unpaid → the failed banner + 'Update card'; active/trialing → "Plan", "{n} businesses x $99 = ${n×99}/mo", "Next invoice {date}", 'Manage billing' (portal, spinner while opening). Plus loading and error.
+- BusinessSwitcher (header): the name only with 1 business. Otherwise:
+  - a popover (bottom sheet on phones, 56px rows): name, city, '34% · 250 answers', and a moss/brick status dot with "Active"/"Paused" for screen readers;
+  - max height 360, search over 8;
+  - '+ Add a business ($99/mo)' and the agency caption;
+  - "More for {name}" → 'Remove business'.
+  The Add and Remove dialogs use the exact UI.md text (Dialog: focus in, Tab trapped, Esc, focus returns).
+- Add: actions.add (quantity +1 with default proration, or Checkout when unpaid). Then it polls seats every 2 s until seats_quantity rises → /app/onboarding. After 30 s it keeps "Adding your business…" with "Try again" and no error (lead).
+- Lead copy in COPY.md "Billing (lead, 2026-11-05)".

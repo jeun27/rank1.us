@@ -38,7 +38,7 @@ test("phones: the switcher is a bottom sheet with 56px rows; wide screens: a pop
   await page.goto("/dev/app?state=switcher-many");
   await page.getByRole("button", { name: "Example Ramen House ▾" }).click();
   const list = page.getByRole("list", { name: "Business switcher" });
-  const rows = list.getByRole("button", { name: /Example/ });
+  const rows = list.getByRole("button", { name: /^Example/ });
   for (const r of await rows.all()) expect((await r.boundingBox())!.height).toBeGreaterThanOrEqual(56);
   const panel = await page.getByTestId("switcher-panel").boundingBox();
   const vp = page.viewportSize()!;
