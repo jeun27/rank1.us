@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { admin, newUser, openMagicLink } from "./helpers/auth";
+import { seedBusiness } from "./helpers/team";
 
 // Step 11: /team on real data, read through RLS. Needs the local stack's service-role key to seed.
 test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
@@ -14,25 +15,6 @@ const must = <T>(r: { data: T; error: unknown }): NonNullable<T> => {
   if (r.error) throw r.error;
   return r.data as NonNullable<T>;
 };
-
-// A workspace with one active business (DFY or self-serve) owned by a fresh user.
-async function seedBusiness(service: "dfy" | "self_serve", name: string) {
-  const owner = await newUser(`owner-${service}`);
-  const ws = must(
-    await admin()
-      .from("workspaces")
-      .insert({ name: "Example Workspace", owner_id: owner.id, subscription_status: "active", seats_quantity: 1 })
-      .select("id")
-      .single(),
-  );
-  return must(
-    await admin()
-      .from("businesses")
-      .insert({ workspace_id: ws.id, name, service, domain: "exampleramen.test" })
-      .select("id")
-      .single(),
-  ).id;
-}
 
 test("team sees a DFY client on real data, writes its fix status, and never a self-serve business", async ({
   page,
