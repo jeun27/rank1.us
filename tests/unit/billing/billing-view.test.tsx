@@ -13,8 +13,9 @@ const paid = { status: "active" as const, seats: 2, nextInvoiceAt: "2026-12-01T0
 
 // UI.md 4b "Billing + switcher". Amounts are the x $99 math, never fetched from Stripe.
 describe("BillingView (/app/billing)", () => {
-  it.each([null, "canceled", "incomplete", "incomplete_expired"] as const)(
-    "no plan (%s): 'Start for $99/mo' opens Checkout",
+  // Lead (#74 review): Checkout only without a live subscription.
+  it.each([null, "canceled", "incomplete_expired"] as const)(
+    "no live subscription (%s): 'Start for $99/mo' opens Checkout",
     async (status) => {
       const a = actions();
       render(<BillingView billing={{ status, seats: 0, nextInvoiceAt: null }} actions={a} />);
@@ -58,6 +59,27 @@ describe("BillingView (/app/billing)", () => {
     expect(screen.getByText("Your last payment failed. Weekly checks are paused.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Update card" })).toBeInTheDocument();
     expect(screen.queryByText("Past due")).toBeNull();
+  });
+
+  it.each(["incomplete", "past_due", "unpaid"] as const)(
+    "%s: never a second Checkout; 'Update card' opens the portal",
+    async (status) => {
+      const a = actions();
+      render(<BillingView billing={{ ...paid, status }} actions={a} />);
+      expect(screen.queryByRole("button", { name: "Start for $99/mo" })).toBeNull();
+      await userEvent.click(screen.getByRole("button", { name: "Update card" }));
+      expect(a.portal).toHaveBeenCalledTimes(1);
+      expect(a.checkout).not.toHaveBeenCalled();
+    },
+  );
+
+  it("paused: 'Manage billing' (portal), no Checkout", async () => {
+    const a = actions();
+    render(<BillingView billing={{ ...paid, status: "paused" }} actions={a} />);
+    expect(screen.queryByRole("button", { name: "Start for $99/mo" })).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: "Manage billing" }));
+    expect(a.portal).toHaveBeenCalledTimes(1);
+    expect(a.checkout).not.toHaveBeenCalled();
   });
 
   it("Checkout or portal failure: 'We couldn't open billing. Try again in a minute.'", async () => {
