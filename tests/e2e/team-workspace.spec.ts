@@ -4,10 +4,8 @@ import AxeBuilder from "@axe-core/playwright";
 import { buildWorkspace } from "@/lib/queries/workspace";
 import { buildBrief, CLAUDE_URL, contextFor } from "@/lib/workspace/context";
 import { exampleWorkspaceRows } from "@/app/team/example-data";
-import { newUser, openMagicLink } from "./helpers/auth";
-
-// Every test here signs in a seeded team user, which needs the local stack's service-role key.
-test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
+// The 3-pane workspace on Example data: the /dev/team gallery (404 in production). /team itself runs on real
+// data behind sign-in; tests/e2e/team-real.spec.ts covers it (Step 11).
 
 const NOW = new Date("2026-11-05T12:00:00Z");
 const view = buildWorkspace(exampleWorkspaceRows());
@@ -17,13 +15,10 @@ const BG = { light: "rgb(247, 244, 238)", dark: "rgb(11, 11, 12)" };
 
 const isMobile = (page: Page) => page.viewportSize()!.width < 768;
 
-// /team is for signed-in team users: sign one in through the emailed-link callback.
 async function open(page: Page, theme: (typeof THEMES)[number]) {
   await page.clock.setFixedTime(NOW);
   await page.emulateMedia({ colorScheme: theme });
-  const user = await newUser("team", "team");
-  await openMagicLink(page, user.email);
-  await expect(page).toHaveURL(/\/team$/);
+  await page.goto("/dev/team");
   await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
 }
 
@@ -44,7 +39,7 @@ const axeClean = async (page: Page) => {
 };
 
 for (const theme of THEMES) {
-  test(`/team ${theme}: 3 landmarks, one H1, Example data, axe clean`, async ({ page }, info) => {
+  test(`/dev/team ${theme}: 3 landmarks, one H1, Example data, axe clean`, async ({ page }, info) => {
     await open(page, theme);
     expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe(BG[theme]);
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
@@ -96,7 +91,7 @@ test("/app is not the team workspace (reserved for owners); the team nav is dark
   }
 });
 
-test("Copy context writes the dashboard brief Markdown; Open in Claude copies it and opens ?q=", async ({
+test("Copy context writes the dashboard brief Markdown; Open in Claude copies it and opens exactly claude.ai", async ({
   page,
   context,
 }) => {
@@ -116,7 +111,7 @@ test("Copy context writes the dashboard brief Markdown; Open in Claude copies it
   const [popup] = await Promise.all([context.waitForEvent("page"), link.click()]);
   expect(popup.url()).toBe("https://claude.ai/");
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(dashboardBrief);
-  await expect(page.getByRole("status")).toHaveText("Brief copied. Paste it in Claude if the box is empty.");
+  await expect(page.getByRole("status")).toHaveText("Brief copied. Paste it in Claude.");
 });
 
 test("the prompt template is added to the brief; nothing calls a model", async ({ page, context }) => {
@@ -241,8 +236,7 @@ test("tap targets are at least 44px", async ({ page }) => {
 
 test("reduced motion turns pane and tab transitions off", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await openMagicLink(page, (await newUser("team", "team")).email);
-  await expect(page).toHaveURL(/\/team$/);
+  await page.goto("/dev/team");
   const durations = await page.locator("[data-motion]").evaluateAll((els) =>
     els.map((e) => {
       const cs = getComputedStyle(e);
@@ -303,4 +297,24 @@ test("every visible string, aria-label and title is in docs/COPY.md (data exclud
   const inCopy = (v: string) =>
     new RegExp(`(^|[^a-z0-9])${v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^a-z0-9]|$)`).test(COPY);
   expect([...seen].filter((v) => v && !inCopy(v))).toEqual([]);
+});
+
+test("no DFY clients: one H1 and the empty state, axe clean, dark nav", async ({ page }) => {
+  await page.goto("/dev/team?state=no-clients");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+  await expect(page.getByText("No clients yet.", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Client")).toHaveCount(0);
+  await axeClean(page);
+});
+
+test("the gallery's Fix list is the shared FixList with a Status select per fix", async ({ page }) => {
+  await open(page, "light");
+  await show(page, "Nav");
+  await navTo(page, "Fix list");
+  await show(page, "Document");
+  const panel = page.getByRole("tabpanel");
+  await expect(panel.getByRole("region", { name: "Tidy-ups" })).toBeVisible();
+  await expect(panel.getByLabel("Status").first()).toBeVisible();
+  await expect(page.locator("nav").getByRole("button", { name: "Experiments", exact: true })).toHaveCount(0);
+  await axeClean(page);
 });
