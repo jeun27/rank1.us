@@ -81,6 +81,19 @@ describe("Sources (UI.md 4b)", () => {
     expect(select).toHaveValue(sources.locations[0].key);
   });
 
+  it("rule 3: the freshness line with n and 'API-measured, directional' under the H1", () => {
+    render(
+      <SourcesView
+        sources={sources}
+        location={undefined}
+        checkedAt="2026-11-02T14:40:00Z"
+        answers={38}
+        now={new Date("2026-11-05T14:40:00Z")}
+      />,
+    );
+    expect(screen.getByText("Checked 3 d ago · 38 answers · API-measured, directional")).toBeInTheDocument();
+  });
+
   it("uses only strings that are in docs/COPY.md", () => {
     const md = readFileSync("docs/COPY.md", "utf8");
     const strings = Object.values(sourcesCopy).flatMap((v) =>

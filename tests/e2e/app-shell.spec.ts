@@ -86,6 +86,8 @@ test("rule 3 on Competitors (both widths) and History", async ({ page }) => {
   await expect(page.getByText(/Checked .* ago · \d+ answers · API-measured, directional/)).toBeVisible();
   await page.goto("/dev/app?state=history-success");
   await expect(page.getByText("API-measured, directional", { exact: true })).toBeVisible();
+  await page.goto("/dev/app?state=sources-success");
+  await expect(page.getByText(/Checked .* ago · \d+ answers · API-measured, directional/)).toBeVisible();
 });
 
 test("tap targets are at least 44px on every page", async ({ page }) => {
