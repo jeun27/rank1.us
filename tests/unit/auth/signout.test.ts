@@ -13,9 +13,22 @@ const post = (headers: Record<string, string | undefined>) =>
     }),
   );
 
-beforeEach(() => signOut.mockReset());
+beforeEach(() => {
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "http://sb.test");
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon");
+  signOut.mockReset();
+});
 
 describe("POST /auth/signout", () => {
+  it("sends to /signin?error=config instead of a 500 when the Supabase env is missing", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "");
+    const res = await post({ "sec-fetch-site": "same-origin" });
+    expect(res.status).toBe(303);
+    const to = new URL(res.headers.get("location")!);
+    expect(to.pathname + to.search).toBe("/signin?error=config");
+    expect(signOut).not.toHaveBeenCalled();
+  });
+
   it.each([{ "sec-fetch-site": "same-origin" }, { origin: "http://localhost:3000" }])(
     "signs out a same-origin request (%o) and goes to /signin",
     async (h) => {

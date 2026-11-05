@@ -6,6 +6,9 @@ import { buildBrief, claudeUrl, contextFor } from "@/lib/workspace/context";
 import { exampleWorkspaceRows } from "@/app/team/example-data";
 import { newUser, openMagicLink } from "./helpers/auth";
 
+// Every test here signs in a seeded team user, which needs the local stack's service-role key.
+test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
+
 const NOW = new Date("2026-11-05T12:00:00Z");
 const view = buildWorkspace(exampleWorkspaceRows());
 const dashboardBrief = buildBrief(contextFor(view, { kind: "section", section: "dashboard" }), NOW);

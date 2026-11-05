@@ -2,6 +2,7 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { landingPath, safeNext } from "@/lib/auth/next";
 import { ensureSelfServeWorkspace, getLanding } from "@/lib/queries/auth";
+import { supabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
 const EMAIL_TYPES: EmailOtpType[] = ["magiclink", "email", "signup", "invite"];
@@ -17,6 +18,7 @@ export async function GET(request: NextRequest) {
   const fail = () =>
     go(`/signin?error=${viaEmail ? "link" : "google"}${next ? `&next=${encodeURIComponent(next)}` : ""}`);
 
+  if (!supabaseEnv()) return go("/signin?error=config");
   const db = await createClient();
   const code = q.get("code");
   let signedIn = false;

@@ -21,6 +21,8 @@ const call = async (qs: string) => {
 };
 
 beforeEach(() => {
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "http://sb.test");
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon");
   vi.clearAllMocks();
   auth.exchangeCodeForSession.mockResolvedValue({ error: null });
   auth.verifyOtp.mockResolvedValue({ error: null });
@@ -29,6 +31,15 @@ beforeEach(() => {
 });
 
 describe("/auth/callback", () => {
+  it.each([["NEXT_PUBLIC_SUPABASE_URL"], ["NEXT_PUBLIC_SUPABASE_ANON_KEY"]])(
+    "sends to /signin?error=config instead of a 500 when %s is missing",
+    async (name) => {
+      vi.stubEnv(name, "");
+      expect(await call("?code=abc&next=%2Fapp%2Fbilling")).toBe("/signin?error=config");
+      expect(auth.exchangeCodeForSession).not.toHaveBeenCalled();
+    },
+  );
+
   it("exchanges a code, makes the self-serve workspace, then routes by landing", async () => {
     expect(await call("?code=abc")).toBe("/app/onboarding");
     expect(auth.exchangeCodeForSession).toHaveBeenCalledWith("abc");

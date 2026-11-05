@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { PillField } from "@/components/forms/PillField";
+import { AuroraButton } from "@/components/ui/AuroraButton";
 import { Banner } from "@/components/ui/Banner";
 import { Button } from "@/components/ui/Button";
 import { authCopy as c } from "@/lib/auth/copy";
@@ -81,9 +82,9 @@ export function SignInForm({ next, error }: { next: string | null; error?: "goog
   return (
     <div className="flex flex-col gap-6">
       {notice && <Banner tone={notice.tone}>{notice.text}</Banner>}
-      <Button onClick={google} loading={opening} className="w-full">
+      <AuroraButton onClick={google} loading={opening} className="w-full">
         {opening ? c.openingGoogle : c.google}
-      </Button>
+      </AuroraButton>
       <form noValidate onSubmit={emailLink} className="flex flex-col gap-3">
         <PillField label={c.emailLabel} name="email" type="email" autoComplete="email" error={emailError} />
         <Button type="submit" variant="secondary" disabled={sending} className="self-start">

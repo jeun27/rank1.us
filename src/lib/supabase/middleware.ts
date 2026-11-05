@@ -1,14 +1,14 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isProtected, signInPath } from "@/lib/auth/next";
+import { supabaseEnv } from "./env";
 
 // Refreshes the session cookie on every request and sends signed-out visitors of /app, /team and /client to /signin.
 export async function updateSession(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  // Supabase not connected (createServerClient would throw): public pages still work, app areas stay closed.
-  if (!url || !key)
+  const env = supabaseEnv();
+  // Supabase not connected: public pages still work, app areas stay closed.
+  if (!env)
     return isProtected(pathname)
       ? NextResponse.redirect(new URL(signInPath(pathname, search), request.url))
       : NextResponse.next({ request });

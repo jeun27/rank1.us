@@ -93,6 +93,7 @@ test("an expired email link comes back to /signin with the link banner", async (
 test("first self-serve sign-in makes one workspace with the user as owner and lands on onboarding", async ({
   page,
 }) => {
+  test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
   const user = await newUser("selfserve");
   await openMagicLink(page, user.email);
   expect(new URL(page.url()).pathname).toBe("/app/onboarding");
@@ -108,6 +109,7 @@ test("first self-serve sign-in makes one workspace with the user as owner and la
 });
 
 test("a seeded team user lands on /team with no self-serve workspace", async ({ page }) => {
+  test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
   const user = await newUser("team", "team");
   await openMagicLink(page, user.email, "/app/billing");
   expect(new URL(page.url()).pathname).toBe("/team");
@@ -117,6 +119,7 @@ test("a seeded team user lands on /team with no self-serve workspace", async ({ 
 });
 
 test("a seeded dfy_client lands on /client", async ({ page }) => {
+  test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
   const user = await newUser("dfy", "dfy_client");
   await openMagicLink(page, user.email);
   expect(new URL(page.url()).pathname).toBe("/client");
@@ -126,6 +129,7 @@ test("a seeded dfy_client lands on /client", async ({ page }) => {
 });
 
 test("Start for $99/mo goes through sign-in to the billing paywall stub", async ({ page }) => {
+  test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
   await page.goto("/");
   await page.locator("#pricing").getByRole("link", { name: "Start for $99/mo" }).click();
   await page.waitForURL(/\/signin/);
@@ -142,6 +146,7 @@ test("Start for $99/mo goes through sign-in to the billing paywall stub", async 
 });
 
 test("sign out from the Account menu, then /app is closed again", async ({ page }) => {
+  test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
   const user = await newUser("signout");
   await openMagicLink(page, user.email);
   await page.getByText(c.account, { exact: true }).click();
@@ -152,6 +157,7 @@ test("sign out from the Account menu, then /app is closed again", async ({ page 
 });
 
 test("a team user signs out from the workspace sidebar", async ({ page }) => {
+  test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
   const user = await newUser("team-out", "team");
   await openMagicLink(page, user.email);
   if (page.viewportSize()!.width < 768) await page.getByRole("tab", { name: "Nav", exact: true }).click();
@@ -167,6 +173,7 @@ for (const [role, home] of [
   ["dfy_client", "/client"],
 ] as const) {
   test(`a ${role ?? "self-serve"} user who opens /team is sent to ${home}`, async ({ page }) => {
+    test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
     const user = await newUser("not-team", role);
     await openMagicLink(page, user.email);
     await page.goto("/team");
@@ -177,6 +184,7 @@ for (const [role, home] of [
 }
 
 test("a signed-in owner gets the /app dashboard placeholder", async ({ page }) => {
+  test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
   const user = await newUser("owner");
   await openMagicLink(page, user.email);
   await page.goto("/app");
@@ -191,6 +199,7 @@ for (const [role, area, home] of [
   ["dfy_client", "/app", "/client"],
 ] as const) {
   test(`a ${role ?? "self-serve"} user who opens ${area} is sent to ${home}`, async ({ page }) => {
+    test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
     const user = await newUser("wrong-area", role);
     await openMagicLink(page, user.email);
     await page.goto(area);
@@ -199,6 +208,7 @@ for (const [role, area, home] of [
 }
 
 test("a cross-site sign-out post is refused and the session stays", async ({ page }) => {
+  test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
   const user = await newUser("csrf");
   await openMagicLink(page, user.email);
   const res = await page.request.post("/auth/signout", {

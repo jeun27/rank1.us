@@ -28,8 +28,13 @@ afterEach(() => {
 describe("SignInForm", () => {
   it("opens Google with a callback that carries next, and shows the loading label", async () => {
     render(<SignInForm next="/app/billing" />);
+    // Final set: the aurora ring is the one gradient, on the Google sign-in button only (UI.md "Aurora button").
+    expect(screen.getByRole("button", { name: c.google })).toHaveClass("aurora-ring");
     await userEvent.click(screen.getByRole("button", { name: c.google }));
-    expect(await screen.findByRole("button", { name: c.openingGoogle })).toBeDisabled();
+    const opening = await screen.findByRole("button", { name: c.openingGoogle });
+    expect(opening).toBeDisabled();
+    expect(opening).toHaveClass("aurora-ring");
+    expect(opening).toHaveAttribute("aria-busy", "true");
     await waitFor(() => expect(auth.signInWithOAuth).toHaveBeenCalledTimes(1));
     expect(auth.signInWithOAuth).toHaveBeenCalledWith({
       provider: "google",
@@ -77,6 +82,12 @@ describe("SignInForm", () => {
   it("shows the expired-link banner when an email link failed", () => {
     render(<SignInForm next={null} error="link" />);
     expect(screen.getByRole("alert")).toHaveTextContent(c.linkExpired);
+  });
+
+  it("keeps the magic-link submit a secondary button, not a second aurora ring", () => {
+    render(<SignInForm next={null} />);
+    expect(screen.getByRole("button", { name: c.sendLink })).not.toHaveClass("aurora-ring");
+    expect(document.querySelectorAll(".aurora-ring")).toHaveLength(1);
   });
 
   it("checks the email before sending", async () => {

@@ -172,6 +172,9 @@ Changed
 - `POST /auth/signout` and the Account menu (details/summary, works without JS) on the /app and /client headers and in #11's workspace sidebar (new `user` icon).
 - Role gates (AreaGate in the /app and /client layouts and the /team page): `/app` is for self-serve owners and members, `/team` for team and `/client` for dfy_client. A wrong role goes to its own home (review of #14).
 - Without NEXT_PUBLIC_SUPABASE_URL and the anon key (Supabase not connected on Vercel yet), the proxy passes public pages through and still sends the app areas to /signin, instead of every page returning 500 (review of #14).
+- "Continue with Google" is the AuroraButton (UI.md "Aurora button": the one gradient, Google sign-in only), including 'Opening Google…'. The magic-link submit stays secondary (QA, PR #17).
+- `/auth/callback` and `POST /auth/signout` redirect to `/signin?error=config` instead of an empty 500 when the Supabase env is missing. COPY.md has no string for it, so /signin shows no banner for `config` (ask the lead before adding one).
+- Local-stack e2e (10 in auth.spec.ts, all of team-workspace.spec.ts) skip when E2E_BASE_URL is set ("needs local Supabase", same pattern as client-secrets.spec.ts). The 10 public auth checks still run on a preview (QA, PR #17).
 - `POST /auth/signout` accepts only same-origin requests (Sec-Fetch-Site, or else Origin), so another site's form can't sign a user out.
 - `/team` (#11's workspace): team role only. Signed out goes to /signin, and any other role goes to its own home. With ENABLE_TEAM_WORKSPACE off, a team user gets the placeholder.
 - Landing: "Start for $99/mo" → `/signin?next=/app/billing` (was a 404 to /sign-in). Header "Log in" → `/signin`. `/app/billing` is the paywall stub: the Pricing card, the button disabled, "Checkout isn't open yet."
