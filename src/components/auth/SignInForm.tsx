@@ -32,10 +32,11 @@ function googleEnabled() {
   return googleCheck;
 }
 
-export function SignInForm({ next, error }: { next: string | null; error?: "google" | "link" }) {
-  const [notice, setNotice] = useState<Notice>(
-    error ? { tone: "error", text: error === "google" ? c.googleError : c.linkExpired } : null,
-  );
+export type SignInError = "google" | "link" | "config";
+const ERROR_TEXT: Record<SignInError, string> = { google: c.googleError, link: c.linkExpired, config: c.configError };
+
+export function SignInForm({ next, error }: { next: string | null; error?: SignInError }) {
+  const [notice, setNotice] = useState<Notice>(error ? { tone: "error", text: ERROR_TEXT[error] } : null);
   const [opening, setOpening] = useState(false);
   const [sending, setSending] = useState(false);
   const [emailError, setEmailError] = useState<string>();

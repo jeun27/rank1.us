@@ -10,6 +10,7 @@ export const authCopy = {
   linkSent: (email: string) => `Check your email. We sent a sign-in link to ${email}.`,
   sendError: "That link didn't send. Try again in a minute.",
   linkExpired: "That sign-in link expired. Enter your email for a new one.",
+  configError: "Sign-in isn't available right now. Try again in a few minutes.",
   account: "Account",
   signOut: "Sign out",
   logIn: "Log in",

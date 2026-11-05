@@ -79,6 +79,11 @@ describe("SignInForm", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(c.googleError);
   });
 
+  it("shows the unavailable banner when Supabase isn't configured", () => {
+    render(<SignInForm next={null} error="config" />);
+    expect(screen.getByRole("alert")).toHaveTextContent(c.configError);
+  });
+
   it("shows the expired-link banner when an email link failed", () => {
     render(<SignInForm next={null} error="link" />);
     expect(screen.getByRole("alert")).toHaveTextContent(c.linkExpired);

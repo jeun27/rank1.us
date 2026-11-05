@@ -91,6 +91,12 @@ test("a callback with no code and no token_hash shows the link banner, not the G
   await expect(page.getByRole("main").getByRole("alert")).toHaveText(c.linkExpired);
 });
 
+test("/signin?error=config shows the unavailable banner, axe clean", async ({ page }) => {
+  await page.goto("/signin?error=config");
+  await expect(page.getByRole("main").getByRole("alert")).toHaveText(c.configError);
+  await expectAxeClean(page);
+});
+
 test("an expired email link comes back to /signin with the link banner", async ({ page }) => {
   await page.goto("/auth/callback?token_hash=not-a-real-token&type=magiclink");
   expect(path(page.url())).toBe("/signin?error=link");
