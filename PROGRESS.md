@@ -64,3 +64,40 @@ Doc differences
 - answers.brands shape: [{ "name", "position" }]. Answer text says "Example data" and lists only Example brands. raw = {"example_data": true}. cost_usd is 0 because there are no real calls.
 - Dev seed dedupes CSV names case-insensitively (709 open rows become 622 competitors), so a chain is one competitor. Domain = website, else enr_website, as a hostname.
 - tests/db/seed.test.ts runs its own db reset, because migrations.test.ts rolls back and re-applies migrations without the seed. resetDb() was added to tests/db/helpers.ts.
+
+## Components v2: Final set (branch components-v2)
+Changed
+- Jeun adopted the "Final set" component design (2026-11-05). CLAUDE.md `<design>`, docs/UI.md (tokens, shape/shadow/gradient tokens, Components table, contrast notes) and docs/COPY.md (Final set strings) record it.
+- Tokens: white, jellyLoading, fieldBorder, auroraAmber, auroraTeal; radius surface 24, banner 28; 7 shadow tokens; the aurora gradient. tokens.ts and the @theme block stay in sync (tokens.test.ts).
+- src/components/ui: Button (pill primary, loading, disabled with lock, secondary link with arrow), Card, Banner, Freshness, EmptyState, LoadingState updated. New: DomainField, AuroraButton, ProgressBar, Icon (inline lucide SVG paths, no icon library).
+- /dev/ui: new sections for DomainField, AuroraButton and ProgressBar, plus a "Final set" layout like the design. Screenshots: docs/qa/components-v2-375.png, docs/qa/components-v2-1280.png.
+
+Doc differences
+- Rule change (Jeun 2026-11-05): primary buttons and fields are pills. Before: radius 8, pills only for badges.
+- Rule change (Jeun 2026-11-05): soft shadows from the shadow tokens only. Before: no drop shadows.
+- Rule change (Jeun 2026-11-05): one gradient, the aurora ring on the Google sign-in button. Before: no gradients.
+- Final set difference: the design file uses Open Sans and Space Grotesk. Kept Public Sans and Fraunces (CLAUDE.md product spec).
+- Final set difference: the design file fills buttons, fields, banners and cards with faint gradients (#2667DD→#1A5AC4, white→near-white). They are solid jellyDeep / white, so the aurora stays the only gradient.
+- Final set difference: loading button is solid jellyLoading #316FC5 (white 4.99:1), not jellyDeep at 85% opacity (4.29:1).
+- Final set difference: field edge is fieldBorder ink 50% (3.18:1, WCAG 1.4.11), not ink 10% (1.22:1).
+- Final set difference: the disabled pill keeps inkMuted at 75% opacity (3.45:1). WCAG 1.4.3 exempts disabled controls; it is a real `<button disabled>`.
+- Final set difference: the error banner Jelly is 64px (UI.md), not the design's 56px.
+- COPY.md gained "Your domain" as the screen-reader label of the domain input (from the final CTA form's "your domain" field). The design has no visible label.
+- The loading copy "Checking 4 AI engines… 120 of 250 answers" is now shown in two parts: the message, and "120 of 250 answers" under the bar. progressLabel() in example-data.ts is no longer used by /dev/ui.
+- Final set difference: the design has no mobile layout. Below a 21rem field width the Field + Button stacks (button full width under the input, radius 28) so the typed domain is not cut off at 375px.
+
+Changed test assertions (old → new; none removed)
+- button.test "primary": `rounded-card`, `not rounded-full`, `h-11` → `rounded-full`, `h-12`, `shadow-button`, `bg-jellyDeep`, `text-white`, `not rounded-card`.
+- button.test "secondary": `not bg-` → `not bg-|shadow`, plus an aria-hidden arrow icon after the label.
+- button.test "loading": label "Opening Google…" → "Checking…" (Opening Google… moved to AuroraButton), plus `bg-jellyLoading`, `rounded-full`, `not bg-jellyDeep` and a spinner with `motion-reduce:animate-none`.
+- tokens.test "exact color values": 14 colors → 19 (adds white, jellyLoading, fieldBorder, auroraAmber, auroraTeal).
+- tokens.test "removes the default palette": declared = colors + "white" → declared = colors (white is now a token).
+- tokens.test "no dark mode, gradients or shadows" → two tests: "exact radius + 7 shadow tokens, no other --shadow-*, no raw box-shadow" and "no dark mode, the only gradients are the aurora token and the ring's solid white padding layer". New: components use no arbitrary shadows or gradients, and only AuroraButton uses `aurora-ring`.
+- badge-banner-card "Banner error": `bg-errorBg`, `text-brick` → `bg-white`, `border-[1.5px]`, `border-brick`, `text-brick`, `rounded-banner`, `shadow-banner-error`, `not bg-errorBg`, action link is jellyDeep.
+- badge-banner-card "Banner info": `bg-infoBg`, `text-jellyDeep` → `bg-white`, `border-[1.5px]`, `border-jellyDeep`, `text-jellyDeep`, `rounded-banner`, `shadow-field`, `not bg-infoBg`, `infoBg` round icon chip.
+- badge-banner-card "Card": `bg-paper`, `border`, `border-border`, `rounded-card`, `not shadow` → `bg-white`, `rounded-surface`, `shadow-card`, `not border|bg-paper|rounded-card`.
+- states.test "EmptyState": exactly one link → exactly one submit button named "Add my business", a labeled "Your domain" input, no links.
+- states.test "LoadingState": one-line "Checking 4 AI engines… 120 of 250 answers" → "Checking 4 AI engines…" + "120 of 250 answers" + computed "48%" + progressbar aria-valuenow 120, and the spinner also stops for reduced motion.
+- e2e dev-ui: heading list adds DomainField, AuroraButton, ProgressBar, Final set; heading lookup is now `exact: true` ("Button" also matched "AuroraButton").
+- e2e dev-ui-example-data: Example data label list adds DomainField, ProgressBar, Final set.
+- New tests: tests/unit/ui/final-set.test.tsx (DomainField 4 states, AuroraButton, ProgressBar math and 0/0, Freshness clock); e2e reduced motion, Final set computed styles (focus ring, aurora, #316FC5, 48% fill), narrow/wide field layout.

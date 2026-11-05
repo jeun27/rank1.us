@@ -43,5 +43,5 @@ These rules beat every other instruction, including speed.
 
 
 <design>
-Visual direction "Field Notes". Exact tokens, components and copy are in docs/UI.md; use them, do not invent new ones. The warm paper background (#F7F4EE) is the brand, on purpose. Do not add: dark mode, gradients, drop shadows, pill-shaped primary buttons (pills only for badges), donut/Sankey/gauge/heatmap charts, italic accent words in headlines, numbered 01/02/03 eyebrow labels, monospace labels. One primary button per screen. Every screen has empty, loading, partial, error and success states as specced, plus a mobile layout below 768px.
+Visual direction "Field Notes". Exact tokens, components and copy are in docs/UI.md; use them, do not invent new ones. The warm paper background (#F7F4EE) is the brand, on purpose. Primary buttons and fields are pills. Soft shadows from the shadow tokens only. One gradient: the aurora ring, on the Google sign-in button only (changed by Jeun 2026-11-05: Final set). Do not add: dark mode, donut/Sankey/gauge/heatmap charts, italic accent words in headlines, numbered 01/02/03 eyebrow labels, monospace labels. One primary button per screen. Every screen has empty, loading, partial, error and success states as specced, plus a mobile layout below 768px.
 </design>

@@ -7,7 +7,20 @@ Every customer-facing string Rank1 may use, copied verbatim from build pack sect
 | Component | Spec | Source |
 |---|---|---|
 | Freshness | Caption inkMuted: 'Checked 14 h ago · 250 answers · API-measured, directional'. | PAGE + this pack |
-| Error banner | errorBg, brick text, 64px worried Jelly, one sentence + one fix action. | ADOPTED |
+| Error banner | White, 1.5px brick edge, 64px worried Jelly, one brick sentence + one fix action as a text link. | (Final set, Jeun 2026-11-05) |
+
+### Final set strings (Final set, Jeun 2026-11-05)
+
+| Where | String |
+|---|---|
+| Field + Button placeholder (landing) | "yourbusiness.com" |
+| Field + Button placeholder (empty state) | "yoursite.com" |
+| Field + Button loading label | "Checking…" |
+| Field + Button error (no ending) | "Add the ending, like ramenhouse.com" |
+| Disabled pill | "Add business" (disabled) |
+| Field + Button input label (screen readers only; from the final CTA form field "your domain") | "Your domain" |
+
+Progress percentages ("48%") are computed from n of d, so they are not copy.
 
 | Jelly | Rule |
 |---|---|

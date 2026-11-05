@@ -18,6 +18,10 @@
   --color-warnText: #8A5A12;
   --color-infoBg: #E3EEFB;
   --color-white: #FFFFFF;
+  --color-jellyLoading: #316FC5;
+  --color-fieldBorder: rgb(30 35 32 / 0.5);
+  --color-auroraAmber: #E8B85A;
+  --color-auroraTeal: #5FB8B3;
 }
 
 @theme inline {
@@ -51,6 +55,17 @@
   --text-wordmark: 18px;
 
   --radius-card: 8px;
+  --radius-surface: 24px;
+  --radius-banner: 28px;
+
+  /* Final set (Jeun 2026-11-05): the only shadows (src/styles/tokens.ts shadows). */
+  --shadow-field: inset 0 1px 0 rgb(255 255 255 / 0.9), 0 10px 26px rgb(26 95 191 / 0.12);
+  --shadow-button: inset 0 1px 0 rgb(255 255 255 / 0.25), 0 6px 14px rgb(26 95 191 / 0.3);
+  --shadow-card: inset 0 1px 0 rgb(255 255 255 / 0.9), 0 16px 40px rgb(26 95 191 / 0.1);
+  --shadow-banner-error: inset 0 1px 0 rgb(255 255 255 / 0.9), 0 10px 26px rgb(179 68 58 / 0.12);
+  --shadow-aurora: 0 8px 22px rgb(39 158 242 / 0.18), 0 4px 14px rgb(232 184 90 / 0.12);
+  --shadow-track: inset 0 1px 2px rgb(30 35 32 / 0.06);
+  --shadow-fill: 0 2px 6px rgb(26 95 191 / 0.25);
   --container-page: 1120px;
 
   /* Jelly loading squish: scaleY 0.95 -> 1.0, ~1.2 s loop. */
@@ -59,4 +74,15 @@
     0%, 100% { transform: scaleY(1); }
     50% { transform: scaleY(0.95); }
   }
+}
+
+/* The only gradient: the aurora ring, Google sign-in button only. A white padding-box layer over the
+   gradient border-box gives a 2px gradient edge that follows the pill radius. */
+:root {
+  --aurora: linear-gradient(90deg, #E8B85A, #5FB8B3, #279EF2);
+}
+
+@utility aurora-ring {
+  border: 2px solid transparent;
+  background: linear-gradient(var(--color-white), var(--color-white)) padding-box, var(--aurora) border-box;
 }
