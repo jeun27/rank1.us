@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { findCachedLookup, recordLookup } from "@/lib/queries/lookups";
+import { getCachedLookup, putCachedLookup } from "@/lib/queries/lookup-cache";
 import { takeRateToken, type RateKind } from "@/lib/queries/rate-limits";
 import { anonClient, must, newUser, serviceClient } from "./helpers";
 
@@ -33,15 +33,15 @@ describe("take_rate_token", () => {
     expect(await events(user.id, "read_site")).toHaveLength(10);
   });
 
-  it("maps allows 5 per hour", async () => {
+  it("maps_lookup allows 5 per hour", async () => {
     const user = await newUser("rate-maps-hour");
-    expect(await take(user.db, "maps", 6)).toEqual([...Array(5).fill(true), false]);
+    expect(await take(user.db, "maps_lookup", 6)).toEqual([...Array(5).fill(true), false]);
   });
 
-  it("maps allows 20 per 24 hours even when the last hour is quiet", async () => {
+  it("maps_lookup allows 20 per 24 hours even when the last hour is quiet", async () => {
     const user = await newUser("rate-maps-day");
-    await pastEvents(user.id, "maps", 18, 2);
-    expect(await take(user.db, "maps", 3)).toEqual([true, true, false]);
+    await pastEvents(user.id, "maps_lookup", 18, 2);
+    expect(await take(user.db, "maps_lookup", 3)).toEqual([true, true, false]);
   });
 
   it("events older than an hour do not count toward the hourly limit", async () => {
@@ -53,36 +53,36 @@ describe("take_rate_token", () => {
   it("prunes this user's events of that kind older than 24 hours", async () => {
     const user = await newUser("rate-prune");
     const other = await newUser("rate-prune-other");
-    await pastEvents(user.id, "maps", 25, 25);
+    await pastEvents(user.id, "maps_lookup", 25, 25);
     await pastEvents(user.id, "read_site", 2, 25);
-    await pastEvents(other.id, "maps", 2, 25);
+    await pastEvents(other.id, "maps_lookup", 2, 25);
 
-    expect(await takeRateToken(user.db, "maps")).toBe(true);
-    expect(await events(user.id, "maps")).toHaveLength(1);
+    expect(await takeRateToken(user.db, "maps_lookup")).toBe(true);
+    expect(await events(user.id, "maps_lookup")).toHaveLength(1);
     expect(await events(user.id, "read_site")).toHaveLength(2);
-    expect(await events(other.id, "maps")).toHaveLength(2);
+    expect(await events(other.id, "maps_lookup")).toHaveLength(2);
   });
 
   it("counts kinds separately", async () => {
     const user = await newUser("rate-kinds");
-    await take(user.db, "maps", 5);
-    expect(await takeRateToken(user.db, "maps")).toBe(false);
+    await take(user.db, "maps_lookup", 5);
+    expect(await takeRateToken(user.db, "maps_lookup")).toBe(false);
     expect(await takeRateToken(user.db, "read_site")).toBe(true);
   });
 
   it("limits each user separately", async () => {
     const a = await newUser("rate-a");
     const b = await newUser("rate-b");
-    await take(a.db, "maps", 5);
-    expect(await takeRateToken(a.db, "maps")).toBe(false);
-    expect(await takeRateToken(b.db, "maps")).toBe(true);
+    await take(a.db, "maps_lookup", 5);
+    expect(await takeRateToken(a.db, "maps_lookup")).toBe(false);
+    expect(await takeRateToken(b.db, "maps_lookup")).toBe(true);
   });
 
   it("parallel calls never exceed the limit", async () => {
     const user = await newUser("rate-parallel");
-    const results = await Promise.all(Array.from({ length: 12 }, () => takeRateToken(user.db, "maps")));
+    const results = await Promise.all(Array.from({ length: 12 }, () => takeRateToken(user.db, "maps_lookup")));
     expect(results.filter(Boolean)).toHaveLength(5);
-    expect(await events(user.id, "maps")).toHaveLength(5);
+    expect(await events(user.id, "maps_lookup")).toHaveLength(5);
   });
 
   it("rejects an unknown kind with 22023", async () => {
@@ -116,20 +116,20 @@ describe("take_rate_token", () => {
   });
 });
 
-describe("onboarding_lookups", () => {
-  const dayAgo = () => new Date(Date.now() - 24 * HOUR_MS);
+describe("lookup_cache", () => {
+  const DAY = 24 * 3600;
   const result = { name: "Example Ramen House", cuisine: "ramen", status: "ok" };
 
   it("returns a stored result within its max age, for that user, kind and key only", async () => {
     const user = await newUser("cache");
     const other = await newUser("cache-other");
     const s = serviceClient();
-    await recordLookup(s, { user_id: user.id, kind: "read_site", key: "example-ramen.test", result });
+    await putCachedLookup(s, { user_id: user.id, kind: "read_site", key: "example-ramen.test", result });
 
-    expect(await findCachedLookup(s, user.id, "read_site", "example-ramen.test", dayAgo())).toEqual(result);
-    expect(await findCachedLookup(s, user.id, "read_site", "other.test", dayAgo())).toBeNull();
-    expect(await findCachedLookup(s, user.id, "maps", "example-ramen.test", dayAgo())).toBeNull();
-    expect(await findCachedLookup(s, other.id, "read_site", "example-ramen.test", dayAgo())).toBeNull();
+    expect(await getCachedLookup(s, user.id, "read_site", "example-ramen.test", DAY)).toEqual(result);
+    expect(await getCachedLookup(s, user.id, "read_site", "other.test", DAY)).toBeNull();
+    expect(await getCachedLookup(s, user.id, "maps_lookup", "example-ramen.test", DAY)).toBeNull();
+    expect(await getCachedLookup(s, other.id, "read_site", "example-ramen.test", DAY)).toBeNull();
   });
 
   it("ignores results older than the max age, and an upsert refreshes the age", async () => {
@@ -137,24 +137,24 @@ describe("onboarding_lookups", () => {
     const s = serviceClient();
     const old = new Date(Date.now() - 25 * 3600 * 1000).toISOString();
     must(
-      await s.from("onboarding_lookups").insert({ user_id: user.id, kind: "maps", key: "k", result, created_at: old }),
+      await s.from("lookup_cache").insert({ user_id: user.id, kind: "maps_lookup", key: "k", result, created_at: old }),
     );
-    expect(await findCachedLookup(s, user.id, "maps", "k", dayAgo())).toBeNull();
+    expect(await getCachedLookup(s, user.id, "maps_lookup", "k", DAY)).toBeNull();
 
     const fresh = { ...result, name: "Example Fresh" };
-    await recordLookup(s, { user_id: user.id, kind: "maps", key: "k", result: fresh });
-    expect(await findCachedLookup(s, user.id, "maps", "k", dayAgo())).toEqual(fresh);
-    expect(must(await s.from("onboarding_lookups").select("key").eq("user_id", user.id))).toHaveLength(1);
+    await putCachedLookup(s, { user_id: user.id, kind: "maps_lookup", key: "k", result: fresh });
+    expect(await getCachedLookup(s, user.id, "maps_lookup", "k", DAY)).toEqual(fresh);
+    expect(must(await s.from("lookup_cache").select("key").eq("user_id", user.id))).toHaveLength(1);
   });
 
   it("signed-in users and anon cannot read or write it", async () => {
     const user = await newUser("cache-direct");
-    await recordLookup(serviceClient(), { user_id: user.id, kind: "read_site", key: "k", result });
+    await putCachedLookup(serviceClient(), { user_id: user.id, kind: "read_site", key: "k", result });
     for (const db of [user.db, anonClient()]) {
-      const read = await loose(db).from("onboarding_lookups").select("*");
+      const read = await loose(db).from("lookup_cache").select("*");
       expect(read.error?.code ?? "").toBe("42501");
       const write = await loose(db)
-        .from("onboarding_lookups")
+        .from("lookup_cache")
         .insert({ user_id: user.id, kind: "read_site", key: "x", result });
       expect(write.error?.code).toBe("42501");
     }
