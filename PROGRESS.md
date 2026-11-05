@@ -269,3 +269,8 @@ Review follow-ups (lead, 2026-11-05)
 - Business domain is required (lead): onboarding is domain-first ("Add your domain and I'll find the questions"), and readSite needs it. Competitor domain is optional, because Maps results can lack a website: missing, null or blank is stored as NULL and validated only when present.
 - Open: src/types/db.ts got the two 0009 functions added by hand in the generator format, because the pod disk was full and no local stack could run. Regenerate it with `pnpm db:types` in the next DB PR when a stack is available.
 - Open (Step 11/12 decision): a DFY workspace is owned by the team member who created it, so only that member (and anyone added to workspace_members) reaches it through RLS. Whether every team user sees every DFY client is still to decide.
+
+## Step 5 (backend): per-user rate limits for onboarding lookups (branch feat/step5-rate-limits, issue #18)
+- Migration 20261105000010 (+ .down.sql). `rate_events` (user_id, kind read_site | maps_lookup, created_at) has RLS on and no policies. `take_rate_token(kind, max, window)` is SECURITY DEFINER and takes a per-user, per-kind advisory lock. It returns true and records one event when the caller had fewer than max events in the window. It returns false otherwise, or with no user. EXECUTE is for authenticated only.
+- Query: takeRateToken(db, kind, max, windowSeconds) in src/lib/queries/rate-limits.ts. Tests: tests/db/rate-limits.test.ts.
+- src/types/db.ts got rate_events and take_rate_token added by hand in the generator format (no local stack, disk full). Regenerate it with `pnpm db:types` in the next DB PR.

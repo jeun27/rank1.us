@@ -375,6 +375,20 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"rate_events": {
+                  Row: {
+                    "created_at": string,"kind": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"kind": string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"kind"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"reports": {
                   Row: {
                     "business_id": string,"id": string,"pdf_path": string | null,"period_end": string,"period_start": string,"sent_at": string | null,"sent_to": (string)[],"status": string | null
@@ -508,6 +522,9 @@ isOneToOne: false
                            },
 "my_landing":
 { Args: Record<PropertyKey, never>; Returns: string
+                           },
+"take_rate_token":
+{ Args: { "p_kind": string,"p_max": number,"p_window": unknown }; Returns: boolean
                            }
           }
           Enums: {
