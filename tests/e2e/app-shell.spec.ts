@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { newUser, openMagicLink } from "./helpers/auth";
+import { admin, newUser, openMagicLink } from "./helpers/auth";
 
 const STATES = [
   "dashboard-empty",
@@ -138,4 +138,60 @@ test("signed-in owner: the nav reaches every page, one H1 each, Dashboard empty 
   await expect(nav.getByRole("link", { name: "Billing" })).toHaveAttribute("aria-current", "page");
   const axe = await new AxeBuilder({ page }).analyze();
   expect(axe.violations.map((v) => v.id)).toEqual([]);
+});
+
+test("signed-in owner: What to fix next lists open fixes, Tidy-ups, and Done removes a fix", async ({ page }) => {
+  test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
+  const user = await newUser("fixes");
+  const db = admin();
+  const ws = await db
+    .from("workspaces")
+    .insert({ name: "Example Workspace", owner_id: user.id, subscription_status: "active", seats_quantity: 1 })
+    .select("id")
+    .single();
+  if (ws.error) throw ws.error;
+  const member = await db
+    .from("workspace_members")
+    .insert({ workspace_id: ws.data.id, user_id: user.id, role: "owner" });
+  if (member.error) throw member.error;
+  const biz = await db
+    .from("businesses")
+    .insert({ workspace_id: ws.data.id, name: "Example Ramen House", domain: "exampleramen.test" })
+    .select("id")
+    .single();
+  if (biz.error) throw biz.error;
+  const fixes = await db
+    .from("fixes")
+    .insert([
+      {
+        business_id: biz.data.id,
+        rule_key: "R10",
+        size: "M-L",
+        title: "Example data: put your menu on a page as text",
+      },
+      { business_id: biz.data.id, rule_key: "H1", size: "S", title: "Example data: add Restaurant schema" },
+    ])
+    .select("id, rule_key");
+  if (fixes.error) throw fixes.error;
+
+  await openMagicLink(page, user.email);
+  await page.goto("/app/fixes");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("What to fix next");
+  await expect(
+    page.getByRole("heading", { level: 2, name: "Example data: put your menu on a page as text" }),
+  ).toBeVisible();
+  const tidy = page.getByRole("region", { name: "Tidy-ups" });
+  await expect(tidy.getByRole("heading", { name: "Example data: add Restaurant schema" })).toBeVisible();
+  await expect(
+    page.getByRole("navigation", { name: "App" }).getByRole("link", { name: "What to fix next" }),
+  ).toHaveAttribute("aria-current", "page");
+  const axe = await new AxeBuilder({ page }).analyze();
+  expect(axe.violations.map((v) => v.id)).toEqual([]);
+
+  // Done closes the fix: it leaves the list and the row is saved.
+  const r10 = fixes.data.find((f) => f.rule_key === "R10")!;
+  await page.getByRole("listitem").filter({ hasText: "put your menu" }).getByLabel("Status").selectOption("done");
+  await expect(page.getByText("Example data: put your menu on a page as text")).toHaveCount(0);
+  const saved = await db.from("fixes").select("status").eq("id", r10.id).single();
+  expect(saved.data?.status).toBe("done");
 });
