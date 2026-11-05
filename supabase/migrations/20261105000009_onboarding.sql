@@ -128,7 +128,7 @@ begin
   perform private.check_business_input(b);
   if exists (select 1 from jsonb_to_recordset(coalesce(p -> 'competitors', '[]')) as c(name text, domain text)
              where coalesce(btrim(c.name), '') = '' or char_length(c.name) > 200
-                or (c.domain is not null and not private.is_hostname(c.domain))) then
+                or (nullif(btrim(c.domain), '') is not null and not private.is_hostname(btrim(c.domain)))) then
     raise exception 'Each competitor needs a name of at most 200 characters and a valid domain or none'
       using errcode = 'invalid_parameter_value';
   end if;
@@ -150,7 +150,7 @@ begin
   returning id into biz;
 
   insert into public.competitors (business_id, name, domain, rating, maps_cid, source)
-  select biz, c.name, c.domain, c.rating, c.maps_cid, c.source
+  select biz, c.name, nullif(btrim(c.domain), ''), c.rating, c.maps_cid, c.source
   from jsonb_to_recordset(coalesce(p -> 'competitors', '[]'))
     as c(name text, domain text, rating numeric, maps_cid text, source text);
 

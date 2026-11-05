@@ -432,6 +432,26 @@ describe("input validation (22023)", () => {
     }
   });
 
+  it("accepts a competitor with a missing, null or empty domain and stores NULL", async () => {
+    const { user } = await selfServe("optional-domain");
+    const competitors = [
+      { name: "Example Missing", source: "maps" as const },
+      { name: "Example Null", domain: null, source: "maps" as const },
+      { name: "Example Empty", domain: "", source: "manual" as const },
+      { name: "Example Blank", domain: "  ", source: "manual" as const },
+    ];
+    const id = await createBusinessOnboarding(user.db, input({ competitors }));
+    const rows = must(
+      await serviceClient().from("competitors").select("name, domain").eq("business_id", id).order("name"),
+    );
+    expect(rows).toEqual([
+      { name: "Example Blank", domain: null },
+      { name: "Example Empty", domain: null },
+      { name: "Example Missing", domain: null },
+      { name: "Example Null", domain: null },
+    ]);
+  });
+
   it("create_dfy_client rejects a workspace name over 200", async () => {
     const team = await withRole("long-ws", "team");
     await expect(
