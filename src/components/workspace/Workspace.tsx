@@ -93,10 +93,12 @@ export function Workspace({ view }: { view: WorkspaceView }) {
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-paper text-ink md:flex-row">
+      {/* Team nav is always dark (ENG_HANDOFF_OVERNIGHT §3); the dark tokens apply to this subtree. */}
       <nav
         id="ws-nav"
+        data-theme="dark"
         data-motion
-        className={`flex-col bg-paper md:shrink-0 md:border-r md:border-border ${motion} ${
+        className={`flex-col bg-paper text-ink md:shrink-0 md:border-r md:border-border ${motion} ${
           expanded ? "hidden" : `flex ${sheet("Nav")}`
         } ${prefs.collapsed ? "md:w-14" : "md:w-14 lg:w-60"}`}
       >

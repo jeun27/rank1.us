@@ -98,6 +98,7 @@ Strings for the /team team workspace shell (ENG_HANDOFF_STEP2 §3). Nav labels a
 | Sidebar buttons (labels) | "Help", "Dark theme", "Collapse sidebar" |
 | Context pane | "Prompt template", "Copy context", "Copied", "Open in Claude" |
 | After Open in Claude | "Brief copied. Paste it in Claude if the box is empty." |
+| Clipboard blocked (either button) | "Couldn't copy. Allow clipboard access and try again." |
 | Pane divider (label) | "Resize panes" |
 | Document tabs | "Document", "New tab", "Close tab", "Expand", "Split" |
 | Phone tab bar | "Nav", "Context", "Document" |

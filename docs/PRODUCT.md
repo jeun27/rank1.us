@@ -8,7 +8,7 @@ Rank1 checks whether AI answer engines name a business when people ask buying qu
 - One plan: $99/mo per business, self-serve. Includes 1 business, 25 questions, weekly checks (every week's results stay visible in the app on the Dashboard and History screens), the what-to-fix-next list, a monthly white-label report and the GA4 link. Agencies are a secondary audience: same plan, $99 per business (Stripe subscription quantity). Bundles and done-for-you tiers show "Contact us" only. No discounts, coupons, founding offers or any other price anywhere.
 - 4 tracked engines. Answers per question per location per weekly check: ChatGPT x3, Gemini x3, Google AI Overview x3, Perplexity x1 = 10.
 - In scope: same-day audit with CSV + PNG export; per-engine source chart from real cited links only; location per question (country/state/city), greyed where an engine can't do that level; competitor leaderboard; share of voice with sample size; automatic "what to fix next" list; GA4 link; white-label report; before/after test vs a control group of questions; Stripe checkout; Google sign-in; Contact us form.
-- Not in v1: daily runs, more engines, other integrations, team seats beyond owner + invited members, mobile app, custom report builder, sentiment, dark mode.
+- Not in v1: daily runs, more engines, other integrations, team seats beyond owner + invited members, mobile app, custom report builder, sentiment, dark mode on customer pages. The team workspace (/team) is light + dark with an always-dark nav (Jeun, ENG_HANDOFF_OVERNIGHT §3 / ENG_HANDOFF_STEP2 §3).
 </product>
 
 
@@ -43,5 +43,5 @@ These rules beat every other instruction, including speed.
 
 
 <design>
-Visual direction "Field Notes". Exact tokens, components and copy are in docs/UI.md; use them, do not invent new ones. The warm paper background (#F7F4EE) is the brand, on purpose. Primary buttons and fields are pills. Soft shadows from the shadow tokens only. One gradient: the aurora ring, on the Google sign-in button only (changed by Jeun 2026-11-05: Final set). Do not add: dark mode, donut/Sankey/gauge/heatmap charts, italic accent words in headlines, numbered 01/02/03 eyebrow labels, monospace labels. One primary button per screen. Every screen has empty, loading, partial, error and success states as specced, plus a mobile layout below 768px.
+Visual direction "Field Notes". Exact tokens, components and copy are in docs/UI.md; use them, do not invent new ones. The warm paper background (#F7F4EE) is the brand, on purpose. Primary buttons and fields are pills. Soft shadows from the shadow tokens only. One gradient: the aurora ring, on the Google sign-in button only (changed by Jeun 2026-11-05: Final set). Do not add: dark mode on customer pages (the /team workspace is light + dark, nav always dark: Jeun, ENG_HANDOFF_OVERNIGHT §3), donut/Sankey/gauge/heatmap charts, italic accent words in headlines, numbered 01/02/03 eyebrow labels, monospace labels. One primary button per screen. Every screen has empty, loading, partial, error and success states as specced, plus a mobile layout below 768px.
 </design>

@@ -168,8 +168,10 @@ Blocked
 - Nothing. Preview needs ENABLE_TEAM_WORKSPACE=true set in Vercel (Preview environment) by the lead.
 
 Doc differences
-- docs/PRODUCT.md and CLAUDE.md say "dark mode: not in v1" and UI.md says "Light mode only". Jeun's later lock (ENG_HANDOFF_STEP2 §3) makes the team workspace light + dark. Dark applies only through data-theme set on /team; the rest of the site stays light, and there is still no prefers-color-scheme CSS.
+- Dark mode: docs/PRODUCT.md and UI.md said "dark mode: not in v1" / "Light mode only". Jeun's locks (ENG_HANDOFF_OVERNIGHT §3, ENG_HANDOFF_STEP2 §3: "light + dark; team nav always dark") override that for /team, so both docs now scope the rule to customer pages. Dark applies only through data-theme; there is still no prefers-color-scheme CSS.
+- Route: Step 3 routing reserves /app for self-serve owners/members, /team for the team, /client for DFY clients. The workspace moved from /app to /team; /app is a 404 until the owner app exists.
 - "Open in Claude": claude.ai has no documented prefill parameter. `https://claude.ai/new?q=<brief>` is the known form, but one report says it no longer prefills, and claude.ai blocks headless checks behind a Cloudflare challenge, so it is unverified. The button copies the brief to the clipboard first, then opens ?q= (no ?q= when the encoded brief is over 6000 characters), and says "Brief copied. Paste it in Claude if the box is empty."
 - Fix list, Experiments and Reports show their 4b empty states: the seed has no fixes, experiments or reports (fixes come from the fix_rules engine later). The Reports document previews the dashboard summary.
+- Clipboard blocked: both buttons show "Couldn't copy. Allow clipboard access and try again." instead of failing silently (review note on #11).
 - The business switcher shows the name only: UI.md hides the switcher while the workspace has 1 business.
 - Tailwind v4 inlines theme shadows into utilities, so the light shadows also render in dark (the inset white highlight is subtle on dark surfaces). The workspace itself uses borders, not shadows.

@@ -24,11 +24,11 @@ Source: field-notes-spec.md + UI/UX Page section 13. PAGE = from research #4. AD
 | fieldBorder | ink 50%, 1px | Domain field edge (3.18:1 on white and paper; the design's ink 10% was 1.22:1 and failed WCAG 1.4.11) | (Final set, Jeun 2026-11-05) |
 | auroraAmber / auroraTeal | #E8B85A / #5FB8B3 | Aurora ring stops only (with jelly). Never text | (Final set, Jeun 2026-11-05) |
 
-Contrast: ink/paper 14.53, white/jellyDeep 6.12, jellyDeep/paper 5.57, moss/paper 5.45, ink/amber 5.97, brick/paper 5.03. Never: white on jelly (2.89), jelly text on paper (2.64), amber text on paper (2.44). Light mode only. (Final set, Jeun 2026-11-05): white/jellyLoading 4.99, brick/white 5.52, jellyDeep/white 6.12, inkMuted/white 6.24, jellyDeep/infoBg 5.21, fieldBorder/white 3.18. Disabled pill text is inkMuted at 75% opacity (3.45:1); WCAG 1.4.3 exempts disabled controls, so it must be a real `<button disabled>`. The aurora ring is decorative (stops 1.84-2.89 on white); the button is identified by its jellyDeep label.
+Contrast: ink/paper 14.53, white/jellyDeep 6.12, jellyDeep/paper 5.57, moss/paper 5.45, ink/amber 5.97, brick/paper 5.03. Never: white on jelly (2.89), jelly text on paper (2.64), amber text on paper (2.44). Light mode only on customer pages; the /team workspace is light + dark with an always-dark nav (see "Team workspace dark theme" below; Jeun, ENG_HANDOFF_OVERNIGHT §3 / ENG_HANDOFF_STEP2 §3). (Final set, Jeun 2026-11-05): white/jellyLoading 4.99, brick/white 5.52, jellyDeep/white 6.12, inkMuted/white 6.24, jellyDeep/infoBg 5.21, fieldBorder/white 3.18. Disabled pill text is inkMuted at 75% opacity (3.45:1); WCAG 1.4.3 exempts disabled controls, so it must be a real `<button disabled>`. The aurora ring is decorative (stops 1.84-2.89 on white); the button is identified by its jellyDeep label.
 
 ## Team workspace dark theme (ENG_HANDOFF_STEP2 §3, lead 2026-11-05)
 
-/team only, set by `data-theme="dark"` (toggle in the sidebar, defaults to the system setting, saved in localStorage). Same token names as the light set, so every component switches with it. `raised` is new in both themes: selected rows, active tab, composer (light #FFFFFF).
+/team only, set by `data-theme="dark"`. The team nav always carries it, in both themes; the panes follow the toggle in the sidebar (defaults to the system setting, saved in localStorage). Same token names as the light set, so every component switches with it. `raised` is new in both themes: selected rows, active tab, composer (light #FFFFFF).
 
 | Token | Dark value | Contrast |
 |---|---|---|

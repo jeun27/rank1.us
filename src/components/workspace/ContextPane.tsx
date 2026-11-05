@@ -71,7 +71,14 @@ export function ContextPane({
   const ctx = contextFor(view, selection);
   const brief = now ? buildBrief(ctx, now, prompt) : "";
   const items = itemsFor(view, section);
-  const copy = (message: string) => navigator.clipboard.writeText(brief).then(() => setStatus(message));
+  // Blocked or missing clipboard: say so, so the brief is never silently lost.
+  const copy = (message: string) =>
+    Promise.resolve()
+      .then(() => navigator.clipboard.writeText(brief))
+      .then(
+        () => setStatus(message),
+        () => setStatus("Couldn't copy. Allow clipboard access and try again."),
+      );
 
   return (
     <>
