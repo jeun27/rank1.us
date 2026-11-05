@@ -20,31 +20,38 @@ describe("Badge", () => {
 });
 
 describe("Banner", () => {
-  it("error: errorBg, brick text, 64px Jelly, one sentence and one action", () => {
+  it("error: white, 1.5px brick edge, brick text, 64px Jelly, one sentence and one text-link action", () => {
     render(<Banner tone="error" action={{ label: "Try again", href: "#" }}>We couldn&apos;t load your results. Try again.</Banner>);
     const el = screen.getByRole("alert");
-    expect(el.className).toContain("bg-errorBg");
-    expect(el.className).toContain("text-brick");
+    const cls = el.className.split(" ");
+    for (const c of ["bg-white", "border-[1.5px]", "border-brick", "text-brick", "rounded-banner", "shadow-banner-error"]) expect(cls).toContain(c);
+    expect(el.className).not.toMatch(/bg-errorBg/);
+    expect(screen.getByRole("link", { name: "Try again" }).className).toMatch(/text-jellyDeep/);
     const jelly = el.querySelector("img")!;
     expect(jelly).toHaveAttribute("alt", "");
     expect(jelly).toHaveAttribute("width", "64");
     expect(screen.getAllByRole("link")).toHaveLength(1);
   });
-  it("info: infoBg, jellyDeep text, status role, no Jelly", () => {
+  it("info: white, 1.5px jellyDeep edge, jellyDeep text, infoBg 'i' chip, status role, no Jelly", () => {
     render(<Banner tone="info">Info</Banner>);
     const el = screen.getByRole("status");
-    expect(el.className).toContain("bg-infoBg");
-    expect(el.className).toContain("text-jellyDeep");
+    const cls = el.className.split(" ");
+    for (const c of ["bg-white", "border-[1.5px]", "border-jellyDeep", "text-jellyDeep", "rounded-banner", "shadow-field"]) expect(cls).toContain(c);
+    expect(el.className).not.toMatch(/bg-infoBg/);
+    const chip = el.querySelector("[data-icon=info]")!.parentElement!;
+    expect(chip.className).toContain("bg-infoBg");
+    expect(chip.className).toContain("rounded-full");
     expect(el.querySelector("img")).toBeNull();
   });
 });
 
 describe("Card", () => {
-  it("paper, 1px ink/15% border, radius 8, padding 16 mobile / 24 md, no shadow", () => {
+  it("white surface, radius 24, card shadow, no border, padding 16 mobile / 24 md", () => {
     render(<Card title="Leaderboard">body</Card>);
     const el = screen.getByText("body").closest("section")!;
-    for (const c of ["bg-paper", "border", "border-border", "rounded-card", "p-4", "md:p-6"]) expect(el.className).toContain(c);
-    expect(el.className).not.toMatch(/shadow/);
+    const cls = el.className.split(" ");
+    for (const c of ["bg-white", "rounded-surface", "shadow-card", "p-4", "md:p-6"]) expect(cls).toContain(c);
+    expect(el.className).not.toMatch(/\bborder|bg-paper|rounded-card/);
     expect(screen.getByRole("heading", { level: 3, name: "Leaderboard" })).toBeInTheDocument();
   });
 });

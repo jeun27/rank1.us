@@ -18,9 +18,30 @@ Source: field-notes-spec.md + UI/UX Page section 13. PAGE = from research #4. AD
 | successBg | #E6EFE9 | Success badge/banner (moss text, 5.10:1) | ADOPTED |
 | errorBg | #F7E6E3 | Error banner (brick text, 4.57:1) | ADOPTED |
 | warnBg / warnText | #FBEFD9 / #8A5A12 | 'Moved' badge (5.19:1) | ADOPTED |
-| infoBg | #E3EEFB | Info badge, 'You' row tag (jellyDeep text, 5.21:1) | ADOPTED |
+| infoBg | #E3EEFB | Info badge, 'You' row tag (jellyDeep text, 5.21:1); info banner icon chip | ADOPTED |
+| white | #FFFFFF | Surface: cards, fields, banners, aurora button; text on jellyDeep | (Final set, Jeun 2026-11-05) |
+| jellyLoading | #316FC5 | Primary button while loading (white text, 4.99:1). The design's jellyDeep at 85% opacity was 4.29:1 | (Final set, Jeun 2026-11-05) |
+| fieldBorder | ink 50%, 1px | Domain field edge (3.18:1 on white and paper; the design's ink 10% was 1.22:1 and failed WCAG 1.4.11) | (Final set, Jeun 2026-11-05) |
+| auroraAmber / auroraTeal | #E8B85A / #5FB8B3 | Aurora ring stops only (with jelly). Never text | (Final set, Jeun 2026-11-05) |
 
-Contrast: ink/paper 14.53, white/jellyDeep 6.12, jellyDeep/paper 5.57, moss/paper 5.45, ink/amber 5.97, brick/paper 5.03. Never: white on jelly (2.89), jelly text on paper (2.64), amber text on paper (2.44). Light mode only; no gradients; no shadows.
+Contrast: ink/paper 14.53, white/jellyDeep 6.12, jellyDeep/paper 5.57, moss/paper 5.45, ink/amber 5.97, brick/paper 5.03. Never: white on jelly (2.89), jelly text on paper (2.64), amber text on paper (2.44). Light mode only. (Final set, Jeun 2026-11-05): white/jellyLoading 4.99, brick/white 5.52, jellyDeep/white 6.12, inkMuted/white 6.24, jellyDeep/infoBg 5.21, fieldBorder/white 3.18. Disabled pill text is inkMuted at 75% opacity (3.45:1); WCAG 1.4.3 exempts disabled controls, so it must be a real `<button disabled>`. The aurora ring is decorative (stops 1.84-2.89 on white); the button is identified by its jellyDeep label.
+
+## Shape, shadow and gradient tokens (Final set, Jeun 2026-11-05)
+
+| Token | Value | Use |
+|---|---|---|
+| radius pill | 9999px (`rounded-full`) | Primary button 48h, field 60h, aurora and disabled 50h, badges |
+| radius surface | 24px | Card, EmptyState, LoadingState |
+| radius banner | 28px | Error and info banners |
+| radius card | 8px | Final CTA ink band |
+| shadow-field | inset 0 1px 0 white/90%, 0 10px 26px jellyDeep/12% | Domain field, info banner |
+| shadow-button | inset 0 1px 0 white/25%, 0 6px 14px jellyDeep/30% | Primary button |
+| shadow-card | inset 0 1px 0 white/90%, 0 16px 40px jellyDeep/10% | Card |
+| shadow-banner-error | inset 0 1px 0 white/90%, 0 10px 26px brick/12% | Error banner |
+| shadow-aurora | 0 8px 22px jelly/18%, 0 4px 14px auroraAmber/12% | Aurora button |
+| shadow-track | inset 0 1px 2px ink/6% | Progress track |
+| shadow-fill | 0 2px 6px jellyDeep/25% | Progress fill |
+| aurora | linear-gradient(90deg, auroraAmber, auroraTeal, jelly), 2px ring | Google sign-in button only. The only gradient |
 
 ## Type
 
@@ -41,15 +62,21 @@ Contrast: ink/paper 14.53, white/jellyDeep 6.12, jellyDeep/paper 5.57, moss/pape
 
 | Component | Spec | Source |
 |---|---|---|
-| Button primary | jellyDeep bg, white text, 44h, padding 0 20, radius 8, hover darken 8%, focus 2px jellyDeep ring offset 2. One per screen. | PAGE + ADOPTED |
-| Button secondary | Text link, jellyDeep, underline on hover, 44px tap area. | PAGE |
+| Button primary | Pill, jellyDeep bg, white text, 48h, padding 0 20, shadow-button, hover darken 8%, focus 2px jellyDeep ring offset 2. Loading: jellyLoading bg + white spinner + label ('Checking…'). One per screen. | (Final set, Jeun 2026-11-05) |
+| Button secondary | Text link, jellyDeep 600, → arrow after the label, underline on hover, 44px tap area. Banner actions use it. | (Final set, Jeun 2026-11-05) |
+| Button disabled | Real `<button disabled>`: pill 50h, white/55% fill, 1.5px ink/14% edge, inkMuted label at 75% opacity, 14px lock icon after it. | (Final set, Jeun 2026-11-05) |
+| Field + Button (DomainField) | Pill field 60h, white, 1px fieldBorder, shadow-field, padding 6 6 6 20, 18px globe icon, labeled input (15px), primary button inside on the right. Focused: 2px jellyDeep edge. Loading: button loading. Error: 2px brick edge + brick 13px error text below, tied with aria-describedby. When the field is narrower than 21rem (phones, small cards) the button drops below the input, full width, and the field radius becomes 28 so the domain stays readable. | (Final set, Jeun 2026-11-05) |
+| Aurora button | Pill 50h, white, 2px aurora ring, shadow-aurora, jellyDeep 16px spinner + jellyDeep label. Google sign-in only. | (Final set, Jeun 2026-11-05) |
 | Final CTA | Full-width ink band, paper text; amber button, ink text. | PAGE |
-| Card | Paper bg, 1px ink/15% border, radius 8, padding 24 (16 mobile), no shadow. | PAGE + ADOPTED |
+| Card | White surface on the paper page, radius 24, shadow-card, no border, padding 24 (16 mobile). | (Final set, Jeun 2026-11-05) |
 | Badge | Pill 999px, caption size; success/error/warn/info fills. | ADOPTED |
 | Table | Header Public Sans 600 13px inkMuted; 1px ink/15% dividers; numbers right-aligned, tabular. Leaderboard: max 3 numbers per row; sample size under table. | PAGE + ADOPTED |
 | Chart | Lines and bars only. In-app business line jellyDeep 2px; rival average ink 40% dashed 4/3; reports use the business color. No donut/Sankey/gauge/heatmap. | PAGE + ADOPTED |
-| Freshness | Caption inkMuted: 'Checked 14 h ago · 250 answers · API-measured, directional'. | PAGE + this pack |
-| Error banner | errorBg, brick text, 64px worried Jelly, one sentence + one fix action. | ADOPTED |
+| Freshness | 16px clock icon + caption inkMuted: 'Checked 14 h ago · 250 answers · API-measured, directional'. | PAGE + this pack; icon (Final set, Jeun 2026-11-05) |
+| Error banner | White, 1.5px brick edge, radius 28, shadow-banner-error, 64px worried Jelly, one brick 600 sentence + one fix action as a secondary text link on the right. | (Final set, Jeun 2026-11-05) |
+| Info banner | White, 1.5px jellyDeep edge, radius 28, shadow-field, 36px infoBg circle with an 18px jellyDeep 'i' icon, jellyDeep text. | (Final set, Jeun 2026-11-05) |
+| Empty | Card, 80px Jelly, centered body-large message, DomainField ('yoursite.com' / 'Add my business'). | (Final set, Jeun 2026-11-05) |
+| Loading + progress bar | Card, squishing 80px Jelly, 16px jellyDeep spinner + message, 12px track (white, 1px border, shadow-track) with a jellyDeep fill (shadow-fill), 'n of d answers' inkMuted left and the floored percent jellyDeep 600 right. The percent is computed. Reduced motion stops the spinner and the squish. | (Final set, Jeun 2026-11-05) |
 | Logo | Bar mark (public/logo-mark.svg, currentColor, ink) left of the wordmark 'Rank1' in Fraunces 600 18px ink, 8px gap. App icon: public/app-icon.svg. | Jeun 2026-11-05 |
 | Spacing | 4-pt: 4 8 12 16 24 32 48 64 96. Sections 96 / 64 mobile. Max width 1120. Gutters 20 mobile / 32 desktop. | ADOPTED |
 | Breakpoints | sm 640, md 768, lg 1024 (container cap 1120). Stack below md. Tap targets >= 44px. Sticky mobile CTA bar. | PAGE |

@@ -34,3 +34,7 @@ export const partialRunLabel = ({ jobsOk, jobsTotal }: typeof examplePartialRun)
 
 export const progressLabel = ({ answersDone, answersTotal }: typeof exampleProgress) =>
   `Checking 4 AI engines… ${answersDone} of ${answersTotal} answers`;
+
+// Example domains typed into the Field + Button states (the design's Example Ramen House).
+export const exampleDomain = "ramenhouse.com";
+export const exampleDomainNoEnding = "ramenhouse";

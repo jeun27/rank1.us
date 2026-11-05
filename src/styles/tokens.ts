@@ -15,7 +15,13 @@ export const colors = {
   errorBg: "#F7E6E3", // error banner (brick text)
   warnBg: "#FBEFD9", // "Moved" badge background
   warnText: "#8A5A12", // "Moved" badge text
-  infoBg: "#E3EEFB", // info badge, "You" row tag (jellyDeep text)
+  infoBg: "#E3EEFB", // info badge, "You" row tag (jellyDeep text), info banner icon chip
+  // Final set (Jeun 2026-11-05)
+  white: "#FFFFFF", // surface: cards, fields, banners; text on jellyDeep
+  jellyLoading: "#316FC5", // primary button while loading (white text 4.99:1)
+  fieldBorder: "rgb(30 35 32 / 0.5)", // ink 50%: domain field edge (3.18:1 on white)
+  auroraAmber: "#E8B85A", // aurora ring stop only. Never text
+  auroraTeal: "#5FB8B3", // aurora ring stop only. Never text
 } as const;
 
 // [font-size px, line-height px]; mobile -> md+ where UI.md gives two sizes.
@@ -33,6 +39,21 @@ export const type = {
 } as const;
 
 export const spacing = [4, 8, 12, 16, 24, 32, 48, 64, 96] as const;
-export const radius = 8;
+// Final set (Jeun 2026-11-05): pills use rounded-full.
+export const radius = { card: 8, surface: 24, banner: 28 } as const;
+
+// Soft shadows (Final set). The only box-shadows allowed; mirrored as --shadow-* in globals.css.
+export const shadows = {
+  field: "inset 0 1px 0 rgb(255 255 255 / 0.9), 0 10px 26px rgb(26 95 191 / 0.12)",
+  button: "inset 0 1px 0 rgb(255 255 255 / 0.25), 0 6px 14px rgb(26 95 191 / 0.3)",
+  card: "inset 0 1px 0 rgb(255 255 255 / 0.9), 0 16px 40px rgb(26 95 191 / 0.1)",
+  "banner-error": "inset 0 1px 0 rgb(255 255 255 / 0.9), 0 10px 26px rgb(179 68 58 / 0.12)",
+  aurora: "0 8px 22px rgb(39 158 242 / 0.18), 0 4px 14px rgb(232 184 90 / 0.12)",
+  track: "inset 0 1px 2px rgb(30 35 32 / 0.06)",
+  fill: "0 2px 6px rgb(26 95 191 / 0.25)",
+} as const;
+
+// The only gradient: the aurora ring on the Google sign-in button.
+export const aurora = "linear-gradient(90deg, #E8B85A, #5FB8B3, #279EF2)";
 export const maxWidth = 1120;
 export const breakpoints = { sm: 640, md: 768, lg: 1024 } as const;
