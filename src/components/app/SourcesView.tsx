@@ -80,9 +80,14 @@ export function SourcesView({
   checkedAt = null,
   answers,
   now,
+  formAction,
+  formHidden,
 }: {
   sources: Sources | null;
   location: string | undefined;
+  // The /dev gallery submits the selector to itself; the app page uses the default (/app/sources).
+  formAction?: string;
+  formHidden?: Record<string, string>;
   // Rule 3: the latest run's check time and its ok answers (in the selected location).
   checkedAt?: string | null;
   answers?: number;
@@ -100,7 +105,7 @@ export function SourcesView({
         <>
           <Measured checkedAt={checkedAt} answers={answers} now={now} />
           <Patterns />
-          <LocationSelect locations={sources.locations} value={location} />
+          <LocationSelect locations={sources.locations} value={location} action={formAction} hidden={formHidden} />
           <ul aria-label={c.category} className="flex flex-wrap gap-x-4 gap-y-2 text-caption">
             {CATEGORY_ORDER.map((k) => (
               <li key={k} className="flex items-center gap-1.5">
