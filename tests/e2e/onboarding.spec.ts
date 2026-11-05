@@ -65,10 +65,13 @@ test("a new owner sets up a business in 3 steps and lands on /app", async ({ pag
   await page.waitForURL("**/app", { timeout: 20_000 });
 
   const db = admin();
-  const { data: biz } = await db
+  // businesses has no FK to workspace_members, so look the workspace up first.
+  const { data: member } = await db.from("workspace_members").select("workspace_id").eq("user_id", user.id).single();
+  const { data: biz, error } = await db
     .from("businesses")
-    .select("id, name, domain, cuisine, city, state, workspace_id, workspace_members!inner(user_id)")
-    .eq("workspace_members.user_id", user.id);
+    .select("id, name, domain, cuisine, city, state")
+    .eq("workspace_id", member!.workspace_id);
+  expect(error).toBeNull();
   expect(biz).toHaveLength(1);
   expect(biz![0]).toMatchObject({
     name: "Example Ramen House",
