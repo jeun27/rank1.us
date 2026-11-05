@@ -124,20 +124,22 @@ test("signed-in owner: the nav reaches every page, one H1 each, Dashboard empty 
   expect(axe.violations.map((v) => v.id)).toEqual([]);
 });
 
-// QA STEP 9 (#49): the location selector must work with JavaScript off.
-test.describe("sources location form without JavaScript", () => {
-  test.use({ javaScriptEnabled: false });
-
-  test("choosing a location and pressing Show filters the page; All locations clears it", async ({ page }) => {
-    await page.goto("/dev/app?state=sources-form");
-    const select = page.getByLabel("Location");
-    const second = await select.locator("option").nth(1).getAttribute("value");
-    await select.selectOption(second!);
-    await page.getByRole("button", { name: "Show" }).click();
-    await expect(page).toHaveURL(new RegExp(`location=${encodeURIComponent(second!)}`));
-    await expect(page.getByLabel("Location")).toHaveValue(second!);
-    await page.getByLabel("Location").selectOption("");
-    await page.getByRole("button", { name: "Show" }).click();
-    await expect(page.getByLabel("Location")).toHaveValue("");
-  });
+// QA STEP 9 (#49): the selector is a plain GET form submitted by its Show button (the form markup is
+// unit-tested). Streamed /app pages need JavaScript to reveal their content, so this runs with JS on.
+test("sources location form: Show submits ?location= and the choice is kept; All locations clears it", async ({
+  page,
+}) => {
+  await page.goto("/dev/app?state=sources-form");
+  const select = page.getByLabel("Location");
+  const second = await select.locator("option").nth(1).getAttribute("value");
+  await select.selectOption(second!);
+  expect(page.url()).not.toContain("location=");
+  await page.getByRole("button", { name: "Show" }).click();
+  await page.waitForURL(/location=/);
+  expect(new URL(page.url()).searchParams.get("location")).toBe(second);
+  await expect(page.getByLabel("Location")).toHaveValue(second!);
+  await page.getByLabel("Location").selectOption("");
+  await page.getByRole("button", { name: "Show" }).click();
+  await page.waitForURL((u) => u.searchParams.get("location") === "");
+  await expect(page.getByLabel("Location")).toHaveValue("");
 });

@@ -1,5 +1,4 @@
 "use client";
-import { useSearchParams } from "next/navigation";
 import { CompetitorsView } from "@/components/app/CompetitorsView";
 import { Dashboard } from "@/components/app/Dashboard";
 import { HistoryView } from "@/components/app/HistoryView";
@@ -121,7 +120,19 @@ export const STATES: Record<string, () => React.ReactNode> = {
   ),
 };
 
-export function Gallery() {
-  const state = useSearchParams().get("state") ?? "dashboard-success";
+export function Gallery({ state = "dashboard-success", location: picked }: { state?: string; location?: string }) {
+  // The location form round trip (QA #49): the form submits back here with ?location=.
+  if (state === "sources-form") {
+    const location = picked || undefined;
+    return (
+      <SourcesView
+        sources={computeSources({ questions: exampleQuestions.questions, location })}
+        location={location}
+        {...fresh}
+        formAction="/dev/app"
+        formHidden={{ state: "sources-form" }}
+      />
+    );
+  }
   return (STATES[state] ?? STATES["dashboard-success"])();
 }

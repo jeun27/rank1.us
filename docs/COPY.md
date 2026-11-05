@@ -194,7 +194,7 @@ Strings for /app/sources (Step 9). State messages are the 4b Sources strings; th
 |---|---|
 | Subtitle (from AEO.md) | "See which sites each AI cites for your questions." |
 | Category labels | "Reddit", "YouTube", "Social", "Review sites", "News and blogs", "Other" |
-| Location selector | "Location" (label), "All locations" |
+| Location selector | "Location" (label), "All locations", "Show" (submit) |
 | Top domains table headers | "Domain", "Category", "Links", "Engines" |
 
 # 4b. App screens: every state
