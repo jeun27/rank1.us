@@ -29,6 +29,7 @@ const TABLES = [
   "contact_requests",
   "stripe_events",
   "user_roles",
+  "rate_events",
 ].sort();
 
 const dir = (sub: string) => join(process.cwd(), "supabase", sub);
