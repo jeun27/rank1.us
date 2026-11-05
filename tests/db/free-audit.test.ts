@@ -519,6 +519,7 @@ describe("free audit notify flow", () => {
 
   it("stops listing a run after 5 failed attempts", async () => {
     const { runId } = await finishedFree(ok(false));
+    expect(await listUnnotifiedFreeAudits(serviceClient(), 1)).toHaveLength(1);
     for (let i = 0; i < 4; i++) await bumpFreeAuditNotifyAttempts(serviceClient(), runId);
     expect(await listed(runId)).toBeDefined();
     await bumpFreeAuditNotifyAttempts(serviceClient(), runId);
