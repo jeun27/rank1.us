@@ -287,7 +287,6 @@ Doc differences
 - e2e signs the founder in with magic links. Only one link per user is valid, and both viewport projects sign in at once, so the founder test retries up to 5 times.
 - QA (#22) fix: the proxy matched the raw pathname, so /%61dmin/test and /admin%2Ftest reached the page (soft 404 with status 200). The proxy now matches a normalized path (src/lib/auth/path.ts): segments percent-decoded up to 3 times and re-split on decoded slashes/backslashes, empty and "." segments dropped, ".." resolved, lowercased. Malformed encoding → 404. The same check covers Step 3's /app, /team and /client sign-in redirect.
 
-
 ## Step 5 (data-pipeline): Maps competitors, readSite, question suggestions (branch feat/step5-onboarding-engines, issue #18)
 Step 5 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
 Lead decision (Step 5 brief): a workspace with seats_quantity = 0 may hold exactly one active business (UI.md Billing "Unpaid: 'Start for $99/mo'"); checks don't run for unpaid workspaces (Steps 6/13); DFY businesses are exempt from the seat limit. Implemented by backend in #20.
@@ -306,8 +305,7 @@ UNVERIFIED / open
 - readSite: DNS is checked before each request but the fetch resolves again, so a DNS-rebinding race remains. Closing it needs a pinned-IP agent; logged for Step 6+.
 - The 'unknown state code' fix in stateName() is in #19. maps.ts uses the state table directly, so it doesn't depend on #19.
 - Review (#23) fixes: readSite reads at most 1 MB. A larger Content-Length is refused unread, and a stream is aborted as soon as it passes the cap; both count as unreadable. isPrivateAddress parses IPv6 fully, so v4-mapped in hex form (::ffff:7f00:1), NAT64 (64:ff9b::/96), 2001:db8::/32 and 192.0.0.0/24 are blocked too.
-- Test widened, with reason: tests/unit/engines/fixtures-privacy.test.ts now allows `(www\.)?example-[a-z0-9-]+\.test` links (it was `example-[a-z0-9]+\.test`). The Maps fixtures need hyphenated Example brand hosts (example-ramen-house.test) and a www form to test own-domain exclusion. Only example-*.test hosts are allowed, as before.
-
+- Test widened, with reason: tests/unit/engines/fixtures-privacy.test.ts now allows `(www\.)?example-[a-z0-9-]+\.test` links (it was `example-[a-z0-9]+\.test`). The Maps fixtures need hyphenated Example brand hosts (example-ramen-house.test) and a www form to test own-domain exclusion. Only example-*.test hosts are allowed, as before. Net tightening in the same test: the docs-URL exception now applies only inside the `_synthetic` note (it used to apply anywhere in the file), every synthetic file must carry that note, and title/name/source_name fields in synthetic files must start with "Example".
 
 ## Step 5 (frontend): restaurant onboarding (branch feat/step5-onboarding, issue #18)
 Step 5 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
