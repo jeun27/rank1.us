@@ -566,3 +566,4 @@ Changed
 - Rule 3: a Measured line (latest run, ok answers) under the H1.
 - Nav: "What to fix next" after Sources. The Dashboard section heading links to /app/fixes (top 3 from getTopFixes, same ranking).
 - n fix (#57): the Freshness n comes from loadShell().latest.metrics, the same object the Dashboard hero renders. tests/unit/app/measured.test.tsx (the fixes n equals the Dashboard n with a no_overview answer) supersedes measured.test.ts, which only checked runMeasured against jobs_ok and went away with runMeasured.
+- QA #58 gallery fidelity (#57): the /dev/app fixes fixtures use the fix_rules titles and §5b copy filled for a made-up site, in bySize order (R14, R10, R11), with no answer count for site rules. The fixes states take n from the Dashboard gallery metrics (240). tests/unit/fixes/example-data.test.ts checks titles against seed.sql, details against COPY, and the order.

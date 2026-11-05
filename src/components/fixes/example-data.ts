@@ -1,43 +1,30 @@
-// Example data: invented fixes for the /dev/app gallery and unit tests. Not real results.
+// Example data for the /dev/app gallery and unit tests: the real fix_rules titles and §5b customer
+// copy, filled with invented details for a made-up site. Not real results.
+import { fix, type RuleKey } from "@/lib/fixes/types";
 import type { FixView } from "./FixList";
 
+// Titles as seeded in fix_rules (record_fix_results copies them into fixes.title).
+const TITLE: Record<RuleKey, string> = {
+  R10: "Crawlable HTML menu on your own site",
+  R11: "Dish-level pages / FAQ blocks (signature dishes, dietary tags)",
+  R14: "robots.txt allows AI search crawlers",
+  H1: "Restaurant/Menu schema (hygiene only)",
+};
+
+const item = (id: string, key: RuleKey, status: FixView["status"], fill: Record<string, string> = {}): FixView => ({
+  id,
+  rule_key: key,
+  title: TITLE[key],
+  detail: fix(key, {}, fill).detail,
+  affected_answers: null,
+  status,
+});
+
+// Smallest effort first, as listFixes ranks them: R14 (S), R10 (M-L), R11 (L).
 export const exampleFixes: FixView[] = [
-  {
-    id: "f1",
-    rule_key: "R10",
-    title: "Example data: put your menu on your site as text",
-    detail: "Example data: your menu is a PDF at exampleramen.test/menu.pdf. AI reads text pages more easily.",
-    affected_answers: null,
-    status: "todo",
-  },
-  {
-    id: "f2",
-    rule_key: "R11",
-    title: "Example data: name your signature dishes",
-    detail: "Example data: 3 of your dishes aren't on any page we could read.",
-    affected_answers: 12,
-    status: "doing",
-  },
-  {
-    id: "f3",
-    rule_key: "R14",
-    title: "Example data: let AI search bots read your site",
-    detail: "Your robots.txt blocks OAI-SearchBot from /menu. Check if you meant to.",
-    affected_answers: null,
-    status: "todo",
-  },
+  item("f3", "R14", "todo", { bots: "OAI-SearchBot", paths: "/menu" }),
+  item("f1", "R10", "todo", { "PDF/image": "PDF" }),
+  item("f2", "R11", "doing", { dishes: "tonkotsu ramen, vegan miso ramen" }),
 ];
-export const exampleTidyUps: FixView[] = [
-  {
-    id: "h1",
-    rule_key: "H1",
-    title: "Example data: add restaurant schema",
-    detail: "Example data: your home page has no Restaurant schema.",
-    affected_answers: null,
-    status: "todo",
-  },
-];
-export const exampleUnchecked = [
-  { rule_key: "R10", title: "Example data: put your menu on your site as text" },
-  { rule_key: "R14", title: "Example data: let AI search bots read your site" },
-];
+export const exampleTidyUps: FixView[] = [item("h1", "H1", "todo")];
+export const exampleUnchecked = (["R10", "R14"] as const).map((rule_key) => ({ rule_key, title: TITLE[rule_key] }));
