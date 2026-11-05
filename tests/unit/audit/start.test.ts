@@ -59,24 +59,20 @@ describe("startFreeAudit", () => {
     const expected = buildQuestions({ cuisine: "ramen", city: "Irvine", state: "CA" }, defaultPicks(places));
     expect(input).toEqual({
       lead_id: "lead-1",
-      domain: lead.domain,
-      brands: [
-        { name: "Example Ramen House", aliases: [], domain: lead.domain },
-        { name: "Example Noodle Bar", aliases: [], domain: "example-noodle-bar.test" },
-        { name: "Example Izakaya", aliases: [], domain: null },
-      ],
-      location: { level: "city", country: "US", state: "CA", city: "Irvine" },
+      business: { name: "Example Ramen House", domain: lead.domain },
+      competitors: [{ name: "Example Noodle Bar", domain: "example-noodle-bar.test" }, { name: "Example Izakaya" }],
+      location: { country: "US", state: "CA", city: "Irvine" },
       questions: expected.map((q) => ({ text: q.long_text, location_level: "city" })),
     });
     expect(input.questions.length).toBeGreaterThan(0);
     expect(input.questions.length).toBeLessThanOrEqual(25);
   });
 
-  it("unreadable site → the domain alone is the brand, generic templates with 'restaurants', Maps on plain 'restaurant'", async () => {
+  it("unreadable site → business name null (the snapshot uses the domain), generic templates with 'restaurants', Maps on plain 'restaurant'", async () => {
     const d = deps({ readSite: vi.fn(async () => ({ status: "unreadable" as const })) });
     await startFreeAudit(lead, d);
     const input = d.createFreeAudit.mock.calls[0][0];
-    expect(input.brands[0]).toEqual({ name: lead.domain, aliases: [], domain: lead.domain });
+    expect(input.business).toEqual({ name: null, domain: lead.domain });
     expect(d.findLocalCompetitors).toHaveBeenCalledWith(expect.objectContaining({ cuisine: "" }));
     const generic = buildQuestions({ cuisine: NO_CUISINE, city: "Irvine", state: "CA" }, defaultPicks(places));
     expect(input.questions.map((q) => q.text)).toEqual(generic.map((q) => q.long_text));
@@ -89,13 +85,13 @@ describe("startFreeAudit", () => {
   it("read but no cuisine → site name kept, generic questions", async () => {
     const d = deps({ readSite: vi.fn(async () => ({ status: "ok" as const, name: "Example Place" })) });
     await startFreeAudit(lead, d);
-    expect(d.createFreeAudit.mock.calls[0][0].brands[0].name).toBe("Example Place");
+    expect(d.createFreeAudit.mock.calls[0][0].business.name).toBe("Example Place");
   });
 
   it.each(["missing_keys", "error"] as const)("Maps %s → no competitors, still starts", async (status) => {
     const d = deps({ findLocalCompetitors: vi.fn(async () => ({ status, items: [] })) });
     expect(await startFreeAudit(lead, d)).toBe("run-1");
-    expect(d.createFreeAudit.mock.calls[0][0].brands).toHaveLength(1);
+    expect(d.createFreeAudit.mock.calls[0][0].competitors).toEqual([]);
     expect(d.log).toHaveBeenCalledWith(`free audit: competitors ${status}`);
   });
 
@@ -120,12 +116,12 @@ describe("startFreeAudit", () => {
 });
 
 describe("buildFreeAudit", () => {
-  it("caps competitors at what Maps returned (findLocalCompetitors already caps at 5)", async () => {
-    const items = Array.from({ length: 5 }, (_, i) => ({ name: `Example Place ${i}`, cid: String(i) }));
+  it("passes at most 5 competitors (create_free_audit's limit)", async () => {
+    const items = Array.from({ length: 7 }, (_, i) => ({ name: `Example Place ${i}`, cid: String(i) }));
     const input = await buildFreeAudit(
       lead,
       deps({ findLocalCompetitors: vi.fn(async () => ({ status: "ok" as const, items })) }),
     );
-    expect(input.brands).toHaveLength(6);
+    expect(input.competitors).toHaveLength(5);
   });
 });

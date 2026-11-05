@@ -1,20 +1,10 @@
 import type { Email } from "@/lib/email/resend";
-import { computeMetrics, type MetricAnswer } from "@/lib/metrics";
+import type { UnnotifiedFreeAudit } from "@/lib/queries/results";
 
-export const MAX_NOTIFY_ATTEMPTS = 5;
-
-export type UnnotifiedFreeAudit = {
-  run_id: string;
-  lead_id: string;
-  token: string;
-  domain: string;
-  email: string;
-  run_status: "complete" | "partial" | "failed";
-};
+export type { UnnotifiedFreeAudit };
 
 export type NotifyDeps = {
   listUnnotified: () => Promise<UnnotifiedFreeAudit[]>;
-  answers: (runId: string) => Promise<MetricAnswer[]>;
   send: (email: Email, idempotencyKey: string) => Promise<boolean>;
   markNotified: (runId: string, sent: boolean) => Promise<void>;
   bumpAttempts: (runId: string) => Promise<void>;
@@ -50,24 +40,24 @@ export async function notifyFreeAudits(deps: NotifyDeps): Promise<NotifySummary>
   }
   for (const a of await deps.listUnnotified()) {
     try {
-      if (a.run_status === "failed") {
-        await deps.markNotified(a.run_id, false);
-        log(`free audit notify: run ${a.run_id} failed, not emailed`);
+      if (a.status === "failed") {
+        await deps.markNotified(a.runId, false);
+        log(`free audit notify: run ${a.runId} failed, not emailed`);
         out.failedRuns++;
         continue;
       }
-      const n = computeMetrics({ answers: await deps.answers(a.run_id), citations: [], brands: [], freeAudit: true })
-        .visibility.denominator;
-      if (await deps.send(auditEmail(a, n, siteUrl, from), a.lead_id)) {
-        await deps.markNotified(a.run_id, true);
+      // okAnswers = status 'ok' answers: the visibility denominator for a free audit.
+      const n = a.okAnswers;
+      if (await deps.send(auditEmail(a, n, siteUrl, from), a.leadId)) {
+        await deps.markNotified(a.runId, true);
         out.sent++;
       } else {
-        await deps.bumpAttempts(a.run_id);
-        log(`free audit notify: run ${a.run_id} send failed`);
+        await deps.bumpAttempts(a.runId);
+        log(`free audit notify: run ${a.runId} send failed`);
         out.sendErrors++;
       }
     } catch {
-      log(`free audit notify: run ${a.run_id} error`);
+      log(`free audit notify: run ${a.runId} error`);
       out.sendErrors++;
     }
   }

@@ -57,6 +57,10 @@ export type MetricsInput = {
 
 export const TOO_FEW = 10;
 
+const CATEGORIES: readonly Category[] = ["reddit", "youtube", "social", "review_directory", "news_blog", "other"];
+const asCategory = (c: string | null): Category =>
+  (CATEGORIES as readonly string[]).includes(c ?? "") ? (c as Category) : "other";
+
 export const metric = (numerator: number, denominator: number): Metric => ({
   value: denominator ? numerator / denominator : null,
   numerator,
@@ -123,7 +127,7 @@ export function computeMetrics({ answers, citations, brands, freeAudit = false, 
   for (const c of citations) {
     if (!okIds.has(c.answer_id)) continue;
     const d = c.domain.toLowerCase();
-    const row = byDomain.get(d) ?? { domain: d, category: c.category ?? "other", count: 0 };
+    const row = byDomain.get(d) ?? { domain: d, category: asCategory(c.category), count: 0 };
     row.count++;
     byDomain.set(d, row);
   }

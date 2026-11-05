@@ -11,14 +11,13 @@ const PICKS_PER_KIND = 3;
 
 export type FreeAuditLead = { id: string; domain: string };
 
-export type FreeAuditBrand = { name: string; aliases: string[]; domain: string | null };
-
+// create_free_audit's p (migration 0012). A null business name becomes the domain in the snapshot.
 export type CreateFreeAuditInput = {
   lead_id: string;
-  domain: string;
-  brands: FreeAuditBrand[]; // the business first, then up to 5 Maps competitors
-  location: typeof FREE_AUDIT_LOCATION;
-  questions: { text: string; location_level: LocationLevel }[];
+  business: { name: string | null; domain: string; aliases?: string[] };
+  competitors: { name: string; domain?: string; aliases?: string[] }[]; // ≤5, Maps order
+  location: { country: string; state?: string; city?: string };
+  questions: { text: string; location_level: LocationLevel }[]; // 1..25
 };
 
 export type StartDeps = {
@@ -61,14 +60,12 @@ export async function buildFreeAudit(
   if (maps.status !== "ok") log(`free audit: competitors ${maps.status}`);
   const places = await deps.listLocalPlaces(city, state).catch((): LocalPlace[] => []);
   const questions = buildQuestions({ cuisine, city, state }, defaultPicks(places));
+  const { country, state: st, city: ct } = FREE_AUDIT_LOCATION;
   return {
     lead_id: lead.id,
-    domain: lead.domain,
-    brands: [
-      { name: site.name ?? lead.domain, aliases: [], domain: lead.domain },
-      ...maps.items.map((c) => ({ name: c.name, aliases: [], domain: c.domain ?? null })),
-    ],
-    location: FREE_AUDIT_LOCATION,
+    business: { name: site.name ?? null, domain: lead.domain },
+    competitors: maps.items.slice(0, 5).map((c) => ({ name: c.name, ...(c.domain ? { domain: c.domain } : {}) })),
+    location: { country, state: st, city: ct },
     questions: questions.map((q) => ({ text: q.long_text, location_level: FREE_AUDIT_LOCATION.level })),
   };
 }

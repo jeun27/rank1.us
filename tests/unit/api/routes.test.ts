@@ -11,6 +11,10 @@ const q = vi.hoisted(() => ({
 vi.mock("@/lib/queries/contactRequests", async (real) => ({ ...(await real<object>()), ...q }));
 vi.mock("@/lib/queries/leads", () => q);
 vi.mock("@/lib/supabase/service", () => ({ createServiceClient: () => ({}) }));
+// after() needs a Next request scope; run the callback inline so the audit start is observable.
+const auditService = vi.hoisted(() => ({ startFreeAuditWith: vi.fn(async () => "run-1") }));
+vi.mock("@/lib/audit/service", () => auditService);
+vi.mock("next/server", async (real) => ({ ...(await real<object>()), after: (fn: () => unknown) => void fn() }));
 
 import { POST as contactPOST } from "@/app/api/contact/route";
 import { POST as auditPOST } from "@/app/api/audit/request/route";
@@ -189,6 +193,10 @@ describe("POST /api/audit/request", () => {
     expect(row.token).toMatch(/^[A-Za-z0-9_-]{43}$/);
     await post(auditPOST, audit);
     expect(q.insertLead.mock.calls[1][1].token).not.toBe(row.token);
+    expect(auditService.startFreeAuditWith).toHaveBeenCalledWith(expect.anything(), {
+      id: "lead-1",
+      domain: "ramenhouse.com",
+    });
     const since: Date = q.countLeadsSince.mock.calls[0][1];
     expect(since.getUTCHours() + since.getUTCMinutes() + since.getUTCSeconds()).toBe(0);
   });
