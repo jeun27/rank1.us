@@ -417,6 +417,15 @@ Changed
   - add_competitor / dismiss_competitor: invoker RPCs with a per-business lock. They match by domain, else name, un-hide on re-add, are idempotent on dismiss, and validate with 22023.
 - Queries (src/lib/queries/shell.ts): getCurrentBusiness (self_serve only), listRunSummaries, getTopFixes, getQuestionsWithLatestAnswers, listCompetitors, addCompetitor, dismissSuggestion. Tests: tests/db/shell.test.ts, including the parity test against computeMetrics.
 - src/types/db.ts got the 0013 objects added by hand in the generator format (no local stack). Regenerate it with `pnpm db:types` when a stack is available.
+## Step 8 (data-pipeline): competitor suggestions and visibility series (branch feat/step8-suggestions)
+Step 8 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
+Lead decisions (Step 8 brief): suggested competitors = findLocalCompetitors for the business cuisine/city (existing cache + maps_lookup token) minus tracked and dismissed; keys missing → nothing shown. The 8-run line = the latest 8 complete/partial audit+weekly runs; fewer than 2 → hidden. Free audits never appear in /app.
+- One paid lookup serves both (lead, 2026-11-05): the 24 h cache holds the full Maps list (≤20, Maps order), keyed cuisine|city|state|domain with no limit in the key. src/lib/onboarding/lookup.ts lookupCompetitors does that. Onboarding's findCompetitorsAction shows the first 5, as before. findLocalCompetitors takes an optional `limit` (default 5, unchanged). withLimits moved from src/app/app/onboarding/limits.ts to src/lib/onboarding/limits.ts, and the old path re-exports it.
+- Test changed, with reason: tests/unit/onboarding/actions.test.ts now expects findLocalCompetitors to be called with `{ ...q, limit: 20 }` (was `q`), because onboarding's lookup fills the shared cache. A new test checks onboarding still returns only the top 5 while the cache keeps all of them.
+
+Changed
+- src/lib/onboarding/suggest.ts suggestCompetitors({business, tracked, dismissed}, {store}): drops Maps items whose bare domain or normalized name (detectMentions' normalize) matches a tracked or dismissed competitor or the business; first of each domain/name kept; Maps order; ≤5. limited / missing_keys / error → no items. Never throws.
+- src/lib/metrics/series.ts seriesFromSummaries(summaries): {points: {runId, at, metric: Metric}[] oldest → newest, visible: ≥2}.
 ## Step 7 (frontend): audit progress, results and exports (branch feat/step7-audit, issue #33)
 - /app/runs/[runId] (members, through RLS getRunResults) and /audit/[token] (service role, getFreeAuditByToken) share AuditView: UI.md 4b Audit progress and Audit results. The free page adds the 'Start for $99/mo' card and the Powered by Rank1 credit; the paid page never shows the credit.
 - Per-engine progress comes from run.jobs_total (3q/3q/3q/q) and the answers so far (lead: run_jobs has no member read path). While a run is queued or running, the page refreshes every 5 s.

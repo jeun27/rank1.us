@@ -90,7 +90,8 @@ describe("onboarding server actions", () => {
     });
     expect(readSite).toHaveBeenCalledWith("exampleramen.test");
     expect(await findCompetitorsAction(q)).toEqual({ status: "error", items: [] });
-    expect(findLocalCompetitors).toHaveBeenCalledWith(q);
+    // One lookup fills the shared cache with the full Maps list (≤20); onboarding shows the first 5.
+    expect(findLocalCompetitors).toHaveBeenCalledWith({ ...q, limit: 20 });
   });
 
   it("finish: rejects an empty tracked question before the RPC, saves a good one and goes to /app", async () => {
@@ -136,5 +137,13 @@ describe("onboarding server actions", () => {
     user.current = { id: "u2" };
     await findCompetitorsAction(q);
     expect(findLocalCompetitors).toHaveBeenCalledTimes(2);
+  });
+
+  it("caches the full Maps list but shows only the top 5 in onboarding", async () => {
+    user.current = { id: "u1" };
+    const items = Array.from({ length: 8 }, (_, i) => ({ name: `Example Place ${i + 1}`, cid: `c${i + 1}` }));
+    vi.mocked(findLocalCompetitors).mockResolvedValue({ status: "ok", items } as never);
+    expect(await findCompetitorsAction(q)).toEqual({ status: "ok", items: items.slice(0, 5) });
+    expect([...cache.values()]).toEqual([{ status: "ok", items }]);
   });
 });
