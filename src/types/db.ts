@@ -497,7 +497,13 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "ensure_self_serve_workspace":
+            "create_business_onboarding":
+{ Args: { "p": Json }; Returns: string
+                           },
+"create_dfy_client":
+{ Args: { "p": Json }; Returns: Json
+                           },
+"ensure_self_serve_workspace":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
 "my_landing":
