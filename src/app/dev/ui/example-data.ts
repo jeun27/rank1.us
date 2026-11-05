@@ -1,4 +1,5 @@
 // Example data: invented Irvine restaurants for the component gallery. Not real results.
+import { formatPercent } from "@/components/ui/StatNumber";
 import type { Metric } from "@/types/metrics";
 
 const metric = (numerator: number, denominator: number): Metric => ({
@@ -18,3 +19,18 @@ export const exampleLeaderboard = [
 
 export const exampleVisibility = metric(9, 30);
 export const exampleNoAnswers = metric(0, 0);
+
+// A partial weekly run and an in-progress audit (docs/COPY.md wording).
+export const examplePartialRun = { jobsOk: 230, jobsTotal: 250 };
+export const exampleProgress = { answersDone: 120, answersTotal: 250 };
+
+export function pointsChange(now: Metric, before: Metric) {
+  const pts = parseInt(formatPercent(now)) - parseInt(formatPercent(before));
+  return pts === 0 ? "0 pts" : `${pts > 0 ? "+" : "−"}${Math.abs(pts)} pts`;
+}
+
+export const partialRunLabel = ({ jobsOk, jobsTotal }: typeof examplePartialRun) =>
+  `Last run partial: ${jobsOk} of ${jobsTotal} answers`;
+
+export const progressLabel = ({ answersDone, answersTotal }: typeof exampleProgress) =>
+  `Checking 4 AI engines… ${answersDone} of ${answersTotal} answers`;

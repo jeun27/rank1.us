@@ -11,22 +11,30 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { Logo } from "@/components/ui/Logo";
 import { StatNumber, formatPercent } from "@/components/ui/StatNumber";
 import { Table } from "@/components/ui/Table";
-import { exampleCheck, exampleLeaderboard, exampleNoAnswers, exampleVisibility } from "./example-data";
+import {
+  exampleCheck,
+  exampleLeaderboard,
+  exampleNoAnswers,
+  examplePartialRun,
+  exampleProgress,
+  exampleVisibility,
+  partialRunLabel,
+  pointsChange,
+  progressLabel,
+} from "./example-data";
 
 export const metadata: Metadata = { title: "UI components", robots: { index: false } };
 
-function Section({ name, children }: { name: string; children: ReactNode }) {
+const you = exampleLeaderboard.find((r) => r.you)!;
+
+function Section({ name, example, children }: { name: string; example?: boolean; children: ReactNode }) {
   return (
     <section className="border-t border-border py-8">
       <h2 className="mb-4 font-display text-h2 font-semibold md:text-h2-md">{name}</h2>
+      {example && <p className="mb-4"><Badge tone="info">Example data</Badge></p>}
       <div className="flex flex-col gap-4">{children}</div>
     </section>
   );
-}
-
-function change(now: Parameters<typeof formatPercent>[0], before: Parameters<typeof formatPercent>[0]) {
-  const pts = parseInt(formatPercent(now)) - parseInt(formatPercent(before));
-  return pts === 0 ? "0 pts" : `${pts > 0 ? "+" : "−"}${Math.abs(pts)} pts`;
 }
 
 export default function DevUiPage() {
@@ -71,11 +79,11 @@ export default function DevUiPage() {
         </Card>
       </Section>
 
-      <Section name="Badge">
+      <Section name="Badge" example>
         <div className="flex flex-wrap gap-2">
-          <Badge tone="success">+6 pts</Badge>
+          <Badge tone="success">{pointsChange(you.now, you.lastWeek)}</Badge>
           <Badge tone="error">Paused</Badge>
-          <Badge tone="warn">Last run partial: 230 of 250 answers</Badge>
+          <Badge tone="warn">{partialRunLabel(examplePartialRun)}</Badge>
           <Badge tone="info">You</Badge>
         </div>
       </Section>
@@ -102,13 +110,13 @@ export default function DevUiPage() {
               </span>
             ),
             visibility: formatPercent(r.now),
-            change: change(r.now, r.lastWeek),
+            change: pointsChange(r.now, r.lastWeek),
           }))}
           footnote={<Freshness checkedAt={exampleCheck.checkedAt} answers={exampleCheck.answers} now={exampleCheck.now} />}
         />
       </Section>
 
-      <Section name="StatNumber">
+      <Section name="StatNumber" example>
         <div className="flex flex-wrap gap-12">
           <StatNumber metric={exampleVisibility} />
           <StatNumber metric={exampleNoAnswers} />
@@ -124,13 +132,13 @@ export default function DevUiPage() {
         </Card>
       </Section>
 
-      <Section name="LoadingState">
+      <Section name="LoadingState" example>
         <Card>
-          <LoadingState message="Checking 4 AI engines… 120 of 250 answers" decorativeJelly />
+          <LoadingState message={progressLabel(exampleProgress)} decorativeJelly />
         </Card>
       </Section>
 
-      <Section name="Freshness">
+      <Section name="Freshness" example>
         <Freshness checkedAt={exampleCheck.checkedAt} answers={exampleCheck.answers} now={exampleCheck.now} />
       </Section>
     </main>
