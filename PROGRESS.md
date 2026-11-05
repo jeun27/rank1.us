@@ -1,6 +1,6 @@
 # PROGRESS
 
-## Step 0: Set up the project (in progress)
+## Step 0: Set up the project (done: qa PASS, docs/QA.md)
 Changed
 - Created private repo jeun27/rank1.us. Next.js 16.4.5 app with TypeScript strict, Tailwind v4, ESLint, pnpm. Vitest + Testing Library + Playwright + axe.
 - CLAUDE.md, the five .claude/agents files, TASKS.md, PROGRESS.md, HANDOFF.md, .env.example (every name from docs/INTEGRATIONS.md, one-line comment each).

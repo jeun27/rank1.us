@@ -7,4 +7,4 @@
 - [x] 4. docs/UI.md (section 4), docs/COPY.md (all exact copy from section 4), docs/SCHEMA.md and docs/INTEGRATIONS.md (section 5), docs/AEO.md (section 6).
 - [x] 5. src/styles/tokens.ts and Tailwind theme from docs/UI.md tokens. Fraunces (600), Public Sans (400, 600) via next/font/google. tabular-nums on numbers.
 - [x] 6. src/components/ui: Button (primary jellyDeep/white, secondary text link, final-CTA amber/ink), Card, Badge (success/error/warn/info), Banner (error/info), Table, StatNumber, EmptyState, LoadingState (Jelly squish), Freshness ("checked X h ago · n answers").
-- [ ] 7. /dev/ui page shows every component and state. Deployed to a Vercel preview.
+- [x] 7. /dev/ui page shows every component and state. Deployed to a Vercel preview.
