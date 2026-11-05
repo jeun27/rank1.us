@@ -11,7 +11,9 @@ import type { Json } from "@/types/db";
 import { createBusinessOnboarding } from "@/lib/queries/onboarding";
 import { createClient } from "@/lib/supabase/server";
 import type { CompetitorQuery, CompetitorSearch, OnboardingInput, SiteRead } from "./contract";
-import { withLimits, type LookupStore } from "./limits";
+import { withLimits, type LookupStore } from "@/lib/onboarding/limits";
+import { lookupCompetitors } from "@/lib/onboarding/lookup";
+import { MAX_SUGGESTED_COMPETITORS } from "@/lib/onboarding/competitors";
 
 // Server actions are public endpoints: fetch sites or pay for Maps only for a signed-in
 // self-serve owner who is still onboarding (team, DFY and set-up owners get the fallbacks).
@@ -50,23 +52,11 @@ export async function readSiteAction(domain: string): Promise<SiteRead> {
 export async function findCompetitorsAction(q: CompetitorQuery): Promise<CompetitorSearch> {
   const caller = await onboardingClient();
   if (!caller) return { status: "error", items: [] };
-  const key = [
-    q.cuisine.trim().toLowerCase(),
-    q.city.trim().toLowerCase(),
-    q.state.trim().toUpperCase(),
-    q.domain,
-  ].join("|");
-  const r = await withLimits(
-    storeFor(caller),
-    "maps_lookup",
-    key,
-    async (): Promise<CompetitorSearch> => {
-      const { status, items } = await findLocalCompetitors(q);
-      return { status, items };
-    },
-    (x) => x.status === "ok",
-  );
-  return r === "limited" ? { status: "error", items: [] } : r;
+  const r = await lookupCompetitors(storeFor(caller), q, findLocalCompetitors);
+  // The cache holds the full Maps list; onboarding shows the top 5.
+  return r === "limited"
+    ? { status: "error", items: [] }
+    : { status: r.status, items: r.items.slice(0, MAX_SUGGESTED_COMPETITORS) };
 }
 
 // The RPC enforces the limits too; this keeps a tampered payload from reaching it half-filled.

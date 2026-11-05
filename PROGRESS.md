@@ -399,3 +399,13 @@ Changed
 - src/lib/audit/start.ts and notify.ts, plus docs/COPY.md "Audit email (lead, 2026-11-05)".
 - src/lib/onboarding/competitors.ts: the Maps keyword is trimmed, so an empty cuisine searches "restaurant".
 - Wiring (after #34 / 0012): src/lib/audit/service.ts binds the real dependencies on the service client: create_free_audit via rpc (p = {lead_id, business {name|null, domain}, competitors ≤5, location, questions}); listUnnotifiedFreeAudits, markFreeAuditNotified and bumpFreeAuditNotifyAttempts from src/lib/queries/results.ts (okAnswers is the email's {n}). POST /api/audit/request calls after(() => startFreeAuditWith(db, {id, domain})) once insertLead returns, so the 202 and the copy are unchanged. GET /api/cron/run-jobs runs notifyFreeAuditsWith after each drain and returns `notified` alongside the drain summary.
+
+## Step 8 (data-pipeline): competitor suggestions and visibility series (branch feat/step8-suggestions)
+Step 8 built from ENG_HANDOFF_OVERNIGHT §6 + docs/*; Build Pack not readable; reconcile later.
+Lead decisions (Step 8 brief): suggested competitors = findLocalCompetitors for the business cuisine/city (existing cache + maps_lookup token) minus tracked and dismissed; keys missing → nothing shown. The 8-run line = the latest 8 complete/partial audit+weekly runs; fewer than 2 → hidden. Free audits never appear in /app.
+- One paid lookup serves both (lead, 2026-11-05): the 24 h cache holds the full Maps list (≤20, Maps order), keyed cuisine|city|state|domain with no limit in the key. src/lib/onboarding/lookup.ts lookupCompetitors does that. Onboarding's findCompetitorsAction shows the first 5, as before. findLocalCompetitors takes an optional `limit` (default 5, unchanged). withLimits moved from src/app/app/onboarding/limits.ts to src/lib/onboarding/limits.ts, and the old path re-exports it.
+- Test changed, with reason: tests/unit/onboarding/actions.test.ts now expects findLocalCompetitors to be called with `{ ...q, limit: 20 }` (was `q`), because onboarding's lookup fills the shared cache. A new test checks onboarding still returns only the top 5 while the cache keeps all of them.
+
+Changed
+- src/lib/onboarding/suggest.ts suggestCompetitors({business, tracked, dismissed}, {store}): drops Maps items whose bare domain or normalized name (detectMentions' normalize) matches a tracked or dismissed competitor or the business; first of each domain/name kept; Maps order; ≤5. limited / missing_keys / error → no items. Never throws.
+- src/lib/metrics/series.ts seriesFromSummaries(summaries): {points: {runId, at, metric: Metric}[] oldest → newest, visible: ≥2}.

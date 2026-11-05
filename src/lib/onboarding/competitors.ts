@@ -31,7 +31,7 @@ export async function findLocalCompetitors(
   const own = input.domain ? bareDomain(input.domain) : null;
   const items = res.items
     .filter((i) => !own || !i.domain || bareDomain(i.domain) !== own)
-    .slice(0, MAX_SUGGESTED_COMPETITORS)
+    .slice(0, input.limit ?? MAX_SUGGESTED_COMPETITORS)
     .map((i) => ({
       name: i.title,
       cid: i.cid,
