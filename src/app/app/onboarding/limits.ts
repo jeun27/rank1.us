@@ -11,27 +11,27 @@ export const LIMITS = {
 export const CACHE_MS = 24 * HOUR;
 
 export type LookupKind = keyof typeof LIMITS;
-// One signed-in user's lookups.
+export type Limit = { max: number; windowMs: number };
+// One signed-in user's lookups: a 24 h result cache and rate tokens (rate_events, backend).
 export type LookupStore = {
-  count: (kind: LookupKind, since: Date) => Promise<number>;
-  cached: (kind: LookupKind, key: string, since: Date) => Promise<unknown>;
-  record: (kind: LookupKind, key: string, result: unknown) => Promise<void>;
+  cached: (kind: LookupKind, key: string, maxAgeMs: number) => Promise<unknown>;
+  // True, and one event recorded, only when every window still has room.
+  take: (kind: LookupKind, limits: readonly Limit[]) => Promise<boolean>;
+  save: (kind: LookupKind, key: string, result: unknown) => Promise<void>;
 };
 
-// A cache hit is free. Otherwise every call counts, and only results worth reusing are cached.
+// A cache hit is free. Otherwise every call takes a token, and only results worth reusing are cached.
 export async function withLimits<T>(
   store: LookupStore,
   kind: LookupKind,
   key: string,
-  now: Date,
   run: () => Promise<T>,
   cacheable: (r: T) => boolean,
 ): Promise<T | "limited"> {
-  const hit = await store.cached(kind, key, new Date(now.getTime() - CACHE_MS));
+  const hit = await store.cached(kind, key, CACHE_MS);
   if (hit) return hit as T;
-  for (const { max, windowMs } of LIMITS[kind])
-    if ((await store.count(kind, new Date(now.getTime() - windowMs))) >= max) return "limited";
+  if (!(await store.take(kind, LIMITS[kind]))) return "limited";
   const result = await run();
-  await store.record(kind, key, cacheable(result) ? result : null);
+  if (cacheable(result)) await store.save(kind, key, result);
   return result;
 }
