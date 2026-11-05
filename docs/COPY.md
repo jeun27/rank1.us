@@ -60,7 +60,6 @@ Progress percentages ("48%") are computed from n of d, so they are not copy.
 | Sign-in not configured (/signin?error=config) | "Sign-in isn't available right now. Try again in a few minutes." |
 | Account menu label and item | "Account", "Sign out" |
 | Landing header link to /signin | "Log in" |
-| /app/billing paywall stub: Pricing card copy, "Start for $99/mo" disabled, caption | "Checkout isn't open yet." |
 | Placeholder H1s | /app/onboarding "Add your business", /app "Dashboard", /client "Dashboard", /app/billing "Billing" |
 
 | Jelly | Rule |
@@ -150,6 +149,7 @@ Step 14. /app/billing and the header Business switcher. The UI.md 4b "Billing + 
 | Switcher search (more than 8 businesses) | "Search businesses" |
 | Switcher status dot (screen readers) | "Active", "Paused" (UI.md: moss active, brick paused) |
 | Billing, past due | "Past due" (warn badge) |
+| Billing, paused | "Paused" (warn badge; the plan stays, with 'Manage billing') |
 | Billing, paid | "Plan", "{n} businesses x $99 = ${n x 99}/mo" ("1 business" in the singular), "Next invoice {date}" |
 | While an added business waits for its seat | "Adding your business…" (after 30 s it stays, with "Try again"; no error) |
 | Checkout or portal redirect failed | "We couldn't open billing. Try again in a minute." |
