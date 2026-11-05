@@ -1,12 +1,12 @@
 # QA
 
-## Step 0: Set up the project (re-run)
+## Step 0: Set up the project (final)
 
-Checked 2026-11-05 on commit d864d72 (branch step-0-claude-md).
-Preview: https://rank1-c5us4op76-bryan-flowhighlevels-projects.vercel.app (Vercel API: git ref step-0-claude-md, sha d864d72, READY).
+Checked 2026-11-05 on commit 26a1aef (branch step-0-claude-md).
+Preview: https://rank1-oq7rbwrkg-bryan-flowhighlevels-projects.vercel.app (Vercel API: git ref step-0-claude-md, sha 26a1aef, READY).
 Preview runs use VERCEL_AUTOMATION_BYPASS_SECRET from .env.local, sent as x-vercel-protection-bypass (playwright.config.ts).
 
-Result: FAIL. 1 blocking problem, listed at the end. The axe failure from the first run is fixed.
+Result: PASS. Every check passes locally and on the preview. No blocking problems.
 
 ### Commands
 
@@ -15,10 +15,10 @@ Result: FAIL. 1 blocking problem, listed at the end. The axe failure from the fi
 | `pnpm test` | PASS. 7 files, 28 tests passed |
 | `pnpm typecheck` | PASS. exit 0 |
 | `pnpm lint` | PASS. exit 0 |
-| `pnpm e2e` (local, `.next` deleted first, fresh `next build`) | PASS. 12 passed, 0 failed |
-| `E2E_BASE_URL=<preview> pnpm e2e` | PASS. 12 passed, 0 failed |
+| `pnpm e2e` (local, `.next` deleted first, fresh `next build`) | PASS. 14 passed, 0 failed |
+| `E2E_BASE_URL=<preview> pnpm e2e` | PASS. 14 passed, 0 failed |
 
-Tests changed since the first run: tests/unit/tokens.test.ts changed only the errorBg value to #F7E6E3 (matches UI.md). New: tests/unit/ui/logo.test.tsx, tests/unit/example-data.test.ts, tests/e2e/logo.spec.ts, tests/e2e/dev-ui-example-data.spec.ts. No test deleted, skipped or weakened.
+Tests changed since the first run: tests/unit/tokens.test.ts changed only the errorBg value to #F7E6E3 (matches UI.md). New: tests/unit/ui/logo.test.tsx, tests/unit/example-data.test.ts, tests/e2e/logo.spec.ts, tests/e2e/dev-ui-example-data.spec.ts. 26a1aef adds one test to tests/e2e/dev-ui-example-data.spec.ts (Card demo is Example Ramen House, "34% of 160 answers" absent). No test deleted, skipped or weakened.
 
 ### TASKS.md step 0
 
@@ -42,9 +42,9 @@ Tests changed since the first run: tests/unit/tokens.test.ts changed only the er
 | 375px has no horizontal scroll | PASS | preview: scrollWidth 375 at 375px, 1280 at 1280px |
 | Tap targets >= 44px | PASS | dev-ui.spec.ts:28 passed, local and preview |
 | No secrets in client bundle | PASS | Fresh local build (20 files in .next/static): no match for `sk_(test|live)_`, `whsec_`, `service_role`, JWT `eyJhbGciOi`, `pplx-`, `re_`, `GOCSPX-`; no server-only env name from .env.example; neither .env.local value present |
-| No fake numbers | FAIL | Badge, Table, StatNumber, LoadingState and Freshness now use example-data.ts, and every section is labeled Example data (dev-ui-example-data.spec.ts passed). One string is still typed in: src/app/dev/ui/page.tsx:78 "Example data: named in 34% of 160 answers, +6 pts". The numbers in the Logo section (lines 50, 56) are pixel sizes, not stats |
+| No fake numbers | PASS | Every gallery number comes from example-data.ts. The Card demo is "Example Ramen House" with StatNumber 30%, "named in 75 of 250 answers" (exampleLeaderboard). The old hand-typed "34% of 160 answers" is gone (grep of page.tsx: no stat literals; new e2e assertion passed). Every example section is labeled Example data. Numbers in the Logo section are pixel sizes |
 | Sample size + freshness shown | PASS | StatNumber "named in 9 of 30 answers"; Freshness "Checked 14 h ago · 250 answers · API-measured, directional" |
-| /dev/ui hidden in production | PASS | production deployment rank1-i4qctuh3f: /dev/ui 404 |
+| /dev/ui hidden in production | PASS | production deployment rank1-i4qctuh3f (latest production): /dev/ui 404 |
 
 ### Favicon (preview)
 
@@ -61,4 +61,4 @@ Tests changed since the first run: tests/unit/tokens.test.ts changed only the er
 
 ### Blocking problems
 
-1. Hardcoded gallery numbers: src/app/dev/ui/page.tsx:78 ("34% of 160 answers, +6 pts") is not built from example-data.ts. It is the exact COPY.md hero card string and labeled Example data, but its numbers don't come from example-data.ts, which the gallery numbers rule requires.
+None.
