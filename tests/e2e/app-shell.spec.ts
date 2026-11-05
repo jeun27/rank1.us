@@ -66,6 +66,8 @@ test("questions drawer: keyboard opens it, Tab stays inside, Esc closes and focu
 test("sources: the location select is keyboard reachable and lists All locations first", async ({ page }) => {
   await page.goto("/dev/app?state=sources-success");
   const select = page.getByLabel("Location");
+  // focus() doesn't wait for visibility; the streamed content is hidden until React moves it into place.
+  await expect(select).toBeVisible();
   await select.focus();
   await expect(select).toBeFocused();
   await expect(select.locator("option").first()).toHaveText("All locations");
