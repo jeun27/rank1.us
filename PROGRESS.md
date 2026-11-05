@@ -531,3 +531,16 @@ Changed
 - The copy templates are the SCHEMA §5b customer copy verbatim (a test reads docs/SCHEMA.md); detail is set only for fix.
 - Wiring (after #50): src/lib/fixes/service.ts reads fix_rules.enabled (service role) and uses listRunsNeedingFixChecks(db, 1) and recordFixResults. GET /api/cron/run-jobs runs it after the drain and notify, with time left = maxDuration (300 s) − elapsed since the request started, and returns `fixes`.
 - PROGRESS.md: the duplicate "## Step 9 (data-pipeline)" section on main (a merge leftover) is merged into one copy, with no line dropped.
+
+## Step 11 (data-pipeline): context brief from stored data (branch feat/step11-context)
+Step 11 built from ENG_HANDOFF_OVERNIGHT §3/§6 + issue #10; Build Pack not readable; reconcile later.
+Lead decisions (Step 11 brief): no in-app AI. Copy context = a Markdown brief of stored numbers and texts for the selected item, each with n + freshness and "API-measured, directional": business, latest visibility (overall + per engine), leaderboard, top sources, open fixes (title + detail), and questions where the business wasn't named. Never why_note, raw, cost, vendor stats, lead emails or tokens. Open in Claude opens exactly https://claude.ai after copying the brief; no ?q= and no data in the URL.
+
+Changed
+- src/lib/workspace/context.ts:
+  - buildContextMarkdown(input, selection, now, prompt): input = getCurrentBusiness/listDfyBusinesses + computeMetrics + computeSources + listFixes + getQuestionsWithLatestAnswers + listRunSummaries.
+  - It keeps #11's format (# title, "- label: text", namedText/visibilityText/pointsChange/fallbackNote, ## Sources, ## Prompt template). It reads named fields only. Every % carries "named in a of b answers"; null → "no answers yet".
+  - Lists cap at 10 (questions 25) with "…and N more"; the brief caps at 12,000 chars by dropping the lowest sections, and the header and visibility are always kept.
+- claudeUrl and CLAUDE_Q_MAX are removed and CLAUDE_URL = "https://claude.ai" replaces them. ContextPane's href uses it (its onClick still copies the brief first). The team e2e now asserts the exact URL.
+- Tests changed, with reason: tests/unit/workspace/brief.test.ts's two claudeUrl ?q= prefill tests are replaced by one asserting CLAUDE_URL === "https://claude.ai" (lead, Step 11: the prefill is removed). tests/e2e/team-workspace.spec.ts asserts the href is exactly CLAUDE_URL and the popup is https://claude.ai/ (routed, never reaches the real site).
+- Removed two unused imports in tests/unit/fixes/rules.test.ts (lint warnings from Step 10).

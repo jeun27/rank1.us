@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { COPY, evaluateFixes, type FixResult } from "@/lib/fixes";
 import { checkRobots } from "@/lib/fixes/r14-robots";
