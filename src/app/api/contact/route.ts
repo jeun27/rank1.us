@@ -6,6 +6,7 @@ import { readBody } from "@/lib/spam/readBody";
 import { verifyTurnstile } from "@/lib/spam/turnstile";
 import { TURNSTILE_FIELD, validateContact } from "@/lib/spam/validate";
 import { createServiceClient } from "@/lib/supabase/service";
+import type { DbClient } from "@/lib/queries/client";
 
 // Runs on the Node.js runtime (the default). cacheComponents rejects the "runtime" segment config.
 
@@ -20,9 +21,10 @@ export async function POST(req: Request) {
   const ip = clientIp(req);
   if (!(await verifyTurnstile(body[TURNSTILE_FIELD], ip))) return Response.json({ error: "turnstile" }, { status: 403 });
 
+  let db: DbClient;
   let id: string;
-  const db = createServiceClient();
   try {
+    db = createServiceClient();
     const ipHash = hashIp(ip);
     if ((await countRecentContactRequests(db, ipHash, contactWindowStart(new Date()))) >= CONTACT_LIMIT) {
       return Response.json({ error: "rate_limited" }, { status: 429 });
