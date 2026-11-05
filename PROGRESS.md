@@ -540,3 +540,4 @@ Changed
 - The shared FixList (src/components/fixes) is reused by Steps 11/12. There, canWrite={false} renders a read-only status badge.
 - Rule 3: a Measured line (latest run, ok answers) under the H1.
 - Nav: "What to fix next" after Sources. The Dashboard section heading links to /app/fixes (top 3 from getTopFixes, same ranking).
+- n fix (#57): the Freshness n comes from loadShell().latest.metrics, the same object the Dashboard hero renders. tests/unit/app/measured.test.tsx (the fixes n equals the Dashboard n with a no_overview answer) supersedes measured.test.ts, which only checked runMeasured against jobs_ok and went away with runMeasured.
