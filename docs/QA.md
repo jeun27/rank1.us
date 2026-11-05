@@ -1,5 +1,44 @@
 # QA
 
+## Step 13: Weekly cron
+
+Checked 2026-11-05 on main at 9f696c3:
+- #68 (64d0212): weekly run enqueue and cache pruning
+- #69 (9f696c3): weekly cron route
+
+The sandbox Docker disk is full, so there was no local Supabase. test-db and e2e come from CI on main's push of 9f696c3 (run 42111709487). Unit, typecheck, lint and format ran locally in the sandbox. The 401 checks ran from the Mac on #69's preview at 08509f8, whose tree is identical to 9f696c3. No live paid calls. I don't have CRON_SECRET, so the in-window and outside-window paths come from unit tests.
+Preview: https://rank1-f16z2r9t8-bryan-flowhighlevels-projects.vercel.app (sha 08509f8, READY).
+Sources: Jeun's ENG_HANDOFF_OVERNIGHT §6 Step 13, the lead's brief (rank1-step13.md).
+
+Result: PASS. No blocking problems.
+
+### Commands
+
+| Command | Result |
+|---|---|
+| `pnpm test` (sandbox, 9f696c3) | PASS. 81 files, 978 tests passed |
+| `pnpm typecheck`, `pnpm lint`, `pnpm format:check` (sandbox) | PASS |
+| CI on main push 9f696c3 | PASS. test-db 18 files / 347 tests; e2e 320 passed, 2 skipped; test, typecheck, lint, format green |
+
+### Checks
+
+| Check | Result | Evidence |
+|---|---|---|
+| vercel.json: /api/cron/weekly at "0 13,14 * * 1" plus run-jobs | PASS | vercel.json crons = run-jobs "* * * * *" and weekly "0 13,14 * * 1"; pinned by tests/unit/vercel-config.test.ts |
+| Window: Monday 06:xx America/Los_Angeles only, across both 2026 DST switches, exactly one fire per Monday | PASS | src/lib/runs/weekly.ts `isWeeklyWindow` (Intl, America/Los_Angeles, Monday + hour 6). tests/unit/runs/weekly.test.ts covers: PST before Mar 8 (14:00 UTC yes, 13:00 no); PDT after (13:00 yes, 14:00 no); Oct 26 PDT; Nov 2 PST after the Nov 1 switch; 06:59:59 yes, 05:59:59 and 07:00 no; Sunday and Tuesday no. "exactly one of the two Monday fires (13:00, 14:00 UTC) matches, every Monday of 2026". laWeekStart is the same LA Monday for both fires |
+| GET /api/cron/weekly: missing/wrong bearer → 401 | PASS | preview: no header, "Bearer wrong", "bearer x", "Bearer " → 401 `{"error":"unauthorized"}` on /api/cron/weekly and /api/cron/run-jobs. Unit weekly-route.test: undefined, "", wrong, lowercase bearer, bare secret, secret + x → 401; 401 for everyone while CRON_SECRET is unset |
+| Correct request outside the window → no-op | PASS (unit) | weekly-route.test "the other Monday fire (13:00 UTC in PST) is a no-op: no DB client at all"; weekly.test "outside the window: a no-op, no DB call". The response is 200 `{skipped: "outside_window"}` |
+| enqueue_weekly_runs: eligibility, idempotency (incl. concurrent), open-run skip, current-week guard | PASS | CI db weekly.test.ts: "enqueues paid, trialing and DFY businesses; never unpaid, past_due, archived or question-less ones", "is idempotent within the week: a second call adds nothing, even after the first run finished", "a weekly run from an earlier week doesn't block this week's", "skips a business with an open run", "two concurrent calls for the same week make exactly one run per business", "rejects a week start that isn't the current LA week's Monday (22023)" |
+| prune_ephemeral boundaries | PASS | db "deletes lookup_cache rows over 24 h and rate_events over 48 h, keeping newer ones" |
+| Service-only (42501) | PASS | db "members and anon get 42501 on both functions" |
+| Constant-time CRON_SECRET on both crons | PASS | src/lib/runs/drain.ts `cronAuthorized`: refuses an unset/blank secret or a missing header, then `timingSafeEqual` on SHA-256 digests of the header and `Bearer ${secret}` (equal length, so no length leak). Both routes import it. Fixes the Step 6 QA note |
+| 500 bodies carry no DB text | PASS | weekly → `{"error":"enqueue_failed"}` / `{"error":"prune_failed"}`; run-jobs → `{"error":"claim_failed"}`; logs carry Postgres codes and counts only. Unit "enqueue error → prune still runs → 500 with no DB text; the log has codes only", "prune error → 500 prune_failed, no DB text", run-jobs "claim_jobs failing → 500 with a fixed label and no DB error text". Fixes the Step 6 QA note |
+| Weekly route only enqueues, logs counts only | PASS | route calls enqueue + prune only (no engine call); log line "weekly {week}: enqueued= skipped= failed= pruned lookup_cache= rate_events="; unit "logs counts only" |
+
+### Blocking problems
+
+None.
+
 ## Step 12: Client invites + DFY client dashboard
 
 Checked 2026-11-05 on main at 092636f:
