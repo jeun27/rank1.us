@@ -110,7 +110,7 @@ export function BusinessSwitcher({
       )}
       {failed && (
         <p role="alert" className="mt-1 text-caption text-brick">
-          {c.openFailed}
+          {c.saveFailed}
         </p>
       )}
       {open && (

@@ -152,7 +152,8 @@ Step 14. /app/billing and the header Business switcher. The UI.md 4b "Billing + 
 | Billing, past due | "Past due" (warn badge) |
 | Billing, paid | "Plan", "{n} businesses x $99 = ${n x 99}/mo" ("1 business" in the singular), "Next invoice {date}" |
 | While an added business waits for its seat | "Adding your business…" (after 30 s it stays, with "Try again"; no error) |
-| Checkout, portal, add or remove failed | "We couldn't open billing. Try again in a minute." |
+| Checkout or portal redirect failed | "We couldn't open billing. Try again in a minute." |
+| Add or Remove business failed | reuses "We couldn't save that. Try again." |
 
 ## Admin (lead, 2026-11-05)
 

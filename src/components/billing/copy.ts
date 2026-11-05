@@ -15,6 +15,7 @@ export const billingCopy = {
   updateCard: "Update card",
   pastDue: "Past due",
   openFailed: "We couldn't open billing. Try again in a minute.",
+  saveFailed: "We couldn't save that. Try again.",
   // Business switcher
   switcher: "Business switcher",
   search: "Search businesses",
