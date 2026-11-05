@@ -32,7 +32,7 @@ Progress percentages ("48%") are computed from n of d, so they are not copy.
 | Contact tier options (no dollar amounts) | "Agency bundle", "Done-for-you (custom)", "Other" |
 | Audit form labels | "Email", "Your domain" (no email placeholder) |
 | Audit domain placeholder | "yourbusiness.com" |
-| Audit success | "Got it. We'll email your audit to {email}." (proposed by lead, pending Jeun) |
+| Audit success | "Got it. We'll email your audit to {email}." |
 | Email error (both forms) | "Add a valid email, like you@ramenhouse.com" |
 | Contact name error | "Add your name" |
 | Contact message error | "Add a message" |
