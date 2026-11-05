@@ -62,9 +62,11 @@ describe("active businesses limited to seats_quantity", () => {
     expect(error?.message).toMatch(/no free seat/);
   });
 
-  it("a new workspace (seats 0) cannot add a business before checkout", async () => {
+  // Lead decision (Step 5): an unpaid workspace (seats 0) may hold exactly one active business.
+  it("a new workspace (seats 0) can add one business before checkout, not a second", async () => {
     const ws = must(await a.db.from("workspaces").insert({ name: "Example New", owner_id: a.id }).select().single());
-    const { error } = await a.db.from("businesses").insert({ workspace_id: ws.id, name: "Example Four" });
+    must(await a.db.from("businesses").insert({ workspace_id: ws.id, name: "Example Four" }));
+    const { error } = await a.db.from("businesses").insert({ workspace_id: ws.id, name: "Example Five" });
     expect(error?.message).toMatch(/no free seat/);
   });
 });
