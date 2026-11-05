@@ -314,13 +314,15 @@ UNVERIFIED / open
   - Runs need subscription_status active/trialing or a DFY business. free_audit is Step 7.
   - Citations are deduped by normalized URL per answer at storage time. The worker normalizes, and unique(answer_id, url) is the safety net.
   - One queued/running run per business (P0409).
+  - Spend cap (review): kind 'weekly' is service role only (the Step 13 cron). A member may start one 'audit' per business per rolling 24 h, counted from runs.started_at, failed runs excluded (P0429 audit_limit). The service role isn't capped.
+  - Question deleted mid-run (review): its jobs cascade away, and an AFTER DELETE trigger recomputes the run from the remaining jobs. jobs_total = remaining jobs. The run closes once none are queued/running. finish_job on a deleted job is a no-op. The deleted question's answers stay (question_id set null) but no longer count in the run's totals.
   - Stale-job exhaustion writes a failed answer.
   - Run counts are recomputed from answers on every finish, never incremented, because Vercel Cron may deliver twice.
 - Cron (lead, 2026-11-05): the team is on Vercel Pro, so `* * * * *` is allowed. Crons run only on production, and production updates only on a release tag, so no paid engine calls happen until Jeun's next release AND the API keys exist. The cron route and vercel.json ship in the data-pipeline PR with processJob.
 - Migration 20261105000011 (+ .down.sql):
   - run_jobs: RLS on, ALL revoked from anon/authenticated, unique(run_id, question_id, engine, run_index).
   - create_run(business, kind): definer, member or service role.
-    - Errors: 42501 not allowed, P0402 subscription_required, P0409 run_in_progress, 22023 bad kind / archived / no active questions.
+    - Errors: 42501 not allowed (incl. a member asking for weekly), P0402 subscription_required, P0409 run_in_progress, P0429 audit_limit, 22023 bad kind / archived / no active questions.
     - Jobs: 10 per active question, 3/3/3/1.
   - claim_jobs(limit), service only: FOR UPDATE SKIP LOCKED. A job locked over 10 minutes ago is re-claimable. At 3 attempts it's closed as failed with a failed answer.
   - finish_job(job, answer, citations), service only, idempotent. It stores the answer and citations, closes the job and recomputes the run: jobs_ok = ok + no_overview, jobs_failed = failed, cost_usd, then running / complete / partial / failed and finished_at.
