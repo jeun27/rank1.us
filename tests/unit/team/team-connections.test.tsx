@@ -95,8 +95,9 @@ describe("TeamConnections: rows, tasks, log, interest", () => {
 
   it("the change log shows the values (team only): field, before → after, who, when", () => {
     setup();
-    const log = screen.getByRole("table", { name: c.changes });
-    const rows = within(log).getAllByRole("row").slice(1);
+    // A stacked list, not a table: the document pane is narrow (axe: scrollable-region-focusable).
+    const log = screen.getByRole("list", { name: c.changes });
+    const rows = within(log).getAllByRole("listitem");
     expect(rows[0]).toHaveTextContent("Website");
     expect(rows[0]).toHaveTextContent("http://old.example.test");
     expect(rows[0]).toHaveTextContent("https://exampleramen.test");
@@ -112,7 +113,7 @@ describe("TeamConnections: rows, tasks, log, interest", () => {
 
   it("no connections yet: an empty list, nothing else", () => {
     setup({ connections: [], changes: [], interest: [], gas: null });
-    expect(screen.queryByRole("table")).toBeNull();
+    expect(screen.queryByRole("list", { name: c.changes })).toBeNull();
   });
 });
 
