@@ -51,8 +51,8 @@ const joined = (...parts: (string | null)[]) => parts.filter(Boolean).join(" · 
 const focus = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
 const control = `inline-flex h-11 shrink-0 items-center rounded-control border border-fieldBorder bg-raised px-3 text-ui font-medium text-ink hover:bg-overlay md:h-8 ${focus}`;
 
-// The check-off circle: empty (to do), half (in progress), checked (done).
-function Mark({ state }: { state: FixStatus }) {
+// The check-off circle: empty (to do), half (in progress), checked (done). The Dashboard card reuses it.
+export function Mark({ state }: { state: FixStatus }) {
   return (
     <svg viewBox="0 0 20 20" className="size-5" aria-hidden>
       <circle
