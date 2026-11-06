@@ -81,4 +81,39 @@ describe("ThemeSync", () => {
     localStorage.clear();
     vi.unstubAllGlobals();
   });
+
+  // No one-frame flash: the theme is set in the commit, before paint. A probe after ThemeSync reads it
+  // in its own layout effect, which runs after ThemeSync's layout effect and before any passive effect.
+  it("applies the theme before paint (layout effect), not after", async () => {
+    const { render } = await import("@testing-library/react");
+    const { useLayoutEffect } = await import("react");
+    const { vi } = await import("vitest");
+    const nav = { path: "/team" };
+    vi.doMock("next/navigation", () => ({ usePathname: () => nav.path }));
+    vi.stubGlobal("matchMedia", () => ({ matches: false }));
+    localStorage.setItem("rank1.workspace", JSON.stringify({ theme: "light" }));
+    document.documentElement.dataset.theme = "dark";
+    const painted: (string | undefined)[] = [];
+    function Probe({ path }: { path: string }) {
+      useLayoutEffect(() => void painted.push(document.documentElement.dataset.theme), [path]);
+      return null;
+    }
+    const { ThemeSync } = await import("@/components/ui/ThemeSync");
+    const { rerender } = render(
+      <>
+        <ThemeSync />
+        <Probe path={nav.path} />
+      </>,
+    );
+    nav.path = "/contact";
+    rerender(
+      <>
+        <ThemeSync />
+        <Probe path={nav.path} />
+      </>,
+    );
+    expect(painted).toEqual(["light", "dark"]);
+    localStorage.clear();
+    vi.unstubAllGlobals();
+  });
 });
