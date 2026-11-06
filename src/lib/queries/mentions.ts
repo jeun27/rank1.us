@@ -34,3 +34,12 @@ export async function setMentionTarget(
   });
   if (error) throw error;
 }
+
+// The one grouped "Get on these lists" fix (R17) from the 'added' decisions: updated or created
+// with evidence { urls }, or deleted (todo/doing only) when nothing is added (returns null).
+// detail = the filled "{n} lists AI cites name {rivals} but not you.". Errors: 22023, 42501.
+export async function upsertMentionFix(db: DbClient, businessId: string, detail: string): Promise<string | null> {
+  const { data, error } = await db.rpc("upsert_mention_fix", { p_business_id: businessId, p_detail: detail });
+  if (error) throw error;
+  return data;
+}
