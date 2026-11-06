@@ -574,6 +574,20 @@ describe("step 18 hardening", () => {
     expect(again).toMatchObject({ data: first.data, error: null });
   });
 
+  it("skips the DB cap when daily_limit is missing or null (builds that don't pass it yet)", async () => {
+    const limit = await freeToday();
+    const [a, b] = [await newLead(), await newLead()];
+    expect((await createFree(serviceClient(), freeInput(a.id, 1, { daily_limit: limit }))).error?.code).toBe("P0429");
+    const { daily_limit: _omit, ...missing } = freeInput(a.id, 1);
+    void _omit;
+    const created = await createFree(serviceClient(), missing);
+    expect(created.error).toBeNull();
+    expect(must(await serviceClient().from("leads").select("run_id").eq("id", a.id).single()).run_id).toBe(
+      created.data,
+    );
+    expect((await createFree(serviceClient(), freeInput(b.id, 1, { daily_limit: null }))).error).toBeNull();
+  });
+
   it("parallel creates never pass the cap", async () => {
     const limit = (await freeToday()) + 1;
     const leads = await Promise.all(Array.from({ length: 4 }, () => newLead()));
@@ -584,9 +598,9 @@ describe("step 18 hardening", () => {
     expect(results.filter((r) => r.error?.code === "P0429")).toHaveLength(3);
   });
 
-  it("refuses a missing, negative or fractional daily_limit (22023)", async () => {
+  it("refuses a negative, fractional or non-number daily_limit (22023)", async () => {
     const lead = await newLead();
-    for (const daily_limit of [undefined, null, -1, 1.5, "5"]) {
+    for (const daily_limit of [-1, 1.5, "5", true]) {
       const { error } = await createFree(serviceClient(), freeInput(lead.id, 1, { daily_limit }));
       expect(error?.code).toBe("22023");
     }

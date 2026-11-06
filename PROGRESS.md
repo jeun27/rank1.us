@@ -825,6 +825,7 @@ Changed
 ## Step 18 cleanup list
 - Unused google_tokens table: drop with founder OK (lead, 2026-11-06).
 - Capped free-audit lead UX: decide copy. When create_free_audit's own daily cap hits (P0429, a race past the route check), the lead already got the 202 "queued" answer; it stays stored with no run and gets no email (lead, 2026-11-06).
+- Make create_free_audit's p.daily_limit required once every deployed build passes it. Until then a missing one skips the DB cap, because prod and preview share the hosted DB and v0.5.0 doesn't pass it (lead, 2026-11-06).
 
 ## Connections (data-pipeline): Google OAuth, GBP and Search Console (branch feat/connections)
 - Built from the founder's Connections spec (2026-11-06) + the lead's decisions in briefs/rank1-connections.md. Behind ENABLE_CONNECTIONS.
@@ -893,6 +894,6 @@ Blocked/open
 - Migration 20261105000022 (+ .down.sql):
   - bump_free_audit_notify_attempts(run) → the new count, one UPDATE (service only). bumpFreeAuditNotifyAttempts uses it instead of read-then-write (review #34).
   - claim_jobs: free-audit jobs still go first but take at most half a claim (rounded up) while paid jobs wait; slots paid work doesn't use go back to free audits. Output shape and order unchanged.
-  - create_free_audit: p.daily_limit is required (a whole number; the server passes auditDailyLimit(), so AUDIT_DAILY_LIMIT stays the one knob, lead Q1). Under a transaction advisory lock it counts free audits since UTC midnight and raises P0429 at the cap. A lead that already has a run still gets it back. startFreeAudit already logs the code and returns no run (lead Q2: no new copy).
+  - create_free_audit: p.daily_limit is a whole number (else 22023); the server passes auditDailyLimit(), so AUDIT_DAILY_LIMIT stays the one knob (lead Q1). Missing or null skips the DB cap so the live v0.5.0 build keeps working on the shared hosted DB (lead); the app-level check still runs. Under a transaction advisory lock it counts free audits since UTC midnight and raises P0429 at the cap. A lead that already has a run still gets it back. startFreeAudit already logs the code and returns no run (lead Q2: no new copy).
 - README "Releasing": apply missing migrations to the hosted DB, then `notify pgrst, 'reload schema'`, before the deploy.
 - Tests: the claim-order test now expects the half-and-half split (the rule changed, lead-approved). free-audit and e2e inputs pass daily_limit.

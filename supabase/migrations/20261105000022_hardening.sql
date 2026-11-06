@@ -96,7 +96,7 @@ begin
 end;
 $$;
 
--- Redefined from 0012: p.daily_limit (a whole number, required) caps free audits per UTC day.
+-- Redefined from 0012: p.daily_limit (a whole number) caps free audits per UTC day; without it, no DB cap.
 create or replace function public.create_free_audit(p jsonb) returns uuid
 language plpgsql security definer set search_path = '' as $$
 declare
@@ -120,15 +120,17 @@ begin
     return l.run_id;
   end if;
   -- The daily spend cap (AUDIT_DAILY_LIMIT, passed by the server), counted per UTC day under a lock
-  -- so parallel calls can't pass it together.
-  if jsonb_typeof(p -> 'daily_limit') is distinct from 'number' or (p ->> 'daily_limit') !~ '^[0-9]{1,9}$' then
-    raise exception 'daily_limit must be a whole number' using errcode = 'invalid_parameter_value';
-  end if;
-  v_limit := (p ->> 'daily_limit')::int;
-  perform pg_advisory_xact_lock(hashtext('create_free_audit_daily'));
-  if (select count(*) from public.free_audits
-      where created_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc') >= v_limit then
-    raise exception 'audit_limit' using errcode = 'P0429';
+  -- so parallel calls can't pass it together. Builds that don't pass it yet skip this check.
+  if p ? 'daily_limit' and jsonb_typeof(p -> 'daily_limit') <> 'null' then
+    if jsonb_typeof(p -> 'daily_limit') <> 'number' or (p ->> 'daily_limit') !~ '^[0-9]{1,9}$' then
+      raise exception 'daily_limit must be a whole number' using errcode = 'invalid_parameter_value';
+    end if;
+    v_limit := (p ->> 'daily_limit')::int;
+    perform pg_advisory_xact_lock(hashtext('create_free_audit_daily'));
+    if (select count(*) from public.free_audits
+        where created_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc') >= v_limit then
+      raise exception 'audit_limit' using errcode = 'P0429';
+    end if;
   end if;
 
   if not private.is_hostname(v_domain) then
