@@ -2,8 +2,14 @@
 
 import { useEffect, useRef } from "react";
 
+type TurnstileOptions = {
+  sitekey: string;
+  callback?: (token: string) => void;
+  "expired-callback"?: () => void;
+  "error-callback"?: () => void;
+};
 type TurnstileApi = {
-  render(el: HTMLElement, options: { sitekey: string }): string;
+  render(el: HTMLElement, options: TurnstileOptions): string;
   reset(id: string): void;
   remove(id: string): void;
 };
@@ -34,11 +40,24 @@ function loadScript(): Promise<void> {
   return loading;
 }
 
-// Tokens are single-use, so the form bumps resetSignal after every submit.
-export function Turnstile({ resetSignal }: { resetSignal: number }) {
+// Tokens are single-use, so the form bumps resetSignal after every submit. onToken gets the token, or
+// null when it expires (the widget is reset then) or errors; onUnavailable when the script can't load.
+export function Turnstile({
+  resetSignal,
+  onToken,
+  onUnavailable,
+}: {
+  resetSignal: number;
+  onToken?: (token: string | null) => void;
+  onUnavailable?: () => void;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const widget = useRef<string | null>(null);
   const sitekey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  const handlers = useRef({ onToken, onUnavailable });
+  useEffect(() => {
+    handlers.current = { onToken, onUnavailable };
+  });
 
   useEffect(() => {
     if (!sitekey) return;
@@ -46,10 +65,19 @@ export function Turnstile({ resetSignal }: { resetSignal: number }) {
     loadScript()
       .then(() => {
         if (!gone && ref.current && window.turnstile)
-          widget.current = window.turnstile.render(ref.current, { sitekey });
+          widget.current = window.turnstile.render(ref.current, {
+            sitekey,
+            callback: (token) => handlers.current.onToken?.(token),
+            "expired-callback": () => {
+              handlers.current.onToken?.(null);
+              if (widget.current) window.turnstile?.reset(widget.current);
+            },
+            "error-callback": () => handlers.current.onToken?.(null),
+          });
       })
       .catch(() => {
         // No widget means no token; the server rejects the submit and the form shows its error state.
+        if (!gone) handlers.current.onUnavailable?.();
       });
     return () => {
       gone = true;

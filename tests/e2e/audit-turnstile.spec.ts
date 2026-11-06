@@ -53,7 +53,7 @@ test("reduced motion: the reveal has no transition", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/dev/forms");
   const reveal = page.locator("[data-turnstile-reveal]");
-  expect(await reveal.evaluate((el) => getComputedStyle(el).transitionDuration)).toMatch(/^0s(, 0s)*$/);
+  expect(await reveal.evaluate((el) => getComputedStyle(el).transitionProperty)).toBe("none");
 });
 
 test("Turnstile blocked: the fallback stays, the button works once the fields are valid", async ({ page }) => {
@@ -66,6 +66,6 @@ test("Turnstile blocked: the fallback stays, the button works once the fields ar
   await expect(button).not.toHaveAttribute("aria-disabled");
   await button.click();
   // The server still verifies the token: no token, so the form shows its error state as before.
-  await expect(page.getByRole("alert")).toBeVisible();
+  await expect(page.locator("form").getByRole("alert")).toBeVisible();
   expect(bodies).toHaveLength(1);
 });
