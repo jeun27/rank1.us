@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useSyncExternalStore, type KeyboardEvent } from "react";
+import { useEffect, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from "react";
 import { rovingIndex } from "@/components/workspace/hooks";
 import { Banner } from "@/components/ui/Banner";
 import { Card } from "@/components/ui/Card";
@@ -17,6 +17,8 @@ export type FixView = Pick<FixItem, "id" | "rule_key" | "title" | "detail" | "af
   changed_by?: Actor | null;
   // G5 (#102): the fix's pillar. Real fixes always have one; older fixtures don't (plain sections then).
   pillar?: Pillar;
+  // G2: the evidence the page attaches (the AI access panel on R14, R16 and R18), in the open fix's collapsible body (X7).
+  evidence?: ReactNode;
 };
 // listDoneFixes (#101), newest change first.
 export type DoneView = {
@@ -38,6 +40,7 @@ type Row = {
   at: string | null;
   by: Actor | null;
   pillar?: Pillar;
+  evidence?: ReactNode;
 };
 
 const FILTERS = ["open", "done", "all"] as const;
@@ -169,6 +172,7 @@ function FixRow({
               {row.detail}
             </p>
           )}
+          {row.evidence && !done && <div className="rounded-card border border-border p-3">{row.evidence}</div>}
           {expanded && row.affected !== null && !done && (
             <p data-computed className="text-caption text-inkMuted tabular-nums">
               {c.affected(row.affected)}
@@ -240,6 +244,7 @@ const fromOpen = (f: FixView): Row => ({
   at: f.status_changed_at ?? null,
   by: f.changed_by ?? null,
   pillar: f.pillar,
+  evidence: f.evidence,
 });
 const fromDone = (f: DoneView): Row => ({
   id: f.id,
