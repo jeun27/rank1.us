@@ -71,6 +71,8 @@ $$;
 revoke all on function public.record_ai_access_check(uuid, jsonb) from public, anon, authenticated;
 
 -- R16: Cloudflare's AI bot blocking (p5 via 0024's mapping). Copy is the lead's (GAS, 2026-11-06).
+alter table public.fix_rules drop constraint if exists fix_rules_key_check;
+alter table public.fix_rules add constraint fix_rules_key_check check (key ~ '^(A[1-6]|R([1-9]|1[0-6])|H1)$');
 insert into public.fix_rules (key, grp, title, size, detection, data_source, cadence, threshold, unverified,
                               customer_copy, why_note, ai_lever, enabled)
 values ('R16', 'restaurant', 'Your site lets AI in, but Cloudflare may be blocking it.', 'S',
