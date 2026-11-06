@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 
-const q = vi.hoisted(() => ({ listRunsNeedingFixChecks: vi.fn(), recordFixResults: vi.fn() }));
+const q = vi.hoisted(() => ({
+  listRunsNeedingFixChecks: vi.fn(),
+  recordFixResults: vi.fn(),
+  withdrawFixes: vi.fn(async () => 0),
+}));
 vi.mock("@/lib/queries/fixes", () => q);
 const evaluate = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/fixes/evaluate", async (real) => ({ ...(await real<object>()), evaluateFixes: evaluate }));
@@ -186,5 +190,64 @@ describe("checkFixesWith with YouTube (G1 R19–R21, ENABLE_CONNECTIONS)", () =>
     await checkFixesWith(d.client, () => 200_000, {});
     expect(d.calls.at(-1)).toEqual(["in", "key", ["R10", "R11", "R14", "H1"]]);
     expect(yt.youtubeChecklistForBusiness).not.toHaveBeenCalled();
+  });
+});
+
+describe("stale YouTube fixes are withdrawn when a business stops being ready (#152 S1)", () => {
+  const RUN = { runId: "run-1", businessId: "b-1", domain: "example-ramen-house.test" };
+  const ON = { ENABLE_CONNECTIONS: "true" };
+
+  it("not ready (disconnect, no keyword, no channel) → its todo R19–R21 are withdrawn, none recorded", async () => {
+    const d = db([{ key: "R10" }, { key: "R19" }, { key: "R20" }, { key: "R21" }]);
+    q.listRunsNeedingFixChecks.mockResolvedValue([RUN]);
+    evaluate.mockResolvedValue([{ rule_key: "R10", result: "ok", evidence: {}, detail: null }]);
+    yt.youtubeReady.mockResolvedValue(false);
+    q.withdrawFixes.mockClear().mockResolvedValue(1);
+    await checkFixesWith(d.client, () => 200_000, ON);
+    expect(q.withdrawFixes).toHaveBeenCalledWith(d.client, "b-1", ["R19", "R20", "R21"]);
+    // Never an 'ok' (which would mark open fixes done): no YouTube rows at all.
+    expect(q.recordFixResults.mock.calls.at(-1)![3].map((r: { rule_key: string }) => r.rule_key)).toEqual(["R10"]);
+  });
+
+  it("ready again → no withdrawal, and the next pass records R19–R21 again (recreating them)", async () => {
+    const d = db([{ key: "R19" }, { key: "R20" }, { key: "R21" }]);
+    q.listRunsNeedingFixChecks.mockResolvedValue([RUN]);
+    yt.youtubeReady.mockResolvedValue(true);
+    yt.youtubeChecklistForBusiness.mockResolvedValue({
+      keyword: "ramen",
+      channel: { id: "UC1", title: "Example Ramen House" },
+      videos: [
+        {
+          id: "v1",
+          title: "Our story",
+          url: "https://www.youtube.com/watch?v=v1",
+          checks: { title: "fail", description: "pass", chapters: "not_needed", saysKeyword: "cant_check" },
+        },
+      ],
+    });
+    q.withdrawFixes.mockClear();
+    await checkFixesWith(d.client, () => 200_000, ON);
+    expect(q.withdrawFixes).not.toHaveBeenCalled();
+    expect(
+      q.recordFixResults.mock.calls.at(-1)![3].map((r: { rule_key: string; result: string }) => [r.rule_key, r.result]),
+    ).toEqual([
+      ["R19", "fix"],
+      ["R20", "ok"],
+      ["R21", "ok"],
+    ]);
+  });
+
+  it("only the enabled YouTube rules are withdrawn, and a withdrawal error doesn't stop the pass (code logged)", async () => {
+    const d = db([{ key: "R10" }, { key: "R20" }]);
+    q.listRunsNeedingFixChecks.mockResolvedValue([RUN]);
+    evaluate.mockResolvedValue([{ rule_key: "R10", result: "ok", evidence: {}, detail: null }]);
+    yt.youtubeReady.mockResolvedValue(false);
+    q.withdrawFixes.mockClear().mockRejectedValueOnce(Object.assign(new Error("secret"), { code: "57014" }));
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    expect(await checkFixesWith(d.client, () => 200_000, ON)).toEqual({ checked: "run-1" });
+    expect(q.withdrawFixes).toHaveBeenCalledWith(d.client, "b-1", ["R20"]);
+    expect(log.mock.calls.flat().join(" ")).toContain("57014");
+    expect(log.mock.calls.flat().join(" ")).not.toContain("secret");
+    log.mockRestore();
   });
 });
