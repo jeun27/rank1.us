@@ -769,3 +769,8 @@ Changed
 - run-jobs drains reports after the fix checks. vercel.json gains the monthly cron, and tests/unit/vercel-config.test.ts pins all 3 crons.
 - Logs carry counts and PG codes only.
 - Review (#77): the drain reads with the service client, which bypasses the DFY fix_list_visible rule. So the report loader applies it: a DFY business with the fix list hidden gets no "What to fix next" section (no heading, no placeholder). DFY visible and self-serve always show it. Tested on the rendered PDF and the email.
+
+## Fix (data-pipeline): exact percent floors (branch fix/exact-percent-floors)
+- Bug (reviewer, Step 17): compute.ts floorPct did Math.floor(value × 100). Floating point makes 0.29 × 100 = 28.999…, so 29 of 100 showed as 28% in the leaderboard change, and progress bars were 1 low.
+- One shared helper: floorPct(metric) = Math.floor(numerator × 100 / denominator), null at denominator 0. formatPercent (UI and the report PDF), pointsChange, History and progressPercent all use it. A test fails if any other src file floors a ratio × 100.
+- Tests: 29/100, 57/100, 7/25, 58/200 give exact results in floorPct, formatPercent and progressPercent.

@@ -67,8 +67,10 @@ export const metric = (numerator: number, denominator: number): Metric => ({
   denominator,
 });
 
-// Whole percent, rounded down so a stat is never shown higher than measured.
-export const floorPct = (m: Metric) => (m.value === null ? null : Math.floor(m.value * 100));
+// Whole percent, rounded down so a stat is never shown higher than measured. From the integers, not
+// value × 100: floating point makes 0.29 × 100 = 28.999…, which would show 29 of 100 as 28%.
+export const floorPct = ({ numerator, denominator }: Metric) =>
+  denominator > 0 ? Math.floor((numerator * 100) / denominator) : null;
 
 // Successful answers only: failed and no_overview leave every denominator; so do deleted questions on paid runs.
 export const counted = (answers: MetricAnswer[], freeAudit = false) =>
