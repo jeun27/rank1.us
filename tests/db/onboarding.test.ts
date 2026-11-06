@@ -460,3 +460,37 @@ describe("input validation (22023)", () => {
     ).rejects.toMatchObject({ code: INVALID });
   });
 });
+
+describe("vertical (the Connections brief's industry)", () => {
+  it("onboarding and create_dfy_client store the given vertical, and default to restaurant", async () => {
+    const { user } = await selfServe("vertical");
+    const id = await createBusinessOnboarding(user.db, input({ business: { ...input().business, vertical: "saas" } }));
+    const team = await withRole("vertical-team", "team");
+    const dfy = await createDfyClient(team.db, {
+      workspace_name: "Example DFY",
+      business: { ...input().business, vertical: "hvac" },
+    });
+    const plain = await createDfyClient(team.db, { workspace_name: "Example DFY 2", business: input().business });
+    const rows = must(
+      await serviceClient().from("businesses").select("id, vertical").in("id", [id, dfy.businessId, plain.businessId]),
+    );
+    expect(Object.fromEntries(rows.map((r) => [r.id, r.vertical]))).toEqual({
+      [id]: "saas",
+      [dfy.businessId]: "hvac",
+      [plain.businessId]: "restaurant",
+    });
+  });
+
+  it("refuses a vertical outside the list (22023 from the RPCs, 23514 on a direct update)", async () => {
+    const { user } = await selfServe("vertical-bad");
+    const bad = { ...input().business, vertical: "med_spa" as "beauty" };
+    await expect(createBusinessOnboarding(user.db, input({ business: bad }))).rejects.toMatchObject({ code: "22023" });
+    const team = await withRole("vertical-bad-team", "team");
+    await expect(createDfyClient(team.db, { workspace_name: "x", business: bad })).rejects.toMatchObject({
+      code: "22023",
+    });
+    const id = await createBusinessOnboarding(user.db, input());
+    const { error } = await user.db.from("businesses").update({ vertical: "med_spa" }).eq("id", id);
+    expect(error?.code).toBe("23514");
+  });
+});

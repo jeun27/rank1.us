@@ -11,7 +11,7 @@ import {
   listConnectorInterest,
   noteConnectorInterest,
   recordConnectionChange,
-  revokeGoogleGrant,
+  revokeConnection,
   saveConnection,
   setConnectionEntities,
   setConnectionStatus,
@@ -165,7 +165,7 @@ describe("no direct user writes", () => {
   it("users can't call the service RPCs (42501)", async () => {
     const id = await connect(f.businessId, "ga4", "rpc");
     for (const db of [owner.db, team.db, client.db]) {
-      await expect(revokeGoogleGrant(db, f.businessId)).rejects.toMatchObject({ code: "42501" });
+      await expect(revokeConnection(db, id)).rejects.toMatchObject({ code: "42501" });
       await expect(setConnectionStatus(db, id, "needs_reauth")).rejects.toMatchObject({ code: "42501" });
       await expect(
         recordConnectionChange(db, {
@@ -297,7 +297,7 @@ describe("connect, reauth and revoke", () => {
     expect(await getConnectionTokens(svc(), shop)).not.toBeNull();
   });
 
-  it("revoke_google_grant revokes gbp, search_console and ga4 and deletes their tokens; shopify is untouched", async () => {
+  it("revoking one Google connection revokes gbp, search_console and ga4 and deletes their tokens; shopify is untouched", async () => {
     const x = await makeWorkspace(owner);
     const ids = [
       await connect(x.businessId, "gbp", "v1"),
@@ -305,7 +305,7 @@ describe("connect, reauth and revoke", () => {
       await connect(x.businessId, "ga4", "v3"),
     ];
     const shop = await connect(x.businessId, "shopify", "v4");
-    expect((await revokeGoogleGrant(svc(), x.businessId)).sort()).toEqual([...ids].sort());
+    expect((await revokeConnection(svc(), ids[1])).sort()).toEqual([...ids].sort());
     for (const id of ids) expect(await getConnectionTokens(svc(), id)).toBeNull();
     expect(must(await svc().from("connection_tokens").select("connection_id").in("connection_id", ids))).toEqual([]);
     const rows = await listConnections(owner.db, x.businessId);
@@ -316,7 +316,16 @@ describe("connect, reauth and revoke", () => {
     ]);
     expect(rows.find((c) => c.provider === "shopify")?.status).toBe("connected");
     expect((await getConnectionTokens(svc(), shop))?.enc_access).toBe("enc:v1:access-v4");
-    expect(await revokeGoogleGrant(svc(), x.businessId)).toEqual([]);
+    expect(await revokeConnection(svc(), ids[0])).toEqual([]);
+  });
+
+  it("revoking shopify revokes only shopify", async () => {
+    const x = await makeWorkspace(owner);
+    const gbp = await connect(x.businessId, "gbp", "s1");
+    const shop = await connect(x.businessId, "shopify", "s2");
+    expect(await revokeConnection(svc(), shop)).toEqual([shop]);
+    expect(await getConnectionTokens(svc(), shop)).toBeNull();
+    expect((await getConnectionTokens(svc(), gbp))?.status).toBe("connected");
   });
 
   it("refuses an unknown provider or status (22023)", async () => {

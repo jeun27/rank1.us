@@ -790,3 +790,21 @@ Changed
 - Queries: src/lib/queries/experiments.ts. src/types/db.ts got the 0020 objects by hand in the generator format.
 - Window edges tested at d-29/d-28/d-1/d/d+27/d+28, the ended-early end day, and one minute before LA midnight on d (before) vs midnight (after), the 07:59Z/08:00Z case.
 - tests/db/helpers.ts makeWorkspace now inserts its experiment with both groups in one transaction.
+
+## Connections (backend): connections and change log (branch feat/connections-db, issue #84)
+- Built from the founder's Connections spec (2026-11-06) and the lead's brief (briefs/rank1-connections.md).
+- Lead decisions (2026-11-06):
+  - Industry: the brief's businesses.industry is the existing businesses.vertical (lead O1), not a new column. 0021 adds a validated 13-value check (restaurant, hvac, plumbing, roofing, pest_control, auto, beauty, gym, events, dental, saas, dtc, other) with no row rewrite, so the migration fails if a row is outside the list. Onboarding and create_dfy_client accept business.vertical (default restaurant). The contact-us industry maps onto it via VERTICAL_FOR_INDUSTRY.
+  - Apply edits: any self-serve member (can_write_business), or the team on DFY; never a dfy_client. This refines the brief's "owner (self-serve)" wording (lead Q1).
+  - Connect/revoke: the business's own members, incl. its dfy_client (the one place a dfy_client writes, via OAuth only); never the team.
+  - One Google grant covers gbp, search_console and ga4. Token saves, refreshes, needs_reauth and revoke apply to all of a business's live Google connections. revoke_connection is grant-wide for Google, only itself otherwise.
+  - The unused google_tokens table stays (dropping a table is a stop condition, lead Q2).
+- Migration 20261105000021 (+ .down.sql):
+  - connections (provider gbp | search_console | ga4 | shopify), connection_tokens (ciphertext, RLS on, no policies, no user grants), connection_changes (append-only: a trigger refuses UPDATE and any DELETE but the cascade; actor required; gbp fields only description, regular_hours, special_hours, website_uri, primary_phone, attributes), connector_interest (12 connector keys, shared with recommend.ts).
+  - Reads: members (incl. the dfy_client) and the team on DFY. No user writes any of these tables directly.
+  - Route checks (invoker): can_connect_business, can_apply_edits. note_connector_interest (idempotent).
+  - Service RPCs: save_connection, get_connection_tokens (nothing once revoked), update_connection_tokens, set_connection_entities (≤ 100 {id, name}), set_connection_status (connected | needs_reauth), revoke_connection, record_connection_change.
+- Queries: src/lib/queries/connections.ts (CONNECTOR_KEYS, GBP_EDIT_FIELDS). VERTICALS and VERTICAL_FOR_INDUSTRY in src/lib/queries/onboarding.ts. src/types/db.ts got the 0021 objects by hand in the generator format. docs/SCHEMA.md updated.
+
+## Step 18 cleanup list
+- Unused google_tokens table: drop with founder OK (lead, 2026-11-06).

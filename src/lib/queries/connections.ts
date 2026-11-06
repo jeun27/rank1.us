@@ -207,9 +207,10 @@ export async function setConnectionStatus(
   if (error) throw error;
 }
 
-// After revoking with Google: every gbp/search_console/ga4 connection revoked, tokens deleted.
-export async function revokeGoogleGrant(serviceDb: DbClient, businessId: string): Promise<string[]> {
-  const { data, error } = await serviceDb.rpc("revoke_google_grant", { p_business_id: businessId });
+// After revoking with the provider: revoked and tokens deleted, the whole grant for Google.
+// Returns the newly revoked ids.
+export async function revokeConnection(serviceDb: DbClient, connectionId: string): Promise<string[]> {
+  const { data, error } = await serviceDb.rpc("revoke_connection", { p_connection_id: connectionId });
   if (error) throw error;
   return data;
 }

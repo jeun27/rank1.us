@@ -810,8 +810,8 @@ isOneToOne: false
 "revoke_dfy_client":
 { Args: { "p_business_id": string,"p_user_id": string }; Returns: boolean
                            },
-"revoke_google_grant":
-{ Args: { "p_business_id": string }; Returns: string[]
+"revoke_connection":
+{ Args: { "p_connection_id": string }; Returns: string[]
                            },
 "run_summaries":
 { Args: { "p_business_id": string,"p_limit"?: number,"p_statuses"?: string[] }; Returns: { "finished_at": string | null,"jobs_failed": number,"jobs_ok": number,"jobs_total": number,"kind": string,"n": number,"named": number,"per_engine": Json,"run_id": string,"started_at": string | null,"status": string }[]
