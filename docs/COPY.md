@@ -447,7 +447,7 @@ Strings from the GAS prototype report (share/gas-proto/REPORT.md, lead copy). Fi
 | Hint | "Words that never come up are the next thing to say on your own pages." |
 | No words (one quiet Dashboard line) | "Tell us the words that fit you, and we'll check every AI answer for them." + "Add your words" |
 | Actions | "Edit words", "Remove {word}", "Add", "Save" |
-| Saved (frontend; lead to confirm) | "Saved." |
+| Saved | reuses "After saving" above (lead C3) |
 | Save failed (inline) | "We couldn't save that. Try again." |
 | Inline errors | "Up to 8 words.", "2 to 40 characters.", "That word is in the other list." |
 
