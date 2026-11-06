@@ -148,14 +148,17 @@ function Picker({
   );
 }
 
+// UI.md: one primary per screen. Only a Recommended tile's Connect / Reconnect is filled; the rest are alt.
 function TileCard({
   tile,
+  primary,
   props,
   onConsent,
   onRevoke,
   onFailed,
 }: {
   tile: Tile;
+  primary: boolean;
   props: HubProps;
   onConsent: (k: GoogleConnector) => void;
   onRevoke: (id: string) => void;
@@ -189,9 +192,17 @@ function TileCard({
       </Button>
     );
   else if (write && (!conn || conn.status === "revoked"))
-    actions = <Button onClick={() => onConsent(k)}>{c.connect}</Button>;
+    actions = (
+      <Button variant={primary ? "primary" : "alt"} onClick={() => onConsent(k)}>
+        {c.connect}
+      </Button>
+    );
   else if (write && conn?.status === "needs_reauth")
-    actions = <Button onClick={() => onConsent(k)}>{c.reconnect}</Button>;
+    actions = (
+      <Button variant={primary ? "primary" : "alt"} onClick={() => onConsent(k)}>
+        {c.reconnect}
+      </Button>
+    );
   else if (write && conn)
     actions = (
       <>
@@ -307,6 +318,7 @@ export function ConnectionsHub(props: HubProps) {
                   <TileCard
                     key={t.connector}
                     tile={t}
+                    primary={tier === "recommended"}
                     props={props}
                     onConsent={setConsent}
                     onRevoke={setRevoke}
