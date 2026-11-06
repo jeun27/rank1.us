@@ -8,11 +8,11 @@ Checked 2026-11-06 on main at b9f12ca:
 - #110: robots.txt and sitemap.xml (G6)
 - #109: the /client theme toggle (re-checked in #119)
 
-Main doesn't auto-deploy, so the UI checks ran against #115's final head preview 9b1ae2d. It differs from b9f12ca only by backend #114 (mention decisions), docs and the e2e Connections flag probe (#118), with no UI change. The e2e suite ran from a b9f12ca worktree on the Mac. Unit, typecheck, lint, format and build ran in the sandbox. test-db is from CI on main. Example data only. Per the lead, the live production GETs of /robots.txt and /sitemap.xml wait until v0.7.0 deploys, because rank1.us doesn't serve #110 yet.
+Main doesn't auto-deploy, so the UI checks ran against #115's final head preview 9b1ae2d. It differs from b9f12ca only by backend #114 (mention decisions), docs and the e2e Connections flag probe (#118), with no UI change. The e2e suite ran from a b9f12ca worktree on the Mac. Unit, typecheck, lint, format and build ran in the sandbox. test-db is from CI on main. Example data only. Per the lead, the live production GETs of /robots.txt and /sitemap.xml ran after v0.7.0 deployed (see the P3 live row).
 Preview: https://rank1-sd643fjzq-bryan-flowhighlevels-projects.vercel.app (sha 9b1ae2d, READY).
 Sources: docs/design/v3.md D44, UI.md, COPY.md "Fix list (lead, 2026-11-06)" and the pillar rows, briefs/rank1-gas.md (G5, G6).
 
-Result: PASS. No blocking problems. One item is open until after deploy: P3 live (the production robots.txt/sitemap.xml GETs).
+Result: PASS. No blocking problems. P3 live was checked after v0.7.0 deployed (tag at bb0ac29, deployment dpl_5UwCnKiheK8Xq2ohrG6cmCQwwdYQ): PASS.
 
 ### Commands
 
@@ -54,7 +54,7 @@ The sweep covered 20 pages at 375 and 1280, with a saved dark and a saved light 
 | P3 robots.txt / sitemap.xml, production logic | PASS (unit + e2e) | src/app/robots.ts: production allows / for * and for GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot and Google-Extended by name, disallows /app /team /client /api /dev /admin /auth, and points the sitemap at the site origin. Unit robots-sitemap.test "allows / for everyone and for each named AI crawler, disallowing exactly the private areas", "/audit is not listed (its noindex covers it); the sitemap line uses the site origin", "falls back to https://rank1.us for %s", "lists the public pages only, as absolute URLs on the site origin". e2e "robots.txt and sitemap.xml are served; every sitemap URL's path answers 200" |
 | P3 preview robots | PASS | Preview /robots.txt: 200 text/plain, exactly "User-Agent: * / Disallow: /". Unit "VERCEL_ENV=preview/development/undefined: Disallow / for everyone" |
 | P3 sitemap content | PASS | Preview /sitemap.xml: 200 application/xml, `<loc>` https://rank1.us/, /contact, /privacy, /terms only. No private path, no /audit |
-| P3 live production GETs | OPEN (after deploy) | Per the lead, run after v0.7.0 deploys: one read-only GET each of https://rank1.us/robots.txt and /sitemap.xml |
+| P3 live production GETs (v0.7.0, after deploy) | PASS | One read-only GET each, 2026-11-06 ~08:05 UTC. https://rank1.us/robots.txt: 200, text/plain; charset=utf-8. One block each for `*`, GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot and Google-Extended, each `Allow: /` plus `Disallow:` /app, /team, /client, /api, /dev, /admin, /auth. Ends with `Sitemap: https://rank1.us/sitemap.xml`. https://rank1.us/sitemap.xml: 200, application/xml, `<loc>` https://rank1.us/, /contact, /privacy, /terms only (no private path, no /audit) |
 | P4 /client toggle on the new look | PASS | /dev/client in dark and light at both widths: correct theme from the first frame, axe 0. Full re-check in the v3 section (#109) |
 
 ### Blocking problems
