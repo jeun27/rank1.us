@@ -14,6 +14,9 @@ export type FixCheckDeps = {
   enabledRules: () => Promise<RuleKey[]>;
   evaluate: (business: { domain: string | null }, rules: RuleKey[]) => Promise<FixResult[]>;
   record: (businessId: string, runId: string, results: FixResult[]) => Promise<void>;
+  // Narrows the rules to the ones that apply to this run's business (e.g. R19–R21 only with an active
+  // YouTube connection). The unchecked fallbacks then use the narrowed list, so they add no rows either.
+  applicable?: (run: RunToCheck, rules: RuleKey[]) => Promise<RuleKey[]>;
   timeLeftMs: () => number;
   log?: (line: string) => void;
 };
@@ -46,6 +49,15 @@ export async function checkFixesForOneRun(deps: FixCheckDeps): Promise<FixCheckS
     return { checked: null, error: codeOf(e) };
   }
   if (!run) return { checked: null, skipped: "none" };
+  if (deps.applicable) {
+    try {
+      rules = await deps.applicable(run, rules);
+    } catch (e) {
+      log(`fix check: failed (${codeOf(e)})`);
+      return { checked: null, error: codeOf(e) };
+    }
+    if (!rules.length) return { checked: null, skipped: "no_rules" };
+  }
   const results = await deps
     .evaluate({ domain: run.domain }, rules)
     .then((rs) => rs.filter((r) => rules.includes(r.rule_key)))

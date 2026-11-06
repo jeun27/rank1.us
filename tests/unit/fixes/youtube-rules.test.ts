@@ -50,16 +50,13 @@ describe("youtubeFixes (R19 title, R20 first two lines, R21 chapters)", () => {
     expect(youtubeFixes(["R20"], list([video("v1", { description: "fail" })])).map((x) => x.rule_key)).toEqual(["R20"]);
   });
 
-  it("no keyword on the business → R19/R20 unchecked (never guessed); R21 still checks chapters", () => {
-    const r = youtubeFixes(
-      [...ALL],
-      list([video("v1", { title: "no_keyword", description: "no_keyword", chapters: "fail" })], null),
-    );
-    expect(r.map((x) => [x.rule_key, x.result, (x.evidence as { reason?: string }).reason])).toEqual([
-      ["R19", "unchecked", "no_keyword"],
-      ["R20", "unchecked", "no_keyword"],
-      ["R21", "fix", undefined],
-    ]);
+  it("no keyword (lead, #146 Q) → no R19–R21 rows at all, so nothing noisy reaches the Fix list", () => {
+    expect(
+      youtubeFixes(
+        [...ALL],
+        list([video("v1", { title: "no_keyword", description: "no_keyword", chapters: "fail" })], null),
+      ),
+    ).toEqual([]);
   });
 
   it("'not needed' chapters (short videos) are never a fix", () => {
@@ -76,11 +73,8 @@ describe("youtubeFixes (R19 title, R20 first two lines, R21 chapters)", () => {
     );
   });
 
-  it("no YouTube connection, or one needing reauth → unchecked with the reason", () => {
-    expect(youtubeFixes(["R19"], null)[0]).toMatchObject({
-      result: "unchecked",
-      evidence: { reason: "not_connected" },
-    });
+  it("no connection → no rows (lead, #146 B1); a connected one whose read fails → unchecked with the reason", () => {
+    expect(youtubeFixes([...ALL], null)).toEqual([]);
     expect(youtubeFixes(["R21"], "needs_reauth")[0]).toMatchObject({
       result: "unchecked",
       evidence: { reason: "needs_reauth" },

@@ -24,14 +24,14 @@ export type Checklist = {
 };
 
 // list: the business's checklist, null without a YouTube connection, or the connection's failure reason.
+// No connection, or no keyword (lead, #146): no rows at all, so nothing noisy reaches the Fix list. The
+// fix pass only asks when youtubeReady; these are the guards behind that.
 export function youtubeFixes(rules: RuleKey[], list: Checklist | null | string): FixResult[] {
+  if (list === null || (typeof list !== "string" && !list.keyword)) return [];
   return YOUTUBE_RULES.filter((k) => rules.includes(k)).map((rule_key): FixResult => {
-    if (list === null) return { rule_key, result: "unchecked", evidence: { reason: "not_connected" }, detail: null };
     if (typeof list === "string") return { rule_key, result: "unchecked", evidence: { reason: list }, detail: null };
     if (!list.videos.length) return { rule_key, result: "unchecked", evidence: { reason: "no_videos" }, detail: null };
     const field = FIELD[rule_key];
-    if (field !== "chapters" && !list.keyword)
-      return { rule_key, result: "unchecked", evidence: { reason: "no_keyword" }, detail: null };
     const failing = list.videos
       .filter((v) => v.checks[field] === "fail")
       .map((v) => ({ id: v.id, title: v.title, url: v.url }));

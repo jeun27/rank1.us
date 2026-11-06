@@ -66,6 +66,13 @@ describe("GET /api/connections/google/start", () => {
     expect(db.createClient).not.toHaveBeenCalled();
   });
 
+  it("YouTube is refused (400) while it isn't in LIVE_CONNECTORS (lead, #146 S1)", async () => {
+    const res = await start.GET(req("/api/connections/google/start?business=b&connector=youtube"));
+    expect(res.status).toBe(400);
+    expect(svc.beginGoogleConnect).not.toHaveBeenCalled();
+    expect(db.createClient).not.toHaveBeenCalled();
+  });
+
   it("an unknown connector or no business → 400, no access check", async () => {
     for (const q of ["?business=b&connector=shopify", "?connector=gbp", "?business=b"])
       expect((await start.GET(req(`/api/connections/google/start${q}`))).status).toBe(400);

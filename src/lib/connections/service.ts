@@ -433,3 +433,18 @@ export async function youtubeChecklistForBusiness(
     return failure(e);
   }
 }
+
+// The fix pass's gate for R19–R21 (lead, #146): a live YouTube connection with a chosen channel, and a
+// keyword (businesses.cuisine). Otherwise the rules don't apply and get no rows at all.
+export async function youtubeReady(serviceDb: DbClient, businessId: string): Promise<boolean> {
+  const { data, error } = await serviceDb
+    .from("connections")
+    .select("selected_entities")
+    .eq("business_id", businessId)
+    .eq("provider", "youtube")
+    .eq("status", "connected")
+    .maybeSingle();
+  if (error) throw error;
+  const picked = (data?.selected_entities as unknown as ConnectionEntity[] | undefined) ?? [];
+  return picked.length > 0 && (await cuisineOf(serviceDb, businessId)) !== null;
+}

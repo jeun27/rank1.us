@@ -9,7 +9,7 @@ import { AI_RULES, evaluateFixes, SITE_RULES } from "./evaluate";
 import { checkCloudflare } from "./r16-cloudflare";
 import { checkJsEmpty } from "./r18-js-empty";
 import { youtubeFixes, YOUTUBE_RULES } from "./youtube-rules";
-import { connectionsEnabled, youtubeChecklistForBusiness } from "@/lib/connections/service";
+import { connectionsEnabled, youtubeChecklistForBusiness, youtubeReady } from "@/lib/connections/service";
 import type { RuleKey } from "./types";
 
 // The real dependencies on the service client. fix_rules is service-only, so the enabled-rule read
@@ -32,6 +32,11 @@ export function checkFixesWith(
       return (data ?? []).map((r) => r.key as RuleKey);
     },
     next: async () => (run = (await listRunsNeedingFixChecks(db, 1))[0] ?? null),
+    async applicable(r, rules) {
+      const yt: RuleKey[] = YOUTUBE_RULES.filter((k) => rules.includes(k));
+      if (!yt.length || (await youtubeReady(db, r.businessId))) return rules;
+      return rules.filter((k) => !yt.includes(k));
+    },
     async evaluate(business, rules) {
       const yt: RuleKey[] = YOUTUBE_RULES.filter((r) => rules.includes(r));
       const site = rules.filter((r) => !AI_RULES.includes(r) && !yt.includes(r));
