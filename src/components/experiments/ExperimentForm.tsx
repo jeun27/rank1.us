@@ -43,6 +43,12 @@ export function ExperimentForm({
   const [errors, setErrors] = useState<Errors>({});
   const [failed, setFailed] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Pressed before it's ready: the polite region says the reason (cleared first so a repeat is heard).
+  const [said, setSaid] = useState("");
+  const nudge = () => {
+    setSaid("");
+    setTimeout(() => setSaid(c.startReason));
+  };
   const control = new Set(questions.filter((q) => !test.has(q.id) && !dropped.has(q.id)).map((q) => q.id));
   const ready = test.size > 0 && name.trim() !== "";
 
@@ -89,6 +95,7 @@ export function ExperimentForm({
       className="flex max-w-2xl flex-col gap-6"
       onSubmit={async (e) => {
         e.preventDefault();
+        if (!ready) return nudge();
         const data = new FormData(e.currentTarget);
         const link = String(data.get("change_url") ?? "").trim();
         const next: Errors = {};
@@ -197,11 +204,14 @@ export function ExperimentForm({
       </div>
       <div className="flex flex-col gap-2">
         <div>
+          {/* Founder rule: never a silent disabled button. aria-disabled keeps it focusable; the form's
+              submit handler stops it and says why. */}
           <Button
             type="submit"
             loading={saving}
-            disabled={!ready}
+            aria-disabled={!ready || undefined}
             aria-describedby={ready ? undefined : `${id}-reason`}
+            className="aria-disabled:cursor-not-allowed aria-disabled:opacity-60"
           >
             {c.start}
           </Button>
@@ -211,6 +221,9 @@ export function ExperimentForm({
             {c.startReason}
           </p>
         )}
+        <span role="status" className="sr-only">
+          {ready ? "" : said}
+        </span>
       </div>
     </form>
   );
