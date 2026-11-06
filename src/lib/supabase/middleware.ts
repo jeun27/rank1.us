@@ -22,6 +22,12 @@ export function resultTarget(pathname: string): { kind: "run" | "audit"; key: st
   }
 }
 
+// /app/experiments and /new stream (Step 17), so the dfy_client gate is a real 404 here (lead), on top of RLS.
+export function experimentsTarget(pathname: string): boolean {
+  const path = normalizePath(pathname);
+  return path !== null && /^\/app\/experiments(\/new)?$/.test(path);
+}
+
 // Settings → Connections (C-a): off unless ENABLE_CONNECTIONS=true. The pages stream, so the flag is a real
 // 404 here, before anything else (it doesn't need a session or Supabase).
 export function connectionsTarget(pathname: string): boolean {
@@ -53,6 +59,10 @@ async function missingResult(
       .is("archived_at", null)
       .maybeSingle();
     return Boolean(error) || !data;
+  }
+  if (experimentsTarget(pathname) && signedIn) {
+    const { data, error } = await supabase.rpc("my_landing");
+    return Boolean(error) || data === "dfy_client";
   }
   const target = resultTarget(pathname);
   if (target?.kind === "run" && signedIn) {

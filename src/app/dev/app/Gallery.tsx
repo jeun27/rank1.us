@@ -9,6 +9,9 @@ import { AppShell } from "@/components/app/AppShell";
 import { BillingView } from "@/components/billing/BillingView";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { BusinessSwitcher, type SwitcherBusiness } from "@/components/billing/BusinessSwitcher";
+import { ExperimentForm } from "@/components/experiments/ExperimentForm";
+import { ExperimentList } from "@/components/experiments/ExperimentList";
+import { exampleExperiments, exampleTestQuestions, exampleTooFew } from "@/components/experiments/example-data";
 import { ConnectionsHub } from "@/components/connections/ConnectionsHub";
 import { exampleConnected, exampleHub } from "@/components/connections/example-data";
 import { FixList } from "@/components/fixes/FixList";
@@ -34,6 +37,7 @@ const series = seriesFromSummaries(exampleRuns);
 const none = { points: [], visible: false };
 const noop = async () => undefined;
 const actions = { add: noop, dismiss: noop };
+const experiment = { end: noop, remove: noop };
 const results = "We couldn't load your results. Try again.";
 const fresh = { checkedAt: exampleQuestions.run!.finished_at, answers: 38, now: NOW };
 // Success = everything answered; partial = the 4b partial state of the same page.
@@ -173,6 +177,28 @@ export const STATES: Record<string, () => React.ReactNode> = {
   ),
   "report-loading": () => <Skeleton title="Reports" />,
   "report-error": () => <ErrorState title="Reports" message={results} reset={() => {}} />,
+  "experiments-empty": () => (
+    <Page title="Experiments">
+      <ExperimentList experiments={[]} canWrite actions={experiment} />
+    </Page>
+  ),
+  "experiments-success": () => (
+    <Page title="Experiments">
+      <ExperimentList experiments={exampleExperiments} canWrite actions={experiment} />
+    </Page>
+  ),
+  "experiments-partial": () => (
+    <Page title="Experiments">
+      <ExperimentList experiments={exampleTooFew} canWrite actions={experiment} />
+    </Page>
+  ),
+  "experiments-loading": () => <Skeleton title="Experiments" />,
+  "experiments-error": () => <ErrorState title="Experiments" message={results} reset={() => {}} />,
+  "experiments-form": () => (
+    <Page title="Start a test">
+      <ExperimentForm questions={exampleTestQuestions} today="2026-11-05" onCreate={noop} />
+    </Page>
+  ),
   "connections-restaurant": () => <Hub />,
   "connections-saas": () => <Hub industry="saas" />,
   "connections-connected": () => <Hub {...exampleConnected} />,
@@ -249,6 +275,7 @@ const CRUMB: Record<string, string> = {
   history: "History",
   billing: "Billing",
   report: "Reports",
+  experiments: "Experiments",
   connections: "Settings",
   switcher: "Dashboard",
 };
@@ -259,7 +286,11 @@ export function Gallery({ state = "dashboard-success", location }: { state?: str
     ? switcher(state === "switcher-one" ? switcherBusinesses.slice(0, 1) : switcherBusinesses)
     : exampleBusiness.name;
   return (
-    <AppShell business={business} actions={<ThemeToggle />} page={CRUMB[state.split("-")[0]] ?? "Dashboard"}>
+    <AppShell
+      business={business}
+      actions={<ThemeToggle />}
+      page={state === "experiments-form" ? "Start a test" : (CRUMB[state.split("-")[0]] ?? "Dashboard")}
+    >
       <div className="mx-auto flex w-full max-w-page">
         <State state={state} location={location} />
       </div>

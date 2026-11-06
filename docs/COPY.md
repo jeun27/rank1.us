@@ -286,6 +286,21 @@ Copy in quotes is exact. Every number shows n + checked X ago. Results labeled A
 | Agency hint | Below list, caption: 'Need 10+ businesses or done-for-you? Contact us.' |
 | Mobile | Opens as a bottom sheet; rows 56px. |
 
+## Experiments (lead, 2026-11-05)
+
+Step 17 before/after test vs control (/app/experiments). The empty, partial and 'Start a test' copy is in the UI.md 4b row above. No p-values or significance words anywhere.
+
+| Where | String |
+|---|---|
+| Nav (App) | "Experiments" |
+| Form labels | "Name", "What changed", "Link to the change", "Change date", "Test questions", "Control questions" |
+| Card actions | "End test", "Delete test" |
+| Results | "Before", "After", "Change", "Difference"; cells "{pct}% · n={n}"; points "+{n} pts" / "−{n} pts" (floored, never %); tag "Directional" |
+| Status tags (lead, 2026-11-06) | "Running", "Done", "Ended" |
+| Form errors (lead, 2026-11-06) | "Pick at least 1 test question.", "Pick at least 1 control question.", "Use a link that starts with http:// or https://." |
+| Delete confirm (lead, 2026-11-06) | "Delete this test? Its results go too." with "Delete test" and "Cancel" |
+| Fix list button (Step 17) | "Start a before/after test" (opens the form for that fix) |
+
 ## Report (lead, 2026-11-05)
 
 Strings for the white-label monthly report PDF and email (Step 16). No product name or "Powered by" anywhere. The email From name is the business name. `{Business}` = businesses.name, `{Month YYYY}` = the report month ("October 2026"), `{n}` = the AI answers counted.

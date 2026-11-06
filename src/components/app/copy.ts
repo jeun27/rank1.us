@@ -10,6 +10,7 @@ export const appCopy = {
   visibility: "Visibility",
   named: "Named",
   fixNext: "What to fix next",
+  experiments: "Experiments",
   settings: "Settings",
   reports: "Reports",
   noFixes: "Nothing to fix yet. Run your first check.",
