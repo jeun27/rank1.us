@@ -210,14 +210,14 @@ isOneToOne: false
                   ]
                 },"connections": {
                   Row: {
-                    "business_id": string,"connected_at": string,"connected_by": string | null,"external_account_id": string | null,"id": string,"last_checked_at": string | null,"provider": string,"scopes": (string)[],"selected_entities": Json,"status": string
+                    "business_id": string,"connected_at": string,"connected_by": string | null,"entity_count": number | null,"external_account_id": string | null,"id": string,"last_checked_at": string | null,"provider": string,"scopes": (string)[],"selected_entities": Json,"status": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "business_id": string,"connected_at"?: string,"connected_by"?: string | null,"external_account_id"?: string | null,"id"?: string,"last_checked_at"?: string | null,"provider": string,"scopes"?: (string)[],"selected_entities"?: Json,"status"?: string
+                    "business_id": string,"connected_at"?: string,"connected_by"?: string | null,"entity_count"?: number | null,"external_account_id"?: string | null,"id"?: string,"last_checked_at"?: string | null,"provider": string,"scopes"?: (string)[],"selected_entities"?: Json,"status"?: string
                   }
                   Update: {
-                    "business_id"?: string,"connected_at"?: string,"connected_by"?: string | null,"external_account_id"?: string | null,"id"?: string,"last_checked_at"?: string | null,"provider"?: string,"scopes"?: (string)[],"selected_entities"?: Json,"status"?: string
+                    "business_id"?: string,"connected_at"?: string,"connected_by"?: string | null,"entity_count"?: number | null,"external_account_id"?: string | null,"id"?: string,"last_checked_at"?: string | null,"provider"?: string,"scopes"?: (string)[],"selected_entities"?: Json,"status"?: string
                   }
                   Relationships: [
                     {
@@ -900,6 +900,9 @@ isOneToOne: false
                            },
 "set_connection_entities":
 { Args: { "p_connection_id": string,"p_entities": Json }; Returns: undefined
+                           },
+"set_connection_entity_count":
+{ Args: { "p_connection_id": string,"p_count": number }; Returns: undefined
                            },
 "set_connection_status":
 { Args: { "p_connection_id": string,"p_status": string }; Returns: undefined
