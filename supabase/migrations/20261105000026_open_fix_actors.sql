@@ -12,3 +12,6 @@ language sql stable security invoker set search_path = '' as $$
 $$;
 revoke all on function public.open_fix_actors(uuid) from public, anon;
 grant execute on function public.open_fix_actors(uuid) to authenticated;
+-- The report drain reads the fix list with the service client. It sees no actor (the helper's
+-- visibility check needs a signed-in caller), but it may call the helper.
+grant execute on function private.fix_status_actor(uuid) to service_role;
