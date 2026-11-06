@@ -73,7 +73,7 @@ test("team sees a DFY client on real data, writes its fix status, and never a se
   await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== "running"));
   const axe = await new AxeBuilder({ page }).analyze();
   expect(axe.violations.map((v) => v.id)).toEqual([]);
-  await card.getByLabel("Status").selectOption("done");
+  await card.getByRole("checkbox").click();
   await expect
     .poll(async () => must(await admin().from("fixes").select("status").eq("id", fix.id).single()).status)
     .toBe("done");

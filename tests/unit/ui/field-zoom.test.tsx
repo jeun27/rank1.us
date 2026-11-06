@@ -3,13 +3,11 @@ import { render } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { LocationSelect } from "@/components/app/LocationSelect";
-import { FixList } from "@/components/fixes/FixList";
-import { exampleFixes } from "@/components/fixes/example-data";
 import { PillField } from "@/components/forms/PillField";
 import { DomainField } from "@/components/ui/DomainField";
 
 // R2 (lead O1, docs/UI.md type table): form fields stay 16px below md so iPhone Safari doesn't zoom on focus.
-// One unlayered rule in globals.css covers every native input, select and textarea; these tests check the
+// The Fix list has no form field since the check-off circle (portal b). One unlayered rule in globals.css covers every native input, select and textarea; these tests check the
 // rule exists and that no shared field opts out of it (an !important size or an inline font-size would win).
 const css = readFileSync("src/app/globals.css", "utf8");
 
@@ -32,10 +30,6 @@ const fields: [string, ReactElement][] = [
       locations={[{ id: "l1", label: "Irvine, CA", level: "city" } as never]}
       value={undefined}
     />,
-  ],
-  [
-    "FixList Status",
-    <FixList key="f" ranked={exampleFixes} tidyUps={[]} unchecked={[]} noDomain={false} canWrite onStatus={vi.fn()} />,
   ],
 ];
 
