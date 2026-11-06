@@ -977,3 +977,6 @@ Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/
 - Lead (2026-11-06): listFixes items carry status_changed_at and changed_by {is_team, name} | null, with the same safe mapping as done_fixes (team → is_team only, never an email), null on todo rows. Additive, and listFixes' signature is unchanged.
 - Migration 20261105000026 (+ .down.sql): open_fix_actors(business) (invoker, through the fixes RLS) returns the doing fixes' time and actor via 0023's private.fix_status_actor. listFixes merges it by fix id; the item key test lists the two new fields.
 
+## Pillar on done fixes (backend) (branch feat/done-fix-pillar)
+- Lead (2026-11-06): done_fixes also returns pillar, so frontend's G5 per-group done counts are complete. Migration 20261105000029 (+ .down.sql) re-creates done_fixes with the extra column (a function's result columns can't change in place; drop + create in one transaction). listDoneFixes items gain pillar.
+
