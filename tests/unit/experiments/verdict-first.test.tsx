@@ -66,3 +66,20 @@ describe("experiment card: verdict first, delete in place", () => {
     expect(actions.remove).toHaveBeenCalledWith("e1");
   });
 });
+
+// #141 review: the destructive confirm reads as danger, and the verdict's delta is the #126 state badge.
+describe("experiment card polish", () => {
+  it("the inline Delete test uses the danger style; focus still lands on Cancel", async () => {
+    const { art } = setup();
+    await userEvent.click(within(art).getByRole("button", { name: c.remove }));
+    const confirm = within(art).getByRole("group", { name: c.confirmDelete });
+    expect(within(confirm).getByRole("button", { name: c.remove })).toHaveClass("bg-errorBg", "text-brick");
+    expect(within(confirm).getByRole("button", { name: c.cancel })).toHaveFocus();
+  });
+
+  it("the verdict delta is a mono state badge (+7 pts → success)", () => {
+    const { art } = setup();
+    const delta = within(art).getByText("+7 pts");
+    expect(delta).toHaveClass("rounded-tag", "font-mono", "text-moss");
+  });
+});
