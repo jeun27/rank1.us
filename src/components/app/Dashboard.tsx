@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { EngineTable, Hero, Leaderboard } from "@/components/audit/AuditView";
 import type { Loaded } from "@/components/audit/load";
 import { Badge } from "@/components/ui/Badge";
@@ -5,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Jelly } from "@/components/ui/Jelly";
 import type { SeriesPoint } from "@/lib/metrics";
+import { deltaTone, signedPts } from "@/lib/metrics/delta";
 import type { TopFix } from "@/lib/queries/shell";
 import { appCopy as c } from "./copy";
 import { Page, Section } from "./Page";
@@ -17,12 +19,15 @@ export function Dashboard({
   series,
   fixes,
   now,
+  notice,
 }: {
   business: { name: string; paid: boolean } | null;
   latest: Loaded | null;
   series: { points: SeriesPoint[]; visible: boolean };
   fixes: TopFix[];
   now: Date;
+  // C-b: the connect card, after the hero (UX plan slot 3, after PR6's next-fix card), or first with no run.
+  notice?: ReactNode;
 }) {
   if (!business)
     return (
@@ -39,6 +44,7 @@ export function Dashboard({
   if (!latest)
     return (
       <Page title={c.dashboard}>
+        {notice}
         <Card>
           {business.paid ? (
             <p className="text-body-lg">{c.noChecks}</p>
@@ -54,10 +60,15 @@ export function Dashboard({
     <Page title={c.dashboard}>
       <Hero metrics={latest.metrics} now={now}>
         <div className="flex flex-wrap gap-2">
-          {lead?.change != null && <Badge tone="info">{`${lead.change > 0 ? "+" : ""}${lead.change} pts`}</Badge>}
+          {lead?.change != null && (
+            <Badge tone={deltaTone(lead.change)} mono>
+              {signedPts(lead.change)}
+            </Badge>
+          )}
           {run.status === "partial" && <Badge tone="warn">{c.lastPartial(run.jobs_ok, run.jobs_total)}</Badge>}
         </div>
       </Hero>
+      {notice}
       {series.visible && (
         <Section title={c.visibility}>
           <VisibilityLine points={series.points} />

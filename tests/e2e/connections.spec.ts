@@ -92,7 +92,12 @@ const flagOn = async (request: APIRequestContext) =>
 
 test("ENABLE_CONNECTIONS off: the Settings and Connections pages are a real 404", async ({ page, request }) => {
   test.skip(await flagOn(request), "the flag is on for this deployment");
-  for (const path of ["/app/settings", "/app/settings/connections", "/client/settings/connections"]) {
+  for (const path of [
+    "/app/settings",
+    "/app/settings/connections",
+    "/client/settings/connections",
+    "/app/onboarding/connect",
+  ]) {
     const res = await page.goto(path);
     expect(res?.status(), path).toBe(404);
   }

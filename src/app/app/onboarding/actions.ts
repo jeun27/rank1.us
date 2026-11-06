@@ -1,5 +1,6 @@
 "use server";
 import { redirect } from "next/navigation";
+import { readinessSet } from "@/lib/connections/recommend";
 import { findLocalCompetitors, readSite } from "@/lib/onboarding";
 import { MAX_ACTIVE_QUESTIONS } from "@/lib/questions/templates";
 import { getLanding } from "@/lib/queries/auth";
@@ -53,10 +54,13 @@ export async function finishAction(input: OnboardingInput): Promise<{ error: str
     active.some((q) => !q.short_text.trim() || !q.long_text?.trim())
   )
     return { error: "invalid" };
+  // C-b: the vertical select and the connect step are behind ENABLE_CONNECTIONS (lead Q4).
+  const connections = process.env.ENABLE_CONNECTIONS === "true";
+  const { vertical, ...business } = input.business;
   try {
-    await createBusinessOnboarding(await createClient(), input);
+    await createBusinessOnboarding(await createClient(), connections ? input : { ...input, business });
   } catch (e) {
     return { error: (e as { code?: string }).code ?? "save_failed" };
   }
-  redirect("/app");
+  redirect(connections && readinessSet(vertical ?? "restaurant").length ? "/app/onboarding/connect" : "/app");
 }

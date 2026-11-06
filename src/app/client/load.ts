@@ -1,6 +1,7 @@
 import "server-only";
 import { connection } from "next/server";
 import { loadPaidRun } from "@/components/audit/load";
+import { loadConnectCard } from "@/components/connections/load";
 import type { ClientFixes } from "@/components/client/ClientDashboard";
 import { listDoneFixes, listFixes } from "@/lib/queries/fixes";
 import { listRunSummaries } from "@/lib/queries/shell";
@@ -13,14 +14,15 @@ export async function loadClient() {
   await connection();
   const db = await createClient();
   const [business] = await listDfyBusinesses(db);
-  if (!business) return { business: null, latest: null, runs: [], fixes: null };
+  if (!business) return { business: null, latest: null, runs: [], fixes: null, card: null };
   // Every status for History; the line and the hero use complete/partial audit or weekly runs (Step 8).
   const runs = await listRunSummaries(db, business.id, 20);
   const done = runs.find((r) => r.status === "complete" || r.status === "partial");
-  const [latest, list] = await Promise.all([
+  const [latest, list, card] = await Promise.all([
     done ? loadPaidRun(done.id) : null,
     business.fix_list_visible ? Promise.all([listFixes(db, business.id), listDoneFixes(db, business.id)]) : null,
+    loadConnectCard(db, business.id, new Date()),
   ]);
   const fixes: ClientFixes | null = list && { ...list[0], done: list[1], noDomain: !business.domain };
-  return { business: { name: business.name }, latest, runs, fixes };
+  return { business: { id: business.id, name: business.name }, latest, runs, fixes, card };
 }
