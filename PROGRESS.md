@@ -852,3 +852,18 @@ Blocked/open
 - R1 (founder): GBP API access needs Google's approval ("Application for Basic API Access", https://developers.google.com/my-business/content/prereqs). Quota is 0 QPM until then, so live GBP fails even on Preview. These are sensitive scopes, so external users also need Google OAuth verification.
 - Shopify and the other connectors are Coming soon tiles (Notify me = backend's note_connector_interest).
 
+## Step 16 (frontend): the report page (branch feat/step16-report-ui)
+
+- Step 16 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b. The Build Pack isn't readable, so reconcile later.
+- /app/report (nav "Reports", after "What to fix next") for the current business (switcher cookie):
+  - getReportSettings, listReports and getLogoUrl (#76), read through RLS;
+  - UI.md states: no reports → "Your first report sends on the 1st." + Preview; a failed latest report → "The report didn't send to {email}. Check the address." ({email} = the saved recipients, joined, because report rows carry a count only); plus loading and error.
+  - The GA4 partial state isn't built (no GA4 integration yet).
+- Preview: an iframe of the real PDF (data-pipeline's renderReportPdf). /dev/report-preview.pdf renders it on Example data for the gallery. The real GET /app/report/preview.pdf calls data-pipeline's renderReportPreview (#85) for the current business: application/pdf, inline, no-store; 404 when RLS hides it, 500 on a render error.
+- Settings:
+  - logo (PNG/JPEG ≤ 512 KB, checked in the browser and again by uploadLogo's magic bytes; SVG rejected);
+  - Brand color (a native color picker, so always #RRGGBB);
+  - Recipients (≤ 10 valid emails, one per line, lowercased and deduped).
+  Save goes through setReportSettings (the definer RPC). 'Send test to me' → sendTestReport (the user's own email only).
+- History: Month / Status / Download. Download is GET /app/report/{id}/download → a short-lived signed URL (302, no-store), and a 404 when RLS hides the row.
+- Lead copy in COPY.md "Report (lead, 2026-11-05)".

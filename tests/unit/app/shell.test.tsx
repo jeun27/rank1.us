@@ -43,6 +43,7 @@ describe("AppNav (lead: only pages that exist; Step 9 adds Sources after Questio
       ["Questions", "/app/questions"],
       ["Sources", "/app/sources"],
       ["What to fix next", "/app/fixes"],
+      ["Reports", "/app/report"],
       ["History", "/app/history"],
       ["Billing", "/app/billing"],
     ]);

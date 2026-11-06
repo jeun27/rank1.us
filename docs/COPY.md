@@ -288,6 +288,19 @@ Strings for the white-label monthly report PDF and email (Step 16). No product n
 | PDF section headings | "AI visibility", "By engine", "Competitors", "Top sources", "What to fix next", "Weekly checks" |
 | PDF footer label | "API-measured, directional" |
 
+/app/report (Step 16 frontend):
+
+| Where | String |
+|---|---|
+| Page H1 and nav | "Reports" |
+| Preview (iframe title) | "Report preview" |
+| Settings | "Logo", "Upload logo", "Brand color", "Recipients" (hint "Up to 10 emails, one per line."), "Save" |
+| After saving | "Saved." (a failed save reuses "We couldn't save that. Try again.") |
+| Logo errors | "Use a PNG or JPEG.", "Logos can be up to 512 KB." |
+| Recipients error | "Add up to 10 valid emails, one per line." |
+| Test send | "Send test to me" → "Test sent to {email}." / reuses "That didn't send. Try again in a minute." |
+| History | "History"; columns "Month", "Status", "Download"; statuses "Queued", "Building", "Ready", "Sent", "Failed" |
+
 ## Connections (lead, 2026-11-06)
 
 Strings for Connections. One Google grant covers Business Profile, Search Console and Analytics, so disconnecting one disconnects all three.

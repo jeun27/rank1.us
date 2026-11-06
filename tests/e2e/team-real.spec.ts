@@ -65,6 +65,9 @@ test("team sees a DFY client on real data, writes its fix status, and never a se
   await show(page, "Document");
   const card = page.getByRole("tabpanel").getByRole("listitem").filter({ hasText: "robots.txt allows" });
   await expect(card).toBeVisible();
+  // Let the pane and tab transitions finish, so color-contrast is measured at full opacity (as
+  // team-workspace.spec's axeClean does). Flaked on [mobile] once while the Document sheet faded in.
+  await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== "running"));
   const axe = await new AxeBuilder({ page }).analyze();
   expect(axe.violations.map((v) => v.id)).toEqual([]);
   await card.getByLabel("Status").selectOption("done");

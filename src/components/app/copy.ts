@@ -10,6 +10,7 @@ export const appCopy = {
   visibility: "Visibility",
   named: "Named",
   fixNext: "What to fix next",
+  reports: "Reports",
   noFixes: "Nothing to fix yet. Run your first check.",
   dashboardEmpty: "Nothing tracked yet. Add your domain and I'll find the questions.",
   addBusiness: "Add my business",
