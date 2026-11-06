@@ -350,14 +350,14 @@ isOneToOne: false
                   ]
                 },"fixes": {
                   Row: {
-                    "affected_answers": number | null,"business_id": string,"detail": string | null,"evidence": Json | null,"first_seen_run": string | null,"id": string,"last_seen_run": string | null,"pillar": string,"rule_key": string,"size": string,"status": string,"title": string
+                    "affected_answers": number | null,"business_id": string,"detail": string | null,"evidence": Json | null,"first_seen_run": string | null,"id": string,"last_seen_run": string | null,"pillar": string,"rule_key": string,"size": string,"status": string,"status_changed_at": string | null,"status_changed_by": string | null,"title": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "affected_answers"?: number | null,"business_id": string,"detail"?: string | null,"evidence"?: Json | null,"first_seen_run"?: string | null,"id"?: string,"last_seen_run"?: string | null,"pillar"?: string,"rule_key": string,"size": string,"status"?: string,"title": string
+                    "affected_answers"?: number | null,"business_id": string,"detail"?: string | null,"evidence"?: Json | null,"first_seen_run"?: string | null,"id"?: string,"last_seen_run"?: string | null,"pillar"?: string,"rule_key": string,"size": string,"status"?: string,"status_changed_at"?: string | null,"status_changed_by"?: string | null,"title": string
                   }
                   Update: {
-                    "affected_answers"?: number | null,"business_id"?: string,"detail"?: string | null,"evidence"?: Json | null,"first_seen_run"?: string | null,"id"?: string,"last_seen_run"?: string | null,"pillar"?: string,"rule_key"?: string,"size"?: string,"status"?: string,"title"?: string
+                    "affected_answers"?: number | null,"business_id"?: string,"detail"?: string | null,"evidence"?: Json | null,"first_seen_run"?: string | null,"id"?: string,"last_seen_run"?: string | null,"pillar"?: string,"rule_key"?: string,"size"?: string,"status"?: string,"status_changed_at"?: string | null,"status_changed_by"?: string | null,"title"?: string
                   }
                   Relationships: [
                     {
@@ -758,6 +758,9 @@ isOneToOne: false
                            },
 "dismiss_competitor":
 { Args: { "p": Json,"p_business_id": string }; Returns: string
+                           },
+"done_fixes":
+{ Args: { "p_business_id": string }; Returns: { "changed_by": Json,"detail": string | null,"id": string,"rule_key": string,"status_changed_at": string | null,"title": string }[]
                            },
 "end_experiment":
 { Args: { "p_experiment_id": string }; Returns: boolean

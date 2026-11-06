@@ -94,6 +94,25 @@ export async function listFixes(db: DbClient, businessId: string): Promise<FixLi
   return { ranked: ranked.map(toItem), tidyUps: tidyUps.map(toItem), unchecked, lastRunId };
 }
 
+export type DoneFix = {
+  id: string;
+  rule_key: string;
+  title: string;
+  detail: string | null;
+  // Null for fixes closed before status history existed (they sort last).
+  status_changed_at: string | null;
+  // Null when the weekly check closed it. A team actor is { is_team: true, name: null } ("Rank1 team").
+  changed_by: { is_team: boolean; name: string | null } | null;
+};
+
+// The business's done fixes, newest change first, with the same visibility as the fix list.
+// The actor is shown as is_team and a member's display name, never the email.
+export async function listDoneFixes(db: DbClient, businessId: string): Promise<DoneFix[]> {
+  const { data, error } = await db.rpc("done_fixes", { p_business_id: businessId });
+  if (error) throw error;
+  return data.map((f) => ({ ...f, changed_by: f.changed_by as DoneFix["changed_by"] }));
+}
+
 // Sets a fix's status (self-serve members and team only). Errors: 42501 not allowed or not
 // found, 22023 bad status, 23505 reopening while another fix for the rule is open.
 export async function setFixStatus(db: DbClient, fixId: string, status: FixStatus): Promise<void> {

@@ -19,7 +19,7 @@ Postgres on Supabase, RLS on every table via workspace_members.
 | question_templates | id, vertical ('restaurant'), short_form, long_form, slots text[], fixed_cuisine text null, fixed_city text null, origin, sort | read: authenticated; write: service role |
 | local_places | id, city, state, name, kind ('landmark'\|'area'), verified bool | read: authenticated; write: service role |
 | listing_snapshots | id, business_id, source ('gbp'\|'yelp'\|'tripadvisor'\|'booking'\|'site'\|'serp'), url, data jsonb, fetched_at | read by membership; write service role |
-| fixes | id, business_id, rule_key (fk fix_rules.key), size, title, detail, evidence jsonb, affected_answers int, status ('todo'\|'doing'\|'done'), first_seen_run, last_seen_run, pillar (p0..p6, always the rule's; set by a trigger) | by membership |
+| fixes | id, business_id, rule_key (fk fix_rules.key), size, title, detail, evidence jsonb, affected_answers int, status ('todo'\|'doing'\|'done'), first_seen_run, last_seen_run, status_changed_at, status_changed_by (set by a trigger on every status change), pillar (p0..p6, always the rule's; set by a trigger) | by membership |
 | experiments | id, business_id, fix_id null, name, change_note, change_url, change_date, status | by membership |
 | experiment_questions | experiment_id, question_id, grp ('test'\|'control') | by membership; unique(experiment_id, question_id) |
 | google_tokens | business_id, refresh_token_enc, scope, created_at | service-role only (no policies for anon/auth) |
