@@ -5,7 +5,7 @@ import { AiReassure } from "@/components/audit/AiAccessPanel";
 import { ConnectCard } from "@/components/connections/ConnectCard";
 import { loadConnectCard } from "@/components/connections/load";
 import { NarrativeDashboard } from "@/components/narrative/NarrativeDashboard";
-import { loadNarrative } from "@/lib/narrative/service";
+import { loadDashboardNarrative } from "@/components/narrative/load";
 import { getLatestAiAccessCheck } from "@/lib/queries/ai-access";
 import { getTopFixes } from "@/lib/queries/shell";
 
@@ -20,7 +20,7 @@ export default async function DashboardPage() {
         getTopFixes(db, business.id, 1),
         loadConnectCard(db, business.id, now),
         ai ? getLatestAiAccessCheck(db, business.id) : null,
-        loadNarrative(db, business.id),
+        loadDashboardNarrative(db, business.id),
       ])
     : [[], null, null, null];
   return (
@@ -31,7 +31,7 @@ export default async function DashboardPage() {
       fixes={fixes}
       now={now}
       reassure={access && <AiReassure check={access} now={now} />}
-      narrative={narrative && narrative !== "disabled" && <NarrativeDashboard view={narrative} />}
+      narrative={narrative && <NarrativeDashboard view={narrative} />}
       notice={
         business &&
         card && (
