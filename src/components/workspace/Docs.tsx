@@ -21,12 +21,14 @@ import {
   linksText,
   namedText,
   pointsChange,
+  pointsDelta,
   visibilityText,
   type Selection,
 } from "@/lib/workspace/context";
 import type { DocSel } from "./DocPane";
 import { NAV_SECTIONS, SECTION_ICON } from "./Sidebar";
 import { ClientsPanel } from "./ClientsPanel";
+import { deltaTone, signedPts } from "@/lib/metrics/delta";
 import { useTeam, type TeamExtras } from "./team";
 import { ClientQueue } from "./ClientQueue";
 
@@ -66,12 +68,16 @@ function Doc({
 const H = ({ children }: { children: string }) => <h3 className="text-ui font-semibold">{children}</h3>;
 
 function Summary({ view }: { view: WorkspaceView }) {
-  const change = pointsChange(view.latest.visibility, view.checks[1]?.visibility);
+  const change = pointsDelta(view.latest.visibility, view.checks[1]?.visibility);
   return (
     <>
       <div className="flex items-end gap-4" data-computed>
         <StatNumber metric={view.latest.visibility} />
-        {change && <Badge tone="info">{change}</Badge>}
+        {change !== null && (
+          <Badge tone={deltaTone(change)} mono>
+            {signedPts(change)}
+          </Badge>
+        )}
       </div>
       <Table
         caption="Engine"
