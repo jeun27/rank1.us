@@ -10,7 +10,7 @@ vi.mock("@/lib/queries/fixes", () => ({ listFixes: q.listFixes }));
 vi.mock("@/lib/queries/results", () => ({ getRunResults: q.getRunResults }));
 vi.mock("@/lib/reports/document", () => ({ renderReportPdf: async () => new Uint8Array([37, 80, 68, 70]) }));
 
-const { sendTestReport } = await import("@/lib/reports/service");
+const { renderReportPreview, sendTestReport } = await import("@/lib/reports/service");
 
 const BUSINESS = {
   name: "Example Ramen House",
@@ -65,5 +65,19 @@ describe("sendTestReport ('Send test to me')", () => {
     vi.stubEnv("REPORT_FROM_EMAIL", "");
     expect(await sendTestReport(userDb("me@example.com"), serviceDb, "biz-1", NOW)).toBe("failed");
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("renderReportPreview (the /app/report Preview)", () => {
+  it("renders last month's PDF from the caller's reads, never sends or stores", async () => {
+    const pdf = await renderReportPreview(userDb("me@example.com"), serviceDb, "biz-1", NOW);
+    expect(pdf).toEqual(new Uint8Array([37, 80, 68, 70]));
+    expect(fetchMock).not.toHaveBeenCalled();
+    // serviceDb is {} here: any storage upload or RPC on it would throw.
+  });
+
+  it("a business the caller can't read (RLS) → null", async () => {
+    expect(await renderReportPreview(userDb("me@example.com", null), serviceDb, "biz-1", NOW)).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

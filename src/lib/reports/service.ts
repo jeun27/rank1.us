@@ -95,10 +95,30 @@ export function processReportsWith(serviceDb: DbClient, timeLeftMs: () => number
   });
 }
 
+// Last month's report for the business, read with the caller's client (RLS decides access), never stored.
+// Null when the caller can't read the business.
+async function renderLastMonth(userDb: DbClient, serviceDb: DbClient, businessId: string, now: Date) {
+  const periodStart = laPreviousMonthStart(now);
+  const loaded = await loadReport(userDb, serviceDb, businessId, periodStart, lastDay(periodStart));
+  if (!loaded) return null;
+  const data = buildReportData(loaded.input);
+  return { data, pdf: await renderReportPdf(data), periodStart };
+}
+
+// The /app/report Preview: the same PDF the business would get, rendered on demand. Never sends or stores.
+export async function renderReportPreview(
+  userDb: DbClient,
+  serviceDb: DbClient,
+  businessId: string,
+  now: Date = new Date(),
+): Promise<Uint8Array | null> {
+  return (await renderLastMonth(userDb, serviceDb, businessId, now))?.pdf ?? null;
+}
+
 export type TestSendResult = "sent" | "not_allowed" | "failed";
 
-// 'Send test to me': last month's report to the signed-in user's own email only, never stored. Data is
-// read with the caller's client, so RLS decides access. The key dedupes double clicks within a minute.
+// 'Send test to me': last month's report to the signed-in user's own email only, never stored.
+// The key dedupes double clicks within a minute.
 export async function sendTestReport(
   userDb: DbClient,
   serviceDb: DbClient,
@@ -107,15 +127,13 @@ export async function sendTestReport(
 ): Promise<TestSendResult> {
   const { data: auth } = await userDb.auth.getUser();
   if (!auth.user?.email) return "not_allowed";
-  const periodStart = laPreviousMonthStart(now);
   try {
-    const loaded = await loadReport(userDb, serviceDb, businessId, periodStart, lastDay(periodStart));
-    if (!loaded) return "not_allowed";
-    const data = buildReportData(loaded.input);
-    const pdf = await renderReportPdf(data);
+    const report = await renderLastMonth(userDb, serviceDb, businessId, now);
+    if (!report) return "not_allowed";
     const key = `test-${businessId}-${auth.user.id}-${Math.floor(now.getTime() / 60_000)}`;
+    const to = [auth.user.email.toLowerCase()];
     const ok = await send(
-      { data, to: [auth.user.email.toLowerCase()], pdf, filename: reportFilename(periodStart) },
+      { data: report.data, to, pdf: report.pdf, filename: reportFilename(report.periodStart) },
       key,
     );
     return ok ? "sent" : "failed";
