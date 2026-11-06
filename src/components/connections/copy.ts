@@ -1,4 +1,4 @@
-// Connections strings: COPY.md "Connections (lead, 2026-11-06)". DRAFT until the lead signs off on C-a.
+// Connections strings: COPY.md "Connections (lead, 2026-11-06)", signed off by the lead (2026-11-06).
 // The consent text states only what the code does (src/lib/connections/*): the scope, the GBP fields a
 // DFY edit may change, review + log, how to revoke, no passwords.
 export const connectionsCopy = {
@@ -27,7 +27,8 @@ export const connectionsCopy = {
     saas_reviews: "For software with review listings.",
     ai_referrals: "Shows visits that came from AI answers.",
   },
-  statuses: { connected: "Connected", needs_reauth: "Needs reauth", revoked: "Revoked" },
+  // Plain words (lead sign-off); the enum names in the code stay connected / needs_reauth / revoked.
+  statuses: { connected: "Connected", needs_reauth: "Needs reconnect", revoked: "Disconnected" },
   comingSoon: "Coming soon",
   connect: "Connect",
   reconnect: "Reconnect",
@@ -48,20 +49,20 @@ export const connectionsCopy = {
   },
   consent: {
     gbp: [
-      "Rank1 asks Google for one permission: business.manage, to manage your Business Profile.",
-      "We only ever change these fields: description, hours, special hours, website, primary phone and attributes.",
+      "Rank1 asks Google to manage your Business Profile (business.manage) and to know which Google account you used. We don't get your email or profile.",
+      "We only change these fields, and only after you or the Rank1 team confirm: description, hours, special hours, website, primary phone and attributes.",
       "Every change is shown before it's applied, and logged with who made it, when, and what changed.",
       "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.",
       "We never ask for your password.",
     ],
     search_console: [
-      "Rank1 asks Google for one permission: webmasters.readonly, read-only access to Search Console.",
+      "Rank1 asks Google for read-only access to Search Console (webmasters.readonly) and to know which Google account you used. We don't get your email or profile.",
       "We can only read. We never change anything in Search Console.",
       "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.",
       "We never ask for your password.",
     ],
     ga4: [
-      "Rank1 asks Google for one permission: analytics.readonly, read-only access to Google Analytics.",
+      "Rank1 asks Google for read-only access to Google Analytics (analytics.readonly) and to know which Google account you used. We don't get your email or profile.",
       "We can only read. We never change anything in Google Analytics.",
       "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.",
       "We never ask for your password.",
