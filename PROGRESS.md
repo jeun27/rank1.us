@@ -956,7 +956,6 @@ Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/
 - Without can_connect_business: statuses only, no buttons.
 - Copy: drafted, then signed off by the lead with 3 edits (2026-11-06): the first consent line names openid as well as the scope ("to know which Google account you used. We don't get your email or profile."), GBP edits happen "only after you or the Rank1 team confirm", and the statuses read "Needs reconnect" / "Disconnected" (the enums stay needs_reauth / revoked). In COPY.md "Connections (lead, 2026-11-06)".
 
-
 ## Fix status history (backend): for the check-off Fix list (branch feat/fix-status-history)
 - Lead decisions (2026-11-06): additive only and compatible with live v0.5.0 on the shared DB. A team actor shows as is_team only (the UI says "Rank1 team"); a display name shows only for a non-team member of the same business; never the email.
 - Migration 20261105000023 (+ .down.sql): fixes.status_changed_at / status_changed_by (→ auth.users, on delete set null), null on existing rows (fixes has no updated_at to backfill from). A BEFORE INSERT OR UPDATE trigger forces them: null on insert (reviewer: never the caller's values), set on every status change (actor null for the service detector), kept on any other update, so neither can be written directly. set_fix_status and listFixes are unchanged.
@@ -996,17 +995,3 @@ Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/
 - Lead OK 2026-11-06 (Q1, Q2). src/app/robots.ts: in production, one group for "*" plus GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot and Google-Extended, each "Allow: /" and disallowing /app /team /client /api /dev /admin /auth. /audit is left to its noindex. Sitemap: <origin>/sitemap.xml.
 - Previews and every non-production build (VERCEL_ENV !== "production"): "Disallow: /" for everyone.
 - src/app/sitemap.ts: the public pages only (/, /contact, /privacy, /terms). Origin = NEXT_PUBLIC_SITE_URL when it is https, else https://rank1.us (src/lib/site/origin.ts).
-
-
-
-## Portal (b) (frontend): check-off Fix list (branch feat/fixlist-checkoff)
-
-- Lead OK 2026-11-06 (mockup fixes-mock.html). Built on backend #101 (fix status history: status_changed_at / status_changed_by, listDoneFixes with changed_by {is_team, name}), now on main.
-- The Status select is gone. Each fix has a circle that is a real checkbox (role checkbox, named by the fix title, aria-checked false / mixed / true, aria-keyshortcuts x, tooltip "Mark done (x)"). Click or x = done, with a toast "Marked “{title}” done" + Undo (back to the previous status). "Start" (To do only, s, "Start (s)") sets doing: a half circle + "In progress" + who · date. Done rows are struck through with "Done {date}" · who + Undo (reopens to To do). The DB keeps todo / doing / done via set_fix_status.
-- Who: "Rank1 team" for a team actor, the member's name otherwise, never an email; none when the weekly check closed it (changed_by null).
-- "{done} of {total} done" bar and an Open / Done / All filter. The filter is a segmented control (radiogroup, arrow keys), not tabs, because the team workspace already wraps the list in a document tabpanel.
-- Groups: today's sections (the ranked list, Tidy-ups with its count). The pillar tag slot is empty until G5 (#102).
-- No legend line (lead): the shortcuts live in the tooltips and aria-keyshortcuts.
-- dfy_client: the circles are status images (role img, "{title}: {status}"), no Start or Undo.
-- /app/fixes, /client and /team load listDoneFixes next to listFixes.
-- Who/when on in-progress rows (lead Q3): from backend #108, which adds status_changed_at + changed_by to listFixes items (doing rows; null on todo).
