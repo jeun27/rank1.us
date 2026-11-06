@@ -14,10 +14,23 @@ const text = "text-ui text-link underline underline-offset-4";
 const action =
   "inline-flex min-h-11 items-center text-ui text-link underline underline-offset-4 md:min-h-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
 
+// #142 S1: a cited URL is a link only with an http: or https: protocol. Anything else (javascript:, data:,
+// a malformed URL) is plain text with the domain.
+export function safeHref(url: string): string | null {
+  try {
+    const { protocol } = new URL(url);
+    return protocol === "http:" || protocol === "https:" ? url : null;
+  } catch {
+    return null;
+  }
+}
+
 function PageLink({ t }: { t: MentionTarget }) {
+  const href = safeHref(t.url);
+  if (!href) return <span className="font-medium text-ui">{t.domain}</span>;
   return (
-    <a href={t.url} target="_blank" rel="noopener noreferrer" className={`font-medium ${text}`}>
-      {t.title ?? t.domain}
+    <a href={href} target="_blank" rel="noopener noreferrer" className={`font-medium ${text}`}>
+      {t.title ?? t.domain} <span className="sr-only">{c.newTab}</span>
     </a>
   );
 }
@@ -120,7 +133,7 @@ export function MentionsSection({
   return (
     <section aria-labelledby={heading} className="flex flex-col gap-3">
       <div>
-        <h2 id={heading} className="font-display text-h3 font-semibold">
+        <h2 id={heading} className="heading-gradient font-display text-section font-medium">
           {c.title}
         </h2>
         <p className="text-ui text-text2">{c.sub}</p>
@@ -138,7 +151,7 @@ export function MentionsSection({
           )}
           {added.length > 0 && (
             <section aria-label={c.added} className="flex flex-col gap-2">
-              <h3 className="text-ui font-semibold">{c.added}</h3>
+              <h3 className="text-ui font-medium text-text2">{c.added}</h3>
               <ul aria-label={c.added} className={list}>
                 {added.map(row)}
               </ul>

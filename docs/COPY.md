@@ -447,6 +447,7 @@ G7 "Lists that name your rivals but not you" (/app/sources, and the R17 fix's ev
 | Empty, a run with no lists | "None in your last run. We check again on every run." |
 | Save failed (inline on the row) | "We couldn't save that. Try again." |
 | R17 evidence, more than 3 | "+{n} more" |
+| New-tab links (visually hidden, #142 review) | "(opens in a new tab)" |
 
 ## Landing (lead, 2026-11-06)
 

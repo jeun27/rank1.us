@@ -21,4 +21,6 @@ export const mentionsCopy = {
   emptyNone: "None in your last run. We check again on every run.",
   failed: "We couldn't save that. Try again.",
   more: (n: number) => `+${n} more`,
+  // Visually hidden on every new-tab link (#142 review).
+  newTab: "(opens in a new tab)",
 };
