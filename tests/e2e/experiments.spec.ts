@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { expectAxeClean } from "./helpers/forms";
 import { newUser, openMagicLink } from "./helpers/auth";
 
 // Step 17 frontend: /app/experiments in the v3 shell. The gallery (/dev/app) has every UI.md 4b state.
@@ -81,19 +82,30 @@ test("Fix list: 'Start a before/after test' links to the form for the fix just m
   await expect(page.getByRole("link", { name: "Start a before/after test" })).toHaveCount(0);
 });
 
-test("form by keyboard: the rules show inline errors, one group per question", async ({ page }) => {
+test("form by keyboard: Start waits for a test question and a name, control is the other questions", async ({
+  page,
+}) => {
   await page.goto("/dev/app?state=experiments-form");
-  await page.getByLabel("Name").fill("New menu page");
-  await page.getByRole("button", { name: "Start a test" }).click();
-  await expect(page.getByText("Pick at least 1 test question.")).toBeVisible();
+  const start = page.getByRole("button", { name: "Start a test" });
+  await expect(start).toBeDisabled();
+  await expect(page.getByText("Pick at least one test question and a name.")).toBeVisible();
   const test1 = page.getByRole("group", { name: "Test questions" }).getByRole("checkbox").first();
   await test1.focus();
   await page.keyboard.press("Space");
   await expect(test1).toBeChecked();
-  await expect(page.getByRole("group", { name: "Control questions" }).getByRole("checkbox").first()).not.toBeChecked();
+  await expect(page.getByText(/^Control: the other (\d+ questions|question)$/)).toBeVisible();
+  await page.getByRole("button", { name: "Edit" }).press("Enter");
+  const control = page.getByRole("group", { name: "Control questions" });
+  await expect(control).toBeVisible();
+  // The ticked test question isn't offered as control.
+  const picked = (await test1.evaluate((b) => b.closest("label")!.textContent))!.trim();
+  await expect(control.getByRole("checkbox", { name: picked, exact: true })).toHaveCount(0);
+  await page.getByLabel("Name").fill("New menu page");
+  await expect(start).toBeEnabled();
   await page.getByLabel("Link to the change").fill("ftp://example.test");
-  await page.getByRole("button", { name: "Start a test" }).click();
+  await start.click();
   await expect(page.getByText("Use a link that starts with http:// or https://.")).toBeVisible();
+  await expectAxeClean(page);
 });
 
 // The UI gate on top of backend's RLS (lead): a dfy_client never reaches the experiments pages.
