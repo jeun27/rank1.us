@@ -203,8 +203,10 @@ test("signed-in owner: What to fix next lists open fixes, Tidy-ups, and Done rem
   const r10 = fixes.data.find((f) => f.rule_key === "R10")!;
   await page.getByRole("listitem").filter({ hasText: "put your menu" }).getByRole("checkbox").click();
   await expect(page.getByText("Example data: put your menu on a page as text")).toHaveCount(0);
-  const saved = await db.from("fixes").select("status").eq("id", r10.id).single();
-  expect(saved.data?.status).toBe("done");
+  // The circle is optimistic (the row moves at once), so wait for the save itself to land.
+  await expect
+    .poll(async () => (await db.from("fixes").select("status").eq("id", r10.id).single()).data?.status)
+    .toBe("done");
 });
 
 // QA STEP 9 (#49): the selector is a plain GET form submitted by its Show button (the form markup is

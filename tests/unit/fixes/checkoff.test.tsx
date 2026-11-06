@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { act, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { FixList, type DoneView, type FixView } from "@/components/fixes/FixList";
@@ -228,25 +228,36 @@ describe("read-only (a DFY client) and failures", () => {
     expect(circle(exampleFixes[0].title)).toHaveAttribute("aria-checked", "false");
   });
 
+  // Fake timers only (no self-advancing clock), fireEvent instead of userEvent, so the 8 s is exact.
   it("the toast goes away by itself", async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(
-      <FixList
-        ranked={[exampleFixes[0]]}
-        tidyUps={[]}
-        done={[]}
-        unchecked={[]}
-        noDomain={false}
-        canWrite
-        onStatus={vi.fn()}
-      />,
-    );
-    await user.click(circle(exampleFixes[0].title));
-    expect(screen.getByRole("status")).toHaveTextContent(c.marked(exampleFixes[0].title));
-    await act(async () => vi.advanceTimersByTime(8000));
-    expect(screen.queryByText(c.marked(exampleFixes[0].title))).toBeNull();
-    vi.useRealTimers();
+    vi.useFakeTimers();
+    try {
+      render(
+        <FixList
+          ranked={[exampleFixes[0]]}
+          tidyUps={[]}
+          done={[]}
+          unchecked={[]}
+          noDomain={false}
+          canWrite
+          onStatus={vi.fn()}
+        />,
+      );
+      await act(async () => {
+        fireEvent.click(circle(exampleFixes[0].title));
+      });
+      expect(screen.getByRole("status")).toHaveTextContent(c.marked(exampleFixes[0].title));
+      await act(async () => {
+        vi.advanceTimersByTime(7999);
+      });
+      expect(screen.getByRole("status")).toBeInTheDocument();
+      await act(async () => {
+        vi.advanceTimersByTime(1);
+      });
+      expect(screen.queryByRole("status")).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 
