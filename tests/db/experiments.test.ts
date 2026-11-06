@@ -78,7 +78,7 @@ async function run(
         run_id: r.id,
         question_id,
         engine: i % 2 ? "gemini" : "chatgpt",
-        run_index: i + 1,
+        run_index: (Math.floor(i / 2) % 3) + 1,
         status,
         mentioned,
         checked_at: started,
