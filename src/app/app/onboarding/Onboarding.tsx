@@ -140,14 +140,34 @@ export function Onboarding({
 
 type StepProps = { d: Draft; set: (p: Partial<Draft>) => void };
 
-// X24: the muted line beside a disabled Next, naming what's missing (the button points at it).
-function Reason({ id, text }: { id: string; text: string | null }) {
-  return text ? (
-    <p id={id} className="text-caption text-inkMuted">
-      {text}
-    </p>
-  ) : null;
+// X24 + the founder rule (never a silent disabled button): the muted line beside a not-ready Next, which
+// the button points at, plus a polite region that says it again when Next is pressed early.
+function Reason({ id, text, said }: { id: string; text: string | null; said: string }) {
+  return (
+    <>
+      {text && (
+        <p id={id} className="text-caption text-inkMuted">
+          {text}
+        </p>
+      )}
+      <span role="status" className="sr-only">
+        {text ? said : ""}
+      </span>
+    </>
+  );
 }
+
+// An early press: clear, then set, so a repeat is announced too.
+function useNudge() {
+  const [said, setSaid] = useState("");
+  const nudge = (text: string) => {
+    setSaid("");
+    setTimeout(() => setSaid(text));
+  };
+  return [said, nudge] as const;
+}
+
+const notReady = "aria-disabled:cursor-not-allowed aria-disabled:opacity-60";
 
 // Back + the one primary button; a sticky bar on phones.
 function Bar({ onBack, children }: { onBack?: () => void; children: ReactNode }) {
@@ -223,6 +243,7 @@ function BusinessStep({
   const verticalId = useId();
   const sellsId = useId();
   const reasonId = useId();
+  const [said, nudge] = useNudge();
   const b = d.business;
   const setB = (patch: Partial<Business>) => set({ business: { ...b, ...patch } });
   const read = d.site === "ok" || d.site === "unreadable";
@@ -295,7 +316,8 @@ function BusinessStep({
       className="flex flex-col gap-5"
       onSubmit={(e) => {
         e.preventDefault();
-        if (ready) onNext();
+        if (missing) nudge(missing);
+        else onNext();
       }}
     >
       <PillField label={copy.domain.label} name="domain" value={b.domain} readOnly icon="globe" />
@@ -375,8 +397,13 @@ function BusinessStep({
       <Checks legend={copy.dietary} options={DIETARY} picked={d.picks.dietary} onChange={pick("dietary")} />
       <Checks legend={copy.occasion} options={OCCASIONS} picked={d.picks.occasion} onChange={pick("occasion")} />
       <Bar>
-        <Reason id={reasonId} text={missing} />
-        <Button type="submit" disabled={!ready} aria-describedby={missing ? reasonId : undefined}>
+        <Reason id={reasonId} text={missing} said={said} />
+        <Button
+          type="submit"
+          aria-disabled={!ready || undefined}
+          aria-describedby={missing ? reasonId : undefined}
+          className={notReady}
+        >
           {copy.next}
         </Button>
       </Bar>
@@ -397,6 +424,7 @@ function CompetitorsStep({
   const [domain, setDomain] = useState("");
   const [domainError, setDomainError] = useState(false);
   const reasonId = useId();
+  const [said, nudge] = useNudge();
 
   useEffect(() => {
     if (d.search?.key === key) return;
@@ -496,8 +524,13 @@ function CompetitorsStep({
       )}
 
       <Bar onBack={onBack}>
-        <Reason id={reasonId} text={result ? null : copy.missing.places} />
-        <Button onClick={onNext} disabled={!result} aria-describedby={result ? undefined : reasonId}>
+        <Reason id={reasonId} text={result ? null : copy.missing.places} said={said} />
+        <Button
+          onClick={() => (result ? onNext() : nudge(copy.missing.places))}
+          aria-disabled={!result || undefined}
+          aria-describedby={result ? undefined : reasonId}
+          className={notReady}
+        >
           {copy.next}
         </Button>
       </Bar>
