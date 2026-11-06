@@ -224,17 +224,27 @@ describe("'Start a test' form", () => {
     expect(within(control()).getByRole("checkbox", { name: questions[2].text })).not.toBeChecked();
   });
 
-  it("Start stays off with a reason until 1+ test question and a name", async () => {
-    const { test, start, user } = setup();
+  // Founder rule (lead, #174): never a silent disabled button. Start stays focusable (aria-disabled, not
+  // disabled), points at the reason, and pressing it early keeps focus and announces the reason.
+  it("Start stays off with a reason until 1+ test question and a name, focusable (aria-disabled)", async () => {
+    const { test, start, onCreate, user } = setup();
     const reason = "Pick at least one test question and a name.";
-    expect(start).toBeDisabled();
+    expect(start).toHaveAttribute("aria-disabled", "true");
+    expect(start).not.toBeDisabled();
     expect(start).toHaveAccessibleDescription(reason);
+    await user.click(start);
+    expect(onCreate).not.toHaveBeenCalled();
+    expect(start).toHaveFocus();
+    expect(await screen.findByRole("status")).toHaveTextContent(reason);
     await tick(test, questions[0].text);
-    expect(start).toBeDisabled();
+    expect(start).toHaveAttribute("aria-disabled", "true");
     await user.type(screen.getByLabelText(c.name), "   ");
-    expect(start).toBeDisabled();
+    expect(start).toHaveAttribute("aria-disabled", "true");
+    // Enter in a field doesn't sneak past it either.
+    await user.type(screen.getByLabelText(c.name), "{Enter}");
+    expect(onCreate).not.toHaveBeenCalled();
     await user.type(screen.getByLabelText(c.name), "New menu page");
-    expect(start).toBeEnabled();
+    expect(start).not.toHaveAttribute("aria-disabled");
     expect(start).not.toHaveAccessibleDescription(reason);
     expect(screen.queryByText(reason)).toBeNull();
   });
@@ -272,9 +282,9 @@ describe("'Start a test' form", () => {
   it("from a fix: the name defaults to the fix title, so one test question is enough; fix_id is sent", async () => {
     const { test, start, onCreate, user } = setup({ fix: { id: "f9", title: "Crawlable HTML menu on your own site" } });
     expect(screen.getByLabelText(c.name)).toHaveValue("Crawlable HTML menu on your own site");
-    expect(start).toBeDisabled();
+    expect(start).toHaveAttribute("aria-disabled", "true");
     await tick(test, questions[1].text);
-    expect(start).toBeEnabled();
+    expect(start).not.toHaveAttribute("aria-disabled");
     await user.click(start);
     expect(onCreate).toHaveBeenCalledWith(
       expect.objectContaining({ fixId: "f9", test: ["q2"], control: ["q1", "q3"] }),

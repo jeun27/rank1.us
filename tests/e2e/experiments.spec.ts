@@ -87,8 +87,11 @@ test("form by keyboard: Start waits for a test question and a name, control is t
 }) => {
   await page.goto("/dev/app?state=experiments-form");
   const start = page.getByRole("button", { name: "Start a test" });
-  await expect(start).toBeDisabled();
-  await expect(page.getByText("Pick at least one test question and a name.")).toBeVisible();
+  // aria-disabled, not disabled: still focusable, and it points at the reason.
+  await expect(start).toHaveAttribute("aria-disabled", "true");
+  await expect(start).toHaveAccessibleDescription("Pick at least one test question and a name.");
+  await start.focus();
+  await expect(start).toBeFocused();
   const test1 = page.getByRole("group", { name: "Test questions" }).getByRole("checkbox").first();
   await test1.focus();
   await page.keyboard.press("Space");
@@ -101,7 +104,7 @@ test("form by keyboard: Start waits for a test question and a name, control is t
   const picked = (await test1.evaluate((b) => b.closest("label")!.textContent))!.trim();
   await expect(control.getByRole("checkbox", { name: picked, exact: true })).toHaveCount(0);
   await page.getByLabel("Name").fill("New menu page");
-  await expect(start).toBeEnabled();
+  await expect(start).not.toHaveAttribute("aria-disabled");
   await page.getByLabel("Link to the change").fill("ftp://example.test");
   await start.click();
   await expect(page.getByText("Use a link that starts with http:// or https://.")).toBeVisible();
