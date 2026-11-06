@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { aiAccessAnswer, aiAccessCopy as c, readableCount } from "@/components/audit/ai-access";
+import { aiAccessAnswer, aiAccessCopy as c, readableCount, SEARCH_BOTS } from "@/components/audit/ai-access";
+import { FIX_BOTS } from "@/lib/fixes/r14-robots";
 import { AI_CRAWLERS, type AiAccessCheck } from "@/lib/queries/ai-access";
 
 // G2 (lead OK 2026-11-06, D3 + Q2): the panel's answer line by outcome. A block of an R14 bot
@@ -28,6 +29,8 @@ const check = (over: Partial<AiAccessCheck> = {}): AiAccessCheck => ({
 });
 
 describe("aiAccessAnswer", () => {
+  it("the search bots are exactly R14's", () => expect(SEARCH_BOTS).toEqual(FIX_BOTS));
+
   it("good", () => {
     expect(aiAccessAnswer(check())).toEqual({ tone: "success", line: "AI can read your site.", hint: null });
   });

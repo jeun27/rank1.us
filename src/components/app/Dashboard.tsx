@@ -20,6 +20,7 @@ export function Dashboard({
   fixes,
   now,
   notice,
+  reassure,
 }: {
   business: { name: string; paid: boolean } | null;
   latest: Loaded | null;
@@ -28,6 +29,8 @@ export function Dashboard({
   now: Date;
   // C-b: the connect card, after the hero (UX plan slot 3, after PR6's next-fix card), or first with no run.
   notice?: ReactNode;
+  // G2: the quiet "AI can read your site" line, right under the hero (behind ENABLE_AI_ACCESS_CHECK).
+  reassure?: ReactNode;
 }) {
   if (!business)
     return (
@@ -68,6 +71,7 @@ export function Dashboard({
           {run.status === "partial" && <Badge tone="warn">{c.lastPartial(run.jobs_ok, run.jobs_total)}</Badge>}
         </div>
       </Hero>
+      {reassure}
       {notice}
       {series.visible && (
         <Section title={c.visibility}>

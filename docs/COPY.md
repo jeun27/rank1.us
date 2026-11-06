@@ -407,6 +407,18 @@ Strings from the GAS prototype report (share/gas-proto/REPORT.md, lead copy). Fi
 | R18 title (G2, JS-empty homepage) | "Your homepage needs JavaScript to show its text" |
 | R18 customer copy (lead, every vertical) | "Your homepage shows almost no text without JavaScript, so ChatGPT can't read what you offer." |
 | G2 edge hint (the GPTBot-UA request got a different answer: a soft hint, never "blocked") | "Your site may be blocking AI crawlers at the edge (for example a Cloudflare bot setting). Check your bot settings." |
+| G2 panel title (/audit, and the evidence in the R14/R16/R18 fixes) | "Can AI see your site?" |
+| G2 count | "{n} of 6 AI crawlers can read your site" |
+| G2 answer, good | "AI can read your site." |
+| G2 answer, a search crawler blocked (R14's OAI-SearchBot, PerplexityBot) | "AI search can't read your site: {bots} {is/are} blocked in robots.txt." |
+| G2 answer, only other crawlers blocked (info) | "AI search can read your site. You block {n} training crawlers, which is your call." (n=1: "1 training crawler") |
+| G2 answer, unreachable (the domain only when it's a hostname) | "We couldn't reach {domain}." / "We couldn't reach your site." |
+| G2 JavaScript-off row | "With JavaScript off", "{n} words show" |
+| G2 crawler access | "Allowed", "Blocked", "No rule" |
+| G2 table headers (frontend; lead to confirm) | "Crawler", "Access", "robots.txt line" |
+| G2 checked line | "Checked {age} ago · robots.txt + homepage" |
+| G2 explainer | "We read robots.txt and load your homepage the way AI crawlers would." |
+| G2 dashboard line (/app, good only) | "AI can read your site · checked {age} ago" |
 
 ## Landing (lead, 2026-11-06)
 
