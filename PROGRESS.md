@@ -782,7 +782,7 @@ Changed
   - getReportSettings, listReports and getLogoUrl (#76), read through RLS;
   - UI.md states: no reports → "Your first report sends on the 1st." + Preview; a failed latest report → "The report didn't send to {email}. Check the address." ({email} = the saved recipients, joined, because report rows carry a count only); plus loading and error.
   - The GA4 partial state isn't built (no GA4 integration yet).
-- Preview: an iframe of the real PDF (data-pipeline's renderReportPdf). /dev/report-preview.pdf renders it on Example data for the gallery. The real /app/report/preview.pdf waits on data-pipeline's renderReportPreview export.
+- Preview: an iframe of the real PDF (data-pipeline's renderReportPdf). /dev/report-preview.pdf renders it on Example data for the gallery. The real GET /app/report/preview.pdf calls data-pipeline's renderReportPreview (#85) for the current business: application/pdf, inline, no-store; 404 when RLS hides it, 500 on a render error.
 - Settings:
   - logo (PNG/JPEG ≤ 512 KB, checked in the browser and again by uploadLogo's magic bytes; SVG rejected);
   - Brand color (a native color picker, so always #RRGGBB);
