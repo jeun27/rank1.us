@@ -3,12 +3,23 @@ import { QUEUE_TAGS, queueTag, sortQueue, type QueueRow } from "@/lib/workspace/
 
 // X5 (UX plan PR 19, planner 11:13): /team opens on a client queue tagged with the approved G3 team
 // tags, sorted by what needs the team first.
-const base = { lastRunFailed: false, dropped: false, gasReady: false, started: false };
+const base = {
+  lastRunFailed: false,
+  connections: [] as ("connected" | "needs_reauth" | "revoked")[],
+  gasReady: false,
+  started: false,
+};
 
 describe("queue tags", () => {
-  it("Needs attention: a dropped connection or a failed last run (a partial run is not attention)", () => {
-    expect(queueTag({ ...base, dropped: true, gasReady: true })).toBe("attention");
+  // #161 review: needs_reauth or a failed run. A revoked connection is the client's choice; if it was a
+  // required one, G3 readiness already makes the client "Waiting on client".
+  it("Needs attention: a connection needing reauth, or a failed last run (partial is not attention)", () => {
+    expect(queueTag({ ...base, connections: ["connected", "needs_reauth"], gasReady: true })).toBe("attention");
     expect(queueTag({ ...base, lastRunFailed: true })).toBe("attention");
+  });
+  it("a revoked connection alone is not attention", () => {
+    expect(queueTag({ ...base, connections: ["revoked"], gasReady: true })).toBe("ready");
+    expect(queueTag({ ...base, connections: ["revoked"] })).toBe("waiting");
   });
   it("Ready for GAS: ready and nothing started; In progress: ready and a fix doing or done", () => {
     expect(queueTag({ ...base, gasReady: true })).toBe("ready");
