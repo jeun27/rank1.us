@@ -9,8 +9,10 @@ export type FixSize = (typeof FIX_SIZES)[number];
 export type FixStatus = "todo" | "doing" | "done";
 export const PILLARS = ["p0", "p1", "p2", "p3", "p4", "p5", "p6"] as const;
 export type Pillar = (typeof PILLARS)[number];
+// G5: blockers first. P0 (know where you stand) comes last, with the baseline line.
+export const PILLAR_ORDER: Pillar[] = ["p5", "p3", "p2", "p1", "p4", "p6", "p0"];
 
-// A fix row as stored, used for ranking (size) and by getTopFixes.
+// A fix row as stored, used for ranking (pillar, size) and by getTopFixes.
 export type OpenFix = {
   id: string;
   rule_key: string;
@@ -20,7 +22,7 @@ export type OpenFix = {
   // null for site rules (no answer-derived rule is enabled yet); the UI hides it then.
   affected_answers: number | null;
   status: "todo" | "doing";
-  // G5 group: p0..p6 (the rule's pillar). The Fix list orders groups p5, p3, p2, p1, p4, p6, p0.
+  // G5 group: p0..p6 (the rule's pillar), ordered by PILLAR_ORDER.
   pillar: Pillar;
 };
 
@@ -33,7 +35,7 @@ export type FixActor = { is_team: boolean; name: string | null };
 export type FixItem = Omit<OpenFix, "size"> & { status_changed_at: string | null; changed_by: FixActor | null };
 
 export type FixList = {
-  // Open fixes, smallest effort first (S, S-M, M, M-L, L), then rule key. Never hygiene rules.
+  // Open fixes by pillar (PILLAR_ORDER), then smallest effort (S … L), then rule key. Never hygiene rules.
   ranked: FixItem[];
   // Open hygiene fixes (H1), shown only under "Tidy-ups".
   tidyUps: FixItem[];
@@ -44,8 +46,11 @@ export type FixList = {
 
 const FIX_COLUMNS = "id, rule_key, size, title, detail, affected_answers, status, pillar";
 const byKey = (a: string, b: string) => a.localeCompare(b, "en", { numeric: true });
-const bySize = (a: OpenFix, b: OpenFix) =>
-  FIX_SIZES.indexOf(a.size) - FIX_SIZES.indexOf(b.size) || byKey(a.rule_key, b.rule_key);
+// The one fix order: the Fix list groups by it and the Dashboard's next fix is its first item.
+export const byPillarThenSize = (a: OpenFix, b: OpenFix) =>
+  PILLAR_ORDER.indexOf(a.pillar) - PILLAR_ORDER.indexOf(b.pillar) ||
+  FIX_SIZES.indexOf(a.size) - FIX_SIZES.indexOf(b.size) ||
+  byKey(a.rule_key, b.rule_key);
 
 // Open fixes of a business split into ranked and tidy-ups (by the rule's group), plus rule titles.
 export async function openFixes(
@@ -59,7 +64,7 @@ export async function openFixes(
   if (fixes.error) throw fixes.error;
   if (rules.error) throw rules.error;
   const hygiene = new Set(rules.data.filter((r) => r.grp === "hygiene").map((r) => r.key));
-  const items = (fixes.data as OpenFix[]).sort(bySize);
+  const items = (fixes.data as OpenFix[]).sort(byPillarThenSize);
   return {
     ranked: items.filter((f) => !hygiene.has(f.rule_key)),
     tidyUps: items.filter((f) => hygiene.has(f.rule_key)),
