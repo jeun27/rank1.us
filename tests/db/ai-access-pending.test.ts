@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { AI_CRAWLERS, listRunsNeedingAiAccess, recordAiAccessCheck } from "@/lib/queries/ai-access";
-import { anonClient, must, newUser, serviceClient } from "./helpers";
+import { anonClient, makeWorkspace, must, newUser, serviceClient } from "./helpers";
 
 // 0032: free audits still needing a G2 check: complete/partial free_audit runs of the last 7 days
 // with no ai_access_checks row, oldest first. The domain is free_audits.domain. Service only.
@@ -55,10 +55,11 @@ describe("runs_needing_ai_access_check", () => {
     const stale = await freeAudit(`stale-${tag}.test`, "complete", daysAgo(8));
     const checked = await freeAudit(`checked-${tag}.test`, "complete", daysAgo(2));
     await recordAiAccessCheck(s(), checked, check(`checked-${tag}.test`));
+    const paidBusiness = (await makeWorkspace(await newUser("pending-owner"))).businessId;
     const paid = must(
       await s()
         .from("runs")
-        .insert({ kind: "weekly", status: "complete", started_at: daysAgo(1) })
+        .insert({ business_id: paidBusiness, kind: "weekly", status: "complete", started_at: daysAgo(1) })
         .select("id")
         .single(),
     ).id;
