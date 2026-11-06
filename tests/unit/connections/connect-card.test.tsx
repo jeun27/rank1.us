@@ -81,13 +81,11 @@ describe("ConnectCard: connect", () => {
 });
 
 describe("ConnectCard: you're all set", () => {
-  it("self-serve: one connector reads 'is connected', and links to the fix list", () => {
+  it("self-serve: just what is connected (review: nothing reads connections yet), and links to the fix list", () => {
     render(<ConnectCard {...base} fixesHref="/app/fixes" state={{ kind: "ready", connectors: ["gbp"] }} />);
     const card = screen.getByRole("region", { name: c.card.readyTitle });
     expect(card).toHaveTextContent(c.card.readyBody("self", [c.names.gbp]));
-    expect(c.card.readyBody("self", [c.names.gbp])).toBe(
-      "Google Business Profile is connected. Your fix list and reports now use it.",
-    );
+    expect(c.card.readyBody("self", [c.names.gbp])).toBe("Google Business Profile is connected.");
     expect(within(card).getByRole("link", { name: appCopy.fixNext })).toHaveAttribute("href", "/app/fixes");
     expect(within(card).queryByRole("progressbar")).toBeNull();
   });
@@ -95,7 +93,7 @@ describe("ConnectCard: you're all set", () => {
   it("DFY: the team takes it from here, no timing promised (lead Q1)", () => {
     render(<ConnectCard {...base} audience="dfy" state={{ kind: "ready", connectors: ["gbp", "search_console"] }} />);
     expect(screen.getByRole("region", { name: c.card.readyTitle })).toHaveTextContent(
-      "Google Business Profile and Google Search Console are connected. The Rank1 team takes it from here, and every change shows in your change log.",
+      "Google Business Profile and Google Search Console are connected. The Rank1 team takes it from here, and every change shows under Changes.",
     );
     expect(screen.queryByRole("link")).toBeNull();
   });
@@ -121,8 +119,8 @@ describe("copy", () => {
       expect(copy, s).toContain(`"${s}"`);
     for (const s of [
       '"{n} of {m} connected"',
-      '"{names} are connected. Your fix list and reports now use them."',
-      '"{names} are connected. The Rank1 team takes it from here, and every change shows in your change log."',
+      '"{names} are connected."',
+      '"{names} are connected. The Rank1 team takes it from here, and every change shows under Changes."',
     ])
       expect(copy, s).toContain(s);
   });

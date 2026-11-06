@@ -76,10 +76,10 @@ test("the onboarding step: Skip for now and Go to your dashboard lead to /app", 
 test("all set: self-serve links to the fix list; the DFY client's copy promises no timing", async ({ page }) => {
   await page.goto("/dev/app?state=dashboard-all-set");
   const self = page.getByRole("region", { name: "You're all set. We'll take it from here." });
-  await expect(self).toContainText("Google Business Profile is connected. Your fix list and reports now use it.");
+  await expect(self).toContainText("Google Business Profile is connected.");
   await expect(self.getByRole("link", { name: "What to fix next" })).toHaveAttribute("href", "/app/fixes");
   await page.goto("/dev/client?state=all-set");
   await expect(page.getByRole("region", { name: "You're all set. We'll take it from here." })).toContainText(
-    "The Rank1 team takes it from here, and every change shows in your change log.",
+    "The Rank1 team takes it from here, and every change shows under Changes.",
   );
 });
