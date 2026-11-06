@@ -546,32 +546,6 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
-                },"narrative_results": {
-                  Row: {
-                    "avoid": Json,"business_id": string | null,"checked_at": string,"n": number,"run_id": string,"snippet": string | null,"snippet_word": string | null,"want": Json
-                  }
-                  ComputedFields: never
-                  Insert: {
-                    "avoid"?: Json,"business_id"?: string | null,"checked_at"?: string,"n"?: number,"run_id": string,"snippet"?: string | null,"snippet_word"?: string | null,"want"?: Json
-                  }
-                  Update: {
-                    "avoid"?: Json,"business_id"?: string | null,"checked_at"?: string,"n"?: number,"run_id"?: string,"snippet"?: string | null,"snippet_word"?: string | null,"want"?: Json
-                  }
-                  Relationships: [
-                    {
-      foreignKeyName: "narrative_results_business_id_fkey"
-      columns: ["business_id"]
-isOneToOne: false
-      referencedRelation: "businesses"
-      referencedColumns: ["id"]
-    },{
-      foreignKeyName: "narrative_results_run_id_fkey"
-      columns: ["run_id"]
-isOneToOne: false
-      referencedRelation: "runs"
-      referencedColumns: ["id"]
-    }
-                  ]
                 },"questions": {
                   Row: {
                     "active": boolean,"active_form": string,"business_id": string,"city": string | null,"country": string | null,"dfs_location_code": number | null,"id": string,"location_level": string,"long_text": string | null,"short_text": string,"state": string | null,"template_key": string | null
@@ -864,9 +838,6 @@ isOneToOne: false
                            },
 "record_connection_change":
 { Args: { "p_actor": string,"p_after": Json,"p_before": Json,"p_connection_id": string,"p_field": string,"p_provider_ref": string }; Returns: string
-                           },
-"record_narrative_result":
-{ Args: { "p": Json,"p_run_id": string }; Returns: undefined
                            },
 "record_stripe_event":
 { Args: { "p_event_id": string,"p_type": string }; Returns: boolean

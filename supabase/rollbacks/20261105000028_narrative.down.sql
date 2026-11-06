@@ -1,6 +1,4 @@
--- Reverts 20261105000028_narrative.sql. The word lists and stored results are dropped.
-drop function if exists public.record_narrative_result(uuid, jsonb);
-drop table if exists public.narrative_results;
+-- Reverts 20261105000028_narrative.sql. The word lists are dropped.
 drop function if exists public.set_narrative_words(uuid, text[], text[]);
 drop function if exists private.clean_words(text[]);
 alter table public.businesses drop constraint if exists businesses_narrative_words_check;

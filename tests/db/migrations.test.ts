@@ -39,7 +39,6 @@ const TABLES = [
   "connection_changes",
   "connector_interest",
   "ai_access_checks",
-  "narrative_results",
 ].sort();
 
 const dir = (sub: string) => join(process.cwd(), "supabase", sub);
