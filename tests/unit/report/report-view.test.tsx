@@ -125,6 +125,17 @@ describe("ReportView (/app/report)", () => {
     expect(await screen.findByText("That didn't send. Try again in a minute.")).toBeInTheDocument();
   });
 
+  // UI.md 4b Report partial: GA4 isn't connected, so the GA4 section is hidden; the link shows only when
+  // the Connections hub exists (ENABLE_CONNECTIONS), never a dead link (QA #89 F1).
+  it("GA4 not connected: no GA4 section; 'Connect GA4' only when a hub link is given", () => {
+    const { unmount } = render(<ReportView {...props({ connectGa4Href: "/app/settings/connections" })} />);
+    expect(screen.getByRole("link", { name: "Connect GA4" })).toHaveAttribute("href", "/app/settings/connections");
+    expect(screen.queryByRole("heading", { name: /GA4|traffic/i })).toBeNull();
+    unmount();
+    render(<ReportView {...props()} />);
+    expect(screen.queryByRole("link", { name: "Connect GA4" })).toBeNull();
+  });
+
   it("COPY.md has the lead's Report strings", () => {
     const copy = readFileSync("docs/COPY.md", "utf8");
     for (const s of [
@@ -148,6 +159,7 @@ describe("ReportView (/app/report)", () => {
       "Sent",
       "Failed",
       "Report preview",
+      "Connect GA4",
     ])
       expect(copy.slice(copy.indexOf("## Report (lead, 2026-11-05)"))).toContain(`"${s}"`);
   });
