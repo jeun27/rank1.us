@@ -331,6 +331,24 @@ Tile helper text (the niche key in src/lib/connections/recommend.ts):
 | saas_reviews | "For software with review listings." |
 | ai_referrals | "Shows visits that came from AI answers." |
 
+**DRAFT (C-a, for the lead's sign-off).** The hub, Settings → Connections. Every consent line states only what the code does.
+
+| Where | String |
+|---|---|
+| Page title | "Connections" |
+| Tier headings | "Recommended", "Optional", "Coming soon" |
+| Tile names | "Google Business Profile", "Google Search Console", "Google Analytics", "Website / CMS", "Shopify", "G2 / Capterra", "OpenTable", "Resy", "Apple Business Connect", "Bing Places", "Yelp", "Amazon" |
+| Status tags | "Connected", "Needs reauth", "Revoked"; a tile without a working flow: "Coming soon" |
+| Buttons | "Connect", "Reconnect", "Disconnect", "Notify me", "Continue to Google", "Cancel", "Save" |
+| Notify me, after | "We'll let you know." |
+| Picker | "Choose locations", "Choose sites", "Choose properties" (Business Profile / Search Console / Analytics) |
+| Change log | "Changes"; fields "Description", "Hours", "Special hours", "Website", "Primary phone", "Attributes" with the date |
+| Callback banners | "{connector} is connected." / "Nothing was connected: Google access wasn't allowed." / "We couldn't connect that. Try again." |
+| Any failed action | "We couldn't do that. Try again." |
+| Consent, Google Business Profile | "Rank1 asks Google for one permission: business.manage, to manage your Business Profile.", "We only ever change these fields: description, hours, special hours, website, primary phone and attributes.", "Every change is shown before it's applied, and logged with who made it, when, and what changed.", "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.", "We never ask for your password." |
+| Consent, Search Console | "Rank1 asks Google for one permission: webmasters.readonly, read-only access to Search Console.", "We can only read. We never change anything in Search Console.", "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.", "We never ask for your password." |
+| Consent, Google Analytics | "Rank1 asks Google for one permission: analytics.readonly, read-only access to Google Analytics.", "We can only read. We never change anything in Google Analytics.", "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.", "We never ask for your password." |
+
 ## Landing (lead, 2026-11-06)
 
 | Where | String |

@@ -31,10 +31,13 @@ export function AppShell({
   business,
   actions,
   page,
+  settings = false,
   children,
 }: {
   business: ReactNode;
   actions?: ReactNode;
+  // Shows Settings in the rail (ENABLE_CONNECTIONS).
+  settings?: boolean;
   // The last crumb; defaults to the nav label of the current path (galleries pass their own).
   page?: ReactNode;
   children: ReactNode;
@@ -46,6 +49,7 @@ export function AppShell({
         className="flex items-center border-b border-border bg-rail text-ink md:sticky md:top-0 md:h-dvh md:w-56 md:shrink-0 md:flex-col md:items-stretch md:border-r md:border-b-0"
       >
         <AppNav
+          settings={settings}
           header={
             <Link
               href="/"

@@ -22,6 +22,13 @@ export function resultTarget(pathname: string): { kind: "run" | "audit"; key: st
   }
 }
 
+// Settings → Connections (C-a): off unless ENABLE_CONNECTIONS=true. The pages stream, so the flag is a real
+// 404 here, before anything else (it doesn't need a session or Supabase).
+export function connectionsTarget(pathname: string): boolean {
+  const path = normalizePath(pathname);
+  return path !== null && /^\/(app\/settings(\/connections)?|client\/settings\/connections)$/.test(path);
+}
+
 // /team?b=<id> streams too (Step 11): the client id, when the path is /team.
 export function teamClient(pathname: string, params: URLSearchParams): string | null {
   return normalizePath(pathname) === "/team" ? params.get("b") || null : null;
@@ -77,6 +84,7 @@ export async function updateSession(request: NextRequest) {
   // Checks run on the normalized path, so %61dmin, admin%2Ftest, //admin or /./app can't slip past them.
   const path = normalizePath(pathname);
   if (path === null) return notFound();
+  if (connectionsTarget(path) && process.env.ENABLE_CONNECTIONS !== "true") return notFound();
   const admin = isAdminPath(path);
   const gated = isProtected(path);
   // Supabase not connected: public pages still work, app areas stay closed.

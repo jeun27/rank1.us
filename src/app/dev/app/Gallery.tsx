@@ -9,6 +9,8 @@ import { AppShell } from "@/components/app/AppShell";
 import { BillingView } from "@/components/billing/BillingView";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { BusinessSwitcher, type SwitcherBusiness } from "@/components/billing/BusinessSwitcher";
+import { ConnectionsHub } from "@/components/connections/ConnectionsHub";
+import { exampleConnected, exampleHub } from "@/components/connections/example-data";
 import { FixList } from "@/components/fixes/FixList";
 import { ReportView } from "@/components/report/ReportView";
 import type { ReportRow } from "@/lib/queries/reports";
@@ -171,6 +173,15 @@ export const STATES: Record<string, () => React.ReactNode> = {
   ),
   "report-loading": () => <Skeleton title="Reports" />,
   "report-error": () => <ErrorState title="Reports" message={results} reset={() => {}} />,
+  "connections-restaurant": () => <Hub />,
+  "connections-saas": () => <Hub industry="saas" />,
+  "connections-connected": () => <Hub {...exampleConnected} />,
+  "connections-outcome-connected": () => <Hub outcome={{ connector: "gbp", status: "connected" }} />,
+  "connections-outcome-denied": () => <Hub outcome={{ connector: "gbp", status: "denied" }} />,
+  "connections-outcome-error": () => <Hub outcome={{ connector: "gbp", status: "error" }} />,
+  "connections-readonly": () => <Hub {...exampleConnected} canConnect={false} />,
+  "connections-loading": () => <Skeleton title="Connections" />,
+  "connections-error": () => <ErrorState title="Connections" message={results} reset={() => {}} />,
   "switcher-one": () => <WithSwitcher />,
   "switcher-many": () => <WithSwitcher />,
 };
@@ -214,6 +225,14 @@ const switcher = (businesses: SwitcherBusiness[]) => (
     actions={{ select: noop, add: noop, remove: noop, seats: async () => businesses.length }}
   />
 );
+// Settings → Connections on Example data (shown here whatever ENABLE_CONNECTIONS says).
+function Hub(over: Partial<React.ComponentProps<typeof ConnectionsHub>>) {
+  return (
+    <Page title="Connections">
+      <ConnectionsHub {...exampleHub(over)} />
+    </Page>
+  );
+}
 function WithSwitcher() {
   return (
     <Page title="Dashboard">
@@ -230,6 +249,7 @@ const CRUMB: Record<string, string> = {
   history: "History",
   billing: "Billing",
   report: "Reports",
+  connections: "Settings",
   switcher: "Dashboard",
 };
 

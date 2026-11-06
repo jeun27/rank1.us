@@ -241,3 +241,10 @@ export async function recordConnectionChange(
   if (error) throw error;
   return data;
 }
+
+// The business's industry (businesses.vertical) for recommend(). Null when the caller can't read it.
+export async function getBusinessVertical(db: DbClient, businessId: string): Promise<string | null> {
+  const { data, error } = await db.from("businesses").select("vertical").eq("id", businessId).maybeSingle();
+  if (error) throw error;
+  return data?.vertical ?? null;
+}

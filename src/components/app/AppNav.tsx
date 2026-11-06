@@ -21,12 +21,24 @@ export const NAV_GROUPS: { href: string; label: string; icon: IconName }[][] = [
   [{ href: "/app/billing", label: c.billing, icon: "card" }],
 ];
 
+// Settings → Connections, in the last group only while ENABLE_CONNECTIONS is on (the layout passes it).
+export const SETTINGS_ITEM = { href: "/app/settings", label: c.settings, icon: "settings" as IconName };
+
 export const isCurrent = (path: string, href: string) =>
   href === "/app" ? path === "/app" : path === href || path.startsWith(`${href}/`);
 
 // The rail: a header (logo), the page links (hidden while onboarding) and a footer (Account), all in the
 // App nav landmark. A column at md+, a sideways-scrolling row on phones.
-export function AppNav({ header, footer }: { header?: ReactNode; footer?: ReactNode }) {
+export function AppNav({
+  header,
+  footer,
+  settings = false,
+}: {
+  header?: ReactNode;
+  footer?: ReactNode;
+  settings?: boolean;
+}) {
+  const groups = settings ? [...NAV_GROUPS.slice(0, -1), [...NAV_GROUPS.at(-1)!, SETTINGS_ITEM]] : NAV_GROUPS;
   const path = usePathname();
   const onboarding = path.startsWith("/app/onboarding");
   return (
@@ -34,7 +46,7 @@ export function AppNav({ header, footer }: { header?: ReactNode; footer?: ReactN
       {header}
       {!onboarding && (
         <div className="flex min-w-0 flex-1 gap-1 overflow-x-auto px-2 py-2 md:flex-none md:flex-col md:gap-0 md:overflow-visible md:py-1">
-          {NAV_GROUPS.map((group, i) => (
+          {groups.map((group, i) => (
             <ul
               key={i}
               className={`flex shrink-0 gap-1 md:flex-col md:gap-0.5 ${i ? "md:mt-2 md:border-t md:border-border md:pt-2" : ""}`}
@@ -68,6 +80,6 @@ export function AppNav({ header, footer }: { header?: ReactNode; footer?: ReactN
 // The current page's nav label, for the breadcrumb.
 export function CurrentPage() {
   const path = usePathname();
-  const item = NAV_GROUPS.flat().find((i) => isCurrent(path, i.href));
+  const item = [...NAV_GROUPS.flat(), SETTINGS_ITEM].find((i) => isCurrent(path, i.href));
   return item ? <span aria-current="page">{item.label}</span> : null;
 }
