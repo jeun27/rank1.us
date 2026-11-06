@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { ensureSelfServeWorkspace } from "@/lib/queries/auth";
-import { listDoneFixes, recordFixResults, setFixStatus, type FixCheckResult } from "@/lib/queries/fixes";
+import { listDoneFixes, listFixes, recordFixResults, setFixStatus, type FixCheckResult } from "@/lib/queries/fixes";
 import { createBusinessOnboarding, createDfyClient } from "@/lib/queries/onboarding";
 import { must, newUser, serviceClient, type TestUser } from "./helpers";
 
@@ -207,5 +207,39 @@ describe("done_fixes", () => {
     expect(await listDoneFixes(client.db, dfyBusiness)).toEqual([]);
     expect((await listDoneFixes(team.db, dfyBusiness)).length).toBeGreaterThan(0);
     must(await s().from("businesses").update({ fix_list_visible: true }).eq("id", dfyBusiness));
+  });
+});
+
+describe("who/when on open fixes (listFixes)", () => {
+  const item = async (db: TestUser["db"], businessId: string, id: string) => {
+    const list = await listFixes(db, businessId);
+    return [...list.ranked, ...list.tidyUps].find((f) => f.id === id);
+  };
+
+  it("a doing row shows the member's name and the time; a todo row shows neither, even after a reopen", async () => {
+    const doing = await fixId(ownerBusiness, "R14");
+    expect((await history(doing)).status_changed_by).toBe(owner.id); // reopened to todo earlier
+    expect(await item(owner.db, ownerBusiness, doing)).toMatchObject({
+      status: "todo",
+      status_changed_at: null,
+      changed_by: null,
+    });
+    await setFixStatus(owner.db, doing, "doing");
+    const row = await item(owner.db, ownerBusiness, doing);
+    expect(row).toMatchObject({ status: "doing", changed_by: { is_team: false, name: "Example Owner" } });
+    expect(row?.status_changed_at).toBe((await history(doing)).status_changed_at);
+    expect(JSON.stringify(row)).not.toContain("@");
+  });
+
+  it("a doing row moved by the team shows is_team only, to the team and to the dfy_client", async () => {
+    await recordFixResults(s(), dfyBusiness, await closedRun(dfyBusiness), [fix("R14")]);
+    const id = await fixId(dfyBusiness, "R14");
+    await setFixStatus(team.db, id, "doing");
+    for (const db of [team.db, client.db]) {
+      const row = await item(db, dfyBusiness, id);
+      expect(row).toMatchObject({ status: "doing", changed_by: { is_team: true, name: null } });
+      expect(row?.status_changed_at).not.toBeNull();
+      expect(JSON.stringify(row)).not.toContain("Example Team Person");
+    }
   });
 });

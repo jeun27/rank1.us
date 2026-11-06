@@ -364,6 +364,15 @@ Tile helper text (the niche key in src/lib/connections/recommend.ts):
 | Consent, Search Console | "Rank1 asks Google for read-only access to Search Console (webmasters.readonly) and to know which Google account you used. We don't get your email or profile.", "We can only read. We never change anything in Search Console.", "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.", "We never ask for your password." |
 | Consent, Google Analytics | "Rank1 asks Google for read-only access to Google Analytics (analytics.readonly) and to know which Google account you used. We don't get your email or profile.", "We can only read. We never change anything in Google Analytics.", "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.", "We never ask for your password." |
 
+## GAS (lead, 2026-11-06)
+
+Strings from the GAS prototype report (share/gas-proto/REPORT.md, lead copy). Fix rule R16 (pillar p5, SCHEMA.md 5b):
+
+| Where | String |
+|---|---|
+| R16 title | "Your site lets AI in, but Cloudflare may be blocking it." |
+| R16 customer copy | "Your site runs on Cloudflare. Its AI bot blocking is on by default for many new sites, and robots.txt can't show it. Check Security, then Bots, in your Cloudflare dashboard." |
+
 ## Landing (lead, 2026-11-06)
 
 | Where | String |
