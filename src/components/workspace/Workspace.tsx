@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import type { WorkspaceView } from "@/lib/queries/workspace";
 import { Breadcrumb } from "@/components/app/AppShell";
+import { narrativeCopy } from "@/components/narrative/copy";
 import { Icon } from "@/components/ui/Icon";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { contextFor, SECTION_LABEL, type Section, type Selection } from "@/lib/workspace/context";
@@ -22,7 +23,7 @@ const docId = (s: DocSel) =>
     ? `section-${s.section}`
     : s.kind === "new"
       ? `new-${s.n}`
-      : s.kind === "clients" || s.kind === "connections"
+      : s.kind === "clients" || s.kind === "connections" || s.kind === "narrative"
         ? s.kind
         : `${s.kind}-${(s.kind === "question" ? s.id : s.kind === "competitor" ? s.name : s.kind === "domain" ? s.domain : s.runId).replace(/\W+/g, "-")}`;
 
@@ -40,7 +41,9 @@ export function Workspace({ view, team = null }: { view: WorkspaceView; team?: T
           ? "Clients"
           : sel.kind === "connections"
             ? "Connections"
-            : contextFor(view, sel).title,
+            : sel.kind === "narrative"
+              ? narrativeCopy.teamTitle(view.business.name)
+              : contextFor(view, sel).title,
   });
   // X5: with a client queue, /team opens on it (the Clients document).
   const first = tabOf(
@@ -115,6 +118,10 @@ export function Workspace({ view, team = null }: { view: WorkspaceView; team?: T
     openDoc({ kind: "connections" });
     setPane("Document");
   };
+  const openNarrative = () => {
+    openDoc({ kind: "narrative" });
+    setPane("Document");
+  };
   const showContext = contextOpen && !expanded && mode === "workspace";
   // Phones: the document (main, with the H1) stays put under the top bar; Nav and Context open as sheets
   // over it, with the breadcrumb still on screen.
@@ -149,7 +156,8 @@ export function Workspace({ view, team = null }: { view: WorkspaceView; team?: T
             onMode={setMode}
             recents={recents}
             onRecent={(t) => {
-              if (t.sel.kind === "clients" || t.sel.kind === "connections") openDoc(t.sel);
+              if (t.sel.kind === "clients" || t.sel.kind === "connections" || t.sel.kind === "narrative")
+                openDoc(t.sel);
               else if (t.sel.kind !== "new") select(t.sel);
               setPane("Document");
             }}
@@ -167,6 +175,7 @@ export function Workspace({ view, team = null }: { view: WorkspaceView; team?: T
                     team={team}
                     onClients={team.clients ? openClients : undefined}
                     onConnections={team.connections ? openConnections : undefined}
+                    onNarrative={team.narrative && team.actions.saveNarrative ? openNarrative : undefined}
                   />
                 ) : (
                   <span data-computed data-crumb-static className="truncate">

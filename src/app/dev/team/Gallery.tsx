@@ -1,6 +1,8 @@
 "use client";
 import { exampleSuggestions } from "@/components/app/example-data";
 import { exampleDone, exampleFixes, exampleTidyUps, exampleUnchecked } from "@/components/fixes/example-data";
+import { exampleMentions } from "@/components/mentions/example-data";
+import { exampleNarrative } from "@/components/narrative/example-data";
 import { NoClients } from "@/components/workspace/NoClients";
 import { Workspace } from "@/components/workspace/Workspace";
 import type { TeamExtras } from "@/components/workspace/team";
@@ -74,6 +76,8 @@ const extras: TeamExtras = {
     ],
     interest: ["yelp"],
   },
+  narrative: exampleNarrative,
+  mentions: { targets: exampleMentions, fixId: "ex-r17" },
   actions: {
     status: noop,
     add: noop,
@@ -83,6 +87,8 @@ const extras: TeamExtras = {
     removeClient: noop,
     setFixListVisible: noop,
     dismissReady: noop,
+    saveNarrative: async () => ({ ok: true }),
+    decideMention: async () => ({ fixId: "ex-r17" }),
     // C-c PR 2 on Example data: the preview diffs against an invented "before"; apply does nothing.
     previewGbp: async (_b: string, _l: string, edit: Record<string, string | undefined>) => ({
       changes: Object.entries(edit).map(([field, after]) => ({

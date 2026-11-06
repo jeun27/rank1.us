@@ -27,10 +27,15 @@ export function safeHref(url: string): string | null {
 
 function PageLink({ t }: { t: MentionTarget }) {
   const href = safeHref(t.url);
-  if (!href) return <span className="font-medium text-ui">{t.domain}</span>;
+  if (!href)
+    return (
+      <span data-computed className="font-medium text-ui">
+        {t.domain}
+      </span>
+    );
   return (
     <a href={href} target="_blank" rel="noopener noreferrer" className={`font-medium ${text}`}>
-      {t.title ?? t.domain} <span className="sr-only">{c.newTab}</span>
+      <span data-computed>{t.title ?? t.domain}</span> <span className="sr-only">{c.newTab}</span>
     </a>
   );
 }
@@ -42,6 +47,8 @@ export function MentionsSection({
   canDecide,
   fixId: initialFix,
   decide,
+  level = 2,
+  onView,
 }: {
   // null before the first run.
   targets: MentionTargets | null;
@@ -49,8 +56,13 @@ export function MentionsSection({
   // The open grouped R17 fix, for "View".
   fixId: string | null;
   decide: Decide;
+  // The team's Sources document sits under its own title (C-c D4).
+  level?: 2 | 3;
+  // The team opens its Fixes document instead of /app/fixes (that's the team member's own business).
+  onView?: () => void;
 }) {
   const heading = useId();
+  const Heading = level === 3 ? "h3" : "h2";
   const [override, setOverride] = useState<Record<string, Status>>({});
   const [failed, setFailed] = useState<Record<string, boolean>>({});
   const [fixId, setFixId] = useState(initialFix);
@@ -81,7 +93,7 @@ export function MentionsSection({
       <li key={t.url} data-url={t.url} className="flex flex-col gap-2 py-3">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
           <PageLink t={t} />
-          <span className="text-caption text-inkMuted">
+          <span data-computed className="text-caption text-inkMuted">
             {t.category} · <span className="font-mono">{t.domain}</span>
           </span>
         </div>
@@ -93,11 +105,17 @@ export function MentionsSection({
         </p>
         <div className="flex flex-wrap items-center gap-3">
           {status === "added" && <Badge tone="success">{c.added}</Badge>}
-          {status === "added" && fixId && (
-            <Link href={`/app/fixes#fix-${fixId}`} className={action}>
-              {c.view}
-            </Link>
-          )}
+          {status === "added" &&
+            fixId &&
+            (onView ? (
+              <button type="button" onClick={onView} className={action}>
+                {c.view}
+              </button>
+            ) : (
+              <Link href={`/app/fixes#fix-${fixId}`} className={action}>
+                {c.view}
+              </Link>
+            ))}
           {canDecide && status === null && (
             <>
               <Button variant="alt" onClick={() => set(t.url, "added")}>
@@ -133,9 +151,9 @@ export function MentionsSection({
   return (
     <section aria-labelledby={heading} className="flex flex-col gap-3">
       <div>
-        <h2 id={heading} className="heading-gradient font-display text-section font-medium">
+        <Heading id={heading} className="heading-gradient font-display text-section font-medium">
           {c.title}
-        </h2>
+        </Heading>
         <p className="text-ui text-text2">{c.sub}</p>
       </div>
       {!targets ? (
@@ -159,7 +177,7 @@ export function MentionsSection({
           )}
           {dismissed.length > 0 && (
             <details className="flex flex-col gap-2">
-              <summary className="min-h-11 cursor-pointer text-ui font-medium md:min-h-8">
+              <summary data-computed className="min-h-11 cursor-pointer text-ui font-medium md:min-h-8">
                 {c.dismissedCount(dismissed.length)}
               </summary>
               <ul aria-label={c.notRelevant} className={list}>
