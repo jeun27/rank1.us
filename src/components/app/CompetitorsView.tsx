@@ -37,15 +37,17 @@ export function CompetitorsView({
       {latest && rows.length > 0 && (
         <>
           <Measured checkedAt={latest.metrics.freshness} answers={latest.metrics.visibility.denominator} now={now} />
+          {/* X13: the leaderboard is the one focal block; share of voice is a caption under it, with its n. */}
+          <Leaderboard metrics={latest.metrics} change={rows.some((r) => r.change != null)} />
           {sov && (
-            <Card>
-              <p className="text-caption font-semibold text-inkMuted">{c.shareOfVoice}</p>
-              <p data-computed className="font-display text-h2 font-semibold tabular-nums">
-                {`${formatPercent(sov)} (${sov.numerator} of ${sov.denominator})`}
-              </p>
-            </Card>
+            <p className="-mt-5 text-caption text-inkMuted">
+              <span>{c.shareOfVoice}</span>:{" "}
+              <span
+                data-computed
+                className="font-mono"
+              >{`${formatPercent(sov)} (${sov.numerator} of ${sov.denominator})`}</span>
+            </p>
           )}
-          <Leaderboard metrics={latest.metrics} />
         </>
       )}
 
