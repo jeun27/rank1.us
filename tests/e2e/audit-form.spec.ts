@@ -31,7 +31,8 @@ test("error: domain without an ending shows the Final set string, readable on in
   await page.goto("/dev/forms");
   await page.getByLabel("Email").fill("owner@example.test");
   await page.getByLabel("Your domain").fill("ramenhouse");
-  await submit(page);
+  // The button is aria-disabled while a field is invalid (Turnstile reveal), so submit with Enter.
+  await page.getByLabel("Your domain").press("Enter");
   await expect(page.getByText("Add the ending, like ramenhouse.com")).toBeVisible();
   await expect(page.getByLabel("Your domain")).toBeFocused();
   expect(bodies).toHaveLength(0);

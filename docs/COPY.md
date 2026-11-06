@@ -33,6 +33,8 @@ Progress percentages ("48%") are computed from n of d, so they are not copy.
 | Audit form labels | "Email", "Your domain" (no email placeholder) |
 | Audit domain placeholder | "yourbusiness.com" |
 | Audit success | "Got it. We'll email your audit to {email}." |
+| Audit button helper (lead, founder-approved 2026-11-06), until the email and domain are valid | "Enter your email and website to continue" |
+| Audit button helper, once Turnstile shows and until its token arrives | "Check the box to continue" |
 | Email error (both forms) | "Add a valid email, like you@ramenhouse.com" |
 | Contact name error | "Add your name" |
 | Contact message error | "Add a message" |

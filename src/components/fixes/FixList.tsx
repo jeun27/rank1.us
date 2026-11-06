@@ -465,7 +465,7 @@ export function FixList({
           {showOpen && tidyOpen.length > 0 && (
             <section aria-label={c.tidyUps} className="flex flex-col gap-3">
               <div className="flex items-baseline justify-between gap-3">
-                <TidyHeading className="font-display text-h3 font-semibold">{c.tidyUps}</TidyHeading>
+                <TidyHeading className="font-display text-section font-medium">{c.tidyUps}</TidyHeading>
                 <span
                   data-testid="group-count"
                   data-computed

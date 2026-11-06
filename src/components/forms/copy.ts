@@ -7,6 +7,8 @@ export const formCopy = {
   domainPlaceholder: "yourbusiness.com",
   domainError: "Add the ending, like ramenhouse.com",
   auditSuccess: (email: string) => `Got it. We'll email your audit to ${email}.`,
+  auditHelperFill: "Enter your email and website to continue",
+  auditHelperCheck: "Check the box to continue",
 
   contactTitle: "Contact us",
   nameLabel: "Name",
