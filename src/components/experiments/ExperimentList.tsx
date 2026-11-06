@@ -1,13 +1,12 @@
 "use client";
-import { useState } from "react";
-import { Dialog } from "@/components/billing/Dialog";
+import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Banner } from "@/components/ui/Banner";
 import { Button } from "@/components/ui/Button";
 import { formatPercent } from "@/components/ui/StatNumber";
 import type { ExperimentResult, ExperimentStatus, GroupResult } from "@/lib/metrics/experiment";
 import type { Metric } from "@/types/metrics";
-import { signedPts } from "@/lib/metrics/delta";
+import { deltaTone, signedPts } from "@/lib/metrics/delta";
 import { experimentCopy as c } from "./copy";
 
 export type ExperimentCardView = {
@@ -57,6 +56,13 @@ function Results({ name, result }: { name: string; result: ExperimentResult | nu
   if (!result || result.tooFew) return <p className="text-ui text-text2">{c.tooFew}</p>;
   return (
     <>
+      <p className="flex flex-wrap items-center gap-3 text-ui">
+        <span className="font-medium">{c.difference}</span>
+        <Badge tone={deltaTone(result.difference ?? 0)} mono data-computed>
+          {signedPts(result.difference ?? 0)}
+        </Badge>
+        <Badge tone="info">{result.label}</Badge>
+      </p>
       <div className="overflow-hidden rounded-card border border-border">
         <table aria-label={name} className="w-full border-collapse text-ui">
           <thead>
@@ -75,13 +81,6 @@ function Results({ name, result }: { name: string; result: ExperimentResult | nu
           </tbody>
         </table>
       </div>
-      <p className="flex flex-wrap items-center gap-3 text-ui">
-        <span className="font-medium">{c.difference}</span>
-        <span data-computed className="font-mono tabular-nums">
-          {signedPts(result.difference ?? 0)}
-        </span>
-        <Badge tone="info">{result.label}</Badge>
-      </p>
     </>
   );
 }
@@ -96,7 +95,6 @@ export function ExperimentList({
   canWrite: boolean;
   actions?: ExperimentActions;
 }) {
-  const [confirm, setConfirm] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const write = canWrite && actions;
   const run = async (fn: () => Result) => {
@@ -137,31 +135,79 @@ export function ExperimentList({
           </header>
           <Results name={e.name} result={e.result} />
           {write && (
-            <div className="flex flex-wrap gap-3">
-              {e.status === "running" && (
-                <Button variant="alt" onClick={() => run(() => actions.end(e.id))}>
-                  {c.end}
-                </Button>
-              )}
-              <Button variant="alt" onClick={() => setConfirm(e.id)}>
-                {c.remove}
-              </Button>
-            </div>
+            <CardActions
+              id={e.id}
+              running={e.status === "running"}
+              onEnd={() => run(() => actions.end(e.id))}
+              onDelete={() => run(() => actions.remove(e.id))}
+            />
           )}
         </article>
       ))}
-      {write && confirm && (
-        <Dialog
-          message={c.confirmDelete}
-          confirm={c.remove}
-          onClose={() => setConfirm(null)}
-          onConfirm={() => {
-            const id = confirm;
-            setConfirm(null);
-            run(() => actions.remove(id));
-          }}
-        />
+    </div>
+  );
+}
+
+// X14 + X29: End test stays a button; Delete test is a far-right text action that confirms in place.
+// Focus moves to Cancel, and Cancel or Escape hands it back to Delete test.
+function CardActions({
+  id,
+  running,
+  onEnd,
+  onDelete,
+}: {
+  id: string;
+  running: boolean;
+  onEnd: () => void;
+  onDelete: () => void;
+}) {
+  const [asking, setAsking] = useState(false);
+  const wasAsking = useRef(false);
+  useEffect(() => {
+    if (asking) document.getElementById(`exp-${id}-cancel`)?.focus();
+    else if (wasAsking.current) document.getElementById(`exp-${id}-delete`)?.focus();
+    wasAsking.current = asking;
+  }, [asking, id]);
+  if (asking)
+    return (
+      <div
+        role="group"
+        aria-label={c.confirmDelete}
+        onKeyDown={(e) => e.key === "Escape" && setAsking(false)}
+        className="flex flex-wrap items-center gap-3 rounded-card border border-brick/30 bg-errorBg px-3 py-2"
+      >
+        <p className="text-ui font-medium text-brick">{c.confirmDelete}</p>
+        <div className="ml-auto flex gap-3">
+          <Button
+            variant="danger"
+            onClick={() => {
+              setAsking(false);
+              onDelete();
+            }}
+          >
+            {c.remove}
+          </Button>
+          <Button variant="alt" id={`exp-${id}-cancel`} onClick={() => setAsking(false)}>
+            {c.cancel}
+          </Button>
+        </div>
+      </div>
+    );
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      {running && (
+        <Button variant="alt" onClick={onEnd}>
+          {c.end}
+        </Button>
       )}
+      <button
+        type="button"
+        id={`exp-${id}-delete`}
+        onClick={() => setAsking(true)}
+        className="ml-auto inline-flex min-h-11 items-center text-ui text-text2 underline underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep md:min-h-8"
+      >
+        {c.remove}
+      </button>
     </div>
   );
 }
