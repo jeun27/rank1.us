@@ -17,8 +17,8 @@ export const aiAccessCopy = {
   good: "AI can read your site.",
   searchBlocked: (bots: string[]) =>
     `AI search can't read your site: ${list(bots)} ${bots.length === 1 ? "is" : "are"} blocked in robots.txt.`,
-  trainingOnly: (n: number) =>
-    `AI search can read your site. You block ${n} training crawler${n === 1 ? "" : "s"}, which is your call.`,
+  othersOnly: (n: number) =>
+    `AI search can read your site. You block ${n} other AI crawler${n === 1 ? "" : "s"}, which is your call.`,
   jsEmpty: "Your homepage shows almost no text without JavaScript, so ChatGPT can't read what you offer.",
   edge: "Your site may be blocking AI crawlers at the edge (for example a Cloudflare bot setting). Check your bot settings.",
   cloudflareTitle: "Your site lets AI in, but Cloudflare may be blocking it.",
@@ -54,7 +54,7 @@ export function aiAccessAnswer(check: AiAccessCheck): AiAnswer {
       const search = blocked.filter((b) => SEARCH_BOTS.includes(b));
       return search.length
         ? { tone: "error", line: c.searchBlocked(search), hint: null }
-        : { tone: "info", line: c.trainingOnly(blocked.length), hint: null };
+        : { tone: "info", line: c.othersOnly(blocked.length), hint: null };
     }
     case "js_empty":
       return { tone: "error", line: c.jsEmpty, hint: null };

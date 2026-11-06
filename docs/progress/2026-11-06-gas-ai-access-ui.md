@@ -4,7 +4,7 @@
 - The answer (src/components/audit/ai-access.ts, `aiAccessAnswer`), by outcome:
   - good → "AI can read your site."
   - blocked, with an R14 search bot blocked (OAI-SearchBot or PerplexityBot; SEARCH_BOTS is tested equal to FIX_BOTS) → the error line naming them.
-  - blocked, only other crawlers → info, "the owner's call".
+  - blocked, only other crawlers → info, "You block {n} other AI crawlers, which is your call." (lead N2: not "training", since ChatGPT-User is a user-triggered fetcher). R14's scope is unchanged.
   - js_empty → the R18 copy.
   - cloudflare with a GPTBot-request block status (401/403/406/429/503) → the edge hint ("may be blocking"). Otherwise → the R16 title, with the R16 customer copy as the hint.
   - unreachable → "We couldn't reach {domain}." The domain shows only when it's a hostname, since it can be raw input.
