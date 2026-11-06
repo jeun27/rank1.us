@@ -3,7 +3,8 @@ import { useEffect, useState, type KeyboardEvent } from "react";
 import { rovingIndex } from "@/components/workspace/hooks";
 import { Banner } from "@/components/ui/Banner";
 import { Card } from "@/components/ui/Card";
-import type { FixItem, FixStatus } from "@/lib/queries/fixes";
+import type { FixItem, FixStatus, Pillar } from "@/lib/queries/fixes";
+import type { Metric } from "@/types/metrics";
 import { fixCopy as c } from "./copy";
 
 // Who changed a status, as backend returns it (#101): the team is { is_team: true, name: null }; a member
@@ -13,6 +14,8 @@ export type Actor = { is_team: boolean; name: string | null };
 export type FixView = Pick<FixItem, "id" | "rule_key" | "title" | "detail" | "affected_answers" | "status"> & {
   status_changed_at?: string | null;
   changed_by?: Actor | null;
+  // G5 (#102): the fix's pillar. Real fixes always have one; older fixtures don't (plain sections then).
+  pillar?: Pillar;
 };
 // listDoneFixes (#101), newest change first.
 export type DoneView = {
@@ -22,6 +25,8 @@ export type DoneView = {
   detail: string | null;
   status_changed_at: string | null;
   changed_by: Actor | null;
+  // Not in done_fixes yet (lead Q4); a done fix without one counts toward no group.
+  pillar?: Pillar;
 };
 type OnStatus = (id: string, status: FixStatus) => Promise<{ error: string } | undefined | void>;
 type Row = {
@@ -31,9 +36,12 @@ type Row = {
   affected: number | null;
   at: string | null;
   by: Actor | null;
+  pillar?: Pillar;
 };
 
 const FILTERS = ["open", "done", "all"] as const;
+// G5: blockers first. P0 (know where you stand) comes last, with the baseline line.
+const PILLAR_ORDER: Pillar[] = ["p5", "p3", "p2", "p1", "p4", "p6", "p0"];
 type Filter = (typeof FILTERS)[number];
 const TOAST_MS = 8000;
 const day = (iso: string) =>
@@ -167,7 +175,6 @@ function FixRow({
               {c.startTest}
             </a>
           )}
-          {/* G5: the pillar tag (P0-P6) goes here once fixes.pillar lands. */}
         </div>
       </div>
     </li>
@@ -181,6 +188,7 @@ const fromOpen = (f: FixView): Row => ({
   affected: f.affected_answers,
   at: f.status_changed_at ?? null,
   by: f.changed_by ?? null,
+  pillar: f.pillar,
 });
 const fromDone = (f: DoneView): Row => ({
   id: f.id,
@@ -189,6 +197,7 @@ const fromDone = (f: DoneView): Row => ({
   affected: null,
   at: f.status_changed_at,
   by: f.changed_by,
+  pillar: f.pillar,
 });
 
 // UI.md 4b Fix list as a check-off list (portal b), shared by /app (self-serve), the team area and DFY
@@ -202,6 +211,8 @@ export function FixList({
   canWrite,
   onStatus,
   level = 2,
+  baseline = null,
+  baselineHref,
 }: {
   ranked: FixView[];
   tidyUps: FixView[];
@@ -212,6 +223,9 @@ export function FixList({
   onStatus?: OnStatus;
   // The heading level of the ranked cards and of "Tidy-ups": 2 on a page, 3 inside a workspace document.
   level?: 2 | 3;
+  // G5 P0: the latest visibility, shown as one baseline line at the bottom (none without a run).
+  baseline?: Metric | null;
+  baselineHref?: string;
 }) {
   const [statuses, setStatuses] = useState<Record<string, FixStatus>>({});
   const [doneAt, setDoneAt] = useState<Record<string, string>>({});
@@ -286,6 +300,44 @@ export function FixList({
       />
     );
   };
+  // G5: pillar groups when the fixes carry a pillar (always, on real data). Tidy-ups sit last inside P2.
+  const pillared = [...ranked, ...tidyUps].some((f) => f.pillar);
+  const tidyIds = new Set(tidyUps.map((f) => f.id));
+  const pillarOf = (f: { id: string; pillar?: Pillar }) => (tidyIds.has(f.id) ? "p2" : f.pillar);
+  const groupOpen = (p: Pillar) => rankedOpen.filter((f) => pillarOf(f) === p);
+  const groupTotal = (p: Pillar) =>
+    [...ranked, ...tidyUps].filter((f) => pillarOf(f) === p).length + done.filter((f) => f.pillar === p).length;
+  const groupDoneRows = (p: Pillar) => doneRows.filter((r) => pillarOf(r) === p);
+  const renderDone = (r: Row, lvl: 2 | 3 | 4) => (
+    <FixRow
+      key={r.id}
+      row={r}
+      state="done"
+      canWrite={write}
+      level={lvl}
+      onDone={() => {}}
+      onStart={() => {}}
+      onReopen={() => set(r.id, "todo", "done")}
+    />
+  );
+  // Done rows outside the groups: all of them without pillars, else only those with no pillar.
+  const looseDone = pillared ? doneRows.filter((r) => !pillarOf(r)) : doneRows;
+  // Rules the latest run couldn't check, above the groups.
+  const uncheckedBlock = unchecked.length > 0 && (
+    <div className="flex flex-col gap-3">
+      {noDomain && <p className="text-ui">{c.noDomain}</p>}
+      <ul className="flex flex-col gap-2">
+        {unchecked.map((u) => (
+          <li key={u.rule_key} className="flex flex-col gap-1 rounded-card border border-border bg-white px-4 py-3">
+            <span data-computed className="text-ui font-semibold">
+              {u.title}
+            </span>
+            <span className="text-caption text-inkMuted">{c.unchecked}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
   const showOpen = filter !== "done";
   const showDone = filter !== "open";
   const labels: Record<Filter, string> = { open: c.open, done: c.doneTab, all: c.all };
@@ -350,56 +402,107 @@ export function FixList({
         </div>
       </div>
 
-      {showOpen && rankedOpen.length > 0 && (
-        <ul aria-label={c.title} className="flex flex-col gap-3">
-          {rankedOpen.map((f) => renderOpen(f, level))}
-        </ul>
-      )}
-      {showOpen && unchecked.length > 0 && (
-        <div className="flex flex-col gap-3">
-          {noDomain && <p className="text-ui">{c.noDomain}</p>}
-          <ul className="flex flex-col gap-2">
-            {unchecked.map((u) => (
-              <li key={u.rule_key} className="flex flex-col gap-1 rounded-card border border-border bg-white px-4 py-3">
-                <span data-computed className="text-ui font-semibold">
-                  {u.title}
+      {pillared ? (
+        <>
+          {showOpen && uncheckedBlock}
+          {PILLAR_ORDER.map((p) => {
+            // S2: done rows sit in their group, so a fully done group hides only in Open.
+            const rows = showOpen ? groupOpen(p) : [];
+            const tidyHere = showOpen && p === "p2" ? tidyOpen : [];
+            const doneHere = showDone ? groupDoneRows(p) : [];
+            if (!rows.length && !tidyHere.length && !doneHere.length) return null;
+            const GroupHeading = (["h2", "h3"] as const)[level - 2];
+            const TidyIn = (["h3", "h4"] as const)[level - 2];
+            const cardLevel = (level + 1) as 3 | 4;
+            return (
+              <section key={p} data-pillar={p} aria-labelledby={`pillar-${p}`} className="flex flex-col gap-3">
+                <div className="flex items-center justify-between gap-3">
+                  <GroupHeading
+                    id={`pillar-${p}`}
+                    aria-label={`${p.toUpperCase()}: ${c.pillars[p]}`}
+                    className="flex items-center gap-2 text-ui font-medium"
+                  >
+                    <span className="inline-flex h-5 items-center rounded-tag border border-border px-1.5 font-mono text-tag text-text2">
+                      {p.toUpperCase()}
+                    </span>
+                    <span>{c.pillars[p]}</span>
+                  </GroupHeading>
+                  <span
+                    data-testid="group-count"
+                    data-computed
+                    className="font-mono text-caption text-inkMuted tabular-nums"
+                  >
+                    {`${groupDoneRows(p).length}/${groupTotal(p)}`}
+                  </span>
+                </div>
+                {rows.length + doneHere.length > 0 && (
+                  <ul aria-label={c.pillars[p]} className="flex flex-col gap-3">
+                    {rows.map((f) => renderOpen(f, cardLevel))}
+                    {doneHere.map((r) => renderDone(r, cardLevel))}
+                  </ul>
+                )}
+                {tidyHere.length > 0 && (
+                  <section aria-label={c.tidyUps} className="flex flex-col gap-3">
+                    <TidyIn className="text-caption font-semibold text-text2">{c.tidyUps}</TidyIn>
+                    <ul className="flex flex-col gap-3">{tidyHere.map((f) => renderOpen(f, 4))}</ul>
+                  </section>
+                )}
+              </section>
+            );
+          })}
+        </>
+      ) : (
+        <>
+          {showOpen && rankedOpen.length > 0 && (
+            <ul aria-label={c.title} className="flex flex-col gap-3">
+              {rankedOpen.map((f) => renderOpen(f, level))}
+            </ul>
+          )}
+          {showOpen && uncheckedBlock}
+          {showOpen && tidyOpen.length > 0 && (
+            <section aria-label={c.tidyUps} className="flex flex-col gap-3">
+              <div className="flex items-baseline justify-between gap-3">
+                <TidyHeading className="font-display text-h3 font-semibold">{c.tidyUps}</TidyHeading>
+                <span
+                  data-testid="group-count"
+                  data-computed
+                  className="font-mono text-caption text-inkMuted tabular-nums"
+                >
+                  {tidyOpen.length}
                 </span>
-                <span className="text-caption text-inkMuted">{c.unchecked}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+              </div>
+              <ul className="flex flex-col gap-3">{tidyOpen.map((f) => renderOpen(f, level === 2 ? 3 : 4))}</ul>
+            </section>
+          )}
+        </>
       )}
-      {showOpen && tidyOpen.length > 0 && (
-        <section aria-label={c.tidyUps} className="flex flex-col gap-3">
-          <div className="flex items-baseline justify-between gap-3">
-            <TidyHeading className="font-display text-h3 font-semibold">{c.tidyUps}</TidyHeading>
-            <span data-testid="group-count" data-computed className="font-mono text-caption text-inkMuted tabular-nums">
-              {tidyOpen.length}
-            </span>
-          </div>
-          <ul className="flex flex-col gap-3">{tidyOpen.map((f) => renderOpen(f, level === 2 ? 3 : 4))}</ul>
-        </section>
-      )}
-      {showDone && doneRows.length > 0 && (
+      {showDone && looseDone.length > 0 && (
         <section aria-label={c.doneTab} className="flex flex-col gap-3">
-          <ul className="flex flex-col gap-3">
-            {doneRows.map((r) => (
-              <FixRow
-                key={r.id}
-                row={r}
-                state="done"
-                canWrite={write}
-                level={level}
-                onDone={() => {}}
-                onStart={() => {}}
-                onReopen={() => set(r.id, "todo", "done")}
-              />
-            ))}
-          </ul>
+          <ul className="flex flex-col gap-3">{looseDone.map((r) => renderDone(r, level))}</ul>
         </section>
       )}
 
+      {/* G5 P0: one baseline line at the bottom, not fixes. */}
+      {baseline && baseline.denominator > 0 && (
+        <p
+          data-baseline
+          className="flex flex-wrap items-center gap-2 border-t border-border pt-4 text-caption text-text2"
+        >
+          <span className="inline-flex h-5 items-center rounded-tag border border-border px-1.5 font-mono text-tag">
+            P0
+          </span>
+          {baselineHref ? (
+            <a
+              href={baselineHref}
+              className="text-link underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+            >
+              <span data-computed>{c.baseline(baseline)}</span>
+            </a>
+          ) : (
+            <span data-computed>{c.baseline(baseline)}</span>
+          )}
+        </p>
+      )}
       {toast && (
         <div
           role="status"

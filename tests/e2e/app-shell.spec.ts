@@ -188,10 +188,14 @@ test("signed-in owner: What to fix next lists open fixes, Tidy-ups, and Done rem
   await openMagicLink(page, user.email);
   await page.goto("/app/fixes");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("What to fix next");
+  // G5: real fixes carry their rule's pillar, so the list is grouped. R10 is P5 (an H2 group with the fix
+  // as H3), and the H1 tidy-up sits in Tidy-ups inside P2.
+  const p5 = page.getByRole("region", { name: "P5: Technical access" });
+  await expect(p5.getByRole("heading", { level: 2, name: "P5: Technical access" })).toBeVisible();
   await expect(
-    page.getByRole("heading", { level: 2, name: "Example data: put your menu on a page as text" }),
+    p5.getByRole("heading", { level: 3, name: "Example data: put your menu on a page as text" }),
   ).toBeVisible();
-  const tidy = page.getByRole("region", { name: "Tidy-ups" });
+  const tidy = page.getByRole("region", { name: "P2: Content" }).getByRole("region", { name: "Tidy-ups" });
   await expect(tidy.getByRole("heading", { name: "Example data: add Restaurant schema" })).toBeVisible();
   await expect(
     page.getByRole("navigation", { name: "App" }).getByRole("link", { name: "What to fix next" }),
