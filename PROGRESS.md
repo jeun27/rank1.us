@@ -769,3 +769,20 @@ Changed
 - run-jobs drains reports after the fix checks. vercel.json gains the monthly cron, and tests/unit/vercel-config.test.ts pins all 3 crons.
 - Logs carry counts and PG codes only.
 - Review (#77): the drain reads with the service client, which bypasses the DFY fix_list_visible rule. So the report loader applies it: a DFY business with the fix list hidden gets no "What to fix next" section (no heading, no placeholder). DFY visible and self-serve always show it. Tested on the rendered PDF and the email.
+
+## Step 17 (data-pipeline): before/after vs control math (branch feat/step17-experiment-math)
+- Step 17 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b; Build Pack not readable; reconcile later.
+
+Lead decisions (2026-11-05)
+- Not for dfy_client (backend RLS + no UI). No p-values and no significance language. The label is always "Directional".
+- Before = ok answers of a group's questions in weekly/audit runs on LA dates D−28..D−1. After = D..D+27 (inclusive, 28 days each). D = change_date.
+- Change = after% − before% in floored whole points, each with n. Difference = test change − control change.
+- Any of the 4 cells with n < 10 → tooFew: the UI shows "Too few answers to call yet. Next check Monday." instead of numbers.
+- Status: 'running' through D+27, 'done' from D+28. A user's early 'ended' wins.
+
+Changed
+- src/lib/metrics/experiment.ts (pure): computeExperiment(counts) → per group {before, after: Metric, change}, difference, tooFew, label. When tooFew, change and difference are null so no number can be shown by mistake. experimentWindows(D) and experimentStatus(e, now). The edge table went to backend for getExperimentData's db tests.
+- Percents floor with exact integer math (numerator × 100 / denominator, like formatPercent), so 29 of 100 is 29%.
+
+Open
+- compute.ts floorPct uses value × 100, which floors 29/100 to 28 (floating point) while formatPercent shows 29%. That affects the leaderboard change. It's not changed here; flagged to the lead.
