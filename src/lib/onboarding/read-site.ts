@@ -1,19 +1,20 @@
 import "server-only";
-import { lookup as dnsLookup } from "node:dns/promises";
 import { isIP } from "node:net";
+import { guardedGet } from "@/lib/site/guarded-get";
 import { CUISINES } from "./cuisines";
 import type { SiteRead } from "./types";
 
 export const USER_AGENT = "Rank1/1.0 (+https://rank1.us)";
 const TIMEOUT_MS = 10_000;
 export const MAX_BYTES = 1_000_000;
-const MAX_REDIRECTS = 3;
 
 export type ReadSiteDeps = {
+  // Tests only: a fetch-shaped fake (the guard then checks DNS before the call).
   fetch?: typeof fetch;
   lookup?: (host: string) => Promise<{ address: string }[]>;
   timeoutMs?: number;
 };
+type Deps = ReadSiteDeps & { timeoutMs: number };
 
 const bare = (h: string) => h.toLowerCase().replace(/^www\./, "");
 
@@ -35,139 +36,38 @@ export function siteHost(domain: string): string | null {
   return host.replace(/^www\./, "");
 }
 
-// Loopback, private, link-local, CGNAT, multicast and reserved ranges (v4 and v6, including v4-mapped
-// in dotted or hex form and NAT64).
-export function isPrivateAddress(ip: string): boolean {
-  if (isIP(ip) === 4) return privateV4(ip.split(".").map(Number));
-  const h = expandV6(ip);
-  if (!h) return true;
-  if (h.slice(0, 5).every((x) => x === 0) && h[5] === 0xffff) return privateV4(v4Of(h));
-  if (h[0] === 0x64 && h[1] === 0xff9b) return true;
-  return (
-    h.every((x) => x === 0) ||
-    (h.slice(0, 7).every((x) => x === 0) && h[7] === 1) ||
-    (h[0] & 0xfe00) === 0xfc00 ||
-    (h[0] & 0xffc0) === 0xfe80 ||
-    (h[0] & 0xff00) === 0xff00 ||
-    (h[0] === 0x2001 && h[1] === 0xdb8)
-  );
-}
-
-function privateV4([a, b, c]: number[]): boolean {
-  return (
-    a === 0 ||
-    a === 10 ||
-    a === 127 ||
-    a >= 224 ||
-    (a === 100 && b >= 64 && b <= 127) ||
-    (a === 169 && b === 254) ||
-    (a === 172 && b >= 16 && b <= 31) ||
-    (a === 192 && b === 168) ||
-    (a === 192 && b === 0 && c === 0) ||
-    (a === 198 && (b === 18 || b === 19))
-  );
-}
-
-const v4Of = (h: number[]) => [h[6] >> 8, h[6] & 0xff, h[7] >> 8, h[7] & 0xff];
-
-// Eight 16-bit groups, or null if it isn't valid IPv6. A dotted v4 tail counts as the last two groups.
-function expandV6(ip: string): number[] | null {
-  let s = ip
-    .toLowerCase()
-    .replace(/^\[|\]$/g, "")
-    .replace(/%.*$/, "");
-  if (isIP(s) !== 6) return null;
-  const tail = s.match(/(\d+\.\d+\.\d+\.\d+)$/);
-  if (tail) {
-    const [a, b, c, d] = tail[1].split(".").map(Number);
-    s = s.slice(0, -tail[1].length) + `${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`;
-  }
-  const [head, rest] = s.split("::");
-  const left = head ? head.split(":") : [];
-  const right = rest !== undefined && rest ? rest.split(":") : [];
-  const fill = rest === undefined ? [] : Array(8 - left.length - right.length).fill("0");
-  const groups = [...left, ...fill, ...right].map((g) => parseInt(g, 16));
-  return groups.length === 8 && groups.every((g) => g >= 0 && g <= 0xffff) ? groups : null;
-}
-
-async function publicHost(host: string, lookup: NonNullable<ReadSiteDeps["lookup"]>) {
-  try {
-    const addrs = await lookup(host);
-    return addrs.length > 0 && addrs.every((a) => !isPrivateAddress(a.address));
-  } catch {
-    return false;
-  }
-}
-
-// Reads at most MAX_BYTES: a larger Content-Length is refused unread, and a longer stream is cut off
-// (and the request aborted) as soon as it passes the cap. Either way the page counts as unreadable.
-async function readCapped(res: Response, ctrl: AbortController): Promise<string | null> {
-  if (Number(res.headers.get("content-length") ?? 0) > MAX_BYTES) {
-    ctrl.abort();
-    return null;
-  }
-  if (!res.body) return "";
-  const reader = res.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let size = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    size += value.byteLength;
-    if (size > MAX_BYTES) {
-      ctrl.abort();
-      await reader.cancel().catch(() => {});
-      return null;
-    }
-    chunks.push(value);
-  }
-  return new TextDecoder().decode(Buffer.concat(chunks));
-}
+export { isPrivateAddress } from "@/lib/site/address";
 
 export type SitePage = { url: string; status: number; type: string; body: string };
-type Page = SitePage;
-
-// GET with a timeout and a size cap. Follows same-site redirects only (www and http/https variants).
-async function get(
-  url: URL,
-  deps: Required<ReadSiteDeps>,
-  lookupOk: (h: string) => Promise<boolean>,
-): Promise<Page | null> {
-  const site = bare(url.hostname);
-  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
-    if (bare(url.hostname) !== site || !(await lookupOk(url.hostname))) return null;
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), deps.timeoutMs);
-    try {
-      const res = await deps.fetch(url, {
-        headers: { "User-Agent": USER_AGENT, Accept: "text/html,text/plain;q=0.9" },
-        redirect: "manual",
-        signal: ctrl.signal,
-      });
-      const location = res.headers.get("location");
-      if (res.status >= 300 && res.status < 400 && location) {
-        url = new URL(location, url);
-        if (url.protocol !== "https:" && url.protocol !== "http:") return null;
-        continue;
-      }
-      const body = await readCapped(res, ctrl);
-      return body === null
-        ? null
-        : { url: url.toString(), status: res.status, type: res.headers.get("content-type") ?? "", body };
-    } catch {
-      return null;
-    } finally {
-      clearTimeout(timer);
-    }
-  }
-  return null;
+// GET through the shared SSRF guard (src/lib/site/guarded-get.ts: public IPs checked at connect, no
+// rebinding window), with a timeout and a size cap. Follows same-site redirects only (www and http/https).
+async function get(url: URL, deps: Deps): Promise<SitePage | null> {
+  const r = await guardedGet(url, {
+    headers: { "User-Agent": USER_AGENT, Accept: "text/html,text/plain;q=0.9" },
+    lookup: deps.lookup,
+    timeoutMs: deps.timeoutMs,
+    maxBytes: MAX_BYTES,
+    sameSite: url.hostname,
+    transport: deps.fetch && ((u, init) => deps.fetch!(u, { ...init, redirect: "manual" })),
+  });
+  if (!r.ok) return null;
+  return { url: r.page.url, status: r.page.status, type: r.page.headers.get("content-type") ?? "", body: r.page.body };
 }
 
 // robots.txt rules for an agent (Rank1 by default): its own group if present, else '*'. Longest match
 // wins; Allow wins ties.
 export function robotsAllows(robots: string, path: string, agent = "rank1"): boolean {
+  return robotsDecision(robots, path, agent).allowed;
+}
+
+// The same decision plus the robots.txt line that made it (null when no rule matched).
+export function robotsDecision(
+  robots: string,
+  path: string,
+  agent = "rank1",
+): { allowed: boolean; line: string | null } {
   const me = agent.toLowerCase();
-  const groups: { agents: string[]; rules: { allow: boolean; path: string }[] }[] = [];
+  const groups: { agents: string[]; rules: { allow: boolean; path: string; line: string }[] }[] = [];
   let current: (typeof groups)[number] | null = null;
   for (const line of robots.split(/\r?\n/)) {
     const m = line.replace(/#.*/, "").match(/^\s*([a-z-]+)\s*:\s*(.*?)\s*$/i);
@@ -177,12 +77,12 @@ export function robotsAllows(robots: string, path: string, agent = "rank1"): boo
       if (!current || current.rules.length) groups.push((current = { agents: [], rules: [] }));
       current.agents.push(m[2].toLowerCase());
     } else if ((key === "allow" || key === "disallow") && current) {
-      current.rules.push({ allow: key === "allow", path: m[2] });
+      current.rules.push({ allow: key === "allow", path: m[2], line: line.replace(/#.*/, "").trim() });
     }
   }
   const mine = groups.filter((g) => g.agents.some((a) => a !== "*" && me.startsWith(a)));
   const rules = (mine.length ? mine : groups.filter((g) => g.agents.includes("*"))).flatMap((g) => g.rules);
-  let best: { allow: boolean; len: number } = { allow: true, len: -1 };
+  let best: { allow: boolean; len: number; line: string | null } = { allow: true, len: -1, line: null };
   for (const r of rules) {
     if (!r.path) continue;
     const re = new RegExp(
@@ -192,9 +92,9 @@ export function robotsAllows(robots: string, path: string, agent = "rank1"): boo
         .replace(/\\\$$/, "$")}`,
     );
     if (re.test(path) && (r.path.length > best.len || (r.path.length === best.len && r.allow)))
-      best = { allow: r.allow, len: r.path.length };
+      best = { allow: r.allow, len: r.path.length, line: r.line };
   }
-  return best.allow;
+  return { allowed: best.allow, line: best.line };
 }
 
 const decode = (s: string) =>
@@ -260,18 +160,10 @@ export type FetcherOptions = ReadSiteDeps & { maxRequests?: number; budgetMs?: n
 export async function createSiteFetcher(domain: string, opts: FetcherOptions = {}): Promise<SiteFetcher | null> {
   const host = siteHost(domain);
   if (!host) return null;
-  const d: Required<ReadSiteDeps> = {
-    fetch: opts.fetch ?? fetch,
-    lookup: opts.lookup ?? ((h) => dnsLookup(h, { all: true })),
-    timeoutMs: opts.timeoutMs ?? TIMEOUT_MS,
-  };
+  // fetch is a test seam only; production goes through the guard's pinned transport.
+  const d: Deps = { fetch: opts.fetch, lookup: opts.lookup, timeoutMs: opts.timeoutMs ?? TIMEOUT_MS };
   const now = opts.now ?? Date.now;
   const started = now();
-  const ok = new Map<string, Promise<boolean>>();
-  const lookupOk = (h: string) => {
-    if (!ok.has(h)) ok.set(h, publicHost(h, d.lookup));
-    return ok.get(h)!;
-  };
   let requests = 0;
   let exhausted = false;
   const spend = () => {
@@ -283,7 +175,7 @@ export async function createSiteFetcher(domain: string, opts: FetcherOptions = {
     return true;
   };
   const base = new URL(`https://${host}/`);
-  const r = spend() ? await get(new URL("/robots.txt", base), d, lookupOk) : null;
+  const r = spend() ? await get(new URL("/robots.txt", base), d) : null;
   const robots: RobotsState =
     r && r.status >= 200 && r.status < 300
       ? { status: "ok", text: r.body }
@@ -302,7 +194,7 @@ export async function createSiteFetcher(domain: string, opts: FetcherOptions = {
     url.hash = "";
     const key = url.toString();
     if (bare(url.hostname) !== bare(host) || !allowed(url.pathname + url.search)) return Promise.resolve(null);
-    if (!cache.has(key)) cache.set(key, spend() ? get(url, d, lookupOk) : Promise.resolve(null));
+    if (!cache.has(key)) cache.set(key, spend() ? get(url, d) : Promise.resolve(null));
     return cache.get(key)!;
   };
   return { host, base, robots, allowed, page, used: () => ({ requests, exhausted }) };

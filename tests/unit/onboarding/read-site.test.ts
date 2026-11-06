@@ -246,3 +246,18 @@ describe("helpers", () => {
     expect(matchCuisine("")).toBeUndefined();
   });
 });
+
+describe("one guarded fetch path (no DNS rebinding window)", () => {
+  it("with no test fetch, reading goes through the guard's connect-time lookup: a private answer reads nothing", async () => {
+    const lookup = vi.fn(async () => [{ address: "10.0.0.5" }]);
+    expect(await readSite("example-ramen.test", { lookup })).toEqual({ status: "unreadable" });
+    expect(lookup).toHaveBeenCalledWith("example-ramen.test");
+  });
+
+  it("read-site.ts has no fetch or DNS of its own; everything goes through guardedGet", async () => {
+    const { readFileSync } = await import("node:fs");
+    const src = readFileSync(`${process.cwd()}/src/lib/onboarding/read-site.ts`, "utf8");
+    expect(src).toContain('from "@/lib/site/guarded-get"');
+    expect(src).not.toMatch(/node:dns|\bawait fetch\(|globalThis\.fetch|deps\.fetch\(url/);
+  });
+});

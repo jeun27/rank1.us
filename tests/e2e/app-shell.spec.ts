@@ -247,3 +247,13 @@ test("fixes gallery freshness n equals the Dashboard gallery n", async ({ page }
   expect(dashboard).toBeDefined();
   expect(await n("fixes-success")).toBe(dashboard);
 });
+
+// X6 (UI.md D33): the page name renders 22/28 at -0.02em at every width, and the hero number is 44/48.
+test("/dev/app dashboard: the H1 is 22/28 -0.02em and the hero number is 44px", async ({ page }) => {
+  await page.goto("/dev/app?state=dashboard-success");
+  const h1 = page.getByRole("heading", { level: 1 });
+  await expect(h1).toHaveCSS("font-size", "22px");
+  await expect(h1).toHaveCSS("line-height", "28px");
+  await expect(h1).toHaveCSS("letter-spacing", "-0.44px");
+  await expect(page.locator("main p.text-hero").first()).toHaveCSS("font-size", "44px");
+});
