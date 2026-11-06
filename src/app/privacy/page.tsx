@@ -5,7 +5,7 @@ import { LegalPlaceholder } from "@/components/contact/LegalPlaceholder";
 export const metadata: Metadata = { title: "Privacy - Rank1" };
 
 const link =
-  "text-jellyDeep underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
+  "text-link underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
 
 // Placeholder copy (exempt from COPY.md): only the topics in the step 2 brief.
 export default function PrivacyPage() {

@@ -32,7 +32,7 @@ export function ContactUsLink({ children, className }: { children: ReactNode; cl
         aria-haspopup="dialog"
         className={
           className ??
-          "inline-flex min-h-11 items-center text-jellyDeep underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+          "inline-flex min-h-11 items-center text-link underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
         }
       >
         {children}

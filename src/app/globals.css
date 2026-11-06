@@ -8,21 +8,22 @@
    surface; [data-theme="light"] is the O2 theme. Tailwind's default palette is removed. */
 @theme {
   --color-*: initial;
-  --color-paper: #0E0F11;
-  --color-white: #151619;
-  --color-raised: #1C1E22;
-  --color-overlay: #24262B;
+  --color-paper: #000000;
+  --color-white: #0A0A0A;
+  --color-raised: #111214;
+  --color-overlay: #18191B;
   --color-ink: #EDEEF0;
   --color-text2: #B3B7BF;
   --color-inkMuted: #8C919B;
-  --color-border: #2B2E34;
+  --color-border: rgba(55, 65, 81, 0.55);
   --color-borderStrong: #41454D;
   --color-fieldBorder: #71767F;
-  --color-accent: #279EF2;
-  --color-onAccent: #0E0F11;
-  --color-jellyLoading: #4FAEF7;
+  --color-accent: #FFFFFF;
+  --color-onAccent: #000000;
+  --color-jellyLoading: #E5E5E5;
   --color-jelly: #279EF2;
   --color-jellyDeep: #79C0FA;
+  --color-link: #FFFFFF;
   --color-moss: #5FBF8E;
   --color-successBg: #13291F;
   --color-brick: #F08A7E;
@@ -36,7 +37,7 @@
   --color-series1: #3987E5;
   --color-series2: #D95926;
   --color-series3: #199E70;
-  --color-rail: #0B0C0E;
+  --color-rail: #000000;
 }
 
 /* v3 (D33): Inter for everything, JetBrains Mono for data only (numbers, domains, question strings). */
@@ -107,6 +108,7 @@
 :root {
   --aurora: linear-gradient(90deg, #E8B85A, #5FB8B3, #279EF2);
   --glow: radial-gradient(closest-side, rgb(39 158 242 / 0.18), transparent);
+  --heading-gradient: linear-gradient(180deg, #FFFFFF, rgb(255 255 255 / 0.6));
 }
 
 /* O2 light theme (/app, /team): set on <html> by the theme script before paint. */
@@ -127,6 +129,7 @@
   --color-jellyLoading: #18579F;
   --color-jelly: #279EF2;
   --color-jellyDeep: #1A5FBF;
+  --color-link: #1A5FBF;
   --color-moss: #2F6F4F;
   --color-successBg: #E6EFE9;
   --color-brick: #B3443A;
@@ -146,21 +149,22 @@
 /* Dark again for subtrees that stay dark in the light theme: the rail (D14). */
 [data-theme="dark"] {
   color-scheme: dark;
-  --color-paper: #0E0F11;
-  --color-white: #151619;
-  --color-raised: #1C1E22;
-  --color-overlay: #24262B;
+  --color-paper: #000000;
+  --color-white: #0A0A0A;
+  --color-raised: #111214;
+  --color-overlay: #18191B;
   --color-ink: #EDEEF0;
   --color-text2: #B3B7BF;
   --color-inkMuted: #8C919B;
-  --color-border: #2B2E34;
+  --color-border: rgba(55, 65, 81, 0.55);
   --color-borderStrong: #41454D;
   --color-fieldBorder: #71767F;
-  --color-accent: #279EF2;
-  --color-onAccent: #0E0F11;
-  --color-jellyLoading: #4FAEF7;
+  --color-accent: #FFFFFF;
+  --color-onAccent: #000000;
+  --color-jellyLoading: #E5E5E5;
   --color-jelly: #279EF2;
   --color-jellyDeep: #79C0FA;
+  --color-link: #FFFFFF;
   --color-moss: #5FBF8E;
   --color-successBg: #13291F;
   --color-brick: #F08A7E;
@@ -174,7 +178,7 @@
   --color-series1: #3987E5;
   --color-series2: #D95926;
   --color-series3: #199E70;
-  --color-rail: #0B0C0E;
+  --color-rail: #000000;
 }
 
 /* Pane open/close and tab switch: 150-200ms, off for reduced motion. */
@@ -211,4 +215,20 @@ html:not(.js) .js-only { display: none; }
    it wins over the 13px text-ui utility. */
 @media (width < 48rem) {
   input, select, textarea { font-size: 16px; }
+}
+
+/* Portal look: h1/h2 in /app, /team and /client fade from white to 60% white with tight tracking. Dark
+   only (a nested dark subtree such as the rail counts too); light keeps plain headings. */
+@utility heading-gradient {
+  letter-spacing: -0.04em;
+  [data-theme="dark"] & {
+    background: var(--heading-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+/* Forced colours: plain system text, no clipped background. Unlayered, so it wins. */
+@media (forced-colors: active) {
+  [data-theme="dark"] .heading-gradient { background: none; color: CanvasText; }
 }
