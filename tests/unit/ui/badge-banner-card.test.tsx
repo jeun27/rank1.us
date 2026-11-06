@@ -34,7 +34,7 @@ describe("Banner", () => {
       expect(cls).toContain(c);
     expect(el.className).not.toMatch(/bg-white|border-\[1\.5px\]|shadow-banner-error/);
     expect(screen.getByText(/We couldn.t load your results/).className.split(" ")).toContain("font-medium");
-    expect(screen.getByRole("link", { name: "Try again" }).className).toMatch(/text-jellyDeep/);
+    expect(screen.getByRole("link", { name: "Try again" }).className).toMatch(/text-link/);
     const jelly = el.querySelector("img")!;
     expect(jelly).toHaveAttribute("alt", "");
     expect(jelly).toHaveAttribute("width", "48");

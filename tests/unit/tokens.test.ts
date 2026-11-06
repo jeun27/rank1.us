@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { aurora, colors, darkColors, glow, radius, shadows } from "@/styles/tokens";
+import { aurora, colors, darkColors, glow, headingGradient, radius, shadows } from "@/styles/tokens";
 
 // v3 (design/direction.md §7, founder 2026-11-06): dark by default on every surface, O2 light on /app and
 // /team. `darkColors` is the default @theme; `colors` is the light theme (also the PDF report and PNG).
@@ -16,23 +16,28 @@ const sources = (dir: string): string[] =>
   );
 
 describe("Tailwind theme matches the v3 tokens", () => {
-  it("dark (default) has the exact §7 values", () => {
+  // Portal look (founder 2026-11-06, lead OK): pure black surfaces, white accent, hairlines rgba(55,65,81,.55).
+  it("dark (default) has the portal values", () => {
     expect(darkColors).toEqual({
-      paper: "#0E0F11",
-      white: "#151619",
-      raised: "#1C1E22",
-      overlay: "#24262B",
+      paper: "#000000",
+      white: "#0A0A0A",
+      raised: "#111214",
+      overlay: "#18191B",
       ink: "#EDEEF0",
       text2: "#B3B7BF",
       inkMuted: "#8C919B",
-      border: "#2B2E34",
+      border: "rgba(55, 65, 81, 0.55)",
       borderStrong: "#41454D",
       fieldBorder: "#71767F",
-      accent: "#279EF2",
-      onAccent: "#0E0F11",
-      jellyLoading: "#4FAEF7",
+      // White primary buttons with black text; hover #E5E5E5. Jelly (the mascot) keeps its own blue.
+      accent: "#FFFFFF",
+      onAccent: "#000000",
+      jellyLoading: "#E5E5E5",
       jelly: "#279EF2",
+      // R2: the blue info pair (infoBg + jellyDeep) stays for "You", info banners and focus rings.
       jellyDeep: "#79C0FA",
+      // R1: links are white and always underlined (a non-colour cue).
+      link: "#FFFFFF",
       moss: "#5FBF8E",
       successBg: "#13291F",
       brick: "#F08A7E",
@@ -47,8 +52,8 @@ describe("Tailwind theme matches the v3 tokens", () => {
       series1: "#3987E5",
       series2: "#D95926",
       series3: "#199E70",
-      // The rail stays dark in both themes (D14): #0B0C0E.
-      rail: "#0B0C0E",
+      // The rail is black in both themes (portal look).
+      rail: "#000000",
     });
   });
 
@@ -69,6 +74,7 @@ describe("Tailwind theme matches the v3 tokens", () => {
       jellyLoading: "#18579F",
       jelly: "#279EF2",
       jellyDeep: "#1A5FBF",
+      link: "#1A5FBF",
       moss: "#2F6F4F",
       successBg: "#E6EFE9",
       brick: "#B3443A",
@@ -149,6 +155,13 @@ describe("Tailwind theme matches the v3 tokens", () => {
     expect(css).toContain(`--aurora: ${aurora};`);
     expect(glow).toBe("radial-gradient(closest-side, rgb(39 158 242 / 0.18), transparent)");
     expect(css).toContain(`--glow: ${glow};`);
+    // Portal look: h1/h2 in /app, /team and /client fade from white to 60% white (7.6:1 at the light end).
+    expect(headingGradient).toBe("linear-gradient(180deg, #FFFFFF, rgb(255 255 255 / 0.6))");
+    expect(css).toContain(`--heading-gradient: ${headingGradient};`);
+    // Forced colours (Windows high contrast): plain text, no clipped background.
+    expect(css).toMatch(
+      /@media \(forced-colors: active\)[\s\S]*heading-gradient|heading-gradient[\s\S]*@media \(forced-colors: active\)/,
+    );
     const gradients = [...css.matchAll(/[\w-]*gradient\(/g)].map((m) => {
       let depth = 0;
       for (let i = m.index + m[0].length - 1; i < css.length; i++) {
@@ -162,6 +175,7 @@ describe("Tailwind theme matches the v3 tokens", () => {
         "linear-gradient(90deg, #E8B85A, #5FB8B3, #279EF2)",
         "linear-gradient(var(--color-white), var(--color-white))",
         "radial-gradient(closest-side, rgb(39 158 242 / 0.18), transparent)",
+        "linear-gradient(180deg, #FFFFFF, rgb(255 255 255 / 0.6))",
       ].sort(),
     );
   });
@@ -174,6 +188,8 @@ describe("Tailwind theme matches the v3 tokens", () => {
         expect(Object.keys(shadows), `${file}: ${m[0]}`).toContain(m[1]);
       if (!file.endsWith("AuroraButton.tsx")) expect(src, file).not.toContain("aurora-ring");
       if (!file.includes("components/site/")) expect(src, file).not.toMatch(/\bglow\b/);
+      // The heading gradient is the portal's (app, team, client), never the landing's.
+      if (file.includes("components/site/")) expect(src, file).not.toContain("heading-gradient");
       if (!file.endsWith("HeroDemo.tsx")) expect(src, file).not.toContain("shadow-window");
     }
   });
@@ -197,6 +213,7 @@ const textOn: [Name, Name[]][] = [
   ["text2", [...surfaces, "overlay"]],
   ["inkMuted", surfaces],
   ["jellyDeep", surfaces],
+  ["link", surfaces],
   ["onAccent", ["accent", "jellyLoading"]],
   ["moss", ["successBg", "white"]],
   ["brick", ["errorBg", "white"]],
@@ -220,7 +237,8 @@ describe.each([
 });
 
 describe("dark accent", () => {
-  it("Jelly blue is the fill and the chart line: ≥ 4.5 on page, panel and raised", () => {
+  // R3: the accent (white) is the fill and the business chart line.
+  it("the white accent is the fill and the chart line: ≥ 4.5 on page, panel and raised", () => {
     for (const bg of surfaces)
       expect(ratio(darkColors.accent, darkColors[bg]), `accent on ${bg}`).toBeGreaterThanOrEqual(4.5);
   });

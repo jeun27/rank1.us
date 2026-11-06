@@ -136,7 +136,7 @@ test("sticky bar: below md only, after the hero, hidden over #pricing and #audit
   await expect(sticky(page)).toBeHidden();
 });
 
-// v3 (D34): the dark landing's primary fill is the accent, Jelly blue #279EF2.
+// Portal look: the dark primary fill is the accent, white (was Jelly blue #279EF2, D34).
 test("at most one accent primary button in the viewport at any scroll position", async ({ page }) => {
   await page.goto("/");
   const height = await page.evaluate(() => document.documentElement.scrollHeight);
@@ -152,7 +152,7 @@ test("at most one accent primary button in the viewport at any scroll position",
           el.offsetParent !== null &&
           r.bottom > 0 &&
           r.top < vh &&
-          getComputedStyle(el).backgroundColor === "rgb(39, 158, 242)"
+          getComputedStyle(el).backgroundColor === "rgb(255, 255, 255)"
         );
       }).length;
     });
@@ -256,7 +256,7 @@ test("#audit holds the real audit form on the ink band; a mocked 202 shows succe
   await expect(audit.getByLabel("Your domain")).toBeVisible();
   const submit = audit.getByRole("button", { name: "Get my free audit" });
   // v3 (D34, O1 dark): the final CTA uses the accent, Jelly blue.
-  expect(await submit.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(39, 158, 242)");
+  expect(await submit.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(255, 255, 255)");
   await audit.getByLabel("Email").fill("owner@example.test");
   await audit.getByLabel("Your domain").fill("ramenhouse.com");
   await submit.click();
@@ -277,7 +277,7 @@ test("Contact us in the header, pricing and footer opens the Contact us dialog",
 });
 
 // ---- v3 PR 3 (D37-D41, lead OK 2026-11-06) ----
-const ACCENT = "rgb(39, 158, 242)";
+const ACCENT = "rgb(255, 255, 255)";
 const demo = (page: Page) => page.locator("[data-demo]");
 const isMobile = (page: Page) => page.viewportSize()!.width < 768;
 
