@@ -280,6 +280,26 @@ describe("create_experiment input and defaults", () => {
   });
 });
 
+describe("deletes the group rules never block", () => {
+  it("a plain business and question with no experiments delete", async () => {
+    const s = serviceClient();
+    const b = must(
+      await s.from("businesses").insert({ workspace_id: f.workspaceId, name: "Example Plain" }).select("id").single(),
+    );
+    const q = await question(b.id, "plain question");
+    must(await s.from("questions").delete().eq("id", q));
+    must(await s.from("businesses").delete().eq("id", b.id));
+    expect(must(await s.from("businesses").select("id").eq("id", b.id))).toEqual([]);
+  });
+
+  it("a business with experiments deletes, and its experiments go with it", async () => {
+    const s = serviceClient();
+    const x = await makeWorkspace(owner);
+    must(await s.from("businesses").delete().eq("id", x.businessId));
+    expect(must(await s.from("experiments").select("id").eq("id", x.experimentId))).toEqual([]);
+  });
+});
+
 describe("group rules on direct writes", () => {
   it("an experiment without both groups is refused at commit (23514)", async () => {
     const { error } = await owner.db.from("experiments").insert({ business_id: f.businessId, name: "x" });
