@@ -92,7 +92,7 @@ export function Sidebar(props: {
                 onClick={() => props.onRecent(t)}
                 className={`${row} font-normal text-ink hover:bg-raised`}
               >
-                <Icon name="file" className="size-4 text-amber" />
+                <Icon name="file" className="size-4 text-inkMuted" />
                 <span data-computed className="truncate">
                   {t.title}
                 </span>

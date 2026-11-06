@@ -49,3 +49,15 @@ describe("FixList controls (UI.md: radius 6, 44px below md, 32px from md)", () =
     expect(within(card).queryByRole("checkbox")).toBeNull();
   });
 });
+
+// DQ9 (design-quality audit): one accent. Amber is a state colour (UI.md), so the /team chrome (tab, Recents
+// and Context file icons, the client avatar) stays neutral.
+describe("/team chrome has no amber", () => {
+  it("no workspace component uses the amber or warn tones for decoration", async () => {
+    const { readdirSync, readFileSync } = await import("node:fs");
+    for (const f of readdirSync("src/components/workspace").filter((n) => n.endsWith(".tsx"))) {
+      const text = readFileSync(`src/components/workspace/${f}`, "utf8");
+      expect(text, f).not.toMatch(/text-amber|bg-amber/);
+    }
+  });
+});
