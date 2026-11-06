@@ -20,9 +20,15 @@ export type QueueRow = {
   open: number;
 };
 
-// A dropped connection or a failed last run needs the team. A partial run still has data (warn badge).
-export function queueTag(s: { lastRunFailed: boolean; dropped: boolean; gasReady: boolean; started: boolean }) {
-  if (s.dropped || s.lastRunFailed) return "attention" as const;
+// A connection needing reauth or a failed last run needs the team. A partial run still has data (warn
+// badge). A revoked connection is the client's choice: if it was required, G3 makes it Waiting on client.
+export function queueTag(s: {
+  lastRunFailed: boolean;
+  connections: ("connected" | "needs_reauth" | "revoked")[];
+  gasReady: boolean;
+  started: boolean;
+}) {
+  if (s.connections.includes("needs_reauth") || s.lastRunFailed) return "attention" as const;
   if (!s.gasReady) return "waiting" as const;
   return s.started ? ("progress" as const) : ("ready" as const);
 }

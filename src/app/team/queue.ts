@@ -29,7 +29,7 @@ export async function loadQueue(db: DbClient, businesses: { id: string; name: st
         tag: g3
           ? queueTag({
               lastRunFailed: runs[0]?.status === "failed",
-              dropped: connections.some((c) => c.status !== "connected"),
+              connections: connections.map((c) => c.status),
               gasReady: Boolean(gas?.readyAt),
               started: fixes.ranked.some((f) => f.status === "doing") || done.length > 0,
             })
