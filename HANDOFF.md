@@ -96,3 +96,9 @@ Requests between agents (for example, a new field frontend needs from backend). 
     - `uploadLogo(userDb, serviceDb, businessId, bytes)` → { status: "saved" | "too_large" | "bad_type" | "not_allowed" }.
     - `getLogoUrl` / `getReportDownloadUrl(userDb, serviceDb, id)` → 60 s signed URL | null.
   - Status: done.
+- 2026-11-06, backend -> data-pipeline + frontend: Step 17 experiments on feat/step17-experiments-db (src/lib/queries/experiments.ts), all on the caller's client (RLS; a dfy_client gets nothing).
+  - `listExperiments(db, businessId, now?)` → ExperimentRow[] = { id, fix_id, name, change_note, change_url, change_date, ended_at, status: "running" | "done" | "ended", test, control } (test/control = question counts), newest change first.
+  - `createExperiment(db, { businessId, test, control?, fixId?, name?, changeNote?, changeUrl?, changeDate? })` → id. Errors: 22023 bad input, 42501 not allowed.
+  - `endExperiment(db, id)` / `deleteExperiment(db, id)` → boolean.
+  - `getExperimentData(db, id)` → { before: { start, end }, after: { start, end }, test: { before: Cell, after: Cell }, control: { before: Cell, after: Cell } } | null, with Cell = { named, n }. Dates are LA YYYY-MM-DD, end exclusive.
+  - Pure helpers: `laToday(now?)`, `experimentStatus(row, now?)`, `EXPERIMENT_DAYS = 28`. Status: open.
