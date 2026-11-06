@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { AuditImage } from "@/components/audit/AuditImage";
@@ -37,5 +38,29 @@ describe("exports", () => {
     expect(paid).not.toContain("Powered by Rank1");
     const free = renderToStaticMarkup(<AuditImage {...loaded} free />);
     expect(free).toContain("Powered by Rank1");
+  });
+});
+
+// F1b (type audit): the PNG uses Inter at the UI weights (400/600), not the renderer's default font at 700.
+describe("PNG type", () => {
+  it("sets Inter on the image and no weight outside 400/500/600", () => {
+    const html = renderToStaticMarkup(<AuditImage {...loaded} free />);
+    expect(html).toContain("font-family:Inter");
+    expect(html).not.toMatch(/sans-serif/);
+    expect(
+      [...html.matchAll(/font-weight:(\d+)/g)].map((m) => m[1]).filter((w) => !["400", "500", "600"].includes(w)),
+    ).toEqual([]);
+  });
+
+  it("pngResponse renders a PNG with the bundled Inter faces", async () => {
+    const { pngResponse, PNG_FONTS } = await import("@/components/audit/respond");
+    expect(PNG_FONTS.map((f) => [f.name, f.weight])).toEqual([
+      ["Inter", 400],
+      ["Inter", 600],
+    ]);
+    for (const f of PNG_FONTS) expect(new TextDecoder().decode(f.data.slice(0, 4))).toBe("wOFF");
+    const res = pngResponse(loaded, false);
+    expect(res.headers.get("content-type")).toBe("image/png");
+    expect((await res.arrayBuffer()).byteLength).toBeGreaterThan(10_000);
   });
 });
