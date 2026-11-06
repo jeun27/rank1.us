@@ -77,4 +77,37 @@ export const connectionsCopy = {
     denied: "Nothing was connected: Google access wasn't allowed.",
     error: "We couldn't connect that. Try again.",
   },
+  // C-b (COPY.md "C-b, signed off by the lead"): the onboarding connect step and the dashboard card.
+  card: {
+    title: "Connect your accounts",
+    intro: "One click each, with Google's own sign-in. We never see your password, and you can disconnect any time.",
+    count: (n: number, m: number) => `${n} of ${m} connected`,
+    skip: "Skip for now",
+    toDashboard: "Go to your dashboard",
+    readyTitle: "You're all set. We'll take it from here.",
+    readyBody: (audience: "self" | "dfy", names: string[]) => {
+      const one = names.length === 1;
+      const joined = one ? names[0] : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
+      const head = `${joined} ${one ? "is" : "are"} connected.`;
+      return audience === "dfy"
+        ? `${head} The Rank1 team takes it from here, and every change shows under Changes.`
+        : head;
+    },
+    industry: "What kind of business?",
+    verticals: {
+      restaurant: "Restaurant",
+      hvac: "HVAC",
+      plumbing: "Plumbing",
+      roofing: "Roofing",
+      pest_control: "Pest control",
+      auto: "Auto repair",
+      beauty: "Beauty & salons",
+      gym: "Gyms & fitness",
+      events: "Events & venues",
+      dental: "Dental",
+      saas: "Software (SaaS)",
+      dtc: "Online store",
+      other: "Other",
+    },
+  },
 } as const;

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { formatPercent } from "@/components/ui/StatNumber";
 import type { ExperimentResult, ExperimentStatus, GroupResult } from "@/lib/metrics/experiment";
 import type { Metric } from "@/types/metrics";
+import { signedPts } from "@/lib/metrics/delta";
 import { experimentCopy as c } from "./copy";
 
 export type ExperimentCardView = {
@@ -20,9 +21,6 @@ type Result = Promise<{ error: string } | undefined | void>;
 export type ExperimentActions = { end: (id: string) => Result; remove: (id: string) => Result };
 
 const STATUS_TONE = { running: "info", done: "success", ended: "warn" } as const;
-
-// Signed floored points, a real minus sign; never a %.
-export const signedPts = (n: number) => `${n > 0 ? "+" : n < 0 ? "−" : ""}${Math.abs(n)} pts`;
 
 // "34% · n=160". On phones the n drops under the percent, so a group's numbers stack (UI.md: groups stacked).
 function Share({ m }: { m: Metric }) {

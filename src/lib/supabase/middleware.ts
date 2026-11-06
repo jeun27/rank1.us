@@ -28,11 +28,14 @@ export function experimentsTarget(pathname: string): boolean {
   return path !== null && /^\/app\/experiments(\/new)?$/.test(path);
 }
 
-// Settings → Connections (C-a): off unless ENABLE_CONNECTIONS=true. The pages stream, so the flag is a real
-// 404 here, before anything else (it doesn't need a session or Supabase).
+// Settings → Connections (C-a) and the onboarding connect step (C-b): off unless ENABLE_CONNECTIONS=true.
+// The pages stream, so the flag is a real 404 here, before anything else (it doesn't need a session or Supabase).
 export function connectionsTarget(pathname: string): boolean {
   const path = normalizePath(pathname);
-  return path !== null && /^\/(app\/settings(\/connections)?|client\/settings\/connections)$/.test(path);
+  return (
+    path !== null &&
+    /^\/(app\/settings(\/connections)?|app\/onboarding\/connect|client\/settings\/connections)$/.test(path)
+  );
 }
 
 // /team?b=<id> streams too (Step 11): the client id, when the path is /team.

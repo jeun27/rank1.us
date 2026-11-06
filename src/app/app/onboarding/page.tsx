@@ -24,6 +24,7 @@ export default async function OnboardingPage() {
         places={places}
         cuisines={CUISINES}
         actions={{ readSite: readSiteAction, findCompetitors: findCompetitorsAction, finish: finishAction }}
+        verticals={process.env.ENABLE_CONNECTIONS === "true"}
       />
     </main>
   );
