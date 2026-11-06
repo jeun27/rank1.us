@@ -50,7 +50,11 @@ export async function loadHub(
     canConnect,
     returnTo,
     outcome: status ? { connector: one(params.connection), status } : null,
-    ...(checklist && typeof checklist === "object" && { youtubeVideos: checklist.videos.length }),
+    ...(checklist &&
+      typeof checklist === "object" && {
+        youtubeVideos: checklist.videos.length,
+        youtubeNoKeyword: !checklist.keyword,
+      }),
   };
 }
 
