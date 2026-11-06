@@ -168,3 +168,37 @@ for (const theme of THEMES)
     for (const name of ["Badge", "Banner", "ProgressBar"])
       await section(page, name).screenshot({ path: shot(name.toLowerCase()) });
   });
+
+// F1 type audit: section titles 13/18 Inter 500 under the 22px title, app body and table cells 13px, real
+// Inter + JetBrains Mono (with the metric-matched fallback), no faux bold/italic.
+test("F1: section titles 13/18/500, cells 13px, Inter + Mono loaded, no font synthesis", async ({ page }) => {
+  await page.goto("/dev/app?state=dashboard-success");
+  const h2 = page.getByRole("heading", { level: 2, name: "Visibility" });
+  expect(
+    await h2.evaluate((e) => [
+      getComputedStyle(e).fontSize,
+      getComputedStyle(e).lineHeight,
+      getComputedStyle(e).fontWeight,
+    ]),
+  ).toEqual(["13px", "18px", "500"]);
+  const cell = page.getByRole("table", { name: "Competitors" }).locator("td").first();
+  expect(await cell.evaluate((e) => getComputedStyle(e).fontSize)).toBe("13px");
+  const fonts = await page.evaluate(async () => {
+    await document.fonts.ready;
+    return {
+      family: getComputedStyle(document.body).fontFamily,
+      synthesis: getComputedStyle(document.documentElement).fontSynthesis,
+      // load() resolves to the real faces; [] would mean a missing font (and a fallback glyph).
+      inter: (await document.fonts.load("13px Inter")).length > 0,
+      mono: (await document.fonts.load('13px "JetBrains Mono"')).length > 0,
+    };
+  });
+  expect(fonts.family).toMatch(/^Inter, "Inter Fallback"/);
+  expect(fonts.synthesis).toBe("none");
+  expect(fonts.inter).toBe(true);
+  expect(fonts.mono).toBe(true);
+  // /team's document pane uses the same 13px UI size as /app.
+  await page.goto("/dev/team");
+  const teamCell = page.locator("#ws-document td").first();
+  expect(await teamCell.evaluate((e) => getComputedStyle(e).fontSize)).toBe("13px");
+});
