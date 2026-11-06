@@ -40,7 +40,12 @@ export const connectionsCopy = {
   continue: "Continue to Google",
   cancel: "Cancel",
   save: "Save",
-  pick: { gbp: "Choose locations", search_console: "Choose sites", ga4: "Choose properties" },
+  pick: {
+    gbp: "Choose locations",
+    search_console: "Choose sites",
+    ga4: "Choose properties",
+    youtube: "Choose channel",
+  },
   fields: {
     description: "Description",
     regular_hours: "Hours",
@@ -69,9 +74,19 @@ export const connectionsCopy = {
       "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.",
       "We never ask for your password.",
     ],
+    // G1 (lead OK 2026-11-06).
+    youtube: [
+      "Rank1 asks Google for read-only access to YouTube (youtube.readonly) and to know which Google account you used. We don't get your email or profile.",
+      "We can only read. We never change anything on YouTube.",
+      "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.",
+      "We never ask for your password.",
+    ],
   },
-  // The existing lead string: one Google grant covers all three.
-  revokeConfirm: "This also disconnects Search Console and Analytics",
+  // G1 (lead): one Google grant covers every Google service, so Disconnect names them all.
+  revokeConfirm:
+    "This disconnects every Google service Rank1 uses: Business Profile, Search Console, Analytics and YouTube.",
+  // G1: the YouTube tile's status (the checklist is the P4 fixes' evidence).
+  youtubeChecked: (n: number) => `Connected · ${n} videos checked`,
   changes: "Changes",
   failed: "We couldn't do that. Try again.",
   outcomes: {

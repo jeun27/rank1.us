@@ -4,7 +4,7 @@ import { Dialog } from "@/components/billing/Dialog";
 import { Badge } from "@/components/ui/Badge";
 import { Banner } from "@/components/ui/Banner";
 import { Button } from "@/components/ui/Button";
-import type { GoogleConnector } from "@/lib/connections/oauth";
+import type { OAuthConnector } from "@/lib/connections/oauth";
 import { recommend, type Industry, type Tile } from "@/lib/connections/recommend";
 import type { ConnectionEntity, ConnectionProvider, ConnectionStatus, ConnectorKey } from "@/lib/queries/connections";
 import { Consent, startUrl } from "./Consent";
@@ -37,6 +37,8 @@ export type HubProps = {
   // The callback's ?connection=&status=.
   outcome: { connector: string | null; status: string } | null;
   actions: HubActions;
+  // G1: how many videos the YouTube checklist read (the tile's status); absent when not connected or the read failed.
+  youtubeVideos?: number;
 };
 
 const STATUS_TONE = { connected: "success", needs_reauth: "warn", revoked: "error" } as const;
@@ -46,7 +48,7 @@ function Picker({
   selected,
   onSave,
 }: {
-  connector: GoogleConnector;
+  connector: OAuthConnector;
   options: ConnectionEntity[];
   selected: ConnectionEntity[];
   onSave: (ids: string[]) => void;
@@ -100,7 +102,7 @@ function TileCard({
   tile: Tile;
   primary: boolean;
   props: HubProps;
-  onConsent: (k: GoogleConnector) => void;
+  onConsent: (k: OAuthConnector) => void;
   onRevoke: (id: string) => void;
   onFailed: () => void;
 }) {
@@ -112,7 +114,7 @@ function TileCard({
   const write = props.canConnect;
   // recommend() marks every tile without a working flow (and the whole later tier) as coming soon.
   const comingSoon = tile.available === "coming_soon";
-  const k = connector as GoogleConnector;
+  const k = connector as OAuthConnector;
   let actions: ReactNode = null;
   if (write && comingSoon)
     actions = noted ? (
@@ -180,7 +182,11 @@ function TileCard({
         ) : (
           conn && (
             <span data-testid="status">
-              <Badge tone={STATUS_TONE[conn.status]}>{c.statuses[conn.status]}</Badge>
+              <Badge tone={STATUS_TONE[conn.status]}>
+                {connector === "youtube" && conn.status === "connected" && props.youtubeVideos != null
+                  ? c.youtubeChecked(props.youtubeVideos)
+                  : c.statuses[conn.status]}
+              </Badge>
             </span>
           )
         )}
@@ -227,7 +233,7 @@ function TileCard({
 // Settings → Connections (C-a): tiles by industry from recommend(), in Recommended / Optional / Coming
 // soon. Only the live Google connectors connect; the rest are Coming soon + Notify me (no fake buttons).
 export function ConnectionsHub(props: HubProps) {
-  const [consent, setConsent] = useState<GoogleConnector | null>(null);
+  const [consent, setConsent] = useState<OAuthConnector | null>(null);
   const [revoke, setRevoke] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const r = recommend(props.industry);
@@ -238,7 +244,7 @@ export function ConnectionsHub(props: HubProps) {
       {o &&
         (o.status === "connected" ? (
           <Banner tone="info">
-            {c.outcomes.connected(c.names[(o.connector ?? "gbp") as GoogleConnector] ?? c.names.gbp)}
+            {c.outcomes.connected(c.names[(o.connector ?? "gbp") as OAuthConnector] ?? c.names.gbp)}
           </Banner>
         ) : o.status === "denied" ? (
           <Banner tone="info">{c.outcomes.denied}</Banner>

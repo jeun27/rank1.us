@@ -346,11 +346,11 @@ Strings for the white-label monthly report PDF and email (Step 16). No product n
 
 ## Connections (lead, 2026-11-06)
 
-Strings for Connections. One Google grant covers Business Profile, Search Console and Analytics, so disconnecting one disconnects all three.
+Strings for Connections. One Google grant covers Business Profile, Search Console, Analytics and YouTube, so disconnecting one disconnects them all.
 
 | Where | String |
 |---|---|
-| Revoke confirm (any Google connection) | "This also disconnects Search Console and Analytics" |
+| Revoke confirm (any Google connection; G1, lead 2026-11-06) | "This disconnects every Google service Rank1 uses: Business Profile, Search Console, Analytics and YouTube." |
 
 Tile helper text (the niche key in src/lib/connections/recommend.ts):
 
@@ -375,13 +375,15 @@ Tile helper text (the niche key in src/lib/connections/recommend.ts):
 | Status tags | "Connected", "Needs reconnect", "Disconnected"; a tile without a working flow: "Coming soon" |
 | Buttons | "Connect", "Reconnect", "Disconnect", "Notify me", "Continue to Google", "Cancel", "Save" |
 | Notify me, after | "We'll let you know." |
-| Picker | "Choose locations", "Choose sites", "Choose properties" (Business Profile / Search Console / Analytics) |
+| Picker | "Choose locations", "Choose sites", "Choose properties", "Choose channel" (Business Profile / Search Console / Analytics / YouTube) |
+| YouTube tile status (G1) | "Connected · {n} videos checked" |
 | Change log | "Changes"; fields "Description", "Hours", "Special hours", "Website", "Primary phone", "Attributes" with the date |
 | Callback banners | "{connector} is connected." / "Nothing was connected: Google access wasn't allowed." / "We couldn't connect that. Try again." |
 | Any failed action | "We couldn't do that. Try again." |
 | Consent, Google Business Profile | "Rank1 asks Google to manage your Business Profile (business.manage) and to know which Google account you used. We don't get your email or profile.", "We only change these fields, and only after you or the Rank1 team confirm: description, hours, special hours, website, primary phone and attributes.", "Every change is shown before it's applied, and logged with who made it, when, and what changed.", "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.", "We never ask for your password." |
 | Consent, Search Console | "Rank1 asks Google for read-only access to Search Console (webmasters.readonly) and to know which Google account you used. We don't get your email or profile.", "We can only read. We never change anything in Search Console.", "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.", "We never ask for your password." |
 | Consent, Google Analytics | "Rank1 asks Google for read-only access to Google Analytics (analytics.readonly) and to know which Google account you used. We don't get your email or profile.", "We can only read. We never change anything in Google Analytics.", "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.", "We never ask for your password." |
+| Consent, YouTube (G1, lead 2026-11-06) | "Rank1 asks Google for read-only access to YouTube (youtube.readonly) and to know which Google account you used. We don't get your email or profile.", "We can only read. We never change anything on YouTube.", "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.", "We never ask for your password." |
 
 **C-b, signed off by the lead (2026-11-06).** The onboarding connect step and the dashboard card, plus the G3 client "You're all set" state. "{names}" joins the connector names with "and"; one name reads "is connected".
 
@@ -467,6 +469,28 @@ G7 "Lists that name your rivals but not you" (/app/sources, and the R17 fix's ev
 | Save failed (inline on the row) | "We couldn't save that. Try again." |
 | R17 evidence, more than 3 | "+{n} more" |
 | New-tab links (visually hidden, #142 review) | "(opens in a new tab)" |
+
+**G1 YouTube "Search-ready checklist", signed off by the lead (2026-11-06).** The evidence inside the P4 fixes R19–R21; read-only, behind ENABLE_CONNECTIONS.
+
+| Where | String |
+|---|---|
+| Title | "Search-ready checklist" |
+| Header | "Keyword: {keyword}" · "{n} videos" |
+| Checks | "Keyword in title", "Keyword in the first two lines", "Chapters", "Says the keyword" |
+| Values (text + tone) | "Yes", "No", "Not needed", "Can't check", "No keyword" |
+| Can't check reason | "YouTube doesn't share captions with read-only access." |
+| No keyword (plain text, no action, lead Q2) | "Add your main keyword to check your videos." |
+| No videos | "No videos on this channel yet." |
+| No channel (frontend; lead to confirm) | "No YouTube channel on this Google account." |
+| Read failed (frontend; lead to confirm) | "We couldn't load your videos. Try again." |
+| Reconnect (needs reconnect / revoked) | "Reconnect YouTube" |
+| Suggest fix (copy-only) | "Suggest fix", "Copy", "Copied", "Apply in YouTube" (disabled) + "Coming soon" |
+
+Suggest fix templates (copy-only, nothing is written to YouTube):
+
+- Title: "{keyword} | {title}"
+- First description line: "{keyword} at {business}: {line}"
+- Chapters: "0:00 Intro"
 
 ## Landing (lead, 2026-11-06)
 

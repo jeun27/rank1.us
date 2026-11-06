@@ -5,7 +5,7 @@ import { appCopy } from "@/components/app/copy";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import type { CardState } from "@/lib/connections/connect-card";
-import type { GoogleConnector } from "@/lib/connections/oauth";
+import type { OAuthConnector } from "@/lib/connections/oauth";
 import { Consent, startUrl } from "./Consent";
 import { connectionsCopy as c } from "./copy";
 
@@ -29,7 +29,7 @@ const link = "text-ui text-link underline underline-offset-4";
 // "You're all set" (G3). Not dismissible (the brief's "persistent" card). Connect opens the hub's consent sheet.
 export function ConnectCard(p: ConnectCardProps) {
   const heading = useId();
-  const [consent, setConsent] = useState<GoogleConnector | null>(null);
+  const [consent, setConsent] = useState<OAuthConnector | null>(null);
   const box = "flex flex-col gap-4 rounded-card border border-border bg-white p-4 md:p-5";
 
   if (p.state.kind === "ready") {
@@ -83,7 +83,7 @@ export function ConnectCard(p: ConnectCardProps) {
       <ul className="flex flex-col divide-y divide-border rounded-card border border-border">
         {rows.map((r) => {
           const name = c.names[r.connector];
-          const k = r.connector as GoogleConnector;
+          const k = r.connector as OAuthConnector;
           const verb = r.status === "needs_reauth" ? c.reconnect : c.connect;
           return (
             <li

@@ -1,5 +1,7 @@
 "use client";
 import { CompetitorsView } from "@/components/app/CompetitorsView";
+import { exampleYoutube, exampleYoutubeNoKeyword } from "@/components/youtube/example-data";
+import { YoutubeChecklistPanel } from "@/components/youtube/YoutubeChecklist";
 import { narrativeCopy } from "@/components/narrative/copy";
 import {
   exampleNarrative,
@@ -294,6 +296,48 @@ export const STATES: Record<string, () => React.ReactNode> = {
       fixes={exampleFixes}
       now={NOW}
       reassure={<AiReassure check={exampleAiAccess("good")} now={NOW} />}
+    />
+  ),
+  // G1: the YouTube checklist as the R19 fix's evidence, its states, and the live YouTube tile.
+  ...Object.fromEntries(
+    (
+      [
+        ["fixes-youtube", exampleYoutube],
+        ["fixes-youtube-nokeyword", exampleYoutubeNoKeyword],
+        ["fixes-youtube-reauth", "needs_reauth"],
+      ] as const
+    ).map(([k, checklist]) => [
+      k,
+      () => (
+        <Page title="What to fix next">
+          <FixList
+            ranked={[
+              {
+                ...fixes[0],
+                id: "example-r19",
+                rule_key: "R19",
+                title: "Put your keyword in your video titles",
+                detail: "1 video needs your keyword in the title.",
+                pillar: "p4",
+                evidence: <YoutubeChecklistPanel checklist={checklist} business="Example Ramen House" />,
+              },
+            ]}
+            tidyUps={[]}
+            done={[]}
+            unchecked={[]}
+            noDomain={false}
+            canWrite
+            onStatus={noop}
+          />
+        </Page>
+      ),
+    ]),
+  ),
+  "connections-youtube": () => (
+    <Hub
+      industry="other"
+      connections={[{ id: "ex-yt", provider: "youtube", status: "connected", selected: [] }]}
+      youtubeVideos={3}
     />
   ),
   "fixes-partial": () => (
