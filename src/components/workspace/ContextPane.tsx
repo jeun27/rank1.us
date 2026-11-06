@@ -184,7 +184,7 @@ export function ContextPane({
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => copy("Brief copied. Paste it in Claude.")}
-            className="inline-flex min-h-11 items-center gap-2 px-1.5 text-ui font-semibold text-jellyDeep underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+            className="inline-flex min-h-11 items-center gap-2 px-1.5 text-ui font-semibold text-link underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
           >
             Open in Claude
             <Icon name="arrowRight" className="size-4" />

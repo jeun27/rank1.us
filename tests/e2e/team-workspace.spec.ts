@@ -11,9 +11,9 @@ const NOW = new Date("2026-11-05T12:00:00Z");
 const view = buildWorkspace(exampleWorkspaceRows());
 const dashboardBrief = buildBrief(contextFor(view, { kind: "section", section: "dashboard" }), NOW);
 const THEMES = ["light", "dark"] as const;
-// v3 page colours (§7): light #F6F7F9, dark #0E0F11; the rail is #0B0C0E in both (D14).
-const BG = { light: "rgb(246, 247, 249)", dark: "rgb(14, 15, 17)" };
-const RAIL = "rgb(11, 12, 14)";
+// Page colours: light #F6F7F9, dark #000 (portal look); the rail is #000 in both.
+const BG = { light: "rgb(246, 247, 249)", dark: "rgb(0, 0, 0)" };
+const RAIL = "rgb(0, 0, 0)";
 
 const isMobile = (page: Page) => page.viewportSize()!.width < 768;
 const MODEL_HOSTS = ["api.anthropic.com", "api.openai.com", "generativelanguage.googleapis.com", "api.perplexity.ai"];

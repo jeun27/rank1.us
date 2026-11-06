@@ -5,21 +5,23 @@
 
 // Dark (default). AA on panel #151619: ink 15.58, text2 9.00, muted 5.72, link 9.25, Jelly 6.25.
 export const darkColors = {
-  paper: "#0E0F11", // page
-  white: "#151619", // panel: cards, fields, banners ("white" = the surface token in both themes)
-  raised: "#1C1E22", // selected rows, active tab, secondary buttons
-  overlay: "#24262B", // menus, popovers
+  paper: "#000000", // page
+  white: "#0A0A0A", // panel: cards, fields, banners ("white" = the surface token in both themes)
+  raised: "#111214", // selected rows, active tab, secondary buttons
+  overlay: "#18191B", // menus, popovers
   ink: "#EDEEF0", // text
   text2: "#B3B7BF", // secondary text
   inkMuted: "#8C919B", // muted text, captions, "checked X h ago"
-  border: "#2B2E34", // hairline (decorative divider only)
+  border: "rgba(55, 65, 81, 0.55)", // hairline (decorative divider only)
   borderStrong: "#41454D", // strong hairline
   fieldBorder: "#71767F", // control edge (≥ 3:1)
-  accent: "#279EF2", // primary button fill, active icon, chart line (Jelly blue)
-  onAccent: "#0E0F11", // text on accent (6.63)
-  jellyLoading: "#4FAEF7", // primary hover and loading
+  accent: "#FFFFFF", // primary button fill, active icon, chart line (Jelly blue)
+  onAccent: "#000000", // text on accent (6.63)
+  jellyLoading: "#E5E5E5", // primary hover and loading
   jelly: "#279EF2", // mascot and decorative fills
   jellyDeep: "#79C0FA", // links and focus ring
+  // Portal R1: links are white and always underlined.
+  link: "#FFFFFF",
   moss: "#5FBF8E",
   successBg: "#13291F",
   brick: "#F08A7E",
@@ -34,7 +36,7 @@ export const darkColors = {
   series1: "#3987E5",
   series2: "#D95926",
   series3: "#199E70",
-  rail: "#0B0C0E", // the left rail, dark in both themes (D14)
+  rail: "#000000", // the left rail, dark in both themes (D14)
 } as const;
 
 // Light (O2): cool grey, no beige. Same names, so every component switches with data-theme.
@@ -54,6 +56,7 @@ export const colors = {
   jellyLoading: "#18579F",
   jelly: "#279EF2",
   jellyDeep: "#1A5FBF",
+  link: "#1A5FBF",
   moss: "#2F6F4F",
   successBg: "#E6EFE9",
   brick: "#B3443A",
@@ -110,5 +113,7 @@ export const shadows = {
 // The aurora ring on the Google sign-in button, and (D39) the decorative accent glow on the landing.
 export const aurora = "linear-gradient(90deg, #E8B85A, #5FB8B3, #279EF2)";
 export const glow = "radial-gradient(closest-side, rgb(39 158 242 / 0.18), transparent)";
+// Portal look: h1/h2 in /app, /team and /client fade from white to 60% white (dark only).
+export const headingGradient = "linear-gradient(180deg, #FFFFFF, rgb(255 255 255 / 0.6))";
 export const maxWidth = 1120;
 export const breakpoints = { sm: 640, md: 768, lg: 1024 } as const;
