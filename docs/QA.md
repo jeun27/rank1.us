@@ -59,19 +59,24 @@ Result: PASS after the re-check on 2026-11-06 (main 9361dda, #91). The first run
 | UI.md 4b loading | PASS | report-loading: skeleton, axe 0, one H1, no side scroll |
 | UI.md 4b error | PASS | report-failed: "The report didn't send to {email}. Check the address." and status "Failed"; axe 0 |
 | UI.md 4b success | PASS | report-success: Logo, Upload logo, Brand color, Recipients (hint), Save, Send test to me, History with Month / Status / Download, statuses Sent / Ready; axe 0. e2e "keyboard reaches the settings, the test send and every download" |
-| UI.md 4b partial: GA4 not connected → section hidden + 'Connect GA4' link to /app/settings | FAIL (F1) | No "Connect GA4" link in any report state at 375 or 1280 (`getByRole("link", { name: /connect ga4/i })` = 0). No GA4 reference in src/components/report, src/lib/reports or src/app/app/report, no gallery state, no test |
+| UI.md 4b partial: GA4 not connected → section hidden + 'Connect GA4' link to /app/settings | FAIL (F1) on the first run, FIXED by #91 | No "Connect GA4" link in any report state at 375 or 1280 (`getByRole("link", { name: /connect ga4/i })` = 0). No GA4 reference in src/components/report, src/lib/reports or src/app/app/report, no gallery state, no test |
 | UI.md 4b mobile: preview scales to width | PASS | Preview iframe 335 px wide at 375, 1056 px at 1280, aspect 1:1.414; scrollWidth = viewport. e2e "the preview scales to the width" (both projects) |
 | History downloads | PASS (CI) | Local-stack e2e report-db.spec "owner saves recipients and a color, they persist; a history download redirects to a signed URL" passed in CI. Not live: no stored report exists on the hosted DB until the 1st, and QA has no signed-in preview session (same blocker as Step 14) |
 | Nav "Reports" and COPY.md strings | PASS | AppNav.tsx `{ href: "/app/report", label: "Reports" }`. src/components/report/copy.ts matches COPY.md "/app/report (Step 16 frontend)"; UI test "COPY.md has the lead's Report strings". The brief's suggested "Download PDF" / "Report history" became "Download" / "History" in the lead's COPY.md, which is the source of truth |
 
 ### Blocking problems
 
-- F1: UI.md 4b "partial" is not built. The brief (line 11 and line 17: "Build the GA4 section as 'not connected' for now (hidden + 'Connect GA4' link to /app/settings)") requires a 'Connect GA4' link on /app/report while GA4 isn't connected. /app/report and the gallery have no such link or state. Fix: add the hidden-section + "Connect GA4" link to /app/settings in ReportView, add the string to COPY.md, a /dev/app report-partial state and a test.
-- Lead decision (2026-11-06), recorded for re-verification: the 'Connect GA4' link shows only when ENABLE_CONNECTIONS="true", and goes to /app/settings/connections (not /app/settings). With the flag off (prod), there is no link and no GA4 section. F1 and N1 go to frontend as "fix(app): report GA4 partial state". QA re-verifies both on that PR. N2 stays open with #78 for the morning signed-in run.
+None.
+
+First-run blockers (386f89f):
+
+| Blocker | Result | Evidence |
+|---|---|---|
+| F1: UI.md 4b partial not built: no GA4 "not connected" state or 'Connect GA4' link on /app/report (brief lines 11 and 17) | FIXED by #91 (9361dda) | re-check table above. Lead decision 2026-11-06: the link shows only when ENABLE_CONNECTIONS="true" and goes to /app/settings/connections; prod (flag off) shows no link and no GA4 section |
+| N1 (non-blocking): 404s from /app/report/preview.pdf and /app/report/{id}/download had no `Cache-Control: no-store` | FIXED by #91 (9361dda) | re-check table above |
 
 ### Non-blocking notes
 
-- N1: the 404s from /app/report/preview.pdf and /app/report/{id}/download carry no `Cache-Control: no-store` (empty bodies, so low risk).
 - N2: a live signed-in Preview and history download on the hosted DB is still open. It needs a signed-in owner (founder's morning session) and a stored report.
 
 ## Step 13: Weekly cron
