@@ -6,7 +6,7 @@ import { REPORT_COPY } from "@/lib/reports/copy";
 import { buildReportData, type ReportInput } from "@/lib/reports/data";
 import { renderReportPdf } from "@/lib/reports/document";
 import { reportEmail, sendReportEmail } from "@/lib/reports/email";
-import { isMonthlyWindow, monthLabel } from "@/lib/reports/month";
+import { isMonthlyWindow, monthLabel, nextReportDate, shortDate } from "@/lib/reports/month";
 import { colors } from "@/styles/tokens";
 import { readFileSync } from "node:fs";
 import { pdfText } from "./pdf-text";
@@ -108,6 +108,17 @@ describe("isMonthlyWindow (the 1st, 07:xx America/Los_Angeles)", () => {
   });
 
   it("labels the month", () => expect(monthLabel("2026-10-01")).toBe("October 2026"));
+
+  // X10: the Reports status line names the next send, the 1st at 07:xx LA (America/Los_Angeles).
+  it.each([
+    ["2026-11-06T13:00:00Z", "2026-12-01"], // mid-month
+    ["2026-12-01T14:30:00Z", "2026-12-01"], // the 1st, 06:30 LA: today's send hasn't gone yet
+    ["2026-12-01T15:30:00Z", "2026-12-01"], // 07:30 LA: sending now
+    ["2026-12-01T16:00:00Z", "2027-01-01"], // 08:00 LA: sent, so next month (and next year)
+    ["2026-11-01T06:00:00Z", "2026-11-01"], // Oct 31 23:00 LA
+  ])("next report after %s is %s", (iso, want) => expect(nextReportDate(new Date(iso))).toBe(want));
+
+  it("short date for the status line", () => expect(shortDate("2026-12-01")).toBe("Dec 1"));
 });
 
 describe("accent color", () => {
