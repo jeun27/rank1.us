@@ -1,5 +1,6 @@
 "use client";
 import { useId, useState } from "react";
+import { Badge } from "@/components/ui/Badge";
 import { Banner } from "@/components/ui/Banner";
 import { Card } from "@/components/ui/Card";
 import type { FixItem, FixStatus } from "@/lib/queries/fixes";
@@ -32,7 +33,7 @@ function StatusControl({ fix, onStatus, onError }: { fix: FixView; onStatus: OnS
             onError();
           }
         }}
-        className="h-11 rounded-full border border-fieldBorder bg-white px-4 text-ui focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep"
+        className="h-11 rounded-control border border-fieldBorder bg-white px-2 text-ui md:h-8 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep"
       >
         {STATUSES.map((s) => (
           <option key={s} value={s}>
@@ -88,7 +89,7 @@ function FixCard({
             <StatusControl fix={fix} onStatus={onStatus} onError={onError} />
           </div>
         ) : (
-          <span className="rounded-full bg-infoBg px-2 text-caption text-jellyDeep">{c.statuses[fix.status]}</span>
+          <Badge tone="info">{c.statuses[fix.status]}</Badge>
         )}
       </div>
     </li>

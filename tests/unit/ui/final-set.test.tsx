@@ -98,7 +98,8 @@ describe("ProgressBar", () => {
     expect(bar).toHaveAttribute("aria-valuemin", "0");
     expect(bar).toHaveAttribute("aria-valuemax", "250");
     expect(bar).toHaveAttribute("aria-valuenow", "120");
-    expect((bar.firstElementChild as HTMLElement).style.width).toBe("48%");
+    // v3 (UI.md Loading + progress): the fill is sized by scaleX.
+    expect((bar.firstElementChild as HTMLElement).style.transform).toBe("scaleX(0.48)");
     expect(screen.getByText("48%").className).toContain("text-jellyDeep");
     expect(screen.getByText("120 of 250 answers").className).toContain("text-inkMuted");
   });
