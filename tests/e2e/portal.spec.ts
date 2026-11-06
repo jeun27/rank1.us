@@ -86,6 +86,8 @@ for (const theme of ["dark", "light"] as const)
       ["competitors", "/dev/app?state=competitors-success"],
       ["fixes", "/dev/app?state=fixes-success"],
       ["history", "/dev/app?state=history-success"],
+      ["sources", "/dev/app?state=sources-location"],
+      ["questions", "/dev/app?state=questions-success"],
       ["team", "/dev/team"],
     ];
     for (const [name, path] of pages) {
