@@ -27,10 +27,17 @@ for (const theme of ["dark", "light"] as const)
     await expect(doc.getByRole("listitem", { name: "Google Analytics" })).toContainText(
       "Ask the client to choose their properties",
     );
-    await expect(doc.getByRole("list", { name: "Changes" })).toContainText("https://exampleramen.test");
+    const log = doc.getByRole("list", { name: "Changes" });
+    await expect(log).toContainText("https://exampleramen.test");
+    // #160 S1: one entry each by the Rank1 team, a current client user, and a former user.
+    await expect(log.getByRole("listitem")).toHaveCount(3);
+    await expect(log.getByRole("listitem").nth(0)).toContainText("by Rank1 team");
+    await expect(log.getByRole("listitem").nth(1)).toContainText("by owner@exampleramen.test");
+    await expect(log.getByRole("listitem").nth(2)).toContainText("by a former user");
     await expect(doc).toContainText("Asked to hear about Yelp");
     await axeClean(page);
     await doc.screenshot({ path: `test-results/screenshots/team-connections-${theme}-${info.project.name}.png` });
+    await log.screenshot({ path: `test-results/screenshots/team-connections-log-${theme}-${info.project.name}.png` });
     await notice.getByRole("button", { name: "Dismiss" }).click();
     await expect(doc.getByRole("region", { name: /ready for GAS/ })).toHaveCount(0);
   });
