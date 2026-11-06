@@ -726,9 +726,9 @@ function QuestionRow({
               type="checkbox"
               checked={q.active}
               onChange={() => onChange({ active: !q.active })}
+              aria-label={`${copy.track}: ${q.short.trim() || copy.shortForm}`}
               className="size-5 accent-jellyDeep"
             />
-            <span className="sr-only">{copy.track}</span>
           </label>
           <button
             type="button"
@@ -742,7 +742,8 @@ function QuestionRow({
             {q.short.trim() ? q.short : <span className="text-inkMuted">{copy.shortForm}</span>}
           </button>
           {edited && <Badge tone="warn">{copy.edited}</Badge>}
-          <Badge tone="info">{copy.levels[q.level]}</Badge>
+          {/* Neutral: info blue is for You only (#164). */}
+          <Badge tone="neutral">{copy.levels[q.level]}</Badge>
         </div>
         {open && (
           <div id={`${id}-edit`} className="flex flex-col gap-3 border-t border-border p-3 md:p-4">
