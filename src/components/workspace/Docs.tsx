@@ -27,6 +27,7 @@ import {
 import type { DocSel } from "./DocPane";
 import { NAV_SECTIONS, SECTION_ICON } from "./Sidebar";
 import { ClientsPanel } from "./ClientsPanel";
+import { TeamConnections } from "./TeamConnections";
 import { useTeam, type TeamExtras } from "./team";
 
 const D = ({ children }: { children: ReactNode }) => <span data-computed>{children}</span>;
@@ -134,6 +135,32 @@ function CompetitorTools({ team }: { team: TeamExtras }) {
       )}
       <AddCompetitorForm add={actions.add} />
     </>
+  );
+}
+
+// C-c: the Connections document of the selected DFY client (team only, ENABLE_CONNECTIONS).
+function ConnectionsDoc({
+  view,
+  now,
+  onPick,
+}: {
+  view: WorkspaceView;
+  now: Date | null;
+  onPick: (s: Selection) => void;
+}) {
+  const team = useTeam();
+  if (!team?.connections) return null;
+  const { businessId: b, actions: a } = team;
+  return (
+    <Doc title="Connections" view={view} now={now}>
+      <TeamConnections
+        key={b}
+        data={team.connections}
+        now={now ?? new Date()}
+        onDismiss={async () => a.dismissReady?.(b)}
+        onStartFixes={() => onPick({ kind: "section", section: "fixes" })}
+      />
+    </Doc>
   );
 }
 
@@ -397,6 +424,7 @@ export function DocView({
 }) {
   if (sel.kind === "new") return <NewTab onPick={onPick} />;
   if (sel.kind === "clients") return <ClientsDoc view={view} now={now} />;
+  if (sel.kind === "connections") return <ConnectionsDoc view={view} now={now} onPick={onPick} />;
   const title = contextFor(view, sel).title;
   return (
     <Doc title={title} view={view} now={now}>

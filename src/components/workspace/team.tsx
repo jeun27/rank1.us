@@ -1,4 +1,5 @@
 "use client";
+import type { TeamConnectionsData } from "./team-connections-data";
 import { createContext, useContext } from "react";
 import type { DoneView, FixView } from "@/components/fixes/FixList";
 import type { LocalCompetitor } from "@/lib/onboarding/types";
@@ -29,6 +30,8 @@ export type TeamExtras = {
   loadSuggestions: (businessId: string) => Promise<LocalCompetitor[]>;
   // Step 12: the client users of this DFY client and the fix-list toggle (team only). null in galleries without it.
   clients: { users: ClientUserView[]; fixListVisible: boolean } | null;
+  // C-c: the client's Connections document (ENABLE_CONNECTIONS); null when the flag is off.
+  connections?: TeamConnectionsData | null;
   actions: {
     status: (businessId: string, fixId: string, status: FixStatus) => Result;
     add: (businessId: string, c: CompetitorInput) => Result;
@@ -36,6 +39,8 @@ export type TeamExtras = {
     invite: (businessId: string, email: string) => Promise<{ status: InviteStatus }>;
     removeClient: (businessId: string, userId: string) => Result;
     setFixListVisible: (businessId: string, visible: boolean) => Result;
+    // G3: the team dismisses the ready notice.
+    dismissReady?: (businessId: string) => Result;
   };
 };
 

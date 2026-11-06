@@ -384,6 +384,19 @@ Tile helper text (the niche key in src/lib/connections/recommend.ts):
 | Consent, Google Analytics | "Rank1 asks Google for read-only access to Google Analytics (analytics.readonly) and to know which Google account you used. We don't get your email or profile.", "We can only read. We never change anything in Google Analytics.", "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.", "We never ask for your password." |
 | Consent, YouTube (G1, lead 2026-11-06) | "Rank1 asks Google for read-only access to YouTube (youtube.readonly) and to know which Google account you used. We don't get your email or profile.", "We can only read. We never change anything on YouTube.", "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.", "We never ask for your password." |
 
+**C-c, signed off by the lead (2026-11-06).** The team's Connections document for one DFY client (/team, ENABLE_CONNECTIONS). The G3 notice lives only here (the queue shows the tag).
+
+| Where | String |
+|---|---|
+| G3 notice | "{Business} is ready for GAS" · "{connections} connected {age} ago." · "Start on the fix list" · "Dismiss" |
+| Notify-me interest | "Asked to hear about {connectors}" |
+| Change log (team: values) | "Changes"; each entry "Before: …", "After: …", "by Rank1 team" / "by {name}" (a client user's email, team UI only) and the date |
+
+C-c task lines (at most one per connection):
+
+- "Ask the client to reconnect {connection}"
+- "Ask the client to choose their {locations|sites|properties}" (lead Q5)
+
 **C-b, signed off by the lead (2026-11-06).** The onboarding connect step and the dashboard card, plus the G3 client "You're all set" state. "{names}" joins the connector names with "and"; one name reads "is connected".
 
 | Where | String |
@@ -452,7 +465,7 @@ Strings from the GAS prototype report (share/gas-proto/REPORT.md, lead copy). Fi
 | Save failed (inline) | "We couldn't save that. Try again." |
 | Inline errors | "Up to 8 words.", "2 to 40 characters.", "That word is in the other list." |
 
-## UX (lead, 2026-11-06)
+## G7 mentions (lead, 2026-11-06)
 
 G7 "Lists that name your rivals but not you" (/app/sources, and the R17 fix's evidence), signed off by the lead (2026-11-06).
 

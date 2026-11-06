@@ -22,8 +22,8 @@ const docId = (s: DocSel) =>
     ? `section-${s.section}`
     : s.kind === "new"
       ? `new-${s.n}`
-      : s.kind === "clients"
-        ? "clients"
+      : s.kind === "clients" || s.kind === "connections"
+        ? s.kind
         : `${s.kind}-${(s.kind === "question" ? s.id : s.kind === "competitor" ? s.name : s.kind === "domain" ? s.domain : s.runId).replace(/\W+/g, "-")}`;
 
 // team: the real-data extras (Step 11); without it, #11's read-only Example workspace.
@@ -33,7 +33,14 @@ export function Workspace({ view, team = null }: { view: WorkspaceView; team?: T
   const tabOf = (sel: DocSel): Tab => ({
     id: docId(sel),
     sel,
-    title: sel.kind === "new" ? "New tab" : sel.kind === "clients" ? "Clients" : contextFor(view, sel).title,
+    title:
+      sel.kind === "new"
+        ? "New tab"
+        : sel.kind === "clients"
+          ? "Clients"
+          : sel.kind === "connections"
+            ? "Connections"
+            : contextFor(view, sel).title,
   });
   const first = tabOf({ kind: "section", section: "dashboard" });
 
@@ -99,6 +106,10 @@ export function Workspace({ view, team = null }: { view: WorkspaceView; team?: T
     openDoc({ kind: "clients" });
     setPane("Document");
   };
+  const openConnections = () => {
+    openDoc({ kind: "connections" });
+    setPane("Document");
+  };
   const showContext = contextOpen && !expanded && mode === "workspace";
   // Phones: the document (main, with the H1) stays put under the top bar; Nav and Context open as sheets
   // over it, with the breadcrumb still on screen.
@@ -133,7 +144,7 @@ export function Workspace({ view, team = null }: { view: WorkspaceView; team?: T
             onMode={setMode}
             recents={recents}
             onRecent={(t) => {
-              if (t.sel.kind === "clients") openDoc(t.sel);
+              if (t.sel.kind === "clients" || t.sel.kind === "connections") openDoc(t.sel);
               else if (t.sel.kind !== "new") select(t.sel);
               setPane("Document");
             }}
@@ -147,7 +158,11 @@ export function Workspace({ view, team = null }: { view: WorkspaceView; team?: T
             <Breadcrumb
               business={
                 team ? (
-                  <ClientSwitcher team={team} onClients={team.clients ? openClients : undefined} />
+                  <ClientSwitcher
+                    team={team}
+                    onClients={team.clients ? openClients : undefined}
+                    onConnections={team.connections ? openConnections : undefined}
+                  />
                 ) : (
                   <span data-computed className="truncate">
                     {view.business.name}

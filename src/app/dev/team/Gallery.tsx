@@ -28,6 +28,42 @@ const extras: TeamExtras = {
   },
   loadSuggestions: async () => exampleSuggestions,
   clients: { users: [{ user_id: "example-user", email: "owner@exampleramen.test" }], fixListVisible: false },
+  // C-c: the Connections document on Example data (the G3 notice shows; Search Console needs reconnecting).
+  connections: {
+    business: view.business.name,
+    gas: { readyAt: "2026-11-05T11:48:00Z", showNotice: true },
+    connections: [
+      {
+        id: "ex-gbp",
+        provider: "gbp",
+        status: "connected",
+        selected: [{ id: "l1", name: "Example Ramen House, Irvine" }],
+      },
+      { id: "ex-sc", provider: "search_console", status: "needs_reauth", selected: [] },
+      { id: "ex-ga4", provider: "ga4", status: "connected", selected: [] },
+    ],
+    changes: [
+      {
+        id: "ex-c1",
+        connectionId: "ex-gbp",
+        field: "website_uri",
+        before: "http://old.exampleramen.test",
+        after: "https://exampleramen.test",
+        by: null,
+        at: "2026-11-04T18:00:00Z",
+      },
+      {
+        id: "ex-c2",
+        connectionId: "ex-gbp",
+        field: "description",
+        before: "Ramen in Irvine.",
+        after: "Tonkotsu ramen near Diamond Jamboree, open late on weekends.",
+        by: "owner@exampleramen.test",
+        at: "2026-11-02T16:30:00Z",
+      },
+    ],
+    interest: ["yelp"],
+  },
   actions: {
     status: noop,
     add: noop,
@@ -36,6 +72,7 @@ const extras: TeamExtras = {
       ({ status: email.includes("@") ? "invited" : "invalid_email" }) as const,
     removeClient: noop,
     setFixListVisible: noop,
+    dismissReady: noop,
   },
 };
 
