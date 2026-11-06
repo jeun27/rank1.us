@@ -787,6 +787,9 @@ isOneToOne: false
 "client_invite_status":
 { Args: { "p_business_id": string,"p_email": string }; Returns: string
                            },
+"connection_change_actors":
+{ Args: { "p_business_id": string }; Returns: { "actor_is_team": boolean,"change_id": string }[]
+                           },
 "create_business_onboarding":
 { Args: { "p": Json }; Returns: string
                            },

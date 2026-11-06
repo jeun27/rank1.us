@@ -249,3 +249,15 @@ export async function getBusinessVertical(db: DbClient, businessId: string): Pro
   if (error) throw error;
   return data?.vertical ?? null;
 }
+
+// For the change log: whether each change was made by the Rank1 team (frontend shows "by Rank1 team",
+// a current client user's email from listClientUsers, or "by a former user"). Same visibility as
+// listConnectionChanges; empty for anyone else. Only the flag, never a name or email.
+export async function listConnectionChangeActors(
+  db: DbClient,
+  businessId: string,
+): Promise<{ change_id: string; actor_is_team: boolean }[]> {
+  const { data, error } = await db.rpc("connection_change_actors", { p_business_id: businessId });
+  if (error) throw error;
+  return data;
+}
