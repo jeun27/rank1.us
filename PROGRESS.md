@@ -790,3 +790,19 @@ Changed
 - Queries: src/lib/queries/experiments.ts. src/types/db.ts got the 0020 objects by hand in the generator format.
 - Window edges tested at d-29/d-28/d-1/d/d+27/d+28, the ended-early end day, and one minute before LA midnight on d (before) vs midnight (after), the 07:59Z/08:00Z case.
 - tests/db/helpers.ts makeWorkspace now inserts its experiment with both groups in one transaction.
+
+## Step 17 (data-pipeline): before/after vs control math (branch feat/step17-experiment-math)
+- Step 17 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b; Build Pack not readable; reconcile later.
+
+Lead decisions (2026-11-05)
+- Not for dfy_client (backend RLS + no UI). No p-values and no significance language. The label is always "Directional".
+- Before = ok answers of a group's questions in weekly/audit runs that started on LA dates D−28..D−1. After = D..D+27 (inclusive, 28 days each). D = change_date.
+- A run counts by its start date (the LA date of runs.started_at), not answers.checked_at, so a run's answers never split across windows. Same as History (lead, 2026-11-06).
+- Change = after% − before% in floored whole points, each with n. Difference = test change − control change.
+- Any of the 4 cells with n < 10 → tooFew: the UI shows "Too few answers to call yet. Next check Monday." instead of numbers.
+- Status: 'running' through D+27, 'done' from D+28. A user's early 'ended' wins.
+
+Changed
+- src/lib/metrics/experiment.ts (pure): computeExperiment(counts) → per group {before, after: Metric, change}, difference, tooFew, label. When tooFew, change and difference are null so no number can be shown by mistake. experimentWindows(D) and experimentStatus(e, now). The edge table went to backend for getExperimentData's db tests.
+
+- Percents use the shared floorPct (fixed in #83: exact integer floors).
