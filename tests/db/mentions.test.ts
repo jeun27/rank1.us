@@ -56,11 +56,15 @@ beforeAll(async () => {
 });
 
 describe("decisions", () => {
-  it("a member adds, replaces and clears a decision; it records who and when", async () => {
+  it("a member adds, replaces and clears a decision; who is stored (service-only) and when", async () => {
     await setMentionTarget(owner.db, ownerBusiness, URL, "added");
     expect(await listMentionDecisions(owner.db, ownerBusiness)).toEqual([
-      { url: URL, status: "added", decided_by: owner.id, decided_at: expect.any(String) },
+      { url: URL, status: "added", decided_at: expect.any(String) },
     ]);
+    const stored = must(
+      await s().from("mention_target_decisions").select("decided_by").eq("business_id", ownerBusiness).single(),
+    );
+    expect(stored.decided_by).toBe(owner.id);
     await setMentionTarget(owner.db, ownerBusiness, URL, "dismissed");
     expect((await listMentionDecisions(owner.db, ownerBusiness)).map((d) => d.status)).toEqual(["dismissed"]);
     await setMentionTarget(owner.db, ownerBusiness, URL, null);
@@ -72,6 +76,15 @@ describe("decisions", () => {
     expect((await listMentionDecisions(client.db, dfyBusiness)).map((d) => d.url)).toEqual([URL]);
     await expect(setMentionTarget(client.db, dfyBusiness, URL, "dismissed")).rejects.toMatchObject({ code: "42501" });
     expect((await listMentionDecisions(team.db, dfyBusiness)).map((d) => d.status)).toEqual(["added"]);
+  });
+
+  it("no signed-in user can read decided_by (a raw user id), not even the dfy_client or the team (42501)", async () => {
+    for (const db of [client.db, team.db]) {
+      const { error } = await db.from("mention_target_decisions").select("decided_by").eq("business_id", dfyBusiness);
+      expect(error?.code).toBe("42501");
+      const star = await loose(db).from("mention_target_decisions").select("*").eq("business_id", dfyBusiness);
+      expect(star.error?.code).toBe("42501");
+    }
   });
 
   it("an outsider and the team on self-serve can't decide (42501) and read nothing", async () => {

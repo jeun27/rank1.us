@@ -4,13 +4,14 @@ import type { DbClient } from "./client";
 // stored citations (data-pipeline); only these decisions are stored. "added" feeds the grouped R17 fix.
 
 export type MentionStatus = "added" | "dismissed";
-export type MentionDecision = { url: string; status: MentionStatus; decided_by: string | null; decided_at: string };
+// Who decided is stored but not readable by users (a raw user id; the UI shows only the decision).
+export type MentionDecision = { url: string; status: MentionStatus; decided_at: string };
 
 // Members (incl. the dfy_client) and the team on DFY; empty for anyone else. Newest first.
 export async function listMentionDecisions(db: DbClient, businessId: string): Promise<MentionDecision[]> {
   const { data, error } = await db
     .from("mention_target_decisions")
-    .select("url, status, decided_by, decided_at")
+    .select("url, status, decided_at")
     .eq("business_id", businessId)
     .order("decided_at", { ascending: false })
     .order("url");

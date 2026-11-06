@@ -12,10 +12,11 @@ create table if not exists public.mention_target_decisions (
 );
 create index if not exists mention_target_decisions_decided_by_idx on public.mention_target_decisions (decided_by);
 
--- Read: members (incl. the dfy_client) and the team on DFY. Written only by set_mention_target.
+-- Read: members (incl. the dfy_client) and the team on DFY, every column but decided_by (a raw user
+-- id; the UI doesn't show who decided, reviewer S1). Written only by set_mention_target.
 alter table public.mention_target_decisions enable row level security;
 revoke all on table public.mention_target_decisions from anon, authenticated;
-grant select on table public.mention_target_decisions to authenticated;
+grant select (business_id, url, status, decided_at) on table public.mention_target_decisions to authenticated;
 drop policy if exists mention_target_decisions_read on public.mention_target_decisions;
 create policy mention_target_decisions_read on public.mention_target_decisions for select to authenticated
   using (private.is_business_member(business_id) or private.is_team_dfy_business(business_id));
