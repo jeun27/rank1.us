@@ -11,8 +11,6 @@ export const MAX_REQUESTS = 3 + DEFAULT_MAX_PAGES;
 export const SITE_RULES: RuleKey[] = ["R10", "R11", "R14", "H1"];
 // Rules decided by the G2 AI access check (src/lib/site/ai-access.ts), behind ENABLE_AI_ACCESS_CHECK.
 export const AI_RULES: RuleKey[] = ["R16", "R18"];
-// Rules decided from stored results + the users' mention decisions (G7), behind ENABLE_MENTIONS.
-export const MENTION_RULES: RuleKey[] = ["R17"];
 
 const guard = async (rule: RuleKey, run: () => Promise<FixResult> | FixResult): Promise<FixResult> => {
   try {

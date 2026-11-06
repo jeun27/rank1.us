@@ -9,7 +9,6 @@ const TITLE: Record<RuleKey, string> = {
   R11: "Dish-level pages / FAQ blocks (signature dishes, dietary tags)",
   R14: "robots.txt allows AI search crawlers",
   R16: "Your site lets AI in, but Cloudflare may be blocking it.",
-  R17: "Get on these lists",
   R18: "Your homepage needs JavaScript to show its text",
   H1: "Restaurant/Menu schema (hygiene only)",
 };
