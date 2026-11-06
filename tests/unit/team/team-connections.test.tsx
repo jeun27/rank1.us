@@ -104,6 +104,8 @@ describe("TeamConnections: rows, tasks, log, interest", () => {
     expect(rows[0]).toHaveTextContent("by Rank1 team");
     expect(rows[0]).toHaveTextContent("2026-11-05");
     expect(rows[1]).toHaveTextContent("by owner@exampleramen.test");
+    expect(rows[2]).toHaveTextContent(c.byFormer);
+    expect(c.byFormer).toBe("by a former user");
   });
 
   it("notify-me interest", () => {
@@ -117,41 +119,42 @@ describe("TeamConnections: rows, tasks, log, interest", () => {
   });
 });
 
+// #160 S1: attribute by who the actor is (the backend says whether each change's actor is on the team), never
+// by "not a current client user": team → Rank1 team, a current client user → their email, else a former user.
 describe("toTeamChanges", () => {
-  it("names the actor: a client user by email (team UI only), anyone else as the Rank1 team", () => {
+  const row = (id: string, actor: string) => ({
+    id,
+    connection_id: "g1",
+    actor,
+    field: "description",
+    before: null,
+    after: "x",
+    provider_ref: null,
+    created_at: "t",
+  });
+  it("team, a current client user, and a former user", () => {
     const rows = toTeamChanges(
-      [
-        {
-          id: "1",
-          connection_id: "g1",
-          actor: "u-client",
-          field: "description",
-          before: null,
-          after: "x",
-          provider_ref: null,
-          created_at: "t",
-        },
-        {
-          id: "2",
-          connection_id: "g1",
-          actor: "u-team",
-          field: "website_uri",
-          before: "a",
-          after: "b",
-          provider_ref: null,
-          created_at: "t",
-        },
-      ],
+      [row("1", "u-team"), row("2", "u-client"), row("3", "u-gone")],
       [{ user_id: "u-client", email: "owner@exampleramen.test" }],
+      new Set(["1"]),
     );
-    expect(rows.map((r) => r.by)).toEqual(["owner@exampleramen.test", null]);
+    expect(rows.map((r) => r.by)).toEqual([
+      { kind: "team" },
+      { kind: "client", email: "owner@exampleramen.test" },
+      { kind: "former" },
+    ]);
+  });
+
+  it("a team actor who is also listed as a client user still reads as the Rank1 team", () => {
+    const rows = toTeamChanges([row("1", "u-x")], [{ user_id: "u-x", email: "x@example.test" }], new Set(["1"]));
+    expect(rows[0].by).toEqual({ kind: "team" });
   });
 });
 
 describe("copy", () => {
   it("every C-c PR 1 string is in COPY.md", () => {
     const copy = readFileSync("docs/COPY.md", "utf8");
-    for (const s of [c.start, c.dismiss, c.byTeam]) expect(copy, s).toContain(`"${s}"`);
+    for (const s of [c.start, c.dismiss, c.byTeam, c.byFormer]) expect(copy, s).toContain(`"${s}"`);
     for (const s of [
       '"{Business} is ready for GAS"',
       '"{connections} connected {age} ago."',
