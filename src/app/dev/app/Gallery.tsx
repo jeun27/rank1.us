@@ -160,6 +160,7 @@ export const STATES: Record<string, () => React.ReactNode> = {
   "billing-error": () => <ErrorState title="Billing" message={results} reset={() => {}} />,
   "report-empty": () => <ReportView {...reportProps} reports={[]} />,
   "report-success": () => <ReportView {...reportProps} />,
+  "report-partial": () => <ReportView {...reportProps} connectGa4Href="/app/settings/connections" />,
   "report-failed": () => (
     <ReportView
       {...reportProps}

@@ -6,6 +6,7 @@ export const reportCopy = {
   empty: "Your first report sends on the 1st.",
   failed: (emails: string) => `The report didn't send to ${emails}. Check the address.`,
   preview: "Report preview",
+  connectGa4: "Connect GA4",
   logo: "Logo",
   uploadLogo: "Upload logo",
   brandColor: "Brand color",
