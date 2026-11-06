@@ -1,5 +1,61 @@
 # QA
 
+## v3 restyle: Supabase-style dark (Design v3)
+
+Checked 2026-11-06 on main at 3258a85:
+- #92 (f3ff6c3): v3 tokens and themes
+- #93 (7519529): v3 app shell for /app
+- #95 (9eff317): ThemeSync sets the theme before paint
+- #96 (ed487ec): v3 /team shell
+- #97 (e4ea88e): v3 landing
+- #98 (0c0b45b): v3 component drift
+
+The UI checks and full e2e ran from the Mac against #99's final head preview at 1aa6078, whose tree is identical to 3258a85. Unit, typecheck, lint, format and build ran in the sandbox. test-db and the local-stack e2e come from CI on main's push of 3258a85 (run 42169754045). Example data only. This is the state v0.6.0 ships. The later "template portal" look is not part of this check.
+Preview: https://rank1-nhq6n2w6i-bryan-flowhighlevels-projects.vercel.app (sha 1aa6078, READY).
+Sources: docs/design/v3.md (approved 2026-11-06), UI.md v3, COPY.md.
+
+Result: PASS. No blocking problems.
+
+### Commands
+
+| Command | Result |
+|---|---|
+| `pnpm test` (sandbox, 3258a85) | PASS. 118 files, 1348 tests passed |
+| `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build` (sandbox) | PASS |
+| CI on main push 3258a85 | PASS. test-db 24 files / 444 tests; e2e 573 passed, 13 skipped; test, typecheck, lint, format green |
+| `E2E_BASE_URL=<preview> pnpm exec playwright test` (Mac, 1aa6078) | 503 passed, 81 skipped, 2 failed. Both failures are flaky (N1): a re-run of those two with `--repeat-each=3` gave 11 of 12 passing |
+| `.next/static` scan for service role, Resend, Stripe, webhook and CRON secrets | PASS. No matches |
+
+### Checks
+
+The sweep covered 5 public pages (/, /signin, /privacy, /terms, /contact) and 14 themed pages (/dev/app dashboard, competitors, fixes, report, billing, switcher and all 6 experiments states, plus /dev/team and /dev/client). Each ran at 375 and 1280 with a saved "dark" and a saved "light" choice: 76 page loads.
+
+| Check | Result | Evidence |
+|---|---|---|
+| Dark by default | PASS | Root layout server-renders `data-theme="dark"`. src/lib/theme.ts `themeFor`: public → dark; themed paths → saved, else prefers-color-scheme, else dark. e2e theme.spec "first visit with prefers-color-scheme: light → light /app pages; dark → dark" |
+| Light toggle only on /app and /team | PASS | The "Dark theme" toggle is present on every /dev/app state and /dev/team, and absent on all 5 public pages and /dev/client, at both widths and in both themes. Rendered only by src/app/app/layout.tsx and Workspace.tsx (plus the /dev gallery) |
+| Public pages forced dark | PASS | With a saved "light" choice, all 5 public pages render `data-theme=dark` at 375 and 1280. e2e "public pages are always dark, even with a light system and a saved light choice" |
+| Rail stays dark in light | PASS | AppShell.tsx:55 and Workspace.tsx:119 set `data-theme="dark"` on the rail subtree. globals.css re-declares the dark tokens for that scope (D14) |
+| No theme flash on load | PASS | An init script recorded every `data-theme` value from the first script onward (MutationObserver + DOMContentLoaded). For all 76 loads, the only value seen was the expected one (no dark→light or light→dark step). The theme script is inline in the server `<head>` (e2e "the theme script is in the server HTML head, before the body") |
+| No flash on client navigation | PASS | ThemeSync applies `themeFor` in a layout effect on every path change. e2e "a saved light theme never leaks onto public pages through client-side links", "light on /app → … → the landing is dark → back to /app is light" and the /client variant all passed on the preview |
+| AA contrast, both themes | PASS | axe (including color-contrast) found 0 violations on all 76 loads. e2e runs axe on every gallery state in dark and light |
+| 44px targets below md | PASS | Sweep at 375 of every visible link, button, input, select, tab, option and summary: none under 44px on any themed page, the landing, /signin or /contact. Only exception: the inline "Contact us" text link inside the /privacy and /terms prose is 20px tall (N3, inline-text exception). e2e "tap targets are at least 44px on every page" |
+| Breadcrumb one line at 375 | PASS | `nav[aria-label="Breadcrumb"]` is 44px tall (one row) on every /dev/app state and /dev/team at 375, with no side scroll (scrollWidth = 375). At 1280 it is 19px (32px with the switcher). e2e v3-drift "C5 … the /app breadcrumb is one line, the business crumb ellipsizes" and "a long business name ends in an ellipsis at 375" |
+| No-JS client form | PASS (known limit, N2) | With JS off, the /team client switcher is in the server HTML as `<form method="get" action=/dev/team>` with `<select name="b">` and a "Show" submit (`.nojs-only`, shown when `html` lacks `.js`). As in Step 11, the streamed page sits in React's hidden streaming container until JS runs. The landing audit form is visible with JS off (email, domain, website; submit visible). Not submitted (no real lead) |
+| No copy changes | PASS | `git diff ae49509 3258a85` on every src copy.ts: additions only, all Step 17 strings. COPY.md: 4 rows changed, all visual-term wording only ("Disabled pill" → "Disabled button", "brick"/"moss" → "error"/"success"). Every string is the same. Removed JSX strings ("Get my free audit", "Example data") were moved, not dropped |
+| Landing demo n caption | PASS | Final state (reduced motion), live: "named in 34% of 160 answers, +6 pts". n is shown with the %. landing.spec "the landing renders and the demo is in its final state" (JS off) |
+| Fonts and tokens | PASS | Body font is Inter on every page. JetBrains Mono for numbers (e2e "v3 fonts"). No Fraunces, Public Sans, #F7F4EE or beige in src. Light theme = #F6F7F9 cool grey |
+
+### Blocking problems
+
+None.
+
+### Non-blocking notes
+
+- N1: two preview e2e tests are flaky. tests/e2e/experiments.spec.ts:40 reads `card.getByRole("cell").allTextContents()` without waiting for the streamed card (got 0 cells, 1 failure in 4 preview runs). tests/e2e/landing.spec.ts:369 can see the demo already "final" before it asserts "running" (1 failure in 4). Both pass in CI. A fix for the first: wait for the first cell (`await expect(card.getByRole("cell").first()).toBeVisible()`) before reading.
+- N2: with JS off, streamed pages (/dev/app, /dev/team, and the signed-in /app and /team) stay hidden until JS runs. This is the existing Step 11 note, not new in v3. The no-JS switcher form is present in the HTML.
+- N3: the inline "Contact us" link in the /privacy and /terms body text is 20px tall at 375. Inline links in a sentence are exempt from the target-size rule.
+
 ## Step 16: White-label monthly report
 
 Checked 2026-11-06 on main at 386f89f:
