@@ -31,10 +31,11 @@ for (const theme of ["dark", "light"] as const)
     await axeClean(page);
   });
 
-test("no keyword: the plain line and No keyword cells; reconnect state", async ({ page }) => {
+test("no keyword: the plain line alone; reconnect state", async ({ page }) => {
   await page.goto("/dev/app?state=fixes-youtube-nokeyword");
   await expect(page.getByText("Add your main keyword to check your videos.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Suggest fix" }).first()).toBeVisible(); // chapters still fail on video 1
+  // The plain line alone (lead): no video rows of "No keyword".
+  await expect(page.locator("[data-video]")).toHaveCount(0);
   await page.goto("/dev/app?state=fixes-youtube-reauth");
   await expect(page.getByRole("link", { name: "Reconnect YouTube" })).toHaveAttribute(
     "href",

@@ -54,8 +54,8 @@ describe("YoutubeChecklistPanel", () => {
 
   it("Suggest fix shows a copy-only template per failing check, Copy → Copied, Apply in YouTube is Coming soon", async () => {
     const user = userEvent.setup();
-    const writeText = vi.fn(async () => undefined);
-    Object.assign(navigator, { clipboard: { writeText } });
+    // user-event installs its own clipboard; spy on it.
+    const writeText = vi.spyOn(navigator.clipboard, "writeText");
     setup();
     await user.click(within(item("b")).getByRole("button", { name: c.suggest }));
     const b = item("b");
@@ -85,19 +85,21 @@ describe("YoutubeChecklistPanel", () => {
     expect(item("a")).toHaveTextContent("ramen at Example Ramen House: First line about us");
   });
 
-  it("no keyword: the plain line, no action, and title/description read No keyword", () => {
+  // Lead: with no keyword, the plain line alone; never a checklist full of "No keyword" cells.
+  it("no keyword: only the plain line, no action, no video rows", () => {
     setup({
       ...list,
       keyword: null,
       videos: [
         video("a", {
-          checks: { title: "no_keyword", description: "no_keyword", chapters: "pass", saysKeyword: "cant_check" },
+          checks: { title: "no_keyword", description: "no_keyword", chapters: "fail", saysKeyword: "cant_check" },
         }),
       ],
     });
     expect(screen.getByText(c.noKeyword)).toBeInTheDocument();
-    expect(within(item("a")).getByText(c.titleCheck).closest("li")).toHaveTextContent(c.noKeywordCell);
-    expect(within(item("a")).queryByRole("button", { name: c.suggest })).toBeNull();
+    expect(item("a")).toBeNull();
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.queryByText(c.noKeywordCell)).toBeNull();
   });
 
   it("no videos, and no channel", () => {
