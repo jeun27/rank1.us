@@ -8,11 +8,10 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import type { SubscriptionStatus } from "@/lib/queries/billing";
 import { billingCopy as c } from "./copy";
+import { NO_SUBSCRIPTION } from "./status";
 
 export type BillingStatus = SubscriptionStatus | null;
-// Only these may start a Checkout (lead, #74): any other status has a subscription, and a Checkout would
-// create a second one. Those go to the Customer Portal.
-export const NO_SUBSCRIPTION: ReadonlySet<BillingStatus> = new Set([null, "canceled"]);
+
 export type BillingState = { status: BillingStatus; seats: number; nextInvoiceAt: string | null };
 type Open = () => Promise<{ error: string } | undefined | void>;
 
@@ -37,9 +36,8 @@ export function BillingView({
   };
   const { status } = billing;
   const subscribed = !NO_SUBSCRIPTION.has(status);
-  // incomplete(_expired): the first payment failed or needs action; past_due/unpaid: a renewal failed.
-  const paymentFailed =
-    status === "past_due" || status === "unpaid" || status === "incomplete" || status === "incomplete_expired";
+  // incomplete: the first payment failed or needs action; past_due/unpaid: a renewal failed.
+  const paymentFailed = status === "past_due" || status === "unpaid" || status === "incomplete";
 
   return (
     <Page title={c.title}>
