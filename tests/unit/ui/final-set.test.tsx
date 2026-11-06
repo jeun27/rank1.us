@@ -39,7 +39,8 @@ describe("DomainField", () => {
     expect(document.querySelector("[data-field] [data-icon=globe]")).toHaveAttribute("aria-hidden", "true");
     const b = screen.getByRole("button", { name: "Get my free audit" });
     expect(b).toHaveAttribute("type", "submit");
-    expect(b.className.split(" ")).toContain("bg-jellyDeep");
+    // v3 (D34/D35): the primary fill is the accent.
+    expect(b.className.split(" ")).toContain("bg-accent");
   });
 
   it("focused: 2px jellyDeep edge", () => {

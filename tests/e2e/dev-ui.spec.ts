@@ -24,11 +24,12 @@ test("/dev/ui shows every component and state, accessibly", async ({ page }, inf
   await expect(page.getByText("Example data").first()).toBeVisible();
 
   const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-  expect(bg).toBe("rgb(247, 244, 238)");
+  // v3 light (O2) page #F6F7F9: /dev follows the system, light in Playwright by default.
+  expect(bg).toBe("rgb(246, 247, 249)");
   const h1Font = await page.getByRole("heading", { level: 1 }).evaluate((el) => getComputedStyle(el).fontFamily);
-  expect(h1Font).toMatch(/Fraunces/i);
+  expect(h1Font).toMatch(/Inter/i);
   const bodyFont = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
-  expect(bodyFont).toMatch(/Public Sans/i);
+  expect(bodyFont).toMatch(/Inter/i);
 
   const scrollW = await page.evaluate(() => document.documentElement.scrollWidth);
   expect(scrollW).toBeLessThanOrEqual(page.viewportSize()!.width);
@@ -83,7 +84,7 @@ test("Final set: pill field focus ring, aurora ring, loading blue, progress fill
   expect(await aurora.evaluate((e) => getComputedStyle(e).borderTopWidth)).toBe("2px");
 
   const checking = set.getByRole("button", { name: "Checking…" });
-  expect(await checking.evaluate((e) => getComputedStyle(e).backgroundColor)).toBe("rgb(49, 111, 197)");
+  expect(await checking.evaluate((e) => getComputedStyle(e).backgroundColor)).toBe("rgb(24, 87, 159)");
 
   await expect(set.getByText("Add the ending, like ramenhouse.com")).toBeVisible();
   await expect(set.getByRole("button", { name: "Add business" })).toBeDisabled();

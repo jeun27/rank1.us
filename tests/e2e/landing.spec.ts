@@ -250,7 +250,8 @@ test("#audit holds the real audit form on the ink band; a mocked 202 shows succe
   await expect(audit.getByLabel("Email")).toBeVisible();
   await expect(audit.getByLabel("Your domain")).toBeVisible();
   const submit = audit.getByRole("button", { name: "Get my free audit" });
-  expect(await submit.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(217, 142, 43)");
+  // v3 (D34, O1 dark): the final CTA uses the accent, Jelly blue.
+  expect(await submit.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(39, 158, 242)");
   await audit.getByLabel("Email").fill("owner@example.test");
   await audit.getByLabel("Your domain").fill("ramenhouse.com");
   await submit.click();

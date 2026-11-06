@@ -10,7 +10,8 @@ const submit = (page: import("@playwright/test").Page) =>
 test("idle: labeled fields, amber final button, 44px targets, axe clean", async ({ page }, info) => {
   await page.goto("/dev/forms");
   const button = page.getByRole("button", { name: "Get my free audit" });
-  expect(await button.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(217, 142, 43)");
+  // v3 (D34): the final CTA uses the accent (light theme on /dev: jellyDeep #1A5FBF).
+  expect(await button.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(26, 95, 191)");
   for (const el of [page.getByLabel("Email"), page.getByLabel("Your domain"), button]) {
     expect((await el.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   }

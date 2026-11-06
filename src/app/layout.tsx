@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-import { Fraunces, Public_Sans } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
+import { themeScript } from "@/lib/theme";
 import "./globals.css";
 
-const fraunces = Fraunces({ variable: "--font-fraunces", subsets: ["latin"], weight: "600" });
-const publicSans = Public_Sans({ variable: "--font-public-sans", subsets: ["latin"], weight: ["400", "600"] });
+// v3 (D33): self-hosted by next/font at build time (no runtime requests to Google). Both are OFL.
+const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
+const mono = JetBrains_Mono({ variable: "--font-jetbrains-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Rank1 - Be the brand AI names first.",
@@ -16,8 +18,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${fraunces.variable} ${publicSans.variable} h-full antialiased`}
+      data-theme="dark"
+      className={`${inter.variable} ${mono.variable} h-full antialiased`}
     >
+      <head>
+        {/* Sets data-theme before first paint: dark for public pages, the saved or system theme for /app and /team. */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="min-h-full bg-paper font-sans text-body text-ink">{children}</body>
     </html>
   );
