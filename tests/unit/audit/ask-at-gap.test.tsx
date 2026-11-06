@@ -3,11 +3,11 @@ import { describe, expect, it } from "vitest";
 import { AuditView } from "@/components/audit/AuditView";
 import { auditCopy } from "@/components/audit/copy";
 import { exampleMetrics, exampleRun } from "@/components/audit/example-data";
-import { ENGINE_IDS } from "@/lib/engines/types";
+import { ENGINES } from "@/components/audit/contract";
 
 const now = new Date("2026-11-05T14:30:00Z");
-// Lead follow-up (item 8): the count comes from the engine list, so the approved sentence stays true.
-const SENTENCE = `Rank1 checks these ${ENGINE_IDS.length} AI engines every week and shows you what to fix next.`;
+// Lead follow-up (item 8): the count comes from the engines the audit table renders, so the approved sentence stays true.
+const SENTENCE = `Rank1 checks these ${ENGINES.length} AI engines every week and shows you what to fix next.`;
 const view = (free: boolean) =>
   render(
     <AuditView
@@ -24,11 +24,21 @@ const after = (a: Element, b: Element) => Boolean(a.compareDocumentPosition(b) &
 // one primary; the rest of the detail follows. A logo bar takes the visitor home.
 describe("free audit: ask at the competitor gap", () => {
   it("the CTA sentence counts the engine list instead of a hard-coded 4", () => {
-    expect(ENGINE_IDS).toHaveLength(4);
-    expect(auditCopy.ctaLead(ENGINE_IDS.length)).toBe(
+    expect(ENGINES).toHaveLength(4);
+    expect(auditCopy.ctaLead(ENGINES.length)).toBe(
       "Rank1 checks these 4 AI engines every week and shows you what to fix next.",
     );
     expect(auditCopy.ctaLead(5)).toBe("Rank1 checks these 5 AI engines every week and shows you what to fix next.");
+  });
+
+  // #187 review: "these {n}" is the count of the engine rows the visitor sees right below it.
+  it("the CTA's number equals the Engine table's rendered rows", () => {
+    view(true);
+    const rows = within(screen.getByRole("table", { name: "Engine" }))
+      .getAllByRole("row")
+      .slice(1);
+    const cta = screen.getByText(/^Rank1 checks these \d+ AI engines/);
+    expect(Number(cta.textContent!.match(/these (\d+)/)![1])).toBe(rows.length);
   });
 
   it("orders hero → leaderboard → CTA panel → engines → downloads, with one primary", () => {

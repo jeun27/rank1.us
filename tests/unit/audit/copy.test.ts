@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { auditCopy } from "@/components/audit/copy";
-import { ENGINE_IDS } from "@/lib/engines/types";
+import { ENGINES } from "@/components/audit/contract";
 
 const copyMd = readFileSync("docs/COPY.md", "utf8");
 
@@ -12,7 +12,7 @@ describe("audit copy", () => {
       typeof v !== "function"
         ? v
         : k === "ctaLead"
-          ? (v as (n: number) => string)(ENGINE_IDS.length)
+          ? (v as (n: number) => string)(ENGINES.length)
           : (v as (e: string) => string)("{Engine}"),
     );
     expect(strings.length).toBeGreaterThan(15);
