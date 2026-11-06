@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ConnectionsHub, type HubProps } from "@/components/connections/ConnectionsHub";
 import { connectionsCopy as c } from "@/components/connections/copy";
-import { OAUTH_SCOPES, startAuth } from "@/lib/connections/oauth";
+import { GOOGLE_SCOPES, startAuth } from "@/lib/connections/oauth";
 import { recommend, type Industry } from "@/lib/connections/recommend";
 import { GBP_EDIT_FIELDS } from "@/lib/queries/connections";
 import { connectionsTarget } from "@/lib/supabase/middleware";
@@ -105,9 +105,9 @@ describe("live tiles: consent, then Google", () => {
     const env = { GOOGLE_CLIENT_ID: "x", GOOGLE_CLIENT_SECRET: "y", NEXT_PUBLIC_SITE_URL: "https://rank1.example" };
     for (const k of ["gbp", "search_console", "ga4", "youtube"] as const) {
       const asked = new URL(startAuth(k, "b1", env).url).searchParams.get("scope")!.split(" ");
-      expect(asked.sort()).toEqual(["openid", OAUTH_SCOPES[k]].sort());
+      expect(asked.sort()).toEqual(["openid", GOOGLE_SCOPES[k]].sort());
       const first = c.consent[k][0];
-      expect(first).toContain(`(${OAUTH_SCOPES[k].split("/").at(-1)})`);
+      expect(first).toContain(`(${GOOGLE_SCOPES[k].split("/").at(-1)})`);
       // openid: the account sub only.
       expect(first).toContain("to know which Google account you used. We don't get your email or profile.");
       expect(c.consent[k].join(" ")).not.toMatch(/one permission/i);
