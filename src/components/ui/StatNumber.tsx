@@ -1,8 +1,10 @@
+import { floorPct } from "@/lib/metrics/compute";
 import type { Metric } from "@/types/metrics";
 
 // Whole percent, rounded down so a stat is never shown higher than measured.
-export function formatPercent({ numerator, denominator }: Metric): string {
-  return denominator > 0 ? `${Math.floor((numerator * 100) / denominator)}%` : "–";
+export function formatPercent(m: Metric): string {
+  const pct = floorPct(m);
+  return pct === null ? "–" : `${pct}%`;
 }
 
 export function StatNumber({ metric }: { metric: Metric }) {

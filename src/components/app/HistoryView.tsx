@@ -3,8 +3,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { formatPercent } from "@/components/ui/StatNumber";
 import { Table } from "@/components/ui/Table";
+import { floorPct } from "@/lib/metrics/compute";
 import type { RunSummary } from "@/lib/queries/shell";
-import type { Metric } from "@/types/metrics";
 import { appCopy as c } from "./copy";
 import { Measured, Page } from "./Page";
 
@@ -12,7 +12,7 @@ const day = (iso: string | null) =>
   iso
     ? new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })
     : "–";
-const pct = (m: Metric) => (m.denominator ? Math.floor((m.numerator * 100) / m.denominator) : null);
+const pct = floorPct;
 const link =
   "inline-flex min-h-11 items-center text-jellyDeep underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-jellyDeep";
 

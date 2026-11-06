@@ -40,6 +40,11 @@ beforeEach(() => {
 });
 
 describe("billing server actions", () => {
+  it("the view and the actions share one NO_SUBSCRIPTION rule", async () => {
+    const { NO_SUBSCRIPTION } = await import("@/components/billing/status");
+    expect([...NO_SUBSCRIPTION]).toEqual([null, "canceled", "incomplete_expired"]);
+  });
+
   it.each([null, "canceled", "incomplete_expired"])("no live subscription (%s): Checkout", async (status) => {
     state.mockResolvedValue(billing(status));
     const { checkoutAction, addBusinessAction } = await import("@/app/app/billing/actions");

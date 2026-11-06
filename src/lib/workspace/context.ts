@@ -2,6 +2,7 @@ import { formatAge } from "@/components/ui/Freshness";
 import { formatPercent } from "@/components/ui/StatNumber";
 import { sourcesCopy } from "@/components/app/sources-copy";
 import type { Metrics, Sources } from "@/lib/metrics";
+import { floorPct } from "@/lib/metrics/compute";
 import { ENGINES, ENGINE_LABEL, type Engine, type WorkspaceView } from "@/lib/queries/workspace";
 import type { Metric } from "@/types/metrics";
 
@@ -59,7 +60,7 @@ export const visibilityText = (m: Metric) => `${formatPercent(m)} (${namedText(m
 export const linksText = (n: number) => `${n} ${n === 1 ? "link" : "links"}`;
 export const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
-const pct = (m: Metric) => Math.floor((m.numerator * 100) / m.denominator);
+const pct = (m: Metric) => floorPct(m)!;
 export function pointsChange(now: Metric, before: Metric | undefined): string | null {
   if (!before || !now.denominator || !before.denominator) return null;
   const d = pct(now) - pct(before);
