@@ -914,3 +914,14 @@ Blocked/open
 - Client switcher (D20): one GET form in the breadcrumb. With JS it is a listbox (arrows, Home/End, Enter, Escape, the current client selected) driving the form; the last row "Clients" opens the invites tab (it moved out of the context pane). Without JS the form's "Client" select + "Show" submit it.
 - No-JS fallback (lead Q2): the head script adds .js to <html> before paint; globals.css hides .js-only without it and .nojs-only with it. The server renders both, so nothing swaps after load. Unit tests check the server markup against the real CSS rules with and without .js.
 - Finding: with JS fully off, Next keeps the streamed workspace in <div hidden id="S:0">, so /team (and /dev/team) is blank without JS. The no-JS e2e removes .js from a loaded page and submits the real form instead (flagged to the lead).
+
+## Step 17 (frontend): /app/experiments (branch feat/step17-experiments-ui)
+
+- Step 17 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b; Build Pack not readable; reconcile later.
+- One page of cards (lead Q2), no detail route. Each card: name, change date, status tag (Running / Done / Ended), then a table with rows Test questions and Control questions and columns Before / After / Change. Before and After read "34% · n=120"; on phones the n drops under the percent (groups stacked). Change and Difference are signed floored points ("+6 pts", "−4 pts", never a %), with the "Directional" tag. Any cell under 10 answers shows "Too few answers to call yet. Next check Monday." instead. No p-values or significance words.
+- 'Start a test' opens /app/experiments/new: Name, What changed, Link to the change (http/https only), Change date (default today in LA, no future), Test and Control questions. Control starts as every active question, and ticking a question in one group takes it out of the other. From a fix (?fix=<id>) the name defaults to the fix title and fix_id is set. The server action takes the business from the session's own selection, never the browser.
+- End test (running only) and Delete test (confirm "Delete this test? Its results go too."). All writes are hidden without canWrite.
+- Fix list: 'Start a before/after test' is on for canWrite only and links to the form for that fix.
+- Nav: "Experiments" (flask) after "What to fix next".
+- dfy_client gate (lead): the proxy 404s /app/experiments and /new for a dfy_client (my_landing), on top of backend's RLS; a DB e2e covers it in CI.
+- Lead copy (Q1) is in COPY.md "Experiments (lead, 2026-11-05)".
