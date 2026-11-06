@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Jelly } from "@/components/ui/Jelly";
 import type { SeriesPoint } from "@/lib/metrics";
+import { deltaTone, signedPts } from "@/lib/metrics/delta";
 import type { TopFix } from "@/lib/queries/shell";
 import { appCopy as c } from "./copy";
 import { Page, Section } from "./Page";
@@ -54,7 +55,11 @@ export function Dashboard({
     <Page title={c.dashboard}>
       <Hero metrics={latest.metrics} now={now}>
         <div className="flex flex-wrap gap-2">
-          {lead?.change != null && <Badge tone="info">{`${lead.change > 0 ? "+" : ""}${lead.change} pts`}</Badge>}
+          {lead?.change != null && (
+            <Badge tone={deltaTone(lead.change)} mono>
+              {signedPts(lead.change)}
+            </Badge>
+          )}
           {run.status === "partial" && <Badge tone="warn">{c.lastPartial(run.jobs_ok, run.jobs_total)}</Badge>}
         </div>
       </Hero>

@@ -11,15 +11,20 @@ const tones = {
 
 // v3 (UI.md "Badge / tag"): radius 4, 20h, Inter 500 11px, state fill + text + a 25% state-colour hairline.
 // Extra attributes (a title tooltip, data-*) go on the tag itself.
+// mono: data tags such as deltas ('+2 pts'), per the UI.md type table.
 export function Badge({
   tone,
+  mono = false,
   children,
   ...rest
-}: { tone: keyof typeof tones; children: ReactNode } & Omit<HTMLAttributes<HTMLSpanElement>, "className">) {
+}: { tone: keyof typeof tones; mono?: boolean; children: ReactNode } & Omit<
+  HTMLAttributes<HTMLSpanElement>,
+  "className"
+>) {
   return (
     <span
       {...rest}
-      className={`inline-flex h-5 items-center rounded-tag border border-current/25 px-1.5 text-tag font-medium whitespace-nowrap tabular-nums ${tones[tone]}`}
+      className={`inline-flex h-5 items-center rounded-tag border border-current/25 px-1.5 text-tag font-medium whitespace-nowrap tabular-nums ${mono ? "font-mono tracking-[-0.03em]" : ""} ${tones[tone]}`}
     >
       {children}
     </span>
