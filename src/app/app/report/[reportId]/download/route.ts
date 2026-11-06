@@ -8,6 +8,6 @@ import { createServiceClient } from "@/lib/supabase/service";
 export async function GET(_req: NextRequest, { params }: RouteContext<"/app/report/[reportId]/download">) {
   const { reportId } = await params;
   const url = await getReportDownloadUrl(await createClient(), createServiceClient(), reportId).catch(() => null);
-  if (!url) return new NextResponse(null, { status: 404 });
+  if (!url) return new NextResponse(null, { status: 404, headers: { "Cache-Control": "no-store" } });
   return NextResponse.redirect(url, { status: 302, headers: { "Cache-Control": "no-store" } });
 }

@@ -68,7 +68,7 @@ describe("Button", () => {
     const b = screen.getByRole("button", { name: "Add business" });
     expect(b).toBeDisabled();
     const cls = b.className.split(" ");
-    for (const c of ["rounded-control", "h-8", "border", "border-fieldBorder", "text-inkMuted"])
+    for (const c of ["rounded-control", "h-11", "md:h-8", "border", "border-fieldBorder", "text-inkMuted"])
       expect(cls).toContain(c);
     expect(cls).not.toContain("bg-accent");
     expect(screen.getByText("Add business").className).toBe("opacity-75");

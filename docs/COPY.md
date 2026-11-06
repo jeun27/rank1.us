@@ -300,6 +300,7 @@ Strings for the white-label monthly report PDF and email (Step 16). No product n
 | Recipients error | "Add up to 10 valid emails, one per line." |
 | Test send | "Send test to me" → "Test sent to {email}." / reuses "That didn't send. Try again in a minute." |
 | History | "History"; columns "Month", "Status", "Download"; statuses "Queued", "Building", "Ready", "Sent", "Failed" |
+| GA4 not connected (partial) | "Connect GA4" (link to /app/settings/connections, only while ENABLE_CONNECTIONS is on; the GA4 section stays hidden) |
 
 ## Connections (lead, 2026-11-06)
 

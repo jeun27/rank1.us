@@ -2,7 +2,14 @@ import { test, expect } from "@playwright/test";
 import { expectAxeClean, expectNoSideScroll } from "./helpers/forms";
 
 // Step 16: /app/report on Example data (/dev/app, 404 in production).
-for (const state of ["report-empty", "report-success", "report-failed", "report-loading", "report-error"] as const)
+for (const state of [
+  "report-empty",
+  "report-success",
+  "report-partial",
+  "report-failed",
+  "report-loading",
+  "report-error",
+] as const)
   for (const theme of ["dark", "light"] as const)
     test(`/dev/app ${state} (${theme}): one H1, axe clean, no side scroll`, async ({ page }) => {
       await page.emulateMedia({ colorScheme: theme });
@@ -38,4 +45,9 @@ test("the preview scales to the width", async ({ page }) => {
   const frame = await iframe.boundingBox();
   const main = await page.locator("main").boundingBox();
   expect(frame!.width).toBeGreaterThan(main!.width * 0.8);
+});
+
+test("report-partial: 'Connect GA4' links to the Connections hub", async ({ page }) => {
+  await page.goto("/dev/app?state=report-partial");
+  await expect(page.getByRole("link", { name: "Connect GA4" })).toHaveAttribute("href", "/app/settings/connections");
 });

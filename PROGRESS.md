@@ -868,6 +868,11 @@ Blocked/open
 - History: Month / Status / Download. Download is GET /app/report/{id}/download → a short-lived signed URL (302, no-store), and a 404 when RLS hides the row.
 - Lead copy in COPY.md "Report (lead, 2026-11-05)".
 
+## Step 16 QA fix (frontend): report GA4 partial state (branch fix/report-ga4-partial, issue #75, QA #89)
+
+- F1: UI.md 4b Report partial. GA4 isn't connected yet, so the GA4 section is always hidden in the report UI (the PDF doesn't change). 'Connect GA4' links to /app/settings/connections (the Connections hub) only when ENABLE_CONNECTIONS is "true" (connectionsEnabled), so prod never shows a dead link. /dev/app gains report-partial.
+- N1: the 404s of /app/report/preview.pdf and /app/report/{id}/download send Cache-Control: no-store too.
+
 ## v3 PR 1 (frontend): tokens and themes (branch feat/v3-tokens)
 
 - Built from docs/design/v3.md and UI.md v3 (#90): D32-D36 and D40 (O2 for /app and /team, O1 for public pages).
