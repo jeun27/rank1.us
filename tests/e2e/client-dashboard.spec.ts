@@ -19,6 +19,8 @@ test("read-only: no Status select, no competitor edits, no billing or prices", a
   for (const state of ["success", "fixes"]) {
     await page.goto(`/dev/client?state=${state}`);
     await expect(page.getByLabel("Status")).toHaveCount(0);
+    // Portal (b): the check-off circles are status only for a client.
+    await expect(page.getByRole("checkbox")).toHaveCount(0);
     await expect(page.getByRole("button", { name: /Add|Not a competitor|Start for/ })).toHaveCount(0);
     expect(await page.locator("main").textContent()).not.toMatch(/\$\d/);
   }
