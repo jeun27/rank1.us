@@ -45,7 +45,7 @@ export async function checkAiAccess(domain: string, deps: Deps = {}): Promise<Ai
     cloudflare: false,
     pagesChecked: 0,
   };
-  if (!host) return empty;
+  if (!host) return { ...empty, errorCode: "bad_domain" };
   const deadline = (deps.now ?? Date.now)() + CHECK_BUDGET_MS;
   const get = (path: string, ua: string) =>
     guardedGet(`https://${host}${path}`, { ...deps, deadline, sameSite: host, headers: { "User-Agent": ua } });
@@ -56,7 +56,10 @@ export async function checkAiAccess(domain: string, deps: Deps = {}): Promise<Ai
   const crawlers = crawlerResults(robots);
 
   const home = await get("/", USER_AGENT);
-  if (!home.ok || home.page.status < 200 || home.page.status >= 300) return { ...empty, crawlers };
+  // errorCode: the guard's reason (timeout, blocked_address, …) or http_<status>. A short code, never text.
+  if (!home.ok) return { ...empty, crawlers, errorCode: home.reason };
+  if (home.page.status < 200 || home.page.status >= 300)
+    return { ...empty, crawlers, errorCode: `http_${home.page.status}` };
   const bot = await get("/", GPTBOT_UA);
 
   const statusNormal = home.page.status;

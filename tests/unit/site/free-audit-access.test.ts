@@ -67,11 +67,24 @@ describe("checkFreeAuditAccess (the run-jobs hook for free audits)", () => {
       outcome: "unreachable",
       domain: "run-bad.example.test",
       pagesChecked: 0,
+      errorCode: "error",
     });
     expect(await checkFreeAuditAccess(d)).toEqual({ checked: 1 });
     expect(check.mock.calls.map((c) => c[0])).toEqual(["run-bad.example.test", "run-ok.example.test"]);
     expect(await checkFreeAuditAccess(d)).toEqual({ checked: 0, skipped: "none" });
     expect(check).toHaveBeenCalledTimes(2); // the bad site was checked once, then skipped
+  });
+
+  it("the stored error is a short code only: a PG code passes, anything else becomes 'error'", async () => {
+    for (const [thrown, code] of [
+      [Object.assign(new Error("x"), { code: "57014" }), "57014"],
+      [Object.assign(new Error("x"), { code: "some message with spaces and example.test" }), "error"],
+      [new Error("example-ramen.test is down"), "error"],
+    ] as const) {
+      const d = deps({ check: vi.fn().mockRejectedValue(thrown) });
+      await checkFreeAuditAccess(d);
+      expect(d.record.mock.calls[0][1]).toMatchObject({ outcome: "unreachable", errorCode: code });
+    }
   });
 
   it("errors never throw, and the log carries the PG code only (no domain or run id)", async () => {

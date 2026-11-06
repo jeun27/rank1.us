@@ -21,8 +21,15 @@ export type FreeAuditAccessSummary = {
   error?: string;
 };
 
-const unreachable = (domain: string): AiAccessInput => ({
+// ai_access_checks.error takes a short code only ([A-Za-z0-9_], ≤ 40): a PG code passes, anything else is "error".
+const storableCode = (e: unknown) => {
+  const c = codeOf(e);
+  return /^[A-Za-z0-9_]{1,40}$/.test(c) ? c : "error";
+};
+
+const unreachable = (domain: string, errorCode: string): AiAccessInput => ({
   domain,
+  errorCode,
   outcome: "unreachable",
   crawlers: [],
   visibleWords: null,
@@ -48,8 +55,8 @@ export async function checkFreeAuditAccess(deps: FreeAuditAccessDeps): Promise<F
       check = await deps.check(run.domain);
     } catch (e) {
       // Never leave the run at the head of the oldest-first queue: record it as unreachable.
-      log(`ai access: free audit check failed (${codeOf(e)})`);
-      check = unreachable(run.domain);
+      log(`ai access: free audit check failed (${storableCode(e)})`);
+      check = unreachable(run.domain, storableCode(e));
       failed = true;
     }
     await deps.record(run.runId, check);

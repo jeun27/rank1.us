@@ -138,7 +138,13 @@ describe("checkAiAccess", () => {
   it("unreachable: the homepage fails, or the domain is refused by the guard", async () => {
     expect((await run(site({ homeStatus: 500, gptbotStatus: 500 }))).outcome).toBe("unreachable");
     const r = await checkAiAccess("example-ramen.test", { lookup: async () => [{ address: "10.0.0.1" }] });
-    expect(r).toMatchObject({ outcome: "unreachable", pagesChecked: 0, statusNormal: null });
+    expect(r).toMatchObject({
+      outcome: "unreachable",
+      pagesChecked: 0,
+      statusNormal: null,
+      errorCode: "blocked_address",
+    });
+    expect((await run(site({ homeStatus: 500, gptbotStatus: 500 }))).errorCode).toBe("http_500");
   });
 
   it("makes at most 3 requests: robots.txt, the homepage, the homepage as GPTBot", async () => {
@@ -156,7 +162,7 @@ describe("checkAiAccess", () => {
 
   it("an invalid domain is unreachable with no request", async () => {
     const fetch = site({});
-    expect((await run(fetch, "localhost")).outcome).toBe("unreachable");
+    expect(await run(fetch, "localhost")).toMatchObject({ outcome: "unreachable", errorCode: "bad_domain" });
     expect(fetch).not.toHaveBeenCalled();
   });
 });
