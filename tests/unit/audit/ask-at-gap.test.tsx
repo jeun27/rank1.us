@@ -1,10 +1,13 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { AuditView } from "@/components/audit/AuditView";
+import { auditCopy } from "@/components/audit/copy";
 import { exampleMetrics, exampleRun } from "@/components/audit/example-data";
+import { ENGINES } from "@/components/audit/contract";
 
 const now = new Date("2026-11-05T14:30:00Z");
-const SENTENCE = "Rank1 checks these 4 AI engines every week and shows you what to fix next.";
+// Lead follow-up (item 8): the count comes from the engines the audit table renders, so the approved sentence stays true.
+const SENTENCE = `Rank1 checks these ${ENGINES.length} AI engines every week and shows you what to fix next.`;
 const view = (free: boolean) =>
   render(
     <AuditView
@@ -20,6 +23,24 @@ const after = (a: Element, b: Element) => Boolean(a.compareDocumentPosition(b) &
 // X4 (UX plan PR 20): ask at the peak moment, right after the competitor gap, with one sentence and the
 // one primary; the rest of the detail follows. A logo bar takes the visitor home.
 describe("free audit: ask at the competitor gap", () => {
+  it("the CTA sentence counts the engine list instead of a hard-coded 4", () => {
+    expect(ENGINES).toHaveLength(4);
+    expect(auditCopy.ctaLead(ENGINES.length)).toBe(
+      "Rank1 checks these 4 AI engines every week and shows you what to fix next.",
+    );
+    expect(auditCopy.ctaLead(5)).toBe("Rank1 checks these 5 AI engines every week and shows you what to fix next.");
+  });
+
+  // #187 review: "these {n}" is the count of the engine rows the visitor sees right below it.
+  it("the CTA's number equals the Engine table's rendered rows", () => {
+    view(true);
+    const rows = within(screen.getByRole("table", { name: "Engine" }))
+      .getAllByRole("row")
+      .slice(1);
+    const cta = screen.getByText(/^Rank1 checks these \d+ AI engines/);
+    expect(Number(cta.textContent!.match(/these (\d+)/)![1])).toBe(rows.length);
+  });
+
   it("orders hero → leaderboard → CTA panel → engines → downloads, with one primary", () => {
     view(true);
     const leaderboard = screen.getByRole("table", { name: "Competitors" });

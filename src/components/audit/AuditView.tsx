@@ -50,7 +50,7 @@ export function AuditView({
       className="flex flex-col items-start gap-4 rounded-surface bg-white p-4 shadow-card md:flex-row md:items-center md:justify-between md:p-6"
     >
       <p id="audit-cta" className="text-ui font-medium">
-        {c.ctaLead}
+        {c.ctaLead(ENGINES.length)}
       </p>
       <Button href={`/signin?next=${encodeURIComponent("/app/billing")}`}>{c.paywall}</Button>
     </section>
