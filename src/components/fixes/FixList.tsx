@@ -17,7 +17,7 @@ export type FixView = Pick<FixItem, "id" | "rule_key" | "title" | "detail" | "af
   changed_by?: Actor | null;
   // G5 (#102): the fix's pillar. Real fixes always have one; older fixtures don't (plain sections then).
   pillar?: Pillar;
-  // G2: the evidence the page attaches (the AI access panel on R14, R16 and R18), shown on open rows.
+  // G2: the evidence the page attaches (the AI access panel on R14, R16 and R18), in the open fix's collapsible body (X7).
   evidence?: ReactNode;
 };
 // listDoneFixes (#101), newest change first.

@@ -11,6 +11,6 @@
 - The panel (AiAccessPanel): the answer first, "{n} of 6 AI crawlers can read your site", the crawler table (Allowed/Blocked and the deciding robots.txt line, or "No rule"), the JavaScript-off word count, and "Checked {age} ago". Blocked R14 bots are the error tone, and other blocked crawlers are info. Unreachable is one line with no table.
 - Where it shows:
   - /audit: below the leaderboard (U6). loadFreeAudit reads getAiAccessCheck with the service client, only with the flag on.
-  - What to fix next: the panel is the `evidence` on R14/R16/R18 open rows (FixView.evidence, a new slot). There the crawlers stack as a list, because the table doesn't fit a phone-width fix row.
+  - What to fix next: the panel is the `evidence` on R14/R16/R18 open rows (FixView.evidence, a new slot). With X7 (#136) it sits inside the open fix's collapsible body, never on a one-line row. There the crawlers stack as a list, because the table doesn't fit a phone-width fix row.
   - /app dashboard: one quiet "AI can read your site · checked {age} ago" line under the hero, only when the outcome is good (Dashboard `reassure` slot). Problems are P5 fixes, which the next-fix card already leads with.
 - Not done: the /client fix list gets no evidence yet, and the paid run page (/app/runs) shows no panel. The lead scoped G2 to /audit and What to fix next.
