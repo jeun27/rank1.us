@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -198,6 +199,12 @@ describe("AuditRequestForm", () => {
         expect(button()).toHaveAccessibleDescription("Check the box to continue");
       },
     );
+
+    it("globals.css flags autofilled inputs with a no-op animation, so animationstart fires", () => {
+      const css = readFileSync("src/app/globals.css", "utf8");
+      expect(css).toMatch(/input:-webkit-autofill\s*\{\s*animation:\s*autofill-start 1ms;/);
+      expect(css).toContain("@keyframes autofill-start");
+    });
 
     it("an expired token: inactive again and the widget is reset", async () => {
       vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "1x00000000000000000000AA");

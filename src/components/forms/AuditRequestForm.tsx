@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { Banner } from "@/components/ui/Banner";
 import { Button } from "@/components/ui/Button";
 import { validateAudit } from "@/lib/spam/validate";
@@ -35,12 +35,19 @@ export function AuditRequestForm() {
   const sitekey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const gate = auditGate({ valid, revealed, token, widget: sitekey && !unavailable ? "on" : "off" });
 
-  function onInput() {
-    if (!form.current) return;
-    const ok = validateAudit(Object.fromEntries(new FormData(form.current))).ok;
+  // Re-reads the real field values. Autofill can fill both fields without input events, so this also runs
+  // on focus, blur, animationstart (globals.css flags autofilled inputs) and submit (#129 S1).
+  function refresh(ok: boolean) {
     setValid(ok);
     if (ok) setRevealed(true);
   }
+  const reread = () => form.current && refresh(validateAudit(Object.fromEntries(new FormData(form.current))).ok);
+  useEffect(() => {
+    const el = form.current;
+    const onAutofill = () => el && refresh(validateAudit(Object.fromEntries(new FormData(el))).ok);
+    el?.addEventListener("animationstart", onAutofill);
+    return () => el?.removeEventListener("animationstart", onAutofill);
+  }, [state.kind]);
 
   function showErrors(fields: Field[], banner?: string) {
     setState({ kind: "error", fields, banner });
@@ -52,7 +59,9 @@ export function AuditRequestForm() {
     e.preventDefault();
     const el = e.currentTarget;
     const check = validateAudit(Object.fromEntries(new FormData(el)));
+    refresh(check.ok);
     if (!check.ok) return showErrors(check.errors);
+    // Valid but no token yet: refresh() reveals Turnstile and the helper says "Check the box to continue".
     if (!gate.ready) return;
     setState({ kind: "submitting" });
     const res = await postForm("/api/audit/request", el);
@@ -81,7 +90,9 @@ export function AuditRequestForm() {
       ref={form}
       noValidate
       onSubmit={onSubmit}
-      onInput={onInput}
+      onInput={reread}
+      onFocus={reread}
+      onBlur={reread}
       className="relative flex w-full max-w-160 flex-col gap-4"
       aria-busy={submitting || undefined}
     >
