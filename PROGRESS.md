@@ -934,3 +934,13 @@ Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/
 - C3: UI.md has one type size at every breakpoint: text-ui 15/20 → 13/19, caption 13/18 → 12/16. R2 (lead O1): form fields stay 16px below md (one unlayered rule in globals.css), so iPhone Safari doesn't zoom on focus.
 - C4: the FixList Status select is a 6px control (44px below md, 32px from md); the read-only status label is a Badge.
 - The old v2 unit tests (pill badge, white banner with a 1.5px edge, ProgressBar width) now assert the v3 values above.
+
+## Portal look (frontend): template portal look (branch feat/portal-look)
+
+- Founder direction (2026-11-06 05:23-05:31 UTC), lead OK with R1-R3. Dark tokens only; light unchanged except the new link token.
+- Surfaces: page #000, panel #0A0A0A, raised #111214, overlay #18191B, rail #000, hairlines rgba(55,65,81,.55). Accent #FFFFFF with onAccent #000 (white primary buttons, hover #E5E5E5). Every AA pair is still asserted in tokens.test. The landing shares the dark tokens, so its primaries are white too; it keeps its hero glow.
+- Headings: h1/h2 in /app, /team and /client use the heading-gradient utility (white → 60% white, -0.04em), dark only. Forced colours fall back to plain text. tokens.test allows 4 gradients; heading-gradient never appears in src/components/site, and glow only does.
+- R1: links use a new link token (white in dark, #1A5FBF in light) and are always underlined.
+- R2: the blue info pair (infoBg + jellyDeep #79C0FA) stays for "You", info banners, the progress percent and focus rings.
+- R3: the visibility chart's business line uses the accent (white in dark). The competitor average and series1-3 are unchanged.
+- Left out of scope, flagged: the Competitors "Add" / "Not a competitor" buttons are still pills (pre-v3 drift).
