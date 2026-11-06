@@ -38,13 +38,14 @@ const EXPECTED: Record<Industry, { recommended: string[]; optional: string[]; la
     later: ["apple_business_connect", "bing_places", "yelp"],
   },
   saas: {
-    recommended: ["g2_capterra", "search_console", "site_cms", "youtube"],
-    optional: ["ga4"],
+    // G1 (lead): YouTube is Optional everywhere.
+    recommended: ["g2_capterra", "search_console", "site_cms"],
+    optional: ["ga4", "youtube"],
     later: [],
   },
   dtc: {
-    recommended: ["search_console", "shopify", "site_cms", "youtube"],
-    optional: ["ga4"],
+    recommended: ["search_console", "shopify", "site_cms"],
+    optional: ["ga4", "youtube"],
     later: ["amazon"],
   },
   other: { recommended: [], optional: ["ga4", "gbp", "search_console", "youtube"], later: [] },
@@ -112,5 +113,16 @@ describe("recommend (industry → connectors)", () => {
       const pos = tier.map((t) => order.indexOf(t.connector));
       expect(pos).toEqual([...pos].sort((a, b) => a - b));
     }
+  });
+});
+
+// G1 (lead 2026-11-06): YouTube is Optional for every vertical (no cuisine keyword to check saas/dtc yet), so
+// it never blocks G3 readiness.
+describe("YouTube", () => {
+  it.each(INDUSTRIES)("%s: Optional and live, never Recommended", (i) => {
+    const r = recommend(i);
+    expect(r.optional.map((t) => t.connector)).toContain("youtube");
+    expect(r.recommended.map((t) => t.connector)).not.toContain("youtube");
+    expect(r.optional.find((t) => t.connector === "youtube")?.available).toBe("live");
   });
 });
