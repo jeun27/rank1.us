@@ -82,7 +82,7 @@ function FixCard({
           <div className="flex flex-wrap items-center gap-3">
             <a
               href={`/app/experiments/new?fix=${encodeURIComponent(fix.id)}`}
-              className="inline-flex min-h-11 items-center text-ui text-jellyDeep underline-offset-4 hover:underline md:min-h-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+              className="inline-flex min-h-11 items-center text-ui text-link underline underline-offset-4 md:min-h-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
             >
               {c.startTest}
             </a>

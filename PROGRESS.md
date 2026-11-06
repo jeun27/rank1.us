@@ -967,6 +967,17 @@ Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/
 - record_ai_access_check(run, p) (service only): validates the outcome, the 6 crawler names (GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot, Google-Extended), the line length (≤ 500), counts and HTTP statuses (22023 otherwise), then upserts per run.
 - New fix rule R16 "Your site lets AI in, but Cloudflare may be blocking it." (p5 through 0024's mapping), enabled, with the lead's customer copy from REPORT.md. P5 fixes go through record_fix_results: R14 blocked crawlers, R10 JS-empty, R16 Cloudflare.
 - Queries: src/lib/queries/ai-access.ts (AI_CRAWLERS, getAiAccessCheck, getLatestAiAccessCheck, recordAiAccessCheck).
+
+
+## Portal look (frontend): template portal look (branch feat/portal-look)
+
+- Founder direction (2026-11-06 05:23-05:31 UTC), lead OK with R1-R3. Dark tokens only; light unchanged except the new link token.
+- Surfaces: page #000, panel #0A0A0A, raised #111214, overlay #18191B, rail #000, hairlines rgba(55,65,81,.55). Accent #FFFFFF with onAccent #000 (white primary buttons, hover #E5E5E5). Every AA pair is still asserted in tokens.test. The landing shares the dark tokens, so its primaries are white too; it keeps its hero glow.
+- Headings: h1/h2 in /app, /team and /client use the heading-gradient utility (white → 60% white, -0.04em), dark only. Forced colours fall back to plain text. tokens.test allows 4 gradients; heading-gradient never appears in src/components/site, and glow only does.
+- R1: links use a new link token (white in dark, #1A5FBF in light) and are always underlined.
+- R2: the blue info pair (infoBg + jellyDeep #79C0FA) stays for "You", info banners, the progress percent and focus rings.
+- R3: the visibility chart's business line uses the accent (white in dark). The competitor average and series1-3 are unchanged.
+- Left out of scope, flagged: the Competitors "Add" / "Not a competitor" buttons are still pills (pre-v3 drift).
 ## G5 (backend): a pillar on every fix (branch feat/fix-pillars)
 - GAS brief (briefs/rank1-gas.md), lead decisions 2026-11-06: pillars P0 Know where you stand, P1 Prompts & keywords, P2 Content, P3 Brand mentions, P4 YouTube & video, P5 Technical access, P6 Measure & prove. The Fix list orders P5, P3, P2, P1, P4, P6, with P0 a baseline line.
 - Rule mapping (lead Q2): p5 = R10, R14, R16 (crawl/read access); p3 = R1–R9, R12, R13, R15 (listings, reviews, the web naming you; R15 hours is mostly GBP); p2 = R11 and H1 (H1 is housekeeping and keeps its tidy-up flag, so it never sorts as a P5 blocker); p1 = A1–A6; any new rule without one = p2.

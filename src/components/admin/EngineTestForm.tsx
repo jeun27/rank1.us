@@ -86,7 +86,12 @@ function Result({ answer: a }: { answer: Exclude<EngineTestResult, null | { inva
           <ol className="list-decimal pl-5">
             {a.citations.map((l) => (
               <li key={l.position} className="break-all">
-                <a href={l.url} rel="noreferrer noopener" target="_blank" className="text-jellyDeep underline">
+                <a
+                  href={l.url}
+                  rel="noreferrer noopener"
+                  target="_blank"
+                  className="text-link underline underline-offset-4"
+                >
                   {l.title ?? l.url}
                 </a>{" "}
                 ({l.domain})
