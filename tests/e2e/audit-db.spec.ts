@@ -23,6 +23,8 @@ async function freeAudit() {
       location: { country: "US", state: "CA", city: "Irvine" },
       questions: [{ text: "best ramen in Irvine", location_level: "city" }],
       competitors: [{ name: "Example Noodle Bar", domain: "examplenoodle.test" }],
+      // Required since 0022 (the server passes AUDIT_DAILY_LIMIT).
+      daily_limit: 100_000,
     },
   });
   if (rpc.error) throw rpc.error;

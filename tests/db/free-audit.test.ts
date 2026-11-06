@@ -41,6 +41,8 @@ const freeInput = (leadId: string, questions = 2, extra: Record<string, unknown>
     text: `best ramen in Irvine ${i + 1}`,
     location_level: i === 0 ? "country" : "city",
   })),
+  // create_free_audit enforces the daily cap itself (0022); the server passes AUDIT_DAILY_LIMIT.
+  daily_limit: 100_000,
   ...extra,
 });
 
@@ -303,9 +305,14 @@ describe("claim and finish with a null question_id", () => {
     const lead = await newLead();
     const { data: freeRun } = await createFree(serviceClient(), freeInput(lead.id, 1));
 
-    const first = await claimJobs(serviceClient(), 10);
+    // Free-audit jobs come first but take at most half of a claim while paid jobs wait (0022).
+    const claimed = [...(await claimJobs(serviceClient(), 10)), ...(await claimJobs(serviceClient(), 10))];
+    expect(claimed.map((j) => j.run_id === freeRun)).toEqual(
+      [...Array(5).fill(true), ...Array(5).fill(false)].concat([...Array(5).fill(true), ...Array(5).fill(false)]),
+    );
+    const first = claimed.filter((j) => j.run_id === freeRun);
     expect(first).toHaveLength(10);
-    expect(first.every((j) => j.run_id === freeRun)).toBe(true);
+    expect(claimed.filter((j) => j.run_id !== freeRun).every((j) => j.run_id === paidRun)).toBe(true);
     const cityJob = first.find((j) => j.engine === "gemini")!;
     expect(cityJob.question).toEqual({
       id: null,
@@ -324,7 +331,8 @@ describe("claim and finish with a null question_id", () => {
     });
     expect(cityJob.competitors.map((c) => c.name)).toEqual(["Example Noodle Bar", "Example Izakaya"]);
 
-    const paid = await claimJobs(serviceClient(), 50);
+    const paid = [...claimed.filter((j) => j.run_id === paidRun), ...(await claimJobs(serviceClient(), 50))];
+    expect(paid).toHaveLength(20);
     expect(paid.every((j) => j.run_id === paidRun)).toBe(true);
     expect(paid[0].question.id).not.toBeNull();
     expect(paid[0].competitors.map((c) => c.name)).toEqual(["Example Udon House"]);
@@ -528,5 +536,75 @@ describe("free audit notify flow", () => {
       must(await serviceClient().from("free_audits").select("notify_attempts").eq("run_id", runId).single())
         .notify_attempts,
     ).toBe(5);
+  });
+});
+
+describe("step 18 hardening", () => {
+  const today = () => new Date(new Date().toISOString().slice(0, 10) + "T00:00:00Z").toISOString();
+  const freeToday = async () =>
+    (
+      await serviceClient()
+        .from("free_audits")
+        .select("run_id", { count: "exact", head: true })
+        .gte("created_at", today())
+    ).count!;
+
+  it("bumps notify_attempts atomically: 5 parallel bumps make 5", async () => {
+    const lead = await newLead();
+    const { data: runId } = await createFree(serviceClient(), freeInput(lead.id, 1));
+    const counts = await Promise.all(
+      Array.from({ length: 5 }, () => bumpFreeAuditNotifyAttempts(serviceClient(), runId)),
+    );
+    expect([...counts].sort()).toEqual([1, 2, 3, 4, 5]);
+    const row = must(await serviceClient().from("free_audits").select("notify_attempts").eq("run_id", runId).single());
+    expect(row.notify_attempts).toBe(5);
+    await expect(bumpFreeAuditNotifyAttempts(anonClient(), runId)).rejects.toMatchObject({ code: "42501" });
+  });
+
+  it("create_free_audit enforces the daily cap (P0429), still returning an existing run", async () => {
+    const limit = (await freeToday()) + 2;
+    const [a, b, c] = [await newLead(), await newLead(), await newLead()];
+    const first = await createFree(serviceClient(), freeInput(a.id, 1, { daily_limit: limit }));
+    expect(first.error).toBeNull();
+    expect((await createFree(serviceClient(), freeInput(b.id, 1, { daily_limit: limit }))).error).toBeNull();
+    const capped = await createFree(serviceClient(), freeInput(c.id, 1, { daily_limit: limit }));
+    expect(capped.error?.code).toBe("P0429");
+    expect(must(await serviceClient().from("leads").select("run_id").eq("id", c.id).single()).run_id).toBeNull();
+    const again = await createFree(serviceClient(), freeInput(a.id, 1, { daily_limit: 0 }));
+    expect(again).toMatchObject({ data: first.data, error: null });
+  });
+
+  it("parallel creates never pass the cap", async () => {
+    const limit = (await freeToday()) + 1;
+    const leads = await Promise.all(Array.from({ length: 4 }, () => newLead()));
+    const results = await Promise.all(
+      leads.map((l) => createFree(serviceClient(), freeInput(l.id, 1, { daily_limit: limit }))),
+    );
+    expect(results.filter((r) => r.error === null)).toHaveLength(1);
+    expect(results.filter((r) => r.error?.code === "P0429")).toHaveLength(3);
+  });
+
+  it("refuses a missing, negative or fractional daily_limit (22023)", async () => {
+    const lead = await newLead();
+    for (const daily_limit of [undefined, null, -1, 1.5, "5"]) {
+      const { error } = await createFree(serviceClient(), freeInput(lead.id, 1, { daily_limit }));
+      expect(error?.code).toBe("22023");
+    }
+  });
+
+  it("claim_jobs gives free audits at most half a claim while paid jobs wait, and the rest when none do", async () => {
+    await drain();
+    const { user, businessId } = await paidBusiness("claim-share", 1);
+    await drain();
+    const paidRun = await createRun(user.db, businessId, "audit");
+    const lead = await newLead();
+    const { data: freeRun } = await createFree(serviceClient(), freeInput(lead.id, 3));
+    const kinds = (jobs: ClaimedJob[]) => ({
+      free: jobs.filter((j) => j.run_id === freeRun).length,
+      paid: jobs.filter((j) => j.run_id === paidRun).length,
+    });
+    expect(kinds(await claimJobs(serviceClient(), 5))).toEqual({ free: 3, paid: 2 });
+    expect(kinds(await claimJobs(serviceClient(), 20))).toEqual({ free: 12, paid: 8 });
+    expect(kinds(await claimJobs(serviceClient(), 20))).toEqual({ free: 15, paid: 0 });
   });
 });

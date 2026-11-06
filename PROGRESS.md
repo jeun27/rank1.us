@@ -824,6 +824,7 @@ Changed
 
 ## Step 18 cleanup list
 - Unused google_tokens table: drop with founder OK (lead, 2026-11-06).
+- Capped free-audit lead UX: decide copy. When create_free_audit's own daily cap hits (P0429, a race past the route check), the lead already got the 202 "queued" answer; it stays stored with no run and gets no email (lead, 2026-11-06).
 
 ## Connections (data-pipeline): Google OAuth, GBP and Search Console (branch feat/connections)
 - Built from the founder's Connections spec (2026-11-06) + the lead's decisions in briefs/rank1-connections.md. Behind ENABLE_CONNECTIONS.
@@ -886,3 +887,12 @@ Blocked/open
 - Buttons (D35, lead O2): 6px radius; 32px from md (40px for size lg and the final CTA) and 44px below md, since UI.md keeps "44px below md". Press is translateY(1px) and the secondary arrow nudges on hover. The final CTA uses the accent (amber is no longer a button). A new `alt` variant. The Google button keeps its aurora ring on the 6px shape. The tap-target e2e checks run below md; dev-ui.spec checks 32/40px from md.
 - Chart colours (lead O1, supersedes Step 9 Q3 O1 "4 solid + 2 striped"): dedicated per-theme series1-3 tokens, 3 solids + 3 stripes in both themes. Reddit/YouTube/Review sites are solid on series1/2/3; Social and News and blogs are striped in series1/2, and Other in neutral inkMuted. Dark #3987E5 / #D95926 / #199E70; light keeps #1A5FBF / #D98E2B / #279EF2. The dataviz validator (all pairs) passes in both themes; its output is in the PR.
 - Docs: the old colour words in UI.md:159,200 and COPY.md:20,78,150,274 now use the v3 token names (visual notes only; quoted strings untouched).
+
+## Step 18 (backend): hardening (branch fix/step18-hardening)
+- Already done before this step (evidence in the PR): every cron route compares CRON_SECRET in constant time (cronAuthorized: SHA-256 digests + timingSafeEqual), and every cron/API 5xx body is a fixed label, never DB error text.
+- Migration 20261105000022 (+ .down.sql):
+  - bump_free_audit_notify_attempts(run) → the new count, one UPDATE (service only). bumpFreeAuditNotifyAttempts uses it instead of read-then-write (review #34).
+  - claim_jobs: free-audit jobs still go first but take at most half a claim (rounded up) while paid jobs wait; slots paid work doesn't use go back to free audits. Output shape and order unchanged.
+  - create_free_audit: p.daily_limit is required (a whole number; the server passes auditDailyLimit(), so AUDIT_DAILY_LIMIT stays the one knob, lead Q1). Under a transaction advisory lock it counts free audits since UTC midnight and raises P0429 at the cap. A lead that already has a run still gets it back. startFreeAudit already logs the code and returns no run (lead Q2: no new copy).
+- README "Releasing": apply missing migrations to the hosted DB, then `notify pgrst, 'reload schema'`, before the deploy.
+- Tests: the claim-order test now expects the half-and-half split (the rule changed, lead-approved). free-audit and e2e inputs pass daily_limit.
