@@ -6,6 +6,7 @@ import { formatPercent } from "@/components/ui/StatNumber";
 import type { Metric } from "@/types/metrics";
 import { billingCopy as c } from "./copy";
 import { Dialog } from "./Dialog";
+import { Icon } from "@/components/ui/Icon";
 
 export type SwitcherBusiness = {
   id: string;
@@ -100,8 +101,9 @@ export function BusinessSwitcher({
       >
         <span data-crumb-name className="min-w-0 truncate">
           {current.name}
-        </span>{" "}
-        <span className="shrink-0">▾</span>
+        </span>
+        {/* #186 follow-up: the same chevron as the selects; aria-hidden keeps it out of the name. */}
+        <Icon name="chevronDown" className="size-4 text-inkMuted" />
       </button>
       {adding && (
         <p role="status" className="mt-1 flex items-center gap-2 text-caption text-inkMuted">
