@@ -1,5 +1,5 @@
 import type { Metric } from "@/types/metrics";
-import { metric, TOO_FEW } from "./compute";
+import { floorPct, metric, TOO_FEW } from "./compute";
 
 // Before/after test vs control (Step 17). Directional only: plain counts and floored points, nothing more.
 export const EXPERIMENT_DAYS = 28;
@@ -20,8 +20,9 @@ export type ExperimentResult = {
   label: typeof EXPERIMENT_LABEL;
 };
 
-// Exact integer floor, the same as formatPercent, so a change always matches the two shown percents.
-const pct = (m: Metric) => Math.floor((m.numerator * 100) / m.denominator);
+// The shared exact floor (as formatPercent), so a change always matches the two shown percents.
+// Only called when every cell has n ≥ 10, so never null here.
+const pct = (m: Metric) => floorPct(m)!;
 
 export function computeExperiment(counts: ExperimentCounts): ExperimentResult {
   const cells = [counts.test.before, counts.test.after, counts.control.before, counts.control.after];
