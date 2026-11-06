@@ -11,7 +11,8 @@ const NOW = new Date("2026-11-05T12:00:00Z");
 const view = buildWorkspace(exampleWorkspaceRows());
 const dashboardBrief = buildBrief(contextFor(view, { kind: "section", section: "dashboard" }), NOW);
 const THEMES = ["light", "dark"] as const;
-const BG = { light: "rgb(247, 244, 238)", dark: "rgb(11, 11, 12)" };
+// v3 page colours (§7): light #F6F7F9, dark #0E0F11.
+const BG = { light: "rgb(246, 247, 249)", dark: "rgb(14, 15, 17)" };
 
 const isMobile = (page: Page) => page.viewportSize()!.width < 768;
 const MODEL_HOSTS = ["api.anthropic.com", "api.openai.com", "generativelanguage.googleapis.com", "api.perplexity.ai"];
@@ -88,7 +89,7 @@ test("/app is not the team workspace (reserved for owners); the team nav is dark
     const nav = page.locator("nav");
     await expect(nav).toHaveAttribute("data-theme", "dark");
     expect(await nav.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(BG.dark);
-    expect(await nav.evaluate((el) => getComputedStyle(el).color)).toBe("rgb(242, 239, 233)");
+    expect(await nav.evaluate((el) => getComputedStyle(el).color)).toBe("rgb(237, 238, 240)");
   }
 });
 
@@ -227,6 +228,8 @@ test("theme toggle, split ratio and sidebar collapse persist across reloads", as
 });
 
 test("tap targets are at least 44px", async ({ page }) => {
+  // v3 (lead, O2): 44px below md (UI.md); from md up the dense 32px controls apply (checked in dev-ui.spec).
+  test.skip(page.viewportSize()!.width >= 768, "44px tap targets apply below md");
   await open(page, "light");
   for (const pane of ["Nav", "Context", "Document"] as const) {
     await show(page, pane);

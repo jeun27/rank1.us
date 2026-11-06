@@ -1,0 +1,57 @@
+import { test, expect } from "@playwright/test";
+
+// v3 O1/O2: data-theme is set before first paint by the root layout's script, so there's no flash.
+test("first visit with prefers-color-scheme: light → light /app pages; dark → dark", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "light" });
+  // The value at DOMContentLoaded is what the first paint used (the script runs in <head>, before <body>).
+  await page.goto("/dev/app?state=dashboard-success", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.goto("/dev/app?state=dashboard-success", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+});
+
+test("a saved choice wins over the system setting", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.addInitScript(() => localStorage.setItem("rank1.workspace", JSON.stringify({ theme: "light" })));
+  await page.goto("/dev/team", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+});
+
+test("public pages are always dark, even with a light system and a saved light choice", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.addInitScript(() => localStorage.setItem("rank1.workspace", JSON.stringify({ theme: "light" })));
+  for (const path of ["/", "/signin", "/privacy"]) {
+    await page.goto(path, { waitUntil: "domcontentloaded" });
+    await expect(page.locator("html"), path).toHaveAttribute("data-theme", "dark");
+  }
+});
+
+test("the theme script is in the server HTML head, before the body", async ({ request }) => {
+  const html = await (await request.get("/dev/app?state=dashboard-success")).text();
+  const head = html.slice(0, html.indexOf("<body"));
+  expect(head).toContain("dataset.theme");
+});
+
+test("v3 fonts: Inter for text, JetBrains Mono available for data", async ({ page }) => {
+  await page.goto("/dev/app?state=dashboard-success");
+  const family = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
+  expect(family).toMatch(/Inter/);
+  const mono = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--font-mono"));
+  expect(mono).toMatch(/JetBrains/);
+});
+
+// #92 review: data-theme follows client-side navigation too, with the same rule as the head script.
+test("a saved light theme never leaks onto public pages through client-side links", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.addInitScript(() => localStorage.setItem("rank1.workspace", JSON.stringify({ theme: "light" })));
+  await page.goto("/dev/team");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  if (page.viewportSize()!.width < 768) await page.getByRole("tab", { name: "Nav", exact: true }).click();
+  await page.getByRole("link", { name: "Help" }).click();
+  await page.waitForURL("**/contact");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.goBack();
+  await page.waitForURL("**/dev/team");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+});

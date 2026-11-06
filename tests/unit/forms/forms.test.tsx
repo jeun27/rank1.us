@@ -25,14 +25,15 @@ describe("AuditRequestForm", () => {
     await userEvent.click(screen.getByRole("button", { name: "Get my free audit" }));
   };
 
-  it("idle: labeled email + domain, placeholder, amber final submit, hidden honeypot", () => {
+  it("idle: labeled email + domain, placeholder, accent final submit, hidden honeypot", () => {
     render(<AuditRequestForm />);
     expect(screen.getByLabelText("Email")).toHaveAttribute("type", "email");
     expect(screen.getByLabelText("Email")).not.toHaveAttribute("placeholder");
     expect(screen.getByLabelText("Your domain")).toHaveAttribute("placeholder", "yourbusiness.com");
     const button = screen.getByRole("button", { name: "Get my free audit" });
     expect(button).toHaveAttribute("type", "submit");
-    expect(button.className).toMatch(/bg-amber/);
+    // v3 (D34): the final CTA uses the accent; amber is no longer a button colour.
+    expect(button.className).toMatch(/bg-accent/);
     expect(button.className).not.toMatch(/bg-jellyDeep/);
     const trap = document.querySelector('input[name="website"]')!;
     expect(trap).toHaveAttribute("tabindex", "-1");

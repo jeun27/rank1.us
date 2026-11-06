@@ -18,9 +18,11 @@ test("/contact: one H1, labeled fields, three tiers, 44px targets, axe clean", a
   const tiers = await page.getByLabel("Tier").locator("option:not([disabled])").allTextContents();
   expect(tiers).toEqual(["Agency bundle", "Done-for-you (custom)", "Other"]);
   await expect(page.locator("body")).not.toContainText("$");
-  for (const el of [page.getByLabel("Name"), page.getByLabel("Tier"), page.getByRole("button", { name: "Send" })]) {
-    expect((await el.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-  }
+  // v3 (lead, O2): 44px below md.
+  if (page.viewportSize()!.width < 768)
+    for (const el of [page.getByLabel("Name"), page.getByLabel("Tier"), page.getByRole("button", { name: "Send" })]) {
+      expect((await el.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    }
   await expect(page.locator('input[name="cf-turnstile-response"]')).toHaveValue(DUMMY_TOKEN);
   await expectNoSideScroll(page);
   await expectAxeClean(page);
