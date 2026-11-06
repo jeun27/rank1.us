@@ -18,5 +18,5 @@ Built from briefs/rank1-gas.md (G1) + the lead's OK on the design note (2026-11-
 - Test change, with reason: rules.test.ts finds a migration row by its last "('R19', " (0035 inserts several rows in one statement, and the pillar mapping mentions the keys first).
 
 ## Open
-- LIVE_CONNECTORS still excludes youtube. Frontend adds the tile + consent, then flips it. Going live adds YouTube to saas/dtc readiness (Recommended ∩ live), so those businesses would need YouTube connected to be "Ready for GAS". Lead to confirm.
-- The R19–R21 copy is pending the lead's approval in backend's #137.
+- LIVE_CONNECTORS still excludes youtube; frontend adds the tile + consent, then flips it. YouTube is Optional for every vertical (lead, #146 Q1: saas/dtc have no keyword yet), so going live never changes "Ready for GAS" (tested). Revisit with the founder's non-restaurant keyword decision.
+- The R19–R21 copy is approved and merged (#137).

@@ -44,12 +44,15 @@ export const CONNECTORS = {
   yelp: { niche: "local", later: LOCAL },
   amazon: { niche: "dtc_amazon", later: ["dtc"] },
   // G1 (GAS-Q3): Recommended for saas + dtc, Optional for everyone else; read-only (GAS-Q4).
-  youtube: { niche: "video", recommended: ["saas", "dtc"], optional: [...LOCAL, "other"] },
+  // Optional for every vertical (lead, #146 Q1): non-restaurant businesses have no keyword yet (no cuisine),
+  // so YouTube can't be checked for them and must never be needed for "Ready for GAS". Revisit with the
+  // founder's non-restaurant question-templates decision.
+  youtube: { niche: "video", optional: [...LOCAL, "saas", "dtc", "other"] },
 } as const satisfies Record<ConnectorKey, Rule>;
 export type Connector = ConnectorKey;
 
 // Only these have a working flow; every other tile is "Coming soon" + Notify me (no fake connect buttons).
-// youtube joins once frontend's tile + consent ship (G1); that also adds it to saas/dtc readiness.
+// youtube joins once frontend's tile + consent ship (G1). It's never Recommended, so readiness doesn't move.
 export const LIVE_CONNECTORS: readonly string[] = ["gbp", "search_console", "ga4"];
 
 export type Tile = { connector: Connector; niche: Niche; available: "live" | "coming_soon" };

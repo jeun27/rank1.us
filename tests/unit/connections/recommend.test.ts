@@ -37,14 +37,15 @@ const EXPECTED: Record<Industry, { recommended: string[]; optional: string[]; la
     optional: ["search_console", "youtube"],
     later: ["apple_business_connect", "bing_places", "yelp"],
   },
+  // YouTube is Optional for every vertical until non-restaurant businesses have a keyword (lead, #146 Q1).
   saas: {
-    recommended: ["g2_capterra", "search_console", "site_cms", "youtube"],
-    optional: ["ga4"],
+    recommended: ["g2_capterra", "search_console", "site_cms"],
+    optional: ["ga4", "youtube"],
     later: [],
   },
   dtc: {
-    recommended: ["search_console", "shopify", "site_cms", "youtube"],
-    optional: ["ga4"],
+    recommended: ["search_console", "shopify", "site_cms"],
+    optional: ["ga4", "youtube"],
     later: ["amazon"],
   },
   other: { recommended: [], optional: ["ga4", "gbp", "search_console", "youtube"], later: [] },
