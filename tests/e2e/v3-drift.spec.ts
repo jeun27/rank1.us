@@ -118,7 +118,8 @@ test("C1: Badge is a 4px tag, 20h, Inter 500 11px; ProgressBar is a 6px overlay 
   // A full radius (Tailwind v4 writes rounded-full as calc(infinity * 1px)).
   expect(parseFloat(radius as string)).toBeGreaterThan(1000);
   expect(fill / (track as number)).toBeGreaterThan(0);
-  expect(fillBg).toBe("rgb(39, 158, 242)");
+  // The accent fill (white in the portal look).
+  expect(fillBg).toBe("rgb(255, 255, 255)");
 });
 
 test("C2: the error banner is errorBg with a 1px 30% error hairline and a 48px Jelly; info is infoBg", async ({

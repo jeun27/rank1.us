@@ -81,7 +81,7 @@ export function ReportView({
       {connectGa4Href && (
         <a
           href={connectGa4Href}
-          className="inline-flex min-h-11 items-center self-start text-ui text-jellyDeep underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-jellyDeep"
+          className="inline-flex min-h-11 items-center self-start text-ui text-link underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-jellyDeep"
         >
           {c.connectGa4}
         </a>
@@ -226,7 +226,7 @@ export function ReportView({
                 <a
                   href={`/app/report/${r.id}/download`}
                   aria-label={`${c.download} ${monthLabel(r.period_start)}`}
-                  className="inline-flex min-h-11 items-center text-jellyDeep underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-jellyDeep"
+                  className="inline-flex min-h-11 items-center text-link underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-jellyDeep"
                 >
                   {c.download}
                 </a>
