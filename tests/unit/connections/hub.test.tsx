@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ConnectionsHub, type HubProps } from "@/components/connections/ConnectionsHub";
 import { connectionsCopy as c } from "@/components/connections/copy";
-import { GOOGLE_SCOPES } from "@/lib/connections/oauth";
+import { GOOGLE_SCOPES, startAuth } from "@/lib/connections/oauth";
 import { recommend, type Industry } from "@/lib/connections/recommend";
 import { GBP_EDIT_FIELDS } from "@/lib/queries/connections";
 import { connectionsTarget } from "@/lib/supabase/middleware";
@@ -98,19 +98,41 @@ describe("live tiles: consent, then Google", () => {
     },
   );
 
-  it("the consent text states exactly what the code does: the scope, the GBP fields, review + log, revoke, no passwords", () => {
-    const text = (k: keyof typeof c.consent) => c.consent[k].join(" ");
-    const scope = (k: keyof typeof GOOGLE_SCOPES) => GOOGLE_SCOPES[k].split("/").at(-1)!;
+  // Lead sign-off (2026-11-06): the first line names everything the auth URL asks for (openid + the scope),
+  // in plain words with the scope name in parentheses. Read from the real startAuth URL, not a copy of it.
+  it("the first consent line covers every scope the auth URL requests: the connector's scope and openid", () => {
+    const env = { GOOGLE_CLIENT_ID: "x", GOOGLE_CLIENT_SECRET: "y", NEXT_PUBLIC_SITE_URL: "https://rank1.example" };
     for (const k of ["gbp", "search_console", "ga4"] as const) {
-      expect(text(k)).toContain(scope(k));
+      const asked = new URL(startAuth(k, "b1", env).url).searchParams.get("scope")!.split(" ");
+      expect(asked.sort()).toEqual(["openid", GOOGLE_SCOPES[k]].sort());
+      const first = c.consent[k][0];
+      expect(first).toContain(`(${GOOGLE_SCOPES[k].split("/").at(-1)})`);
+      // openid: the account sub only.
+      expect(first).toContain("to know which Google account you used. We don't get your email or profile.");
+      expect(c.consent[k].join(" ")).not.toMatch(/one permission/i);
+    }
+  });
+
+  it("the rest states what the code does: the GBP fields after a confirm, review + log, revoke, no passwords", () => {
+    const text = (k: keyof typeof c.consent) => c.consent[k].join(" ");
+    for (const k of ["gbp", "search_console", "ga4"] as const) {
       expect(text(k)).toMatch(/password/);
       expect(text(k)).toMatch(/myaccount\.google\.com\/permissions/);
       expect(text(k)).toContain(c.disconnect);
     }
-    for (const f of GBP_EDIT_FIELDS) expect(text("gbp").toLowerCase()).toContain(c.fields[f].toLowerCase());
+    expect(c.consent.gbp[1]).toBe(
+      "We only change these fields, and only after you or the Rank1 team confirm: description, hours, special hours, website, primary phone and attributes.",
+    );
+    for (const f of GBP_EDIT_FIELDS) expect(c.consent.gbp[1].toLowerCase()).toContain(c.fields[f].toLowerCase());
     expect(text("gbp")).toMatch(/shown before it's applied/);
     expect(text("gbp")).toMatch(/logged/);
     for (const k of ["search_console", "ga4"] as const) expect(text(k)).toMatch(/read-only/i);
+  });
+});
+
+describe("plain-word statuses (lead sign-off), the code enums unchanged", () => {
+  it("Connected / Needs reconnect / Disconnected", () => {
+    expect(c.statuses).toEqual({ connected: "Connected", needs_reauth: "Needs reconnect", revoked: "Disconnected" });
   });
 });
 
