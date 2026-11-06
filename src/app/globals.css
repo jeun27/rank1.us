@@ -85,6 +85,9 @@
   --radius-banner: 8px;
   --radius-tag: 4px;
   --radius-frame: 12px;
+  /* Founder fix: a field with a button inside nests its radius around it (control radius + the 6px inset,
+     p-1.5), so a square button never sits in a circle. Every field with an inner button uses rounded-nested. */
+  --radius-nested: calc(var(--radius-control) + 0.375rem);
 
   /* v3 (D36): hairlines instead of shadows (src/styles/tokens.ts shadows); the names stay. */
   --shadow-field: 0 0 #0000;
