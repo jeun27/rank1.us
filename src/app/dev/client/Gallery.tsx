@@ -11,11 +11,11 @@ import { ErrorState, Skeleton } from "@/components/app/states";
 import { ClientDashboard } from "@/components/client/ClientDashboard";
 import { ConnectCard } from "@/components/connections/ConnectCard";
 import { exampleCards } from "@/components/connections/example-data";
-import { exampleFixes, exampleTidyUps } from "@/components/fixes/example-data";
+import { exampleDone, exampleFixes, exampleTidyUps } from "@/components/fixes/example-data";
 
 const NOW = new Date("2026-11-05T12:00:00Z");
 const business = { name: exampleBusiness.name };
-const fixes = { ranked: exampleFixes, tidyUps: exampleTidyUps, unchecked: [], noDomain: false };
+const fixes = { ranked: exampleFixes, tidyUps: exampleTidyUps, done: exampleDone, unchecked: [], noDomain: false };
 const view = (p: Partial<Parameters<typeof ClientDashboard>[0]>) => (
   <ClientDashboard business={business} latest={exampleLatest} runs={exampleRuns} fixes={null} now={NOW} {...p} />
 );

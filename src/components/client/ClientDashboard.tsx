@@ -5,13 +5,18 @@ import { appCopy as c } from "@/components/app/copy";
 import { HistoryTable } from "@/components/app/HistoryView";
 import { Page, Section } from "@/components/app/Page";
 import { VisibilityLine } from "@/components/app/VisibilityLine";
-import { FixList, type DoneView, type FixView } from "@/components/fixes/FixList";
+import { FixList, Mark, statusLine, type DoneView, type FixView } from "@/components/fixes/FixList";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Jelly } from "@/components/ui/Jelly";
 import { seriesFromSummaries } from "@/lib/metrics";
 import { deltaTone, signedPts } from "@/lib/metrics/delta";
 import type { RunSummary } from "@/lib/queries/shell";
+
+// COPY.md "UX (lead, 2026-11-06)" X3.
+const teamDid = "What the team did";
+// X3: /client shows the last 4 weekly checks (founder OK); there's no /client history page.
+const HISTORY_ROWS = 4;
 
 // docs/COPY.md "Client invites (lead, 2026-11-05)": access removed. No button (nothing to set up).
 const removed = "Nothing tracked yet.";
@@ -64,10 +69,53 @@ export function ClientDashboard({
       <FixList {...fixes} canWrite={false} level={3} />
     </Section>
   );
+  // X3: what the team did, first: in progress, then done (newest first). Only when the team shows fixes.
+  const doing = (fixes?.ranked ?? []).filter((f) => f.status === "doing");
+  const done = [...(fixes?.done ?? [])].sort((a, b) =>
+    (b.status_changed_at ?? "").localeCompare(a.status_changed_at ?? ""),
+  );
+  const did = doing.length + done.length > 0 && (
+    <section aria-labelledby="team-did" className="flex flex-col gap-3">
+      <h2 id="team-did" className="heading-gradient font-display text-section font-medium">
+        {teamDid}
+      </h2>
+      <ul className="flex flex-col divide-y divide-border border-y border-border">
+        {[
+          ...doing.map((f) => ({
+            id: f.id,
+            title: f.title,
+            state: "doing" as const,
+            line: statusLine("doing", f.status_changed_at ?? null, f.changed_by ?? null),
+          })),
+          ...done.map((f) => ({
+            id: f.id,
+            title: f.title,
+            state: "done" as const,
+            line: statusLine("done", f.status_changed_at, f.changed_by),
+          })),
+        ].map((r) => (
+          <li key={r.id} className="flex items-start gap-3 py-3">
+            <span aria-hidden className="mt-px text-ink">
+              <Mark state={r.state} />
+            </span>
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <p data-computed className="text-ui font-medium">
+                {r.title}
+              </p>
+              <p data-computed className="text-caption text-inkMuted">
+                {r.line}
+              </p>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
   if (!latest)
     return (
       <Page title={c.dashboard}>
         {name}
+        {did}
         {notice}
         <Card>
           <p className="text-body-lg">{c.noChecks}</p>
@@ -91,6 +139,7 @@ export function ClientDashboard({
           {run.status === "partial" && <Badge tone="warn">{c.lastPartial(run.jobs_ok, run.jobs_total)}</Badge>}
         </div>
       </Hero>
+      {did}
       {notice}
       {series.visible && (
         <Section title={c.visibility}>
@@ -102,7 +151,7 @@ export function ClientDashboard({
         <Leaderboard metrics={latest.metrics} top={5} change={false} />
       </Section>
       <Section title={c.history}>
-        <HistoryTable runs={runs} linked={false} />
+        <HistoryTable runs={runs.slice(0, HISTORY_ROWS)} linked={false} />
       </Section>
       {fixList}
     </Page>
