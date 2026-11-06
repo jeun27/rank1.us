@@ -25,7 +25,8 @@ describe("withdraw_fixes", () => {
     const todo = await fix(businessId, "R19", "todo");
     const doing = await fix(businessId, "R20", "doing");
     const done = await fix(businessId, "R21", "done");
-    const notYoutube = await fix(businessId, "R10", "todo");
+    // R16 comes from a migration, so it exists even after the migrations test drops the seed.
+    const notYoutube = await fix(businessId, "R16", "todo");
     const otherTodo = await fix(other, "R19", "todo");
 
     expect(await withdrawFixes(s(), businessId, ["R19", "R20", "R21"])).toBe(1);
@@ -37,7 +38,7 @@ describe("withdraw_fixes", () => {
   it("refuses a non-YouTube rule key (22023) and deletes nothing", async () => {
     const { businessId } = await makeWorkspace(await newUser("wd-bad"));
     const keep = await fix(businessId, "R19", "todo");
-    for (const keys of [["R16"], ["R19", "R10"], []]) {
+    for (const keys of [["R16"], ["R19", "R16"], []]) {
       await expect(withdrawFixes(s(), businessId, keys)).rejects.toMatchObject({ code: "22023" });
     }
     expect(await exists(keep)).toBe(true);
