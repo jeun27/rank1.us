@@ -14,7 +14,7 @@ The UI checks and full e2e ran from the Mac against #99's final head preview at 
 Preview: https://rank1-nhq6n2w6i-bryan-flowhighlevels-projects.vercel.app (sha 1aa6078, READY).
 Sources: docs/design/v3.md (approved 2026-11-06), UI.md v3, COPY.md.
 
-Result: PASS. No blocking problems.
+Result: PASS with one waived FAIL item (V1b: no theme toggle on /client). Lead waiver for v0.6.0 (already live, cosmetic): a fix is filed to frontend, and QA re-verifies on that PR.
 
 ### Commands
 
@@ -33,7 +33,8 @@ The sweep covered 5 public pages (/, /signin, /privacy, /terms, /contact) and 14
 | Check | Result | Evidence |
 |---|---|---|
 | Dark by default | PASS | Root layout server-renders `data-theme="dark"`. src/lib/theme.ts `themeFor`: public → dark; themed paths → saved, else prefers-color-scheme, else dark. e2e theme.spec "first visit with prefers-color-scheme: light → light /app pages; dark → dark" |
-| Light toggle only on /app and /team | PASS | The "Dark theme" toggle is present on every /dev/app state and /dev/team, and absent on all 5 public pages and /dev/client, at both widths and in both themes. Rendered only by src/app/app/layout.tsx and Workspace.tsx (plus the /dev gallery) |
+| V1: light toggle on /app and /team, never on public pages | PASS | The "Dark theme" toggle is present on every /dev/app state and /dev/team, and absent on all 5 public pages and /dev/client, at both widths and in both themes. Rendered only by src/app/app/layout.tsx and Workspace.tsx (plus the /dev gallery) |
+| V1b: light toggle on /client (UI.md:8: "/app, /client and /team add a light theme, toggled by 'Dark theme'"; D40 = O2) | FAIL (waived for v0.6.0) | /dev/client renders no "Dark theme" toggle at 375 or 1280 in either theme (sweep: toggle=false). /client still follows the saved or system theme (src/lib/theme.ts THEMED includes /client; e2e "light on /client → … back to /client is light"), but a /client user can't change it. Found by the reviewer on #105. My first run wrongly counted the missing toggle as correct: design/v3.md's approval line names /app and /team only, but UI.md:8 includes /client |
 | Public pages forced dark | PASS | With a saved "light" choice, all 5 public pages render `data-theme=dark` at 375 and 1280. e2e "public pages are always dark, even with a light system and a saved light choice" |
 | Rail stays dark in light | PASS | AppShell.tsx:55 and Workspace.tsx:119 set `data-theme="dark"` on the rail subtree. globals.css re-declares the dark tokens for that scope (D14) |
 | No theme flash on load | PASS | An init script recorded every `data-theme` value from the first script onward (MutationObserver + DOMContentLoaded). For all 76 loads, the only value seen was the expected one (no dark→light or light→dark step). The theme script is inline in the server `<head>` (e2e "the theme script is in the server HTML head, before the body") |
@@ -48,7 +49,11 @@ The sweep covered 5 public pages (/, /signin, /privacy, /terms, /contact) and 14
 
 ### Blocking problems
 
-None.
+None for v0.6.0.
+
+| Item | Result | Evidence |
+|---|---|---|
+| V1b: no theme toggle on /client | FAIL, waived by the lead for v0.6.0 (already live, cosmetic) | A fix is filed to frontend. QA re-verifies on that PR: the toggle is on /client at 375 and 1280, aria-pressed, the choice is saved and shared with /app and /team, no flash, axe 0 in both themes |
 
 ### Non-blocking notes
 
