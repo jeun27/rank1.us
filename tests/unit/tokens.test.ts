@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { aurora, colors, darkColors, radius, shadows } from "@/styles/tokens";
+import { aurora, colors, darkColors, glow, radius, shadows } from "@/styles/tokens";
 
 // v3 (design/direction.md §7, founder 2026-11-06): dark by default on every surface, O2 light on /app and
 // /team. `darkColors` is the default @theme; `colors` is the light theme (also the PDF report and PNG).
@@ -101,7 +101,8 @@ describe("Tailwind theme matches the v3 tokens", () => {
   });
 
   it("has the v3 radius and shadow tokens, and no other shadows", () => {
-    expect(radius).toEqual({ control: 6, card: 8, surface: 8, banner: 8 });
+    // v3 PR 3: "frame" is UI.md's 10-12px landing frame (demo window, bento, pricing, final CTA).
+    expect(radius).toEqual({ control: 6, card: 8, surface: 8, banner: 8, frame: 12 });
     for (const [name, px] of Object.entries(radius)) expect(css).toContain(`--radius-${name}: ${px}px;`);
     expect(Object.keys(shadows).sort()).toEqual([
       "aurora",
@@ -112,7 +113,10 @@ describe("Tailwind theme matches the v3 tokens", () => {
       "fill",
       "overlay",
       "track",
+      "window",
     ]);
+    // UI.md: shadow-window is the landing demo window only.
+    expect(shadows.window).toBe("0 30px 80px -20px rgb(0 0 0 / 0.7)");
     for (const [name, value] of Object.entries(shadows)) expect(css).toContain(`--shadow-${name}: ${value};`);
     const declared = [...css.matchAll(/--shadow-([\w-]+):/g)].map((m) => m[1]);
     expect(declared.sort()).toEqual(Object.keys(shadows).sort());
@@ -120,10 +124,13 @@ describe("Tailwind theme matches the v3 tokens", () => {
   });
 
   // The theme comes from data-theme (set before paint by the theme script), never a CSS media query.
-  it("has no media-query theme, and the aurora ring is the only gradient", () => {
+  // D39 (approved 2026-11-06): the accent glow joins the aurora ring. Both live in globals.css only.
+  it("has no media-query theme; the only gradients are the aurora ring and the accent glow", () => {
     expect(css).not.toMatch(/prefers-color-scheme/);
     expect(aurora).toBe("linear-gradient(90deg, #E8B85A, #5FB8B3, #279EF2)");
     expect(css).toContain(`--aurora: ${aurora};`);
+    expect(glow).toBe("radial-gradient(closest-side, rgb(39 158 242 / 0.18), transparent)");
+    expect(css).toContain(`--glow: ${glow};`);
     const gradients = [...css.matchAll(/[\w-]*gradient\(/g)].map((m) => {
       let depth = 0;
       for (let i = m.index + m[0].length - 1; i < css.length; i++) {
@@ -136,17 +143,20 @@ describe("Tailwind theme matches the v3 tokens", () => {
       [
         "linear-gradient(90deg, #E8B85A, #5FB8B3, #279EF2)",
         "linear-gradient(var(--color-white), var(--color-white))",
+        "radial-gradient(closest-side, rgb(39 158 242 / 0.18), transparent)",
       ].sort(),
     );
   });
 
-  it("components use shadow tokens only, and only AuroraButton uses the aurora ring", () => {
+  it("components use shadow tokens only, only AuroraButton uses the aurora ring, the glow is landing-only", () => {
     for (const file of sources("src").filter((f) => !f.endsWith("globals.css") && !f.endsWith("tokens.ts"))) {
       const src = readFileSync(file, "utf8");
       expect(src, file).not.toMatch(/gradient\(|bg-(linear|radial|conic|gradient)|shadow-\[|box-shadow|boxShadow/);
       for (const m of src.matchAll(/\bshadow-([\w-]+)/g))
         expect(Object.keys(shadows), `${file}: ${m[0]}`).toContain(m[1]);
       if (!file.endsWith("AuroraButton.tsx")) expect(src, file).not.toContain("aurora-ring");
+      if (!file.includes("components/site/")) expect(src, file).not.toMatch(/\bglow\b/);
+      if (!file.endsWith("HeroDemo.tsx")) expect(src, file).not.toContain("shadow-window");
     }
   });
 });

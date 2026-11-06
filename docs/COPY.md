@@ -346,6 +346,12 @@ Tile helper text (the niche key in src/lib/connections/recommend.ts):
 | saas_reviews | "For software with review listings." |
 | ai_referrals | "Shows visits that came from AI answers." |
 
+## Landing (lead, 2026-11-06)
+
+| Where | String |
+|---|---|
+| Hero demo, under the leaderboard | "From {n} answers" (the sample size, n = the demo fixture's answers; the demo shows "From 160 answers") |
+
 ## Engine location tooltip
 
 Greyed tooltip copy: "{Engine} can't target a city yet, so we check it for the whole country."

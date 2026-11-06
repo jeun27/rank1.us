@@ -11,7 +11,7 @@ const rows: [string, string, string, string][] = [
 ];
 
 // The only horizontal scroll on the page: below md the table scrolls with the Rank1 column pinned right.
-const rank1 = "sticky right-0 w-32 border-l border-border bg-white font-semibold";
+const rank1 = "sticky right-0 w-32 border-l border-border bg-infoBg font-semibold";
 const cell = "border-b border-border px-3 py-3 text-left";
 
 export function ComparisonTable() {
@@ -20,7 +20,7 @@ export function ComparisonTable() {
       <div
         data-scroll-exempt
         tabIndex={0}
-        className="overflow-x-auto rounded-surface bg-white shadow-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+        className="overflow-x-auto rounded-frame border border-border bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
       >
         <table aria-labelledby="comparison-title" className="w-full min-w-[34rem] table-fixed border-collapse">
           <thead>
@@ -30,7 +30,7 @@ export function ComparisonTable() {
                 <th
                   key={c}
                   scope="col"
-                  className={`${cell} text-caption font-semibold ${c === "Rank1" ? `${rank1} text-jellyDeep` : "text-inkMuted"}`}
+                  className={`${cell} sticky top-0 z-10 text-caption font-semibold ${c === "Rank1" ? `${rank1} z-20 text-jellyDeep` : "bg-white text-inkMuted"}`}
                 >
                   {c}
                 </th>
@@ -45,7 +45,7 @@ export function ComparisonTable() {
                 </th>
                 <td className={cell}>{manual}</td>
                 <td className={cell}>{enterprise}</td>
-                <td className={`${cell} ${rank1} text-moss`}>{ours}</td>
+                <td className={`${cell} ${rank1} text-ink`}>{ours}</td>
               </tr>
             ))}
           </tbody>
