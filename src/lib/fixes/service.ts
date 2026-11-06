@@ -1,7 +1,12 @@
 import "server-only";
 import type { DbClient } from "@/lib/queries/client";
 import { recordAiAccessCheck } from "@/lib/queries/ai-access";
-import { listRunsNeedingFixChecks, recordFixResults, type RunNeedingFixChecks } from "@/lib/queries/fixes";
+import {
+  listRunsNeedingFixChecks,
+  recordFixResults,
+  withdrawFixes,
+  type RunNeedingFixChecks,
+} from "@/lib/queries/fixes";
 import { aiAccessEnabled, checkAiAccess } from "@/lib/site/ai-access";
 import type { Json } from "@/types/db";
 import { checkFixesForOneRun } from "./cron";
@@ -35,6 +40,13 @@ export function checkFixesWith(
     async applicable(r, rules) {
       const yt: RuleKey[] = YOUTUBE_RULES.filter((k) => rules.includes(k));
       if (!yt.length || (await youtubeReady(db, r.businessId))) return rules;
+      // Not ready any more (disconnected, no keyword, no channel): withdraw its never-started todo
+      // R19–R21 so stale videos don't linger. doing/done are kept, and nothing is marked done.
+      await withdrawFixes(db, r.businessId, yt).catch((e: unknown) =>
+        console.error(
+          `fix check: youtube withdraw failed (${typeof e === "object" && e && "code" in e ? String(e.code) : "error"})`,
+        ),
+      );
       return rules.filter((k) => !yt.includes(k));
     },
     async evaluate(business, rules) {
