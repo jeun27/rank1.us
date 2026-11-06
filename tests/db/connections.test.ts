@@ -325,16 +325,22 @@ describe("connect, reauth and revoke", () => {
     expect(await revokeConnection(svc(), ids[0])).toEqual([]);
   });
 
-  it("a different Google account is a separate grant", async () => {
+  it("two Google accounts on one business are separate grants: revoking one leaves the other connected", async () => {
     const x = await makeWorkspace(owner);
     const gbp = await connect(x.businessId, "gbp", "a1", "google-sub-a");
     const ga4 = await connect(x.businessId, "ga4", "b1", "google-sub-b");
     expect((await getConnectionTokens(svc(), gbp))?.enc_refresh).toBe("enc:v1:refresh-a1");
     await setConnectionStatus(svc(), ga4, "needs_reauth");
     expect((await getConnectionTokens(svc(), gbp))?.status).toBe("connected");
+    await setConnectionStatus(svc(), ga4, "connected");
+    await updateConnectionTokens(svc(), gbp, { encAccess: "enc:v1:access-a2", expiresAt: null });
+    expect((await getConnectionTokens(svc(), ga4))?.enc_access).toBe("enc:v1:access-b1");
     expect(await revokeConnection(svc(), gbp)).toEqual([gbp]);
-    expect(await getConnectionTokens(svc(), ga4)).toMatchObject({
+    expect(await getConnectionTokens(svc(), ga4)).toEqual({
+      enc_access: "enc:v1:access-b1",
       enc_refresh: "enc:v1:refresh-b1",
+      expires_at: expect.any(String),
+      status: "connected",
       external_account_id: "google-sub-b",
     });
   });
