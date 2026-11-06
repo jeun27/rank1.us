@@ -1,6 +1,8 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { admin, newUser, openMagicLink } from "./helpers/auth";
+
+const isMobile = (page: Page) => page.viewportSize()!.width < 768;
 
 const STATES = [
   "dashboard-empty",
@@ -146,10 +148,21 @@ test("signed-in owner: the nav reaches every page, one H1 each, Dashboard empty 
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Dashboard");
   await expect(page.getByText("Nothing tracked yet. Add your domain and I'll find the questions.")).toBeVisible();
   const nav = page.getByRole("navigation", { name: "App" });
-  await expect(nav.getByRole("link", { name: "Dashboard" })).toHaveAttribute("aria-current", "page");
-  await nav.getByRole("link", { name: "Billing" }).click();
+  // X2: phones reach Billing through More in the bottom bar.
+  const more = async () => isMobile(page) && (await nav.getByText("More", { exact: true }).click());
+  await expect(nav.getByRole("link", { name: "Dashboard" }).locator("visible=true")).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await more();
+  await nav.getByRole("link", { name: "Billing" }).locator("visible=true").click();
   await page.waitForURL("**/app/billing");
-  await expect(nav.getByRole("link", { name: "Billing" })).toHaveAttribute("aria-current", "page");
+  // The sheet closed on the new page (client navigation keeps the nav mounted), so More opens it again.
+  await more();
+  await expect(nav.getByRole("link", { name: "Billing" }).locator("visible=true")).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
   const axe = await new AxeBuilder({ page }).analyze();
   expect(axe.violations.map((v) => v.id)).toEqual([]);
 });

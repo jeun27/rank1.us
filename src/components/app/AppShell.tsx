@@ -57,7 +57,7 @@ export function AppShell({
     <div className="flex min-h-dvh flex-col md:flex-row">
       <div
         data-theme="dark"
-        className="flex items-center border-b border-border bg-rail text-ink md:sticky md:top-0 md:h-dvh md:w-56 md:shrink-0 md:flex-col md:items-stretch md:border-r md:border-b-0"
+        className="flex items-center border-b border-border bg-rail text-ink max-md:contents md:sticky md:top-0 md:h-dvh md:w-56 md:shrink-0 md:flex-col md:items-stretch md:border-r md:border-b-0"
       >
         <AppNav
           settings={settings}
@@ -77,7 +77,8 @@ export function AppShell({
           }
         />
       </div>
-      <div className="flex min-w-0 flex-1 flex-col">
+      {/* X2: phones pad for the bottom bar (56px + the home-indicator inset). */}
+      <div className="flex min-w-0 flex-1 flex-col max-md:pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
         <header className="flex min-h-12 items-center justify-between gap-x-4 border-b border-border px-4 md:px-6">
           <Breadcrumb business={business} page={page ?? <CurrentPage />} />
           <div className="flex shrink-0 items-center gap-2 max-md:hidden">

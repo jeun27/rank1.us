@@ -26,7 +26,9 @@ test("/app: phones show only the page crumb; the theme toggle is in Account and 
   expect(slash).toBe("none");
   expect(Math.round((await header.boundingBox())!.height)).toBe(48);
   await expect(header.getByRole("button", { name: "Dark theme" })).toBeHidden();
-  await page.getByText("Account", { exact: true }).first().click();
+  // X2: Account is under More in the phone bottom bar.
+  await page.locator("[data-bottom-nav]").getByText("More", { exact: true }).click();
+  await page.getByText("Account", { exact: true }).locator("visible=true").click();
   // #145 review: in Account it is a switch that shows its state.
   const toggle = page.getByRole("switch", { name: "Dark theme" }).locator("visible=true");
   await expect(toggle).toHaveCount(1);

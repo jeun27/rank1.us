@@ -15,7 +15,8 @@ vi.mock("next/navigation", () => ({ usePathname: () => path.current }));
 describe("v3 /app shell", () => {
   it("the nav keeps every page in order, in 4 groups, each with a decorative icon", () => {
     render(<AppNav />);
-    const nav = screen.getByRole("navigation", { name: "App" });
+    // X2: the md+ rail column; phones use the bottom bar (bottom-nav.spec).
+    const nav = screen.getByRole("navigation", { name: "App" }).querySelector<HTMLElement>("[data-rail]")!;
     const groups = within(nav).getAllByRole("list");
     expect(
       groups.map((g) =>
@@ -55,9 +56,9 @@ describe("v3 /app shell", () => {
     expect(within(crumbs).getByText("Sources")).toHaveAttribute("aria-current", "page");
     expect(within(crumbs).getByRole("link", { name: "Rank1" })).toHaveAttribute("href", "/");
     // X9a: the actions sit in the top bar from md, and inside Account below md.
-    const bar = screen.getByRole("button", { name: "Dark theme" });
-    const account = screen.getByRole("switch", { name: "Dark theme" });
-    expect(screen.getByRole("banner")).toContainElement(bar);
+    const bar = within(screen.getByRole("banner")).getByRole("button", { name: "Dark theme" });
+    // The Account copies (rail footer, and the phone bottom bar's More sheet) are switches.
+    const account = screen.getAllByRole("switch", { name: "Dark theme" })[0];
     expect(bar.parentElement).toHaveClass("max-md:hidden");
     expect(account.closest("details")).not.toBeNull();
     expect(account.parentElement).toHaveClass("md:hidden");

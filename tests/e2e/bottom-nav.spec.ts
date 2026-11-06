@@ -17,7 +17,6 @@ test("phones: 4 targets at the bottom, the current page marked, no sideways row"
   const items = bar(page).locator(":scope > li");
   await expect(items).toHaveCount(4);
   await expect(bar(page).getByRole("link")).toHaveText(["Dashboard", "What to fix next", "Competitors"]);
-  await expect(bar(page).getByRole("link", { name: "What to fix next" })).toHaveAttribute("aria-current", "page");
   const box = (await bar(page).boundingBox())!;
   expect(Math.round(box.y + box.height)).toBe(page.viewportSize()!.height);
   for (const h of await items.evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height)))

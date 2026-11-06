@@ -507,6 +507,7 @@ Strings the lead approved for the UX plan (share/ux-plan §C; founder OK 2026-11
 | Questions dot legend, above the list (X18) | "Named" · "Not named", each beside the real filled / hollow dot |
 | Free audit CTA panel, after the leaderboard (X4) | "Rank1 checks these 4 AI engines every week and shows you what to fix next." with the existing "Start for $99/mo" |
 | /client slot 2 section title (X3) | "What the team did" |
+| Phone bottom bar, last item (X2) | "More" (opens the other pages and Account) |
 
 ## Engine location tooltip
 

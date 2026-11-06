@@ -74,12 +74,14 @@ test("C5: a long business name ends in an ellipsis at 375 and stays whole in the
 // below md so iPhone Safari doesn't zoom on focus.
 test("C3: app text is 13/19 and captions 12/16 at every width; fields are 16px below md", async ({ page }) => {
   await page.goto("/dev/app?state=dashboard-success");
-  // A page link (from md up the rail's first link is the logo).
-  const link = page.getByRole("navigation", { name: "App" }).getByRole("link", { name: "Dashboard", exact: true });
-  expect(await link.evaluate((e) => [getComputedStyle(e).fontSize, getComputedStyle(e).lineHeight])).toEqual([
-    "13px",
-    "19px",
-  ]);
+  // A page link: the rail from md up (13/19); on phones the bottom bar's labels are captions (12/16, X2).
+  const link = page
+    .getByRole("navigation", { name: "App" })
+    .getByRole("link", { name: "Dashboard", exact: true })
+    .locator("visible=true");
+  expect(await link.evaluate((e) => [getComputedStyle(e).fontSize, getComputedStyle(e).lineHeight])).toEqual(
+    isMobile(page) ? ["12px", "16px"] : ["13px", "19px"],
+  );
   await page.goto("/dev/ui");
   const caption = page.getByText("Add the ending, like ramenhouse.com").first();
   expect(await caption.evaluate((e) => [getComputedStyle(e).fontSize, getComputedStyle(e).lineHeight])).toEqual([
