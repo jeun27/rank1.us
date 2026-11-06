@@ -904,3 +904,13 @@ Blocked/open
 - /dev/app renders every state inside the shell; the switcher states put the switcher in the breadcrumb.
 - Theme on navigation: ThemeSync (#92) re-applies themeFor on pathname changes. The e2e covers the rail logo, the breadcrumb Rank1 and the /client header logo (local stack).
 - Split (lead D1): 2a is /app; 2b is the /team shell (the client switcher listbox in the breadcrumb, the Context panel on the right, the document as main).
+
+## v3 component drift (frontend, branch fix/v3-component-drift)
+
+Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/UI.md.
+- C5 (bug from #93): the /app breadcrumb wrapped onto 3 lines at 375. The header is one row now: Rank1 and the page crumb don't shrink, and the business crumb gives way and ends in an ellipsis (data-crumb-name). The switcher trigger shrinks with it (a min-w-0 column), and its list keeps the full names. The e2e covers one line and no overlap at 375.
+- C1: Badge is the UI.md tag (radius 4 = new radius token "tag", 20h, Inter 500 11px = new text token "tag", a 25% state hairline). ProgressBar is a 6px overlay track with the accent fill sized by scaleX; the labels are mono.
+- C2: the error banner is errorBg with a 1px error hairline at 30%, a 48px Jelly and an Inter 500 sentence. The info banner is infoBg with a 25% hairline and a 28px chip.
+- C3: UI.md has one type size at every breakpoint: text-ui 15/20 → 13/19, caption 13/18 → 12/16. R2 (lead O1): form fields stay 16px below md (one unlayered rule in globals.css), so iPhone Safari doesn't zoom on focus.
+- C4: the FixList Status select is a 6px control (44px below md, 32px from md); the read-only status label is a Badge.
+- The old v2 unit tests (pill badge, white banner with a 1.5px edge, ProgressBar width) now assert the v3 values above.
