@@ -19,7 +19,7 @@ const LOCAL: Industry[] = [
 const EXPECTED: Record<Industry, { recommended: string[]; optional: string[]; later: string[] }> = {
   restaurant: {
     recommended: ["gbp"],
-    optional: ["opentable", "resy", "search_console", "site_cms"],
+    optional: ["opentable", "resy", "search_console", "site_cms", "youtube"],
     later: ["apple_business_connect", "bing_places", "yelp"],
   },
   ...Object.fromEntries(
@@ -27,27 +27,27 @@ const EXPECTED: Record<Industry, { recommended: string[]; optional: string[]; la
       i,
       {
         recommended: ["gbp"],
-        optional: ["search_console", "site_cms"],
+        optional: ["search_console", "site_cms", "youtube"],
         later: ["apple_business_connect", "bing_places", "yelp"],
       },
     ]),
   ),
   events: {
     recommended: ["gbp", "site_cms"],
-    optional: ["search_console"],
+    optional: ["search_console", "youtube"],
     later: ["apple_business_connect", "bing_places", "yelp"],
   },
   saas: {
-    recommended: ["g2_capterra", "search_console", "site_cms"],
+    recommended: ["g2_capterra", "search_console", "site_cms", "youtube"],
     optional: ["ga4"],
     later: [],
   },
   dtc: {
-    recommended: ["search_console", "shopify", "site_cms"],
+    recommended: ["search_console", "shopify", "site_cms", "youtube"],
     optional: ["ga4"],
     later: ["amazon"],
   },
-  other: { recommended: [], optional: ["ga4", "gbp", "search_console"], later: [] },
+  other: { recommended: [], optional: ["ga4", "gbp", "search_console", "youtube"], later: [] },
 } as unknown as Record<Industry, { recommended: string[]; optional: string[]; later: string[] }>;
 
 describe("recommend (industry → connectors)", () => {
@@ -100,6 +100,7 @@ describe("recommend (industry → connectors)", () => {
         "g2_capterra",
         "search_console",
         "ga4",
+        "youtube",
       ].sort(),
     );
   });

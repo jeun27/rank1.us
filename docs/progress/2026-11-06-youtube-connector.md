@@ -1,0 +1,4 @@
+# G1 YouTube connector (backend) (branch feat/youtube-connector)
+- Lead (2026-11-06): 'youtube' in connections.provider + CONNECTOR_KEYS + recommend.ts (GAS-Q3: Recommended for saas + dtc, Optional for everyone else), read-only (GAS-Q4), behind ENABLE_CONNECTIONS. It isn't in LIVE_CONNECTORS yet, so the tile is Coming soon and readinessSet is unchanged until data-pipeline's connector lands.
+- Migration 20261105000036 (+ .down.sql): the connections and connector_interest provider checks gain youtube; grant_connections treats youtube as part of the Google grant (same business + sub), so tokens, reauth and revoke are shared; save_connection, note_connector_interest and refresh_gas_ready accept it.
+- TS: CONNECTOR_KEYS (13), ConnectionProvider, recommend.ts (niche "video"), the hub copy (names.youtube "YouTube", niches.video "For businesses that post videos.", from REPORT.md) and COPY.md's Connections section.
