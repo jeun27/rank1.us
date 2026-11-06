@@ -11,8 +11,9 @@ export type CompetitorActions = {
   dismiss: (c: CompetitorInput) => Promise<unknown>;
 };
 
+// v3 alt control (D35): 6px, raised fill, a control-edge hairline; 44px below md, 32px from md.
 const ghost =
-  "inline-flex min-h-11 items-center rounded-full border border-fieldBorder bg-white px-4 text-ui font-semibold hover:bg-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
+  "inline-flex h-11 shrink-0 items-center rounded-control border border-fieldBorder bg-raised px-3 text-ui font-medium text-ink hover:bg-overlay md:h-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
 
 const input = (s: LocalCompetitor): CompetitorInput => ({
   name: s.name,
