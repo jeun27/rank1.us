@@ -99,3 +99,46 @@ for (const theme of ["dark", "light"] as const)
       await page.screenshot({ path: `test-results/screenshots/portal-landing-dark-${info.project.name}.png` });
     }
   });
+
+// #104 (lead): the last pills become v3 shapes. Controls: 6px, 44px below md, 32px from md. Tags: the 4px Badge.
+const shape = (page: Page, sel: string) =>
+  page
+    .locator(sel)
+    .first()
+    .evaluate((e) => [getComputedStyle(e).borderTopLeftRadius, Math.round(e.getBoundingClientRect().height)]);
+
+test("Sources: the location select and Show are 6px controls; the exact / fallback tags are 4px Badges", async ({
+  page,
+}) => {
+  const control = page.viewportSize()!.width < 768 ? 44 : 32;
+  await open(page, "/dev/app?state=sources-location");
+  await expect(page.getByLabel("Location")).toBeVisible();
+  expect(await shape(page, "main select[name=location]")).toEqual(["6px", control]);
+  expect(
+    await page
+      .getByRole("button", { name: "Show", exact: true })
+      .evaluate((e) => [getComputedStyle(e).borderTopLeftRadius, Math.round(e.getBoundingClientRect().height)]),
+  ).toEqual(["6px", control]);
+  for (const tag of await page.locator("[data-location-tag]").all())
+    expect(
+      await tag.evaluate((e) => [
+        getComputedStyle(e).borderTopLeftRadius,
+        Math.round(e.getBoundingClientRect().height),
+      ]),
+    ).toEqual(["4px", 20]);
+  expect(await page.locator("[data-location-tag]").count()).toBeGreaterThan(0);
+});
+
+test("Questions: the answer panel's Close is a 6px control", async ({ page }) => {
+  const control = page.viewportSize()!.width < 768 ? 44 : 32;
+  await open(page, "/dev/app?state=questions-success");
+  await page.locator("main").getByRole("button").first().click();
+  const close = page.getByRole("button", { name: "Close", exact: true });
+  await expect(close).toBeVisible();
+  expect(
+    await close.evaluate((e) => [
+      getComputedStyle(e).borderTopLeftRadius,
+      Math.round(e.getBoundingClientRect().height),
+    ]),
+  ).toEqual(["6px", control]);
+});
