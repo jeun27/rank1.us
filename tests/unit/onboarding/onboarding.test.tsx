@@ -78,6 +78,23 @@ async function toStepThree(s: ReturnType<typeof setup>) {
   await screen.findByText("Step 3 of 3");
 }
 
+// OB2 (planner, lead-approved): one heading per step. The page's H1 is "Add your business"; step 1 adds no
+// H2 of its own (it said "Business" again), steps 2 and 3 keep theirs. "Step n of 3" stays.
+describe("Onboarding: one heading per step (OB2)", () => {
+  it("step 1 has no H2; steps 2 and 3 keep Competitors and Questions", async () => {
+    const s = setup();
+    expect(screen.getByText("Step 1 of 3")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 2 })).toBeNull();
+    await toStepTwo(s);
+    await screen.findByText("Step 2 of 3");
+    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("Competitors");
+    await screen.findAllByRole("checkbox", { name: /Example/ });
+    await s.user.click(screen.getByRole("button", { name: "Next" }));
+    await screen.findByText("Step 3 of 3");
+    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("Questions");
+  });
+});
+
 describe("Onboarding 1: Business", () => {
   it("starts blank with Irvine, CA prefilled, and checks the domain ending first", async () => {
     const { actions, user } = setup();
