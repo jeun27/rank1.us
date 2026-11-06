@@ -21,7 +21,7 @@ export function VisibilityCell({ metric }: { metric: Metric }) {
   return (
     <span data-computed className="inline-flex flex-col items-end md:flex-row md:items-baseline md:gap-2">
       <span className="font-mono font-medium tracking-[-0.03em]">{formatPercent(metric)}</span>{" "}
-      <span className="text-caption whitespace-nowrap text-inkMuted">{`named in ${metric.numerator} of ${metric.denominator} answers`}</span>
+      <span className="text-caption text-inkMuted">{`named in ${metric.numerator} of ${metric.denominator} answers`}</span>
     </span>
   );
 }
