@@ -826,6 +826,8 @@ Changed
 - Unused google_tokens table: drop with founder OK (lead, 2026-11-06).
 - Capped free-audit lead UX: decide copy. When create_free_audit's own daily cap hits (P0429, a race past the route check), the lead already got the 202 "queued" answer; it stays stored with no run and gets no email (lead, 2026-11-06).
 - Make create_free_audit's p.daily_limit required once every deployed build passes it. Until then a missing one skips the DB cap, because prod and preview share the hosted DB and v0.5.0 doesn't pass it (lead, 2026-11-06).
+- Pages render nothing without JS (Suspense streaming keeps them in a hidden template): /app, /dev/app, /team, /dev/team (docs/QA.md known note; lead, 2026-11-06).
+- Google revoke in Rank1 drops that Google account for every Rank1 business using it (self-heals to needs_reauth): decide copy or per-business tokens (lead, 2026-11-06).
 
 ## Connections (data-pipeline): Google OAuth, GBP and Search Console (branch feat/connections)
 - Built from the founder's Connections spec (2026-11-06) + the lead's decisions in briefs/rank1-connections.md. Behind ENABLE_CONNECTIONS.
