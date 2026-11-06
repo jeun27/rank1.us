@@ -961,3 +961,7 @@ Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/
 - Migration 20261105000023 (+ .down.sql): fixes.status_changed_at / status_changed_by (→ auth.users, on delete set null), null on existing rows (fixes has no updated_at to backfill from). A BEFORE INSERT OR UPDATE trigger forces them: null on insert (reviewer: never the caller's values), set on every status change (actor null for the service detector), kept on any other update, so neither can be written directly. set_fix_status and listFixes are unchanged.
 - done_fixes(business) (invoker, through the fixes RLS): done fixes, newest change first (nulls last), with changed_by from private.fix_status_actor (definer, re-checks the caller can see the fix). Query: listDoneFixes in src/lib/queries/fixes.ts.
 
+## Who/when on open fixes (backend): listFixes actors (branch feat/open-fix-actors)
+- Lead (2026-11-06): listFixes items carry status_changed_at and changed_by {is_team, name} | null, with the same safe mapping as done_fixes (team → is_team only, never an email), null on todo rows. Additive, and listFixes' signature is unchanged.
+- Migration 20261105000026 (+ .down.sql): open_fix_actors(business) (invoker, through the fixes RLS) returns the doing fixes' time and actor via 0023's private.fix_status_actor. listFixes merges it by fix id; the item key test lists the two new fields.
+

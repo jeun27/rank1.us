@@ -138,10 +138,12 @@ describe("record_fix_results", () => {
     expect(list.unchecked).toEqual([{ rule_key: "R14", title: rule14.title }]);
     expect(Object.keys(list.ranked[0]).sort()).toEqual([
       "affected_answers",
+      "changed_by",
       "detail",
       "id",
       "rule_key",
       "status",
+      "status_changed_at",
       "title",
     ]);
     expect(list.lastRunId).toBe(run1);

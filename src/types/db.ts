@@ -801,6 +801,9 @@ isOneToOne: false
 "note_connector_interest":
 { Args: { "p_business_id": string,"p_provider": string }; Returns: undefined
                            },
+"open_fix_actors":
+{ Args: { "p_business_id": string }; Returns: { "changed_by": Json,"id": string,"status_changed_at": string | null }[]
+                           },
 "prune_ephemeral":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
