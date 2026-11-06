@@ -30,6 +30,10 @@ export const darkColors = {
   infoBg: "#14263B",
   auroraAmber: "#E8B85A", // aurora ring stop only
   auroraTeal: "#5FB8B3", // aurora ring stop only
+  // Chart series (lead, v3 PR 1; supersedes Step 9 Q3 O1): 3 solids, validated on the dark panel.
+  series1: "#3987E5",
+  series2: "#D95926",
+  series3: "#199E70",
 } as const;
 
 // Light (O2): cool grey, no beige. Same names, so every component switches with data-theme.
@@ -59,6 +63,10 @@ export const colors = {
   infoBg: "#E5EFFC",
   auroraAmber: "#E8B85A",
   auroraTeal: "#5FB8B3",
+  // Light keeps the Step 9 hues for the 3 solids.
+  series1: "#1A5FBF",
+  series2: "#D98E2B",
+  series3: "#279EF2",
 } as const;
 
 // [font-size px, line-height px]; mobile -> md+ where UI.md gives two sizes.

@@ -867,3 +867,17 @@ Blocked/open
   Save goes through setReportSettings (the definer RPC). 'Send test to me' → sendTestReport (the user's own email only).
 - History: Month / Status / Download. Download is GET /app/report/{id}/download → a short-lived signed URL (302, no-store), and a 404 when RLS hides the row.
 - Lead copy in COPY.md "Report (lead, 2026-11-05)".
+
+## v3 PR 1 (frontend): tokens and themes (branch feat/v3-tokens)
+
+- Built from docs/design/v3.md and UI.md v3 (#90): D32-D36 and D40 (O2 for /app and /team, O1 for public pages).
+- Tokens (src/styles/tokens.ts ↔ globals.css; tests/unit/tokens.test.ts):
+  - the §7 dark values are the default @theme; [data-theme="light"] holds the O2 values; a later nested [data-theme="dark"] keeps the rail dark inside a light page (D14);
+  - the names are unchanged ("white" = the panel/surface token in both themes), plus accent/onAccent (button fill), text2, overlay and borderStrong;
+  - the §7 contrast pairs are asserted in both themes;
+  - radius: control 6, card/surface/banner 8; shadows are hairlines except overlay menus and the Google button.
+- Theme script (src/lib/theme.ts): one rule, themeFor(path, saved, prefersLight), used by tests and by the inline script in the root layout's <head>, which runs before first paint. Public pages are always dark. /app, /team, /client and /dev use the saved choice, else prefers-color-scheme, else dark. The server renders data-theme="dark", so public pages never change after paint. /app gets the "Dark theme" toggle (ThemeToggle, sharing /team's stored choice). The PDF report and the audit PNG keep the light palette.
+- Fonts: Inter + JetBrains Mono via next/font (self-hosted at build, OFL); Fraunces and Public Sans removed. Mono placement and the type scale follow in the shell and landing PRs.
+- Buttons (D35, lead O2): 6px radius; 32px from md (40px for size lg and the final CTA) and 44px below md, since UI.md keeps "44px below md". Press is translateY(1px) and the secondary arrow nudges on hover. The final CTA uses the accent (amber is no longer a button). A new `alt` variant. The Google button keeps its aurora ring on the 6px shape. The tap-target e2e checks run below md; dev-ui.spec checks 32/40px from md.
+- Chart colours (lead O1, supersedes Step 9 Q3 O1 "4 solid + 2 striped"): dedicated per-theme series1-3 tokens, 3 solids + 3 stripes in both themes. Reddit/YouTube/Review sites are solid on series1/2/3; Social and News and blogs are striped in series1/2, and Other in neutral inkMuted. Dark #3987E5 / #D95926 / #199E70; light keeps #1A5FBF / #D98E2B / #279EF2. The dataviz validator (all pairs) passes in both themes; its output is in the PR.
+- Docs: the old colour words in UI.md:159,200 and COPY.md:20,78,150,274 now use the v3 token names (visual notes only; quoted strings untouched).

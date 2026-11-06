@@ -16,7 +16,7 @@ export function AuroraButton({
       disabled={loading || disabled}
       aria-busy={loading || undefined}
       className={[
-        "aurora-ring inline-flex h-10 items-center justify-center gap-2.5 rounded-control px-4 font-sans text-ui font-medium transition-transform duration-100 active:translate-y-px motion-reduce:transition-none text-jellyDeep shadow-aurora focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep disabled:cursor-wait",
+        "aurora-ring inline-flex h-11 md:h-10 items-center justify-center gap-2.5 rounded-control px-4 font-sans text-ui font-medium transition-transform duration-100 active:translate-y-px motion-reduce:transition-none text-jellyDeep shadow-aurora focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep disabled:cursor-wait",
         className,
       ]
         .filter(Boolean)

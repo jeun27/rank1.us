@@ -7,9 +7,10 @@ export type Action = { label: string; href?: string; onClick?: () => void };
 const base =
   "inline-flex items-center justify-center gap-2 font-sans text-ui font-medium transition-transform duration-100 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep disabled:cursor-not-allowed";
 
-// v3 (D35): 6px controls, 32px tall (40px for size lg), press = translateY(1px) (D24 feedback kept).
+// v3 (D35): 6px controls, 32px tall from md (40px for size lg) and 44px below md (lead O2), press =
+// translateY(1px) (D24 feedback kept).
 const control = "shrink-0 whitespace-nowrap px-3 rounded-control active:translate-y-px";
-const heights = { md: "h-8", lg: "h-10 px-4" };
+const heights = { md: "h-11 md:h-8", lg: "h-11 md:h-10 px-4" };
 
 const variants = {
   // One per screen: the accent fill (Jelly blue in dark, jellyDeep in light) with onAccent text.
