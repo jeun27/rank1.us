@@ -221,6 +221,15 @@ Strings for the self-serve /app shell (Step 8): the nav and the Dashboard, Compe
 | Questions drawer | "Close" |
 | History status | "Complete", "Failed" |
 
+## App shell (lead, 2026-11-06)
+
+v3 shell (PR 2a): the dark rail and the breadcrumb top bar.
+
+| Where | String |
+|---|---|
+| Top bar breadcrumb (aria-label) | "Breadcrumb" |
+| Breadcrumb first crumb (links home) | "Rank1" |
+
 ## Sources (lead, 2026-11-05)
 
 Strings for /app/sources (Step 9). State messages are the 4b Sources strings; the location badge uses "Exact" / "Country fallback" and the engine location tooltip.
