@@ -9,6 +9,7 @@ import {
   revokeConnection,
   saveConnection,
   setConnectionEntities,
+  setConnectionEntityCount,
   setConnectionStatus,
   updateConnectionTokens,
   type ConnectionEntity,
@@ -252,8 +253,9 @@ export async function listConnectionEntities(ctx: Ctx, connectionId: string): Pr
   if (!connectionsEnabled(envOf(ctx))) return "disabled";
   const c = await visible(ctx, connectionId);
   if (!c || !(await canConnectBusiness(ctx.userDb, c.business_id))) return "not_allowed";
+  let entities: ConnectionEntity[];
   try {
-    return await withGoogleToken(
+    entities = await withGoogleToken(
       connectionId,
       (t) => entitiesFor(c.provider, t, { fetch: ctx.fetch }),
       tokenDeps(ctx, c.business_id),
@@ -261,6 +263,13 @@ export async function listConnectionEntities(ctx: Ctx, connectionId: string): Pr
   } catch (e) {
     return failure(e);
   }
+  // The count drives whether the card offers "Choose …". Best effort: the picker works without it.
+  try {
+    await setConnectionEntityCount(ctx.serviceDb, connectionId, entities.length);
+  } catch (e) {
+    logOf(ctx)(`connections: entity count not saved (${(e as { code?: string }).code ?? "error"})`);
+  }
+  return entities;
 }
 
 // Saves the picked ids, keeping only ones Google lists for this grant (at most 100, the DB limit).

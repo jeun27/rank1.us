@@ -1,0 +1,4 @@
+# Connection entity count (backend) (branch feat/connection-entity-count)
+- Lead (2026-11-06, X30 for the implementer's PR 27): store how many entities a connection's account offers (GBP locations, Search Console sites, GA4 properties, YouTube channels), so the Connections hub shows "Choose …" only when there's more than 1, without calling Google on render.
+- Migration 20261105000040 (+ .down.sql): connections.entity_count (int, null until the picker list is loaded, 0–100000), readable with the row; set_connection_entity_count(connection, count) (service only, per connection, not grant-wide; 22023 bad count or unknown connection).
+- Queries: listConnections rows gain entity_count; setConnectionEntityCount(serviceDb, connectionId, count). listConnectionEntities (src/lib/connections/service.ts) calls it after loading the list; a failed save is logged by code only and the picker still returns (lead's call: done in this PR, data-pipeline told).
