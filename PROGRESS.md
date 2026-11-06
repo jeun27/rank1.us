@@ -945,3 +945,11 @@ Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/
 - Nav: "Experiments" (flask) after "What to fix next".
 - dfy_client gate (lead): the proxy 404s /app/experiments and /new for a dfy_client (my_landing), on top of backend's RLS; a DB e2e covers it in CI.
 - Lead copy (Q1) is in COPY.md "Experiments (lead, 2026-11-05)".
+
+## G2 (backend): "Can AI see your site?" storage (branch feat/ai-access-db)
+- GAS brief (briefs/rank1-gas.md), lead decisions 2026-11-06. The check itself (robots.txt rules, visible words, the GPTBot-UA compare, the Cloudflare hint, the SSRF guard) is data-pipeline's. Behind ENABLE_AI_ACCESS_CHECK.
+- Migration 20261105000025 (+ .down.sql), additive (live v0.5.0 never touches it): ai_access_checks, one row per run (on delete cascade with the run). Read like the run: members incl. the dfy_client and the team on DFY; a free audit's check is service-only (served by token). No user writes.
+- record_ai_access_check(run, p) (service only): validates the outcome, the 6 crawler names (GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot, Google-Extended), the line length (≤ 500), counts and HTTP statuses (22023 otherwise), then upserts per run.
+- New fix rule R16 "Your site lets AI in, but Cloudflare may be blocking it." (p5 through 0024's mapping), enabled, with the lead's customer copy from REPORT.md. P5 fixes go through record_fix_results: R14 blocked crawlers, R10 JS-empty, R16 Cloudflare.
+- Queries: src/lib/queries/ai-access.ts (AI_CRAWLERS, getAiAccessCheck, getLatestAiAccessCheck, recordAiAccessCheck).
+
