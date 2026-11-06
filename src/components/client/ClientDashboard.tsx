@@ -40,6 +40,7 @@ export function ClientDashboard({
   fixes,
   now,
   notice,
+  narrative,
 }: {
   business: { name: string } | null;
   latest: Loaded | null;
@@ -48,6 +49,8 @@ export function ClientDashboard({
   now: Date;
   // C-b: the connect card, the slot below the hero (UX plan), or first with no run.
   notice?: ReactNode;
+  // Q4: the read-only narrative clash card, after the notice and before Visibility (the /app Dashboard's slot).
+  narrative?: ReactNode;
 }) {
   if (!business)
     return (
@@ -143,6 +146,7 @@ export function ClientDashboard({
       </Hero>
       {did}
       {notice}
+      {narrative}
       {series.visible && (
         <Section title={c.visibility}>
           <VisibilityLine points={series.points} />
