@@ -7,6 +7,7 @@ import { floorPct } from "@/lib/metrics/compute";
 import type { RunSummary } from "@/lib/queries/shell";
 import { appCopy as c } from "./copy";
 import { Measured, Page } from "./Page";
+import { signedPts } from "@/lib/metrics/delta";
 
 const day = (iso: string | null) =>
   iso
@@ -25,7 +26,7 @@ export function HistoryTable({ runs, linked = true }: { runs: RunSummary[]; link
     const before = runs.slice(i + 1).find((r) => r.status !== "failed" && r.visibility.denominator);
     if (now === null || !before) return "–";
     const d = now - pct(before.visibility)!;
-    return `${d > 0 ? "+" : ""}${d} pts`;
+    return signedPts(d);
   };
   return (
     <Table

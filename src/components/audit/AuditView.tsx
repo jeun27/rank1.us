@@ -18,10 +18,11 @@ import { AiAccessPanel } from "./AiAccessPanel";
 import { ENGINES, ENGINE_LABEL, type Metrics, type RunResults } from "./contract";
 import { auditCopy as c } from "./copy";
 import { progressFor } from "./progress";
+import { signedPts } from "@/lib/metrics/delta";
 
 const D = ({ children }: { children: ReactNode }) => <span data-computed>{children}</span>;
 const namedText = (m: Metric) => `named in ${m.numerator} of ${m.denominator} answers`;
-const points = (change: number | null) => (change === null ? "–" : `${change > 0 ? "+" : ""}${change} pts`);
+const points = (change: number | null) => (change === null ? "–" : signedPts(change));
 
 // One page body for a paid run (/app/runs/[runId]) and the free audit (/audit/[token]).
 export function AuditView({

@@ -5,6 +5,7 @@ import type { Metrics, Sources } from "@/lib/metrics";
 import { floorPct } from "@/lib/metrics/compute";
 import { ENGINES, ENGINE_LABEL, type Engine, type WorkspaceView } from "@/lib/queries/workspace";
 import type { Metric } from "@/types/metrics";
+import { signedPts } from "@/lib/metrics/delta";
 
 // The /app rail order (X16), so /team reads the same.
 export const SECTIONS = [
@@ -62,10 +63,14 @@ export const linksText = (n: number) => `${n} ${n === 1 ? "link" : "links"}`;
 export const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 const pct = (m: Metric) => floorPct(m)!;
-export function pointsChange(now: Metric, before: Metric | undefined): string | null {
+// The change in floored points (null when either side has no answers), and its one display form.
+export function pointsDelta(now: Metric, before: Metric | undefined): number | null {
   if (!before || !now.denominator || !before.denominator) return null;
-  const d = pct(now) - pct(before);
-  return `${d > 0 ? "+" : ""}${d} pts`;
+  return pct(now) - pct(before);
+}
+export function pointsChange(now: Metric, before: Metric | undefined): string | null {
+  const d = pointsDelta(now, before);
+  return d === null ? null : signedPts(d);
 }
 export const fallbackNote = (engine: string) =>
   `${engine} can't target a city yet, so we check it for the whole country.`;
@@ -269,7 +274,7 @@ export function buildContextMarkdown(input: ContextInput, sel: ContextSelection,
     ];
   };
   const leader = (r: Metrics["leaderboard"][number]) =>
-    `- ${r.name}${r.kind === "business" ? " (you)" : ""}: ${share(r.metric)}${r.change !== null ? `, ${r.change > 0 ? "+" : ""}${r.change} pts` : ""}${r.tooFew ? ", too few answers" : ""}`;
+    `- ${r.name}${r.kind === "business" ? " (you)" : ""}: ${share(r.metric)}${r.change !== null ? `, ${signedPts(r.change)}` : ""}${r.tooFew ? ", too few answers" : ""}`;
   const domainLine = (d: Sources["topDomains"][number]) =>
     `- ${d.domain} (${CATEGORY[d.category] ?? CATEGORY.other}): ${linksText(d.links)} · ${d.engines.map((e) => ENGINE_LABEL[e]).join(", ")}`;
   const fixLine = (f: { title: string; detail: string | null }) => `- ${f.title}${f.detail ? `: ${f.detail}` : ""}`;
