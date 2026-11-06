@@ -1,4 +1,7 @@
-# Connection entity count (backend) (branch feat/connection-entity-count)
-- Lead (2026-11-06, X30 for the implementer's PR 27): store how many entities a connection's account offers (GBP locations, Search Console sites, GA4 properties, YouTube channels), so the Connections hub shows "Choose …" only when there's more than 1, without calling Google on render.
-- Migration 20261105000040 (+ .down.sql): connections.entity_count (int, null until the picker list is loaded, 0–100000), readable with the row; set_connection_entity_count(connection, count) (service only, per connection, not grant-wide; 22023 bad count or unknown connection).
-- Queries: listConnections rows gain entity_count; setConnectionEntityCount(serviceDb, connectionId, count). data-pipeline calls it where the picker list is loaded (listConnectionEntities in src/lib/connections/service.ts).
+# X30: save each connection's entity count (data-pipeline, branch fix/connection-entity-count)
+
+Backend's #183 (0040) adds connections.entity_count, so the hub shows "Choose …" only when there's more than one entity and never calls Google on render.
+
+- listConnectionEntities saves entities.length with setConnectionEntityCount every time the picker list loads.
+- Right after a successful connect, the entities are listed once with the fresh access token and the count is saved. This adds 1–2 Google list calls before the redirect.
+- Neither ever fails the caller: a count error, or a failed listing at connect, is logged with its code only.

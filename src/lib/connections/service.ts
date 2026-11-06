@@ -9,6 +9,7 @@ import {
   revokeConnection,
   saveConnection,
   setConnectionEntities,
+  setConnectionEntityCount,
   setConnectionStatus,
   updateConnectionTokens,
   type ConnectionEntity,
@@ -183,7 +184,7 @@ export async function finishGoogleConnect(
       { code: q.code, verifier: s.verifier, connector: s.connector },
       { env: envOf(ctx), fetch: ctx.fetch, now: ctx.now?.() },
     );
-    await saveConnection(ctx.serviceDb, {
+    const connectionId = await saveConnection(ctx.serviceDb, {
       businessId: s.businessId,
       provider: s.connector,
       externalAccountId: t.sub,
@@ -194,6 +195,10 @@ export async function finishGoogleConnect(
       expiresAt: t.expiresAt,
     });
     await refreshReady(ctx, s.businessId);
+    // X30: count the entities once now, with the fresh token, so the hub knows whether to offer a picker.
+    await entitiesFor(s.connector, t.accessToken, { fetch: ctx.fetch })
+      .then((list) => saveEntityCount(ctx, connectionId, list.length))
+      .catch((e: unknown) => logOf(ctx)(`connections: entity count skipped (${codeOf(e)})`));
     return out("connected");
   } catch (e) {
     return out(e instanceof OAuthError && e.reason === "denied" ? "denied" : "error");
@@ -248,16 +253,29 @@ async function entitiesFor(
 }
 
 // The picker: locations (GBP), readable sites (Search Console) or properties (GA4) on the grant.
+// X30 (backend 0040): connections.entity_count, so the hub shows "Choose …" only when there's more than one,
+// without calling Google on render. Never fails the caller; logs the code only.
+const codeOf = (e: unknown) => (typeof e === "object" && e && "code" in e ? String(e.code) : "error");
+async function saveEntityCount(ctx: Ctx, connectionId: string, count: number) {
+  try {
+    await setConnectionEntityCount(ctx.serviceDb, connectionId, count);
+  } catch (e) {
+    logOf(ctx)(`connections: entity count not saved (${codeOf(e)})`);
+  }
+}
+
 export async function listConnectionEntities(ctx: Ctx, connectionId: string): Promise<ConnectionEntity[] | Failure> {
   if (!connectionsEnabled(envOf(ctx))) return "disabled";
   const c = await visible(ctx, connectionId);
   if (!c || !(await canConnectBusiness(ctx.userDb, c.business_id))) return "not_allowed";
   try {
-    return await withGoogleToken(
+    const list = await withGoogleToken(
       connectionId,
       (t) => entitiesFor(c.provider, t, { fetch: ctx.fetch }),
       tokenDeps(ctx, c.business_id),
     );
+    await saveEntityCount(ctx, connectionId, list.length);
+    return list;
   } catch (e) {
     return failure(e);
   }

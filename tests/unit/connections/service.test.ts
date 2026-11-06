@@ -10,6 +10,7 @@ const q = vi.hoisted(() => ({
   getConnectionTokens: vi.fn(),
   updateConnectionTokens: vi.fn(),
   setConnectionEntities: vi.fn(),
+  setConnectionEntityCount: vi.fn(),
   setConnectionStatus: vi.fn(),
   revokeConnection: vi.fn(),
   recordConnectionChange: vi.fn(),
@@ -512,5 +513,72 @@ describe("G1 YouTube checklist", () => {
     expect(await svc.loadYoutubeChecklist(ctx(ytFetch(), ytDb()), "conn-1")).toBe("not_allowed");
     const off = { ...ctx(ytFetch(), ytDb()), env: { ...ENV, ENABLE_CONNECTIONS: "false" } };
     expect(await svc.loadYoutubeChecklist(off, "conn-1")).toBe("disabled");
+  });
+});
+
+describe("X30: the entity count is saved so the hub never calls Google on render", () => {
+  const gbpFetch = () =>
+    vi.fn<typeof globalThis.fetch>(async (input) => {
+      const u = new URL(String(input));
+      if (u.host === "oauth2.googleapis.com")
+        return json({
+          access_token: "ya29.new",
+          refresh_token: "1//new",
+          expires_in: 3599,
+          scope: "openid https://www.googleapis.com/auth/business.manage",
+          id_token: idToken("sub-1"),
+        });
+      if (u.host === "mybusinessaccountmanagement.googleapis.com") return json(fx.accountsPage2);
+      return json(fx.locations);
+    });
+
+  it("loading the picker saves how many entities Google listed", async () => {
+    await svc.listConnectionEntities(ctx(gbpFetch()), "conn-1");
+    expect(q.setConnectionEntityCount).toHaveBeenCalledWith(serviceDb, "conn-1", 2);
+  });
+
+  it("a failing count save never breaks the picker (code logged only)", async () => {
+    q.setConnectionEntityCount.mockRejectedValueOnce(Object.assign(new Error("secret"), { code: "42501" }));
+    const c = ctx(gbpFetch());
+    expect(await svc.listConnectionEntities(c, "conn-1")).toHaveLength(2);
+    expect(c.log.mock.calls.flat().join(" ")).toContain("42501");
+    expect(c.log.mock.calls.flat().join(" ")).not.toContain("secret");
+  });
+
+  it("right after a connect, the count is saved once with the fresh token", async () => {
+    const { url, cookie } = startAuth("gbp", "biz-1", ENV, NOW);
+    q.saveConnection.mockResolvedValue("conn-9");
+    const c = ctx(gbpFetch());
+    const out = await svc.finishGoogleConnect(c, {
+      cookie,
+      state: new URL(url).searchParams.get("state")!,
+      code: "4/x",
+      error: null,
+    });
+    expect(out.status).toBe("connected");
+    expect(q.setConnectionEntityCount).toHaveBeenCalledWith(serviceDb, "conn-9", 2);
+  });
+
+  it("a connect still succeeds when listing for the count fails", async () => {
+    const { url, cookie } = startAuth("gbp", "biz-1", ENV, NOW);
+    q.saveConnection.mockResolvedValue("conn-9");
+    const fetch = vi.fn<typeof globalThis.fetch>(async (input) =>
+      new URL(String(input)).host === "oauth2.googleapis.com"
+        ? json({
+            access_token: "ya29.new",
+            expires_in: 3599,
+            scope: "openid https://www.googleapis.com/auth/business.manage",
+            id_token: idToken("sub-1"),
+          })
+        : json({}, 503),
+    );
+    const out = await svc.finishGoogleConnect(ctx(fetch), {
+      cookie,
+      state: new URL(url).searchParams.get("state")!,
+      code: "4/x",
+      error: null,
+    });
+    expect(out.status).toBe("connected");
+    expect(q.setConnectionEntityCount).not.toHaveBeenCalled();
   });
 });
