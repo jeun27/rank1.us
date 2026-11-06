@@ -20,7 +20,7 @@ const variants = {
   disabled: `${control} gap-2.5 border border-fieldBorder bg-transparent text-inkMuted active:translate-y-0`,
   // D35 .alt: the raised fill with a control-edge hairline.
   alt: `${control} border border-fieldBorder bg-raised text-ink hover:bg-overlay`,
-  secondary: "group min-h-11 px-1.5 text-jellyDeep underline-offset-4 hover:underline",
+  secondary: "group min-h-11 px-1.5 text-link underline underline-offset-4",
   // The final CTA uses the accent (D34: amber is no longer a button colour).
   final: `${control} bg-accent text-onAccent hover:bg-jellyLoading`,
 };

@@ -114,7 +114,7 @@ function Drawer({ q, onClose }: { q: QuestionWithAnswers; onClose: () => void })
                   href={s.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex min-h-11 items-center gap-2 text-caption text-jellyDeep underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-jellyDeep"
+                  className="inline-flex min-h-11 items-center gap-2 text-caption text-link underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-jellyDeep"
                 >
                   <Icon name="link" className="size-4" />
                   <span data-computed>{s.domain}</span>
