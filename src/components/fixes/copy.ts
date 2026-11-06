@@ -11,4 +11,18 @@ export const fixCopy = {
   // Step 17: on since the experiments page exists.
   startTest: "Start a before/after test",
   affected: (n: number) => `${n} affected answers`,
+  // Portal (b), the check-off Fix list: "Fix list (lead, 2026-11-06)". Shortcuts live in the tooltips and
+  // aria-keyshortcuts (no legend line).
+  start: "Start",
+  startTip: "Start (s)",
+  markDoneTip: "Mark done (x)",
+  inProgress: "In progress",
+  undo: "Undo",
+  open: "Open",
+  doneTab: "Done",
+  all: "All",
+  rankTeam: "Rank1 team",
+  marked: (title: string) => `Marked “${title}” done`,
+  doneOn: (date: string) => `Done ${date}`,
+  progress: (done: number, total: number) => `${done} of ${total} done`,
 };

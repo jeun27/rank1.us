@@ -4,7 +4,7 @@ import { appCopy as c } from "@/components/app/copy";
 import { HistoryTable } from "@/components/app/HistoryView";
 import { Page, Section } from "@/components/app/Page";
 import { VisibilityLine } from "@/components/app/VisibilityLine";
-import { FixList, type FixView } from "@/components/fixes/FixList";
+import { FixList, type DoneView, type FixView } from "@/components/fixes/FixList";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Jelly } from "@/components/ui/Jelly";
@@ -17,6 +17,7 @@ const removed = "Nothing tracked yet.";
 export type ClientFixes = {
   ranked: FixView[];
   tidyUps: FixView[];
+  done?: DoneView[];
   unchecked: { rule_key: string; title: string }[];
   noDomain: boolean;
 };

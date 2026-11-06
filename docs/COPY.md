@@ -286,6 +286,20 @@ Copy in quotes is exact. Every number shows n + checked X ago. Results labeled A
 | Agency hint | Below list, caption: 'Need 10+ businesses or done-for-you? Contact us.' |
 | Mobile | Opens as a bottom sheet; rows 56px. |
 
+## Fix list (lead, 2026-11-06)
+
+The check-off Fix list (portal b). Statuses stay "To do" / "Doing" / "Done" in the DB and for read-only viewers.
+
+| Where | String |
+|---|---|
+| Row actions | "Start" (To do only), "Undo" (done rows and the toast) |
+| In progress | "In progress" · {who} · {date}, who = "Rank1 team" for the team, else the member's name (never an email) |
+| Done rows | "Done {date}" · {who} (no who when the weekly check closed it) |
+| Toast | "Marked “{title}” done" with "Undo" |
+| Progress | "{done} of {total} done" |
+| Filter (segmented) | "Open", "Done", "All" |
+| Tooltips (with aria-keyshortcuts) | "Mark done (x)", "Start (s)" |
+
 ## Experiments (lead, 2026-11-05)
 
 Step 17 before/after test vs control (/app/experiments). The empty, partial and 'Start a test' copy is in the UI.md 4b row above. No p-values or significance words anywhere.

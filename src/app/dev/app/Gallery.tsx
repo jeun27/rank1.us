@@ -15,7 +15,7 @@ import { exampleExperiments, exampleTestQuestions, exampleTooFew } from "@/compo
 import { FixList } from "@/components/fixes/FixList";
 import { ReportView } from "@/components/report/ReportView";
 import type { ReportRow } from "@/lib/queries/reports";
-import { exampleFixes as fixes, exampleTidyUps, exampleUnchecked } from "@/components/fixes/example-data";
+import { exampleDone, exampleFixes as fixes, exampleTidyUps, exampleUnchecked } from "@/components/fixes/example-data";
 import { ErrorState, Skeleton } from "@/components/app/states";
 import {
   exampleBusiness,
@@ -127,7 +127,15 @@ export const STATES: Record<string, () => React.ReactNode> = {
   "fixes-success": () => (
     <Page title="What to fix next">
       <Measured {...latestMeasured(exampleLatest)} now={NOW} />
-      <FixList ranked={fixes} tidyUps={exampleTidyUps} unchecked={[]} noDomain={false} canWrite onStatus={noop} />
+      <FixList
+        ranked={fixes}
+        tidyUps={exampleTidyUps}
+        done={exampleDone}
+        unchecked={[]}
+        noDomain={false}
+        canWrite
+        onStatus={noop}
+      />
     </Page>
   ),
   "fixes-partial": () => (
@@ -139,7 +147,14 @@ export const STATES: Record<string, () => React.ReactNode> = {
   "fixes-readonly": () => (
     <Page title="What to fix next">
       <Measured {...latestMeasured(exampleLatest)} now={NOW} />
-      <FixList ranked={fixes} tidyUps={exampleTidyUps} unchecked={[]} noDomain={false} canWrite={false} />
+      <FixList
+        ranked={fixes}
+        tidyUps={exampleTidyUps}
+        done={exampleDone}
+        unchecked={[]}
+        noDomain={false}
+        canWrite={false}
+      />
     </Page>
   ),
   "fixes-empty": () => (

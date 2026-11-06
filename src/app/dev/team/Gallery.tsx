@@ -1,6 +1,6 @@
 "use client";
 import { exampleSuggestions } from "@/components/app/example-data";
-import { exampleFixes, exampleTidyUps, exampleUnchecked } from "@/components/fixes/example-data";
+import { exampleDone, exampleFixes, exampleTidyUps, exampleUnchecked } from "@/components/fixes/example-data";
 import { NoClients } from "@/components/workspace/NoClients";
 import { Workspace } from "@/components/workspace/Workspace";
 import type { TeamExtras } from "@/components/workspace/team";
@@ -19,7 +19,13 @@ const extras: TeamExtras = {
   businessId: view.business.id,
   formAction: "/dev/team",
   input: null,
-  fixes: { ranked: exampleFixes, tidyUps: exampleTidyUps, unchecked: exampleUnchecked.slice(0, 1), noDomain: false },
+  fixes: {
+    ranked: exampleFixes,
+    tidyUps: exampleTidyUps,
+    done: exampleDone,
+    unchecked: exampleUnchecked.slice(0, 1),
+    noDomain: false,
+  },
   loadSuggestions: async () => exampleSuggestions,
   clients: { users: [{ user_id: "example-user", email: "owner@exampleramen.test" }], fixListVisible: false },
   actions: {
