@@ -28,7 +28,12 @@ revoke all on function public.runs_needing_ai_access_check(int) from public, ano
 -- with a short error code (timeout, blocked_address, a PG code...; never message text).
 alter table public.ai_access_checks add column if not exists error text check (error ~ '^[A-Za-z0-9_]{1,40}$');
 
--- Redefined from 0025: also stores p.error (optional, a short code; 22023 otherwise).
+-- Reviewer S1: an unreachable check is stored even when the domain isn't a valid hostname (or is
+-- missing), as given and capped at 253 characters, so a bad-domain free audit still leaves the list.
+alter table public.ai_access_checks alter column domain drop not null;
+
+-- Redefined from 0025: also stores p.error (optional, a short code; 22023 otherwise), and accepts any
+-- domain on an unreachable check.
 create or replace function public.record_ai_access_check(p_run_id uuid, p jsonb) returns void
 language plpgsql security definer set search_path = '' as $$
 declare
@@ -41,7 +46,7 @@ begin
   if not found then
     raise exception 'Unknown run' using errcode = 'invalid_parameter_value';
   end if;
-  if not private.is_hostname(lower(p ->> 'domain'))
+  if (coalesce(p ->> 'outcome', '') <> 'unreachable' and not private.is_hostname(lower(p ->> 'domain')))
      or coalesce(p ->> 'outcome', '') not in ('good', 'blocked', 'js_empty', 'cloudflare', 'unreachable')
      or jsonb_typeof(coalesce(p -> 'crawlers', '[]')) <> 'array'
      or exists (
@@ -59,7 +64,8 @@ begin
   begin
     insert into public.ai_access_checks (run_id, business_id, domain, checked_at, outcome, crawlers, visible_words,
                                          status_normal, status_gptbot, cloudflare, pages_checked, error)
-    values (p_run_id, biz, lower(p ->> 'domain'), now(), p ->> 'outcome', coalesce(p -> 'crawlers', '[]'),
+    values (p_run_id, biz, case when private.is_hostname(lower(p ->> 'domain')) then lower(p ->> 'domain')
+                                else left(p ->> 'domain', 253) end, now(), p ->> 'outcome', coalesce(p -> 'crawlers', '[]'),
             (p ->> 'visible_words')::int, (p ->> 'status_normal')::int, (p ->> 'status_gptbot')::int,
             coalesce((p ->> 'cloudflare')::boolean, false), coalesce((p ->> 'pages_checked')::int, 0),
             p ->> 'error')

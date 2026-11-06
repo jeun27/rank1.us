@@ -25,14 +25,14 @@ export type Database = {
           Tables: {
             "ai_access_checks": {
                   Row: {
-                    "business_id": string | null,"checked_at": string,"cloudflare": boolean,"crawlers": Json,"domain": string,"error": string | null,"outcome": string,"pages_checked": number,"run_id": string,"status_gptbot": number | null,"status_normal": number | null,"visible_words": number | null
+                    "business_id": string | null,"checked_at": string,"cloudflare": boolean,"crawlers": Json,"domain": string | null,"error": string | null,"outcome": string,"pages_checked": number,"run_id": string,"status_gptbot": number | null,"status_normal": number | null,"visible_words": number | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "business_id"?: string | null,"checked_at"?: string,"cloudflare"?: boolean,"crawlers"?: Json,"domain": string,"error"?: string | null,"outcome": string,"pages_checked"?: number,"run_id": string,"status_gptbot"?: number | null,"status_normal"?: number | null,"visible_words"?: number | null
+                    "business_id"?: string | null,"checked_at"?: string,"cloudflare"?: boolean,"crawlers"?: Json,"domain"?: string | null,"error"?: string | null,"outcome": string,"pages_checked"?: number,"run_id": string,"status_gptbot"?: number | null,"status_normal"?: number | null,"visible_words"?: number | null
                   }
                   Update: {
-                    "business_id"?: string | null,"checked_at"?: string,"cloudflare"?: boolean,"crawlers"?: Json,"domain"?: string,"error"?: string | null,"outcome"?: string,"pages_checked"?: number,"run_id"?: string,"status_gptbot"?: number | null,"status_normal"?: number | null,"visible_words"?: number | null
+                    "business_id"?: string | null,"checked_at"?: string,"cloudflare"?: boolean,"crawlers"?: Json,"domain"?: string | null,"error"?: string | null,"outcome"?: string,"pages_checked"?: number,"run_id"?: string,"status_gptbot"?: number | null,"status_normal"?: number | null,"visible_words"?: number | null
                   }
                   Relationships: [
                     {

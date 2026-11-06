@@ -43,3 +43,5 @@ begin
 end;
 $$;
 alter table public.ai_access_checks drop column if exists error;
+delete from public.ai_access_checks where domain is null or not private.is_hostname(domain);
+alter table public.ai_access_checks alter column domain set not null;

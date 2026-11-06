@@ -23,7 +23,8 @@ export type CrawlerResult = { agent: AiCrawler; allowed: boolean; line: string |
 export type AiAccessCheck = {
   run_id: string;
   business_id: string | null;
-  domain: string;
+  // As checked; on an unreachable check it may be the raw input (≤ 253 chars) or null.
+  domain: string | null;
   checked_at: string;
   outcome: AiAccessOutcome;
   crawlers: CrawlerResult[];
@@ -62,7 +63,8 @@ export async function getLatestAiAccessCheck(db: DbClient, businessId: string): 
 }
 
 export type AiAccessInput = {
-  domain: string;
+  // Must be a hostname, except on an unreachable check (stored as given, capped at 253).
+  domain: string | null;
   outcome: AiAccessOutcome;
   crawlers: CrawlerResult[];
   visibleWords: number | null;
