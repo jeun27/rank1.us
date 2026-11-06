@@ -1,4 +1,5 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { safeNext } from "@/lib/auth/next";
 
 // One Google OAuth client for every Google connector, with incremental authorization: each connector asks
 // only for its own scope (+ openid, for the account `sub` that identifies the grant; no email or profile).
@@ -51,13 +52,28 @@ export type OAuthState = {
   verifier: string;
   businessId: string;
   connector: GoogleConnector;
+  // A same-origin path (safeNext) the callback sends the user back to.
+  returnTo: string;
   exp: number;
 };
 
 // state (32 random bytes) and the PKCE verifier live only in the callback-scoped httpOnly cookie.
-export function startAuth(connector: GoogleConnector, businessId: string, env: Env = process.env, now = Date.now()) {
+export function startAuth(
+  connector: GoogleConnector,
+  businessId: string,
+  env: Env = process.env,
+  now = Date.now(),
+  returnTo = "/app",
+) {
   const c = config(env);
-  const s: OAuthState = { state: b64url(32), verifier: b64url(48), businessId, connector, exp: now + STATE_TTL_MS };
+  const s: OAuthState = {
+    state: b64url(32),
+    verifier: b64url(48),
+    businessId,
+    connector,
+    returnTo: safeNext(returnTo) ?? "/app",
+    exp: now + STATE_TTL_MS,
+  };
   const url = new URL(AUTH_URL);
   url.search = new URLSearchParams({
     client_id: c.id,
@@ -90,7 +106,7 @@ export function readState(cookie: string | undefined, state: string | null, now 
   }
   if (typeof s?.state !== "string" || !(s.connector in GOOGLE_SCOPES) || !sameString(s.state, state) || now > s.exp)
     throw new OAuthError("bad_state");
-  return s;
+  return { ...s, returnTo: safeNext(s.returnTo) ?? "/app" };
 }
 
 type Deps = { env?: Env; fetch?: typeof fetch; now?: number };

@@ -1,3 +1,5 @@
+import type { ConnectorKey } from "@/lib/queries/connections";
+
 // Industry → connector recommendations (founder map, 2026-11-06). Keys match backend's connector list (0021). ONE table: the hub, the onboarding step and
 // the dashboard card all read it. Tiers: recommended, optional, later ("Optional later" → Coming soon).
 // Industries not listed for a connector don't see its tile.
@@ -53,8 +55,8 @@ export const CONNECTORS = {
   bing_places: { niche: "local", later: LOCAL },
   yelp: { niche: "local", later: LOCAL },
   amazon: { niche: "dtc_amazon", later: ["dtc"] },
-} as const satisfies Record<string, Rule>;
-export type Connector = keyof typeof CONNECTORS;
+} as const satisfies Record<ConnectorKey, Rule>;
+export type Connector = ConnectorKey;
 
 // Only these have a working flow; every other tile is "Coming soon" + Notify me (no fake connect buttons).
 export const LIVE_CONNECTORS: readonly string[] = ["gbp", "search_console", "ga4"];

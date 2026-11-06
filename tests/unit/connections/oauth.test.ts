@@ -77,6 +77,16 @@ describe("startAuth", () => {
     });
   });
 
+  it("returnTo is kept only as a same-origin path (default /app)", () => {
+    const read = (r?: string) => {
+      const { url, cookie } = startAuth("gbp", "biz-1", ENV, NOW, r);
+      return readState(cookie, new URL(url).searchParams.get("state"), NOW).returnTo;
+    };
+    expect(read("/client/settings")).toBe("/client/settings");
+    expect(read()).toBe("/app");
+    for (const bad of ["https://evil.example/x", "//evil.example", "/\\evil.example"]) expect(read(bad)).toBe("/app");
+  });
+
   it("every start gets a fresh state and verifier", () => {
     const a = startAuth("ga4", "biz-1", ENV, NOW);
     const b = startAuth("ga4", "biz-1", ENV, NOW);

@@ -4,6 +4,7 @@
 // https://developers.google.com/my-business/reference/businessinformation/rest/v1/accounts.locations
 // API access needs Google's approval first (0 QPM until then): https://developers.google.com/my-business/content/prereqs
 
+import { GBP_EDIT_FIELDS } from "@/lib/queries/connections";
 import { call, paged, type Deps } from "./google-api";
 
 export { GoogleApiError } from "./google-api";
@@ -13,14 +14,8 @@ const INFO = "https://mybusinessbusinessinformation.googleapis.com/v1";
 
 // v1 edit allowlist (lead, 2026-11-06). Everything else is read-only: no categories, title, address,
 // reviews, review replies or manager/ownership changes.
-export const EDITABLE_FIELDS = [
-  "description",
-  "regular_hours",
-  "special_hours",
-  "website_uri",
-  "primary_phone",
-  "attributes",
-] as const;
+// The DB enforces the same list on connection_changes (0021), so there is one source.
+export const EDITABLE_FIELDS = GBP_EDIT_FIELDS;
 
 export type Attribute = { name: string; valueType?: string; values?: unknown[]; [k: string]: unknown };
 export type GbpFields = {
