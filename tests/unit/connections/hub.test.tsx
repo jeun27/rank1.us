@@ -46,19 +46,28 @@ describe("tiles by industry (one recommend() table)", () => {
     (industry) => {
       hub({ industry });
       const r = recommend(industry);
+      const soon = [...r.recommended, ...r.optional, ...r.later].filter((t) => t.available === "coming_soon");
+      for (const tier of ["recommended", "optional"] as const)
+        if (!r[tier].some((t) => t.available === "live")) expect(section(c.tiers[tier]), tier).toBeNull();
+      if (soon.length)
+        expect(
+          within(section(c.tiers.later)!).getByText(soon.map((t) => c.names[t.connector]).join(" · ")),
+        ).toBeInTheDocument();
+      const cards = screen.queryAllByRole("article").map((a) => a.getAttribute("aria-label"));
+      for (const t of soon) expect(cards, t.connector).not.toContain(c.names[t.connector]);
       for (const tier of ["recommended", "optional", "later"] as const) {
         const region = section(c.tiers[tier]);
-        if (!r[tier].length) {
-          expect(region, tier).toBeNull();
-          continue;
-        }
+        if (!r[tier].length) continue;
+        // X12: live tiles stay as cards; every Coming soon tile (any tier) folds into the one Coming soon line.
+        const live = r[tier].filter((t) => t.available === "live");
+        if (tier === "later" || !live.length) continue;
         expect(
           within(region!)
             .getAllByRole("article")
             .map((a) => a.getAttribute("aria-label")),
-        ).toEqual(r[tier].map((t) => c.names[t.connector]));
+        ).toEqual(live.map((t) => c.names[t.connector]));
         // Each tile carries its own niche helper text (two tiles can share one).
-        for (const t of r[tier])
+        for (const t of live)
           expect(
             within(within(region!).getByRole("article", { name: c.names[t.connector] })).getByText(c.niches[t.niche]),
           ).toBeInTheDocument();
@@ -69,7 +78,8 @@ describe("tiles by industry (one recommend() table)", () => {
   it("a restaurant gets Business Profile recommended, booking tools optional, no Shopify or G2", () => {
     hub({ industry: "restaurant" });
     expect(within(section(c.tiers.recommended)!).getByRole("article", { name: c.names.gbp })).toBeInTheDocument();
-    expect(within(section(c.tiers.optional)!).getByRole("article", { name: c.names.opentable })).toBeInTheDocument();
+    // OpenTable has no live flow yet, so it sits in the one Coming soon line (X12).
+    expect(within(section(c.tiers.later)!).getByText(new RegExp(c.names.opentable))).toBeInTheDocument();
     expect(screen.queryByRole("article", { name: c.names.shopify })).toBeNull();
     expect(screen.queryByRole("article", { name: c.names.g2_capterra })).toBeNull();
   });
@@ -216,22 +226,31 @@ describe("connection states", () => {
   });
 });
 
-describe("Coming soon tiles", () => {
-  it("no Connect button; Notify me stores interest, then says so", async () => {
+// X12 (lead OK, item 22): every Coming soon connector folds into one line under "Coming soon", with one
+// "Notify me" for all of them (no tile per connector).
+describe("Coming soon, collapsed to one line", () => {
+  it("one line of names, no Connect, and one Notify me that registers each, then says so", async () => {
     const { a, user } = hub({ industry: "restaurant" });
-    const t = tile(c.names.yelp);
-    expect(within(t).getByText(c.comingSoon)).toBeInTheDocument();
-    expect(within(t).queryByRole("button", { name: c.connect })).toBeNull();
-    await user.click(within(t).getByRole("button", { name: c.notify }));
-    expect(a.notify).toHaveBeenCalledWith("yelp");
-    expect(within(t).getByRole("status")).toHaveTextContent(c.noted);
-    expect(within(t).queryByRole("button", { name: c.notify })).toBeNull();
+    const region = section(c.tiers.later)!;
+    expect(within(region).queryAllByRole("article")).toHaveLength(0);
+    expect(within(region).getByText(new RegExp(c.names.yelp))).toBeInTheDocument();
+    expect(within(region).queryByRole("button", { name: c.connect })).toBeNull();
+    const notify = within(region).getAllByRole("button", { name: c.notify });
+    expect(notify).toHaveLength(1);
+    await user.click(notify[0]);
+    const soon = Object.values(recommend("restaurant"))
+      .flat()
+      .filter((t) => t.available === "coming_soon")
+      .map((t) => t.connector);
+    expect(a.notify.mock.calls.map((x) => (x as unknown[])[0]).sort()).toEqual([...soon].sort());
+    expect(within(region).getByRole("status")).toHaveTextContent(c.noted);
+    expect(within(region).queryByRole("button", { name: c.notify })).toBeNull();
   });
 
-  it("already noted: says so, with no button", () => {
-    hub({ industry: "restaurant", interest: ["yelp"] });
-    expect(within(tile(c.names.yelp)).getByText(c.noted)).toBeInTheDocument();
-    expect(within(tile(c.names.yelp)).queryByRole("button", { name: c.notify })).toBeNull();
+  it("some already noted: Notify me registers only the rest", async () => {
+    const { a, user } = hub({ industry: "restaurant", interest: ["yelp"] });
+    await user.click(within(section(c.tiers.later)!).getByRole("button", { name: c.notify }));
+    expect(a.notify.mock.calls.map((x) => (x as unknown[])[0])).not.toContain("yelp");
   });
 });
 
@@ -319,13 +338,57 @@ describe("copy (DRAFT, lead to sign off)", () => {
   });
 });
 
-describe("one primary per screen (UI.md)", () => {
-  it("only a Recommended tile's Connect is the filled button", () => {
+// X30: one filled button. Only the next unconnected Recommended tile's Connect is filled; with a connection
+// needing a reconnect, the banner's Reconnect is the one primary instead.
+describe("one primary per screen (UI.md, X30)", () => {
+  const filled = () => screen.queryAllByRole("button").filter((b) => b.className.includes("bg-accent"));
+
+  it("the next unconnected Recommended Connect is the only filled button", () => {
     hub({ industry: "restaurant" });
-    const gbp = within(tile(c.names.gbp)).getByRole("button", { name: c.connect });
-    const sc = within(tile(c.names.search_console)).getByRole("button", { name: c.connect });
-    expect(gbp.className).toContain("bg-accent");
-    expect(sc.className).not.toContain("bg-accent");
+    expect(filled()).toEqual([within(tile(c.names.gbp)).getByRole("button", { name: c.connect })]);
+  });
+
+  it("with the Recommended ones connected, nothing is filled (Optional stays secondary)", () => {
+    hub({ industry: "restaurant", connections: [{ id: "c1", provider: "gbp", status: "connected", selected: [] }] });
+    expect(filled()).toEqual([]);
+  });
+
+  it("a connection that needs a reconnect: a warn banner first, whose Reconnect is the one primary", async () => {
+    const { user } = hub({
+      industry: "restaurant",
+      connections: [{ id: "c1", provider: "gbp", status: "needs_reauth", selected: [] }],
+    });
+    const banner = screen.getAllByRole("status")[0];
+    expect(banner).toHaveTextContent(`${c.names.gbp}: ${c.statuses.needs_reauth}`);
+    expect(banner.className).toContain("bg-warnBg");
+    expect(
+      banner.compareDocumentPosition(section(c.tiers.recommended)!) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    const reconnect = within(banner).getByRole("button", { name: c.reconnect });
+    expect(filled()).toEqual([reconnect]);
+    await user.click(reconnect);
+    expect(screen.getByRole("dialog", { name: c.names.gbp })).toBeInTheDocument();
+  });
+
+  it("read-only viewers see the banner without a button", () => {
+    hub({ canConnect: false, connections: [{ id: "c1", provider: "gbp", status: "needs_reauth", selected: [] }] });
+    const banner = screen.getAllByRole("status")[0];
+    expect(banner).toHaveTextContent(`${c.names.gbp}: ${c.statuses.needs_reauth}`);
+    expect(within(banner).queryByRole("button")).toBeNull();
+  });
+});
+
+// X30 + backend's entity_count (#183): "Choose …" only when the account offers more than one; unknown (null,
+// the list was never loaded) still offers it, since loading the list is what records the count.
+describe("Choose … follows the entity count", () => {
+  it.each([
+    [null, true],
+    [2, true],
+    [1, false],
+    [0, false],
+  ] as const)("entity count %s → Choose locations shown: %s", (entityCount, shown) => {
+    hub({ connections: [{ id: "c1", provider: "gbp", status: "connected", selected: [], entityCount }] });
+    expect(Boolean(within(tile(c.names.gbp)).queryByRole("button", { name: c.pick.gbp }))).toBe(shown);
   });
 });
 

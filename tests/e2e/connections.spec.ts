@@ -66,12 +66,16 @@ test("consent sheet by keyboard: opens from Connect, focus inside, Esc closes ba
   await expect(connect).toBeFocused();
 });
 
-test("Coming soon: Notify me, then 'We'll let you know.'", async ({ page }) => {
+// X12: every Coming soon connector folds into one line with one Notify me.
+test("Coming soon: one line, one Notify me, then 'We'll let you know.'", async ({ page }) => {
   await page.goto("/dev/app?state=connections-restaurant");
-  const yelp = page.getByRole("article", { name: "Yelp" });
-  await expect(yelp.getByRole("button", { name: "Connect" })).toHaveCount(0);
-  await yelp.getByRole("button", { name: "Notify me" }).click();
-  await expect(yelp.getByRole("status")).toHaveText("We'll let you know.");
+  const soon = page.getByRole("region", { name: "Coming soon" });
+  await expect(page.getByRole("article", { name: "Yelp" })).toHaveCount(0);
+  await expect(soon.getByText(/Yelp/)).toBeVisible();
+  await expect(soon.getByRole("button", { name: "Connect" })).toHaveCount(0);
+  await expect(soon.getByRole("button", { name: "Notify me" })).toHaveCount(1);
+  await soon.getByRole("button", { name: "Notify me" }).click();
+  await expect(soon.getByRole("status")).toHaveText("We'll let you know.");
 });
 
 test("Disconnect asks first, with the one-grant warning", async ({ page }) => {
