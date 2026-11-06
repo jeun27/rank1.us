@@ -1,0 +1,10 @@
+## C-b (frontend): the onboarding connect step and the dashboard card, with the G3 "You're all set" state (branch feat/connect-step)
+
+- Lead OK 2026-11-06 (design note D1-D5, Q1-Q4). Everything is behind ENABLE_CONNECTIONS. With the flag off, nothing changes.
+- One state for both places: src/lib/connections/connect-card.ts, `connectCardState`. Recommended = readinessSet(vertical), the same set refresh_gas_ready uses. Rows show Connected, Connect (missing or revoked) or Reconnect (needs_reauth). "You're all set" shows for 7 days after gas_ready_at (lead Q2), then the card hides. Nothing Recommended (vertical "other") means no card.
+- The card (src/components/connections/ConnectCard.tsx) shows "{n} of {m} connected" and a progress bar, and can't be dismissed. Connect opens the hub's consent sheet, now shared in Consent.tsx (the hub is unchanged). Read-only viewers see statuses, no buttons. All-set copy per audience (lead Q1): self-serve links to "What to fix next", and the DFY client's copy promises no timing.
+- Dashboards: /app and /client render the card at the top (loadConnectCard in components/connections/load.ts).
+- Onboarding: step 1 gets "What kind of business?" (13 verticals, default Restaurant), only with the flag on (lead Q4). Finish goes to /app/onboarding/connect when the vertical has anything Recommended, else /app. With the flag off, a vertical in the payload is dropped. The proxy 404s /app/onboarding/connect while the flag is off.
+- The onboarding step counts "all connected" as all set right away, because nothing calls refreshGasReady yet, so gas_ready_at is never set today. The dashboard's all-set state waits for gas_ready_at.
+- Q5 (lead): questions come from the restaurant templates whatever the vertical, so a non-restaurant pick still gets the full set (tested). A generic or per-vertical set is a product decision before the flag goes on in prod.
+- The G3 team half (badge, notice, Dismiss) goes with C-c (lead Q3).

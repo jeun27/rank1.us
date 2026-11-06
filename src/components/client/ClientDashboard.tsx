@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { EngineTable, Hero, Leaderboard } from "@/components/audit/AuditView";
 import type { Loaded } from "@/components/audit/load";
 import { appCopy as c } from "@/components/app/copy";
@@ -30,12 +31,15 @@ export function ClientDashboard({
   runs,
   fixes,
   now,
+  notice,
 }: {
   business: { name: string } | null;
   latest: Loaded | null;
   runs: RunSummary[];
   fixes: ClientFixes | null;
   now: Date;
+  // C-b: the connect card, under the business name (ENABLE_CONNECTIONS).
+  notice?: ReactNode;
 }) {
   if (!business)
     return (
@@ -63,6 +67,7 @@ export function ClientDashboard({
     return (
       <Page title={c.dashboard}>
         {name}
+        {notice}
         <Card>
           <p className="text-body-lg">{c.noChecks}</p>
         </Card>
@@ -75,6 +80,7 @@ export function ClientDashboard({
   return (
     <Page title={c.dashboard}>
       {name}
+      {notice}
       <Hero metrics={latest.metrics} now={now}>
         <div className="flex flex-wrap gap-2">
           {lead?.change != null && <Badge tone="info">{`${lead.change > 0 ? "+" : ""}${lead.change} pts`}</Badge>}

@@ -13,7 +13,8 @@ import { ExperimentForm } from "@/components/experiments/ExperimentForm";
 import { ExperimentList } from "@/components/experiments/ExperimentList";
 import { exampleExperiments, exampleTestQuestions, exampleTooFew } from "@/components/experiments/example-data";
 import { ConnectionsHub } from "@/components/connections/ConnectionsHub";
-import { exampleConnected, exampleHub } from "@/components/connections/example-data";
+import { ConnectCard } from "@/components/connections/ConnectCard";
+import { exampleCards, exampleConnected, exampleHub } from "@/components/connections/example-data";
 import { FixList } from "@/components/fixes/FixList";
 import { ReportView } from "@/components/report/ReportView";
 import type { ReportRow } from "@/lib/queries/reports";
@@ -74,6 +75,24 @@ export const STATES: Record<string, () => React.ReactNode> = {
   "dashboard-success": () => (
     <Dashboard business={exampleBusiness} latest={exampleLatest} series={series} fixes={exampleFixes} now={NOW} />
   ),
+  // C-b: the connect card on the dashboard (ENABLE_CONNECTIONS), and the onboarding connect step.
+  ...Object.fromEntries(
+    (["connect", "reauth", "readonly", "ready"] as const).map((k) => [
+      `dashboard-${k === "ready" ? "all-set" : `card-${k}`}`,
+      () => (
+        <Dashboard
+          business={exampleBusiness}
+          latest={exampleLatest}
+          series={series}
+          fixes={exampleFixes}
+          now={NOW}
+          notice={<ConnectCard {...exampleCards[k]} />}
+        />
+      ),
+    ]),
+  ),
+  "onboarding-connect": () => <ConnectStep card={exampleCards.connect} />,
+  "onboarding-connect-done": () => <ConnectStep card={{ ...exampleCards.ready, fixesHref: null }} />,
   "dashboard-partial": () => (
     <Dashboard
       business={exampleBusiness}
@@ -276,6 +295,15 @@ const switcher = (businesses: SwitcherBusiness[]) => (
   />
 );
 // Settings → Connections on Example data (shown here whatever ENABLE_CONNECTIONS says).
+// The /app/onboarding/connect layout, on Example data.
+function ConnectStep({ card }: { card: React.ComponentProps<typeof ConnectCard> }) {
+  return (
+    <main className="mx-auto flex max-w-2xl flex-col gap-6 px-5 py-10 md:px-8 md:py-16">
+      <h1 className="font-display text-display font-semibold">Add your business</h1>
+      <ConnectCard {...card} returnTo="/app/onboarding/connect" skipHref="/app" />
+    </main>
+  );
+}
 function Hub(over: Partial<React.ComponentProps<typeof ConnectionsHub>>) {
   return (
     <Page title="Connections">

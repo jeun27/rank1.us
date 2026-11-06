@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { EngineTable, Hero, Leaderboard } from "@/components/audit/AuditView";
 import type { Loaded } from "@/components/audit/load";
 import { Badge } from "@/components/ui/Badge";
@@ -17,12 +18,15 @@ export function Dashboard({
   series,
   fixes,
   now,
+  notice,
 }: {
   business: { name: string; paid: boolean } | null;
   latest: Loaded | null;
   series: { points: SeriesPoint[]; visible: boolean };
   fixes: TopFix[];
   now: Date;
+  // C-b: the connect card, above everything (ENABLE_CONNECTIONS).
+  notice?: ReactNode;
 }) {
   if (!business)
     return (
@@ -39,6 +43,7 @@ export function Dashboard({
   if (!latest)
     return (
       <Page title={c.dashboard}>
+        {notice}
         <Card>
           {business.paid ? (
             <p className="text-body-lg">{c.noChecks}</p>
@@ -52,6 +57,7 @@ export function Dashboard({
   const lead = latest.metrics.leaderboard.find((b) => b.kind === "business");
   return (
     <Page title={c.dashboard}>
+      {notice}
       <Hero metrics={latest.metrics} now={now}>
         <div className="flex flex-wrap gap-2">
           {lead?.change != null && <Badge tone="info">{`${lead.change > 0 ? "+" : ""}${lead.change} pts`}</Badge>}

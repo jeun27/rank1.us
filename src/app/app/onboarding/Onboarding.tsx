@@ -6,6 +6,8 @@ import { Banner } from "@/components/ui/Banner";
 import { Button } from "@/components/ui/Button";
 import { DomainField } from "@/components/ui/DomainField";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { connectionsCopy } from "@/components/connections/copy";
+import { VERTICALS, type Vertical } from "@/lib/queries/onboarding";
 import { buildQuestions, type Picks } from "@/lib/questions/templates";
 import { normalizeDomain } from "@/lib/spam/validate";
 import type { CompetitorSearch, LocalPlace, OnboardingActions, OnboardingInput } from "./contract";
@@ -18,7 +20,16 @@ const MAX_PLACES = 3;
 const LEVELS = ["country", "state", "city"] as const;
 type Level = (typeof LEVELS)[number];
 
-export type Business = { domain: string; name: string; cuisine: string; city: string; state: string; sells: string[] };
+export type Business = {
+  domain: string;
+  name: string;
+  cuisine: string;
+  city: string;
+  state: string;
+  sells: string[];
+  // C-b: only with ENABLE_CONNECTIONS (the page passes verticals); Restaurant until picked.
+  vertical?: Vertical;
+};
 export type Competitor = {
   name: string;
   domain: string | null;
@@ -73,12 +84,14 @@ export function Onboarding({
   actions,
   initial = emptyDraft,
   syncUrl = true,
+  verticals = false,
 }: {
   places: LocalPlace[];
   cuisines: readonly string[];
   actions: OnboardingActions;
   initial?: Draft;
   syncUrl?: boolean;
+  verticals?: boolean;
 }) {
   const [d, setD] = useState<Draft>(initial);
   const reached = useRef(initial.step);
@@ -108,10 +121,18 @@ export function Onboarding({
         <h2 className="font-display text-h2 font-semibold md:text-h2-md">{copy.titles[d.step - 1]}</h2>
       </div>
       {d.step === 1 && (
-        <BusinessStep d={d} set={set} places={places} cuisines={cuisines} actions={actions} onNext={() => go(2)} />
+        <BusinessStep
+          d={d}
+          set={set}
+          places={places}
+          cuisines={cuisines}
+          actions={actions}
+          verticals={verticals}
+          onNext={() => go(2)}
+        />
       )}
       {d.step === 2 && <CompetitorsStep d={d} set={set} actions={actions} onBack={() => go(1)} onNext={() => go(3)} />}
-      {d.step === 3 && <QuestionsStep d={d} set={set} actions={actions} onBack={() => go(2)} />}
+      {d.step === 3 && <QuestionsStep d={d} set={set} actions={actions} verticals={verticals} onBack={() => go(2)} />}
     </div>
   );
 }
@@ -178,10 +199,18 @@ function BusinessStep({
   places,
   cuisines,
   actions,
+  verticals,
   onNext,
-}: StepProps & { places: LocalPlace[]; cuisines: readonly string[]; actions: OnboardingActions; onNext: () => void }) {
+}: StepProps & {
+  places: LocalPlace[];
+  cuisines: readonly string[];
+  actions: OnboardingActions;
+  verticals: boolean;
+  onNext: () => void;
+}) {
   const [domainError, setDomainError] = useState(false);
   const cuisineId = useId();
+  const verticalId = useId();
   const sellsId = useId();
   const b = d.business;
   const setB = (patch: Partial<Business>) => set({ business: { ...b, ...patch } });
@@ -264,6 +293,25 @@ function BusinessStep({
             />
           ))}
         </fieldset>
+      )}
+      {verticals && (
+        <div>
+          <label htmlFor={verticalId} className="mb-1.5 block text-caption font-semibold">
+            {connectionsCopy.card.industry}
+          </label>
+          <select
+            id={verticalId}
+            value={b.vertical ?? "restaurant"}
+            onChange={(e) => setB({ vertical: e.target.value as Vertical })}
+            className={`${select} border-fieldBorder`}
+          >
+            {VERTICALS.map((v) => (
+              <option key={v} value={v}>
+                {connectionsCopy.card.verticals[v]}
+              </option>
+            ))}
+          </select>
+        </div>
       )}
       <PillField label={copy.name} name="name" value={b.name} onChange={(e) => setB({ name: e.target.value })} />
       <div>
@@ -477,7 +525,13 @@ function CompetitorRow({ c, onToggle, onRemove }: { c: Competitor; onToggle: () 
   );
 }
 
-function QuestionsStep({ d, set, actions, onBack }: StepProps & { actions: OnboardingActions; onBack: () => void }) {
+function QuestionsStep({
+  d,
+  set,
+  actions,
+  verticals,
+  onBack,
+}: StepProps & { actions: OnboardingActions; verticals: boolean; onBack: () => void }) {
   const b = d.business;
   const key = questionKey(b, d.picks);
   const [empty, setEmpty] = useState<number | null>(null);
@@ -515,6 +569,7 @@ function QuestionsStep({ d, set, actions, onBack }: StepProps & { actions: Onboa
         state: b.state.trim(),
         country: "US",
         aliases: [],
+        ...(verticals && { vertical: b.vertical ?? "restaurant" }),
       },
       competitors: [
         ...d.competitors.map((c) => ({ c, source: "maps" as const })),
