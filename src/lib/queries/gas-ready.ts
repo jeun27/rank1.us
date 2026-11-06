@@ -4,8 +4,8 @@ import type { ConnectorKey } from "./connections";
 // G3 "Ready for GAS" (0027): set the first time every Recommended connection is connected, cleared
 // (with the notice's dismissal) when one drops.
 
-// Service client only. recommended = the business's Recommended providers from recommend.ts. Call
-// after every connection save/revoke/status change; send the team email only when newlyReady.
+// Service client only. recommended = readinessSet(vertical) (recommend.ts: Recommended ∩ live).
+// Call after every connection save/revoke/status change; send the team email only when newlyReady.
 export async function refreshGasReady(
   serviceDb: DbClient,
   businessId: string,
