@@ -121,12 +121,17 @@ async function tokenCall(params: Record<string, string>, deps: Deps) {
   return { ok: res.ok, body };
 }
 
-// The id_token comes straight from Google's token endpoint over TLS, so its payload is read without a
-// signature check (OpenID Connect Core 3.1.3.7). Only `sub` is used.
-const subOf = (idToken: unknown) => {
+// The id_token is read only from Google's token endpoint response (TLS), so no signature check is needed
+// (OpenID Connect Core 3.1.3.7), but iss, aud and exp are checked. Only `sub` is used; it identifies the
+// Google account of the grant and is never logged or shown.
+const GOOGLE_ISSUERS = ["https://accounts.google.com", "accounts.google.com"];
+const subOf = (idToken: unknown, clientId: string, now: number) => {
   try {
-    const sub = JSON.parse(Buffer.from(String(idToken).split(".")[1], "base64url").toString("utf8")).sub;
-    return typeof sub === "string" && sub ? sub : null;
+    const c = JSON.parse(Buffer.from(String(idToken).split(".")[1], "base64url").toString("utf8"));
+    const aud = Array.isArray(c.aud) ? c.aud : [c.aud];
+    const ok =
+      GOOGLE_ISSUERS.includes(c.iss) && aud.includes(clientId) && typeof c.exp === "number" && c.exp * 1000 > now;
+    return ok && typeof c.sub === "string" && c.sub ? (c.sub as string) : null;
   } catch {
     return null;
   }
@@ -156,7 +161,7 @@ export async function exchangeCode(
     },
     deps,
   ).catch(() => ({ ok: false, body: {} as Record<string, unknown> }));
-  const sub = subOf(body.id_token);
+  const sub = subOf(body.id_token, c.id, deps.now ?? Date.now());
   if (!ok || typeof body.access_token !== "string" || !sub) throw new OAuthError("exchange_failed");
   // Granular consent: the user can untick the scope; then nothing is stored.
   const scopes = String(body.scope ?? "")

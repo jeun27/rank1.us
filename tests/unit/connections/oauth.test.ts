@@ -22,10 +22,21 @@ const ENV = {
 };
 const NOW = 1_800_000_000_000;
 // An unsigned example id_token: {"sub":"10769150350006150715113082367"} (synthetic).
-const idToken = (sub: string) =>
-  ["e30", Buffer.from(JSON.stringify({ sub, iss: "https://accounts.google.com" })).toString("base64url"), "sig"].join(
-    ".",
-  );
+// A synthetic id_token as Google's token endpoint returns it (unsigned here; only iss/aud/exp/sub are read).
+const idToken = (sub: string, claims: Record<string, unknown> = {}) =>
+  [
+    "e30",
+    Buffer.from(
+      JSON.stringify({
+        sub,
+        iss: "https://accounts.google.com",
+        aud: "example-client.apps.googleusercontent.com",
+        exp: Math.floor(NOW / 1000) + 3600,
+        ...claims,
+      }),
+    ).toString("base64url"),
+    "sig",
+  ].join(".");
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
 
 describe("redirect URI", () => {
@@ -154,6 +165,41 @@ describe("exchangeCode", () => {
       client_secret: ENV.GOOGLE_CLIENT_SECRET,
       redirect_uri: "https://rank1.example/api/connections/google/callback",
     });
+  });
+
+  it.each([
+    ["another issuer", { iss: "https://evil.example" }],
+    ["another client's token", { aud: "other-client.apps.googleusercontent.com" }],
+    ["an expired token", { exp: Math.floor(NOW / 1000) - 1 }],
+    ["no sub", { sub: "" }],
+  ])("an id_token from %s → exchange_failed", async (_label, claims) => {
+    const fetch = vi.fn(async () =>
+      json({
+        access_token: "a",
+        expires_in: 3599,
+        scope: `openid ${GOOGLE_SCOPES.ga4}`,
+        id_token: idToken("1", claims),
+      }),
+    );
+    await expect(
+      exchangeCode({ code: "c", verifier: "v".repeat(43), connector: "ga4" }, { env: ENV, fetch, now: NOW }),
+    ).rejects.toMatchObject({ reason: "exchange_failed" });
+  });
+
+  it("both Google issuer spellings are accepted", async () => {
+    const fetch = vi.fn(async () =>
+      json({
+        access_token: "a",
+        expires_in: 3599,
+        scope: `openid ${GOOGLE_SCOPES.ga4}`,
+        id_token: idToken("sub-x", { iss: "accounts.google.com" }),
+      }),
+    );
+    const t = await exchangeCode(
+      { code: "c", verifier: "v".repeat(43), connector: "ga4" },
+      { env: ENV, fetch, now: NOW },
+    );
+    expect(t.sub).toBe("sub-x");
   });
 
   it("granular consent: the requested scope unticked → denied, nothing returned", async () => {

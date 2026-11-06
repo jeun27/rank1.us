@@ -30,7 +30,10 @@ const ENV = {
   NEXT_PUBLIC_SITE_URL: "https://rank1.example",
 };
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
-const idToken = (sub: string) => `e30.${Buffer.from(JSON.stringify({ sub })).toString("base64url")}.sig`;
+const idToken = (sub: string) =>
+  `e30.${Buffer.from(
+    JSON.stringify({ sub, iss: "https://accounts.google.com", aud: ENV.GOOGLE_CLIENT_ID, exp: NOW / 1000 + 3600 }),
+  ).toString("base64url")}.sig`;
 
 // The caller's client: auth + the connection row they can see through RLS.
 const conn = (over: Record<string, unknown> = {}) => ({
@@ -171,6 +174,53 @@ describe("finishGoogleConnect", () => {
       "denied",
     );
     expect(q.saveConnection).not.toHaveBeenCalled();
+  });
+});
+
+describe("two Google accounts on one business", () => {
+  it("each connect stores its own Google sub, so the DB keeps them as separate grants", async () => {
+    const connect = async (connector: "gbp" | "ga4", sub: string, scope: string) => {
+      const { url, cookie } = startAuth(connector, "biz-1", ENV, NOW);
+      const fetch = vi.fn(async () =>
+        json({
+          access_token: `ya29.${sub}`,
+          refresh_token: `1//${sub}`,
+          expires_in: 3599,
+          scope: `openid ${scope}`,
+          id_token: idToken(sub),
+        }),
+      );
+      return svc.finishGoogleConnect(ctx(fetch), {
+        cookie,
+        state: new URL(url).searchParams.get("state")!,
+        code: "4/x",
+        error: null,
+      });
+    };
+    await connect("gbp", "sub-a", "https://www.googleapis.com/auth/business.manage");
+    await connect("ga4", "sub-b", "https://www.googleapis.com/auth/analytics.readonly");
+    expect(q.saveConnection.mock.calls.map((c) => [c[1].provider, c[1].externalAccountId])).toEqual([
+      ["gbp", "sub-a"],
+      ["ga4", "sub-b"],
+    ]);
+    expect(decryptToken(q.saveConnection.mock.calls[1][1].encRefresh, KEY)).toBe("1//sub-b");
+  });
+
+  it("revoking one connection revokes only its own grant's token at Google; revoke_connection scopes the rest", async () => {
+    q.getConnectionTokens.mockResolvedValue(
+      tokens({ enc_refresh: encryptToken("1//sub-a", KEY), external_account_id: "sub-a" }),
+    );
+    const fetch = vi.fn<typeof globalThis.fetch>(async () => new Response("", { status: 200 }));
+    await svc.revokeGoogleConnection(ctx(fetch), "conn-1");
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(String(fetch.mock.calls[0][1]!.body)).toBe("token=1%2F%2Fsub-a");
+    expect(q.revokeConnection).toHaveBeenCalledWith(serviceDb, "conn-1");
+  });
+
+  it("the Google sub is never logged", async () => {
+    const c = ctx(vi.fn(async () => new Response("", { status: 200 })));
+    await svc.revokeGoogleConnection(c, "conn-1");
+    expect(c.log.mock.calls.flat().join(" ")).not.toContain("sub-");
   });
 });
 
