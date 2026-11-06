@@ -1,4 +1,5 @@
 import { ENGINE_LABEL } from "@/components/audit/contract";
+import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Table } from "@/components/ui/Table";
 import { CATEGORY_ORDER, type Sources } from "@/lib/metrics";
@@ -126,15 +127,14 @@ export function SourcesView({
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <h2 className="text-ui font-semibold">{label}</h2>
                     {e.locationSupport === "exact" && (
-                      <span className="rounded-full bg-infoBg px-2 text-caption text-jellyDeep">{c.exact}</span>
+                      <Badge tone="info" data-location-tag>
+                        {c.exact}
+                      </Badge>
                     )}
                     {e.locationSupport === "fallback" && (
-                      <span
-                        title={c.fallbackTip(label)}
-                        className="rounded-full border border-border px-2 text-caption text-inkMuted"
-                      >
+                      <Badge tone="neutral" title={c.fallbackTip(label)} data-location-tag>
                         {c.fallback}
-                      </span>
+                      </Badge>
                     )}
                   </div>
                   {e.links ? (
