@@ -14,7 +14,7 @@ The UI checks and full e2e ran from the Mac against #99's final head preview at 
 Preview: https://rank1-nhq6n2w6i-bryan-flowhighlevels-projects.vercel.app (sha 1aa6078, READY).
 Sources: docs/design/v3.md (approved 2026-11-06), UI.md v3, COPY.md.
 
-Result: PASS with one waived FAIL item (V1b: no theme toggle on /client). Lead waiver for v0.6.0 (already live, cosmetic): a fix is filed to frontend, and QA re-verifies on that PR.
+Result: PASS after the re-check on 2026-11-06. V1b (no theme toggle on /client) failed the first run under a lead waiver for v0.6.0 and is FIXED by #109 (81b24e7). The first run's no-flash evidence was vacuous and is replaced below (re-measured on #109's preview, still no flash).
 
 ### Commands
 
@@ -34,10 +34,10 @@ The sweep covered 5 public pages (/, /signin, /privacy, /terms, /contact) and 14
 |---|---|---|
 | Dark by default | PASS | Root layout server-renders `data-theme="dark"`. src/lib/theme.ts `themeFor`: public → dark; themed paths → saved, else prefers-color-scheme, else dark. e2e theme.spec "first visit with prefers-color-scheme: light → light /app pages; dark → dark" |
 | V1: light toggle on /app and /team, never on public pages | PASS | The "Dark theme" toggle is present on every /dev/app state and /dev/team, and absent on all 5 public pages and /dev/client, at both widths and in both themes. Rendered only by src/app/app/layout.tsx and Workspace.tsx (plus the /dev gallery) |
-| V1b: light toggle on /client (UI.md:8: "/app, /client and /team add a light theme, toggled by 'Dark theme'"; D40 = O2) | FAIL (waived for v0.6.0) | /dev/client renders no "Dark theme" toggle at 375 or 1280 in either theme (sweep: toggle=false). /client still follows the saved or system theme (src/lib/theme.ts THEMED includes /client; e2e "light on /client → … back to /client is light"), but a /client user can't change it. Found by the reviewer on #105. My first run wrongly counted the missing toggle as correct: design/v3.md's approval line names /app and /team only, but UI.md:8 includes /client |
+| V1b: light toggle on /client (UI.md:8: "/app, /client and /team add a light theme, toggled by 'Dark theme'"; D40 = O2) | FAIL on the first run (waived for v0.6.0), FIXED by #109 | First run: /dev/client had no "Dark theme" toggle. My first run also wrongly counted that as correct: design/v3.md's approval line names /app and /team only, but UI.md:8 includes /client. Re-check table below |
 | Public pages forced dark | PASS | With a saved "light" choice, all 5 public pages render `data-theme=dark` at 375 and 1280. e2e "public pages are always dark, even with a light system and a saved light choice" |
 | Rail stays dark in light | PASS | AppShell.tsx:55 and Workspace.tsx:119 set `data-theme="dark"` on the rail subtree. globals.css re-declares the dark tokens for that scope (D14) |
-| No theme flash on load | PASS | An init script recorded every `data-theme` value from the first script onward (MutationObserver + DOMContentLoaded). For all 76 loads, the only value seen was the expected one (no dark→light or light→dark step). The theme script is inline in the server `<head>` (e2e "the theme script is in the server HTML head, before the body") |
+| No theme flash on load | PASS (re-measured) | **The first run's evidence was vacuous.** Its init script attached a MutationObserver to `document.documentElement` before that element existed, so the observer threw and recorded nothing. "Only the expected value seen" was true of an empty list, so it proved nothing. Re-measured on #109's previews (4dc0384 and af282cb) with an observer on `document`, recording `data-theme` at the moment `<body>` is first inserted (before first paint) and every later value: /, /signin, /dev/client, /dev/app (dashboard-success, experiments-success) and /dev/team, at 375 and 1280, with saved light, dark and none, and system light and dark = 72 loads per preview. Every load had the expected theme at `<body>` (public pages dark) and never changed (`atBody` is set on every load, so this time the check is not empty). The theme script is inline in the server `<head>` (e2e "the theme script is in the server HTML head, before the body") |
 | No flash on client navigation | PASS | ThemeSync applies `themeFor` in a layout effect on every path change. e2e "a saved light theme never leaks onto public pages through client-side links", "light on /app → … → the landing is dark → back to /app is light" and the /client variant all passed on the preview |
 | AA contrast, both themes | PASS | axe (including color-contrast) found 0 violations on all 76 loads. e2e runs axe on every gallery state in dark and light |
 | 44px targets below md | PASS | Sweep at 375 of every visible link, button, input, select, tab, option and summary: none under 44px on any themed page, the landing, /signin or /contact. Only exception: the inline "Contact us" text link inside the /privacy and /terms prose is 20px tall (N3, inline-text exception). e2e "tap targets are at least 44px on every page" |
@@ -49,15 +49,30 @@ The sweep covered 5 public pages (/, /signin, /privacy, /terms, /contact) and 14
 
 ### Blocking problems
 
-None for v0.6.0.
+None.
 
 | Item | Result | Evidence |
 |---|---|---|
-| V1b: no theme toggle on /client | FAIL, waived by the lead for v0.6.0 (already live, cosmetic) | A fix is filed to frontend. QA re-verifies on that PR: the toggle is on /client at 375 and 1280, aria-pressed, the choice is saved and shared with /app and /team, no flash, axe 0 in both themes |
+| V1b: no theme toggle on /client | FAIL on the first run, waived by the lead for v0.6.0 (already live, cosmetic). FIXED by #109 (81b24e7) | Re-check table below |
+
+### Re-check: #109 (fix(client): theme toggle in the /client header), 2026-11-06
+
+Previews of #109: 4dc0384 (https://rank1-r0l7h6ryl-bryan-flowhighlevels-projects.vercel.app) and, after main's portal look (#104), af282cb (https://rank1-iwoeuap1z-bryan-flowhighlevels-projects.vercel.app). Both READY, with the same results. Later heads only merged main or moved the progress note, and #109's own diff stayed the same 7 src/test files. CI on the final head 3ec170c: all 9 checks green. Merged as 81b24e7.
+
+| Check | Result | Evidence |
+|---|---|---|
+| V1b: "Dark theme" toggle in the /client header at 375 and 1280 | PASS | One button in the banner, 44x44, at both widths (src/components/auth/AppHeader.tsx renders ThemeToggle; used by src/app/client/layout.tsx and /dev/client) |
+| aria-pressed and toggling | PASS | aria-pressed true on dark, false on light, and it flips on click. dark→light (system dark) and light→dark (system light) |
+| Saved and shared with /app and /team | PASS | Toggling writes `rank1.workspace` `{theme}`. Afterwards /dev/client, /dev/app and /dev/team all load in the chosen theme, and the landing stays dark |
+| No flash | PASS | See the re-measured "No theme flash on load" row above (72 loads, including /dev/client) |
+| axe, both themes | PASS | 0 violations on /dev/client before and after toggling, at 375 and 1280. No side scroll |
+| Tests | PASS | e2e client-theme.spec.ts "the /client header toggles the theme, saves it, and the saved choice wins before paint"; unit app-header-theme.test.tsx |
+| N1: the two flaky specs | FIXED by #109 | experiments.spec.ts:40 waits for the first cell. landing.spec.ts:369 holds the IntersectionObserver and uses the page clock. `--repeat-each=5` on the preview (client-theme, experiments:40, landing:369, mobile + desktop): 30 of 30 passed |
+| Full preview e2e (4dc0384) | 548 passed, 81 skipped, 2 failed (not from #109) | Both failures are connections.spec.ts:87 "ENABLE_CONNECTIONS off: … a real 404" (mobile + desktop). It skips on the runner's `ENABLE_CONNECTIONS`, but the Preview deployment has the flag on. A preview-aware skip is filed with frontend (from #100, non-blocking) |
 
 ### Non-blocking notes
 
-- N1: two preview e2e tests are flaky. tests/e2e/experiments.spec.ts:40 reads `card.getByRole("cell").allTextContents()` without waiting for the streamed card (got 0 cells, 1 failure in 4 preview runs). tests/e2e/landing.spec.ts:369 can see the demo already "final" before it asserts "running" (1 failure in 4). Both pass in CI. A fix for the first: wait for the first cell (`await expect(card.getByRole("cell").first()).toBeVisible()`) before reading.
+- N1 (FIXED by #109, see the re-check): two preview e2e tests were flaky. tests/e2e/experiments.spec.ts:40 reads `card.getByRole("cell").allTextContents()` without waiting for the streamed card (got 0 cells, 1 failure in 4 preview runs). tests/e2e/landing.spec.ts:369 can see the demo already "final" before it asserts "running" (1 failure in 4). Both pass in CI. A fix for the first: wait for the first cell (`await expect(card.getByRole("cell").first()).toBeVisible()`) before reading.
 - N2: with JS off, streamed pages (/dev/app, /dev/team, and the signed-in /app and /team) stay hidden until JS runs. This is the existing Step 11 note, not new in v3. The no-JS switcher form is present in the HTML.
 - N3: the inline "Contact us" link in the /privacy and /terms body text is 20px tall at 375. Inline links in a sentence are exempt from the target-size rule.
 
