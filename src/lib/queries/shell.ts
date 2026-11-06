@@ -109,7 +109,7 @@ export type TopFix = {
   status: "todo" | "doing";
 };
 
-// The Dashboard's top open fixes, ranked like the fix list (size, then rule key), never tidy-ups (H1).
+// The Dashboard's top open fixes, in the Fix list order (pillar, size, rule key), never tidy-ups (H1).
 // Reads only the fixes row (never fix_rules.why_note).
 export async function getTopFixes(db: DbClient, businessId: string, limit = 3): Promise<TopFix[]> {
   const { ranked } = await openFixes(db, businessId);

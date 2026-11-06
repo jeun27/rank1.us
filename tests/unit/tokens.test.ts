@@ -142,6 +142,17 @@ describe("Tailwind theme matches the v3 tokens", () => {
       expect(css).toContain(d);
   });
 
+  // X6 (UI.md D33): the app page title is 22/28 at every width; the hero number sits in the 36-44 range.
+  it("has the UI.md title 22/28 and hero 44/48", () => {
+    for (const d of [
+      "--text-title: 22px;",
+      "--text-title--line-height: 28px;",
+      "--text-hero: 44px;",
+      "--text-hero--line-height: 48px;",
+    ])
+      expect(css).toContain(d);
+  });
+
   // R2 (lead): fields stay 16px below md, so iPhone Safari doesn't zoom on focus. Unlayered, so it wins.
   it("keeps form fields at 16px below md", () => {
     expect(css).toMatch(/@media \(width < 48rem\) \{\s*input,\s*select,\s*textarea \{ font-size: 16px; \}\s*\}/);

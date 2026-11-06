@@ -13,7 +13,20 @@ const LD = (o: unknown) => `<script type="application/ld+json">${JSON.stringify(
 describe("copy", () => {
   it("templates are the SCHEMA.md §5b customer copy, verbatim", () => {
     const byKey = Object.fromEntries(fixRules().map((r) => [r.key, r.customer_copy]));
-    for (const [k, v] of Object.entries(COPY)) expect(v, k).toBe(byKey[k]);
+    // R16 and R18 aren't seeded (migrations 0025 and 0031 insert them); they're checked against those below.
+    for (const [k, v] of Object.entries(COPY)) if (k !== "R16" && k !== "R18") expect(v, k).toBe(byKey[k]);
+  });
+
+  it.each([
+    ["R16", "20261105000025_ai_access.sql"],
+    ["R18", "20261105000031_fix_rule_r18.sql"],
+  ] as const)("%s's template is its fix_rules row's customer_copy (migration %s), verbatim", async (key, file) => {
+    const { readFileSync } = await import("node:fs");
+    const sql = readFileSync(`${process.cwd()}/supabase/migrations/${file}`, "utf8").replace(/''/g, "'");
+    const at = sql.indexOf(`values ('${key}'`);
+    expect(at, `${key} row in ${file}`).toBeGreaterThanOrEqual(0);
+    const row = sql.slice(at, sql.indexOf(";", at));
+    expect(row).toContain(`'${COPY[key]}'`);
   });
 });
 

@@ -58,8 +58,10 @@
   --text-h2-md--line-height: 42px;
   --text-h3: 20px;
   --text-h3--line-height: 26px;
-  --text-hero: 48px;
-  --text-hero--line-height: 52px;
+  --text-title: 22px;
+  --text-title--line-height: 28px;
+  --text-hero: 44px;
+  --text-hero--line-height: 48px;
   --text-body: 16px;
   --text-body--line-height: 24px;
   --text-body-lg: 18px;

@@ -13,6 +13,9 @@ const FIXES = { checked: null, skipped: "none" };
 const fixes = vi.hoisted(() => ({ checkFixesWith: vi.fn() }));
 vi.mock("@/lib/fixes/service", () => fixes);
 const REPORTS = { sent: 0, generated: 0, retry: 0 };
+const AI = { checked: 0, skipped: "disabled" };
+const site = vi.hoisted(() => ({ checkFreeAuditAccessWith: vi.fn() }));
+vi.mock("@/lib/site/service", () => site);
 const reports = vi.hoisted(() => ({ processReportsWith: vi.fn() }));
 vi.mock("@/lib/reports/service", () => reports);
 vi.mock("@/lib/engines", async (real) => ({ ...(await real<object>()), runEngine }));
@@ -48,6 +51,7 @@ beforeEach(() => {
   notify.notifyFreeAuditsWith.mockReset().mockResolvedValue(NOTIFIED);
   fixes.checkFixesWith.mockReset().mockResolvedValue(FIXES);
   reports.processReportsWith.mockReset().mockResolvedValue(REPORTS);
+  site.checkFreeAuditAccessWith.mockReset().mockResolvedValue(AI);
   runEngine.mockReset().mockResolvedValue({
     status: "ok",
     text: "Example Ramen House is great.",
@@ -90,6 +94,7 @@ describe("GET /api/cron/run-jobs", () => {
       unfinished: 0,
       stopped: "batch",
       notified: NOTIFIED,
+      aiAccess: AI,
       fixes: FIXES,
       reports: REPORTS,
     });
@@ -107,6 +112,7 @@ describe("GET /api/cron/run-jobs", () => {
       unfinished: 0,
       stopped: "empty",
       notified: NOTIFIED,
+      aiAccess: AI,
       fixes: FIXES,
       reports: REPORTS,
     });
@@ -139,6 +145,7 @@ describe("GET /api/cron/run-jobs", () => {
       unfinished: 0,
       stopped: "budget",
       notified: NOTIFIED,
+      aiAccess: AI,
       fixes: FIXES,
       reports: REPORTS,
     });
@@ -155,6 +162,7 @@ describe("GET /api/cron/run-jobs", () => {
       unfinished: 1,
       stopped: "empty",
       notified: NOTIFIED,
+      aiAccess: AI,
       fixes: FIXES,
       reports: REPORTS,
     });
@@ -174,6 +182,19 @@ describe("GET /api/cron/run-jobs", () => {
     expect(notify.notifyFreeAuditsWith).not.toHaveBeenCalled();
     expect(fixes.checkFixesWith).not.toHaveBeenCalled();
     expect(reports.processReportsWith).not.toHaveBeenCalled();
+    expect(site.checkFreeAuditAccessWith).not.toHaveBeenCalled();
+  });
+
+  it("runs the free-audit AI access check after notify and before the fix checks, with the time left", async () => {
+    q.claimJobs.mockResolvedValue([]);
+    site.checkFreeAuditAccessWith.mockImplementation(async (_db: unknown, timeLeftMs: () => number) => ({
+      left: timeLeftMs() > 0,
+    }));
+    expect((await (await call(`Bearer ${SECRET}`)).json()).aiAccess).toEqual({ left: true });
+    const order = [notify.notifyFreeAuditsWith, site.checkFreeAuditAccessWith, fixes.checkFixesWith].map(
+      (f) => f.mock.invocationCallOrder[0],
+    );
+    expect(order).toEqual([...order].sort((a, b) => a - b));
   });
 
   it("drains monthly reports last, after the fix checks, with the time left of maxDuration", async () => {
