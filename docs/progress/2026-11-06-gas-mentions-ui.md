@@ -1,0 +1,11 @@
+## G7 (frontend): "Lists that name your rivals but not you" (branch feat/gas-mentions-ui-2)
+
+- Lead OK 2026-11-06 for D1–D7. Q1: strings in COPY.md "UX (lead, 2026-11-06)", with the empty state split in two. Q2: /app first; the DFY pane in /team waits for C-c. Q3: the R17 evidence. Q4: engine names. D4: the save error goes inline on the row. Behind ENABLE_MENTIONS. It builds on data-pipeline's #131 (loadMentions, decideMention), with no backend changes.
+- /app/sources: MentionsSection is the first thing on the page, via SourcesView's `mentions` slot (PR22's slot).
+  - Each row has the page link (new tab, noopener noreferrer; the domain when there's no title), the category and domain, "Names {rivals}" (up to 3, then "+{n}"), and "In {k} of {n} answers · {engine names}". The rivals are #131's (only those in the page).
+  - Actions: "Add to fixes" and a "Not relevant" text action. Added pages move to an Added group with the badge, "View" (to /app/fixes#fix-{R17 id}) and "Remove". Not-relevant pages fold into a closed "Not relevant ({n})" disclosure with "Restore".
+  - Decisions are optimistic. A failed save reverts the row and shows "We couldn't save that. Try again." inline (role=status), never in a banner.
+  - Empty states: before the first run, and after a run with no lists. canDecide=false shows the lists with no actions.
+- The server action (app/app/sources/actions.ts, public) validates the URL (http(s), ≤2000) and the status, decides for the current business, maps the service's refusals to error codes, never returns raw messages, and revalidates /app/fixes and /app/sources.
+- What to fix next: the grouped R17 fix's evidence (FixView.evidence, inside the open fix's collapsible body) lists the added pages, at most 3, then "+{n} more" to /app/sources.
+- Not done: the /team DFY pane (C-c).
