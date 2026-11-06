@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Banner } from "@/components/ui/Banner";
@@ -7,6 +8,7 @@ import { Freshness } from "@/components/ui/Freshness";
 import { Icon } from "@/components/ui/Icon";
 import { Jelly } from "@/components/ui/Jelly";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { Logo } from "@/components/ui/Logo";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatNumber, formatPercent } from "@/components/ui/StatNumber";
 import { Table } from "@/components/ui/Table";
@@ -40,35 +42,62 @@ export function AuditView({
 }) {
   const { run } = results;
   const running = run.status === "queued" || run.status === "running";
+  // X4: the ask sits at the competitor gap, the peak moment, with one sentence and the one primary.
+  const cta = free && (
+    <section
+      aria-labelledby="audit-cta"
+      className="flex flex-col items-start gap-4 rounded-surface bg-white p-4 shadow-card md:flex-row md:items-center md:justify-between md:p-6"
+    >
+      <p id="audit-cta" className="text-ui font-medium">
+        {c.ctaLead}
+      </p>
+      <Button href={`/signin?next=${encodeURIComponent("/app/billing")}`}>{c.paywall}</Button>
+    </section>
+  );
   return (
-    <main className="mx-auto flex max-w-3xl flex-col gap-8 px-5 py-10 md:px-8 md:py-16">
-      <div>
-        <h1 className="font-display text-display font-semibold md:text-display-md">
-          {free ? c.titleFree : c.titlePaid}
-        </h1>
-        <p data-computed className="mt-2 text-body-lg text-inkMuted">
-          {results.label}
-        </p>
-      </div>
-      {running ? (
-        <Progress results={results} metrics={metrics} />
-      ) : run.status === "failed" ? (
-        <Banner tone="error">{c.runFailed}</Banner>
-      ) : (
-        <Results results={results} metrics={metrics} exportBase={exportBase} now={now} aiAccess={aiAccess} />
-      )}
-      {free && !running && run.status !== "failed" && (
-        <Card>
-          <Button href={`/signin?next=${encodeURIComponent("/app/billing")}`}>{c.paywall}</Button>
-        </Card>
-      )}
+    <>
       {free && (
-        <footer className="flex items-center gap-1.5 text-micro text-inkMuted">
-          <Jelly size={12} decorative />
-          {c.credit}
-        </footer>
+        <header className="mx-auto flex max-w-3xl items-center px-5 pt-4 md:px-8">
+          <Link
+            href="/"
+            aria-label="Rank1"
+            className="inline-flex min-h-11 items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+          >
+            <Logo />
+          </Link>
+        </header>
       )}
-    </main>
+      <main className="mx-auto flex max-w-3xl flex-col gap-8 px-5 py-10 md:px-8 md:py-16">
+        <div>
+          <h1 className="font-display text-display font-semibold md:text-display-md">
+            {free ? c.titleFree : c.titlePaid}
+          </h1>
+          <p data-computed className="mt-2 text-body-lg text-inkMuted">
+            {results.label}
+          </p>
+        </div>
+        {running ? (
+          <Progress results={results} metrics={metrics} />
+        ) : run.status === "failed" ? (
+          <Banner tone="error">{c.runFailed}</Banner>
+        ) : (
+          <Results
+            results={results}
+            metrics={metrics}
+            exportBase={exportBase}
+            now={now}
+            aiAccess={aiAccess}
+            cta={cta}
+          />
+        )}
+        {free && (
+          <footer className="flex items-center gap-1.5 text-micro text-inkMuted">
+            <Jelly size={12} decorative />
+            {c.credit}
+          </footer>
+        )}
+      </main>
+    </>
   );
 }
 
@@ -112,12 +141,14 @@ function Results({
   exportBase,
   now,
   aiAccess,
+  cta,
 }: {
   results: RunResults;
   metrics: Metrics;
   exportBase: string;
   now: Date;
   aiAccess: AiAccessCheck | null;
+  cta: ReactNode;
 }) {
   const firstUrl = (domain: string) => results.citations.find((x) => x.domain === domain)?.url;
   const download =
@@ -126,14 +157,16 @@ function Results({
     <>
       <Hero metrics={metrics} now={now} />
 
-      <EngineTable results={results} metrics={metrics} />
-
       <section className="flex flex-col gap-3">
         <h2 className="font-display text-h3 font-semibold">{c.competitors}</h2>
         <Leaderboard metrics={metrics} />
       </section>
 
+      {cta}
+
       {aiAccess && <AiAccessPanel check={aiAccess} now={now} />}
+
+      <EngineTable results={results} metrics={metrics} />
 
       {metrics.sources.length > 0 && (
         <section className="flex flex-col gap-3">

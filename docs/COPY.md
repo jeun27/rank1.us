@@ -476,11 +476,12 @@ G7 "Lists that name your rivals but not you" (/app/sources, and the R17 fix's ev
 
 ## UX (lead, 2026-11-06)
 
-Strings the lead approved for the UX plan (share/ux-plan, founder OK 2026-11-06 07:58 UTC).
+Strings the lead approved for the UX plan (share/ux-plan §C; founder OK 2026-11-06 07:58 UTC, lead sign-off 08:06 + 08:08 UTC).
 
 | Where | String |
 |---|---|
 | The fixes page, everywhere (X16) | "What to fix next": the /app and /team rail item and the page and document title (/team said "Fix list") |
+| Free audit CTA panel, after the leaderboard (X4) | "Rank1 checks these 4 AI engines every week and shows you what to fix next." with the existing "Start for $99/mo" |
 
 ## Engine location tooltip
 
