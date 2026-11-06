@@ -23,7 +23,33 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "ai_traffic": {
+            "ai_access_checks": {
+                  Row: {
+                    "business_id": string | null,"checked_at": string,"cloudflare": boolean,"crawlers": Json,"domain": string,"outcome": string,"pages_checked": number,"run_id": string,"status_gptbot": number | null,"status_normal": number | null,"visible_words": number | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "business_id"?: string | null,"checked_at"?: string,"cloudflare"?: boolean,"crawlers"?: Json,"domain": string,"outcome": string,"pages_checked"?: number,"run_id": string,"status_gptbot"?: number | null,"status_normal"?: number | null,"visible_words"?: number | null
+                  }
+                  Update: {
+                    "business_id"?: string | null,"checked_at"?: string,"cloudflare"?: boolean,"crawlers"?: Json,"domain"?: string,"outcome"?: string,"pages_checked"?: number,"run_id"?: string,"status_gptbot"?: number | null,"status_normal"?: number | null,"visible_words"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "ai_access_checks_business_id_fkey"
+      columns: ["business_id"]
+isOneToOne: false
+      referencedRelation: "businesses"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ai_access_checks_run_id_fkey"
+      columns: ["run_id"]
+isOneToOne: false
+      referencedRelation: "runs"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"ai_traffic": {
                   Row: {
                     "business_id": string,"date": string,"sessions": number,"source": string
                   }
@@ -336,28 +362,28 @@ isOneToOne: false
                   ]
                 },"fix_rules": {
                   Row: {
-                    "ai_lever": boolean,"cadence": string,"customer_copy": string,"data_source": string | null,"detection": string | null,"enabled": boolean,"grp": string,"key": string,"size": string,"threshold": Json | null,"title": string,"unverified": (string)[],"why_note": string | null
+                    "ai_lever": boolean,"cadence": string,"customer_copy": string,"data_source": string | null,"detection": string | null,"enabled": boolean,"grp": string,"key": string,"pillar": string,"size": string,"threshold": Json | null,"title": string,"unverified": (string)[],"why_note": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "ai_lever"?: boolean,"cadence": string,"customer_copy": string,"data_source"?: string | null,"detection"?: string | null,"enabled"?: boolean,"grp": string,"key": string,"size": string,"threshold"?: Json | null,"title": string,"unverified"?: (string)[],"why_note"?: string | null
+                    "ai_lever"?: boolean,"cadence": string,"customer_copy": string,"data_source"?: string | null,"detection"?: string | null,"enabled"?: boolean,"grp": string,"key": string,"pillar"?: string,"size": string,"threshold"?: Json | null,"title": string,"unverified"?: (string)[],"why_note"?: string | null
                   }
                   Update: {
-                    "ai_lever"?: boolean,"cadence"?: string,"customer_copy"?: string,"data_source"?: string | null,"detection"?: string | null,"enabled"?: boolean,"grp"?: string,"key"?: string,"size"?: string,"threshold"?: Json | null,"title"?: string,"unverified"?: (string)[],"why_note"?: string | null
+                    "ai_lever"?: boolean,"cadence"?: string,"customer_copy"?: string,"data_source"?: string | null,"detection"?: string | null,"enabled"?: boolean,"grp"?: string,"key"?: string,"pillar"?: string,"size"?: string,"threshold"?: Json | null,"title"?: string,"unverified"?: (string)[],"why_note"?: string | null
                   }
                   Relationships: [
                     
                   ]
                 },"fixes": {
                   Row: {
-                    "affected_answers": number | null,"business_id": string,"detail": string | null,"evidence": Json | null,"first_seen_run": string | null,"id": string,"last_seen_run": string | null,"rule_key": string,"size": string,"status": string,"status_changed_at": string | null,"status_changed_by": string | null,"title": string
+                    "affected_answers": number | null,"business_id": string,"detail": string | null,"evidence": Json | null,"first_seen_run": string | null,"id": string,"last_seen_run": string | null,"pillar": string,"rule_key": string,"size": string,"status": string,"status_changed_at": string | null,"status_changed_by": string | null,"title": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "affected_answers"?: number | null,"business_id": string,"detail"?: string | null,"evidence"?: Json | null,"first_seen_run"?: string | null,"id"?: string,"last_seen_run"?: string | null,"rule_key": string,"size": string,"status"?: string,"status_changed_at"?: string | null,"status_changed_by"?: string | null,"title": string
+                    "affected_answers"?: number | null,"business_id": string,"detail"?: string | null,"evidence"?: Json | null,"first_seen_run"?: string | null,"id"?: string,"last_seen_run"?: string | null,"pillar"?: string,"rule_key": string,"size": string,"status"?: string,"status_changed_at"?: string | null,"status_changed_by"?: string | null,"title": string
                   }
                   Update: {
-                    "affected_answers"?: number | null,"business_id"?: string,"detail"?: string | null,"evidence"?: Json | null,"first_seen_run"?: string | null,"id"?: string,"last_seen_run"?: string | null,"rule_key"?: string,"size"?: string,"status"?: string,"status_changed_at"?: string | null,"status_changed_by"?: string | null,"title"?: string
+                    "affected_answers"?: number | null,"business_id"?: string,"detail"?: string | null,"evidence"?: Json | null,"first_seen_run"?: string | null,"id"?: string,"last_seen_run"?: string | null,"pillar"?: string,"rule_key"?: string,"size"?: string,"status"?: string,"status_changed_at"?: string | null,"status_changed_by"?: string | null,"title"?: string
                   }
                   Relationships: [
                     {
@@ -803,6 +829,9 @@ isOneToOne: false
                            },
 "prune_ephemeral":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"record_ai_access_check":
+{ Args: { "p": Json,"p_run_id": string }; Returns: undefined
                            },
 "record_connection_change":
 { Args: { "p_actor": string,"p_after": Json,"p_before": Json,"p_connection_id": string,"p_field": string,"p_provider_ref": string }; Returns: string
