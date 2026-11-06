@@ -295,6 +295,8 @@ export function FixList({
   const [failed, setFailed] = useState(false);
   const [filter, setFilter] = useState<Filter>("open");
   const [toast, setToast] = useState<{ id: string; title: string; prev: FixStatus } | null>(null);
+  // WCAG 2.2.1: focus or hover on the toast pauses its timer; leaving restarts the full 8 s.
+  const [held, setHeld] = useState({ focus: false, hover: false });
   // Open by default: the first open fix and the #fix-{id} target. A click flips a row from its default.
   const first = firstOpen(ranked, tidyUps);
   const target = useSyncExternalStore(onHash, hashFix, () => "");
@@ -318,10 +320,10 @@ export function FixList({
   }, [target]);
 
   useEffect(() => {
-    if (!toast) return;
+    if (!toast || held.focus || held.hover) return;
     const t = setTimeout(() => setToast(null), TOAST_MS);
     return () => clearTimeout(t);
-  }, [toast]);
+  }, [toast, held.focus, held.hover]);
 
   if (!ranked.length && !tidyUps.length && !unchecked.length && !done.length)
     return (
@@ -353,7 +355,11 @@ export function FixList({
       const list = root.current;
       if (!list) return;
       const el = id && list.querySelector<HTMLElement>(`[data-fix-check="${CSS.escape(id)}"]`);
-      (el || list.querySelector<HTMLElement>("[data-toast-undo]"))?.focus();
+      (
+        el ||
+        list.querySelector<HTMLElement>("[data-toast-undo]") ||
+        list.querySelector<HTMLElement>("[data-fix-check]")
+      )?.focus();
     });
   const markDone = async (id: string, title: string, prev: FixStatus) => {
     const boxes = [...(root.current?.querySelectorAll<HTMLElement>("[data-fix-check]") ?? [])].map(
@@ -362,7 +368,10 @@ export function FixList({
     const i = boxes.indexOf(id);
     const next = boxes[i + 1] ?? boxes[i - 1] ?? null;
     const ok = await set(id, "done", prev);
-    if (ok) setToast({ id, title, prev });
+    if (ok) {
+      setHeld({ focus: false, hover: false });
+      setToast({ id, title, prev });
+    }
     // In "All" the done row stays, so focus stays on it.
     focusAfterRender(filter === "all" || !ok ? id : next);
   };
@@ -609,6 +618,12 @@ export function FixList({
       {toast && (
         <div
           role="status"
+          onMouseEnter={() => setHeld((h) => ({ ...h, hover: true }))}
+          onMouseLeave={() => setHeld((h) => ({ ...h, hover: false }))}
+          onFocus={() => setHeld((h) => ({ ...h, focus: true }))}
+          onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget)) setHeld((h) => ({ ...h, focus: false }));
+          }}
           className="fixed right-4 bottom-4 z-30 flex max-w-[calc(100vw-2rem)] flex-wrap items-center gap-x-4 gap-y-1 rounded-card border border-border bg-overlay px-4 py-3 text-ui shadow-overlay"
         >
           <span data-computed className="max-md:basis-full">
@@ -620,6 +635,7 @@ export function FixList({
             onClick={async () => {
               const t = toast;
               setToast(null);
+              setHeld({ focus: false, hover: false });
               await set(t.id, t.prev, "done");
               focusAfterRender(t.id);
             }}
@@ -627,6 +643,18 @@ export function FixList({
             className={`text-ui font-medium text-ink underline underline-offset-4 ${focus}`}
           >
             {c.undo}
+          </button>
+          <button
+            type="button"
+            aria-label={c.close}
+            onClick={() => {
+              setToast(null);
+              setHeld({ focus: false, hover: false });
+              focusAfterRender(null);
+            }}
+            className={`-m-2 grid size-11 shrink-0 place-items-center rounded-control text-inkMuted hover:text-ink md:size-8 ${focus}`}
+          >
+            <Icon name="x" className="size-4" />
           </button>
         </div>
       )}

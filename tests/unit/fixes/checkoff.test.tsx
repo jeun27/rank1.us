@@ -231,12 +231,13 @@ describe("read-only (a DFY client) and failures", () => {
   });
 
   // Fake timers only (no self-advancing clock), fireEvent instead of userEvent, so the 8 s is exact.
+  // Two fixes, so focus moves to the next check-off (N1) and not into the toast, which would hold it (2.2.1).
   it("the toast goes away by itself", async () => {
     vi.useFakeTimers();
     try {
       render(
         <FixList
-          ranked={[exampleFixes[0]]}
+          ranked={[exampleFixes[0], exampleFixes[1]]}
           tidyUps={[]}
           done={[]}
           unchecked={[]}
