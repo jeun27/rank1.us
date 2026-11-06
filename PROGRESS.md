@@ -995,7 +995,3 @@ Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/
 - Lead OK 2026-11-06 (Q1, Q2). src/app/robots.ts: in production, one group for "*" plus GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot and Google-Extended, each "Allow: /" and disallowing /app /team /client /api /dev /admin /auth. /audit is left to its noindex. Sitemap: <origin>/sitemap.xml.
 - Previews and every non-production build (VERCEL_ENV !== "production"): "Disallow: /" for everyone.
 - src/app/sitemap.ts: the public pages only (/, /contact, /privacy, /terms). Origin = NEXT_PUBLIC_SITE_URL when it is https, else https://rank1.us (src/lib/site/origin.ts).
-
-## Pillar on done fixes (backend) (branch feat/done-fix-pillar)
-- Lead (2026-11-06): done_fixes also returns pillar, so frontend's G5 per-group done counts are complete. Migration 20261105000029 (+ .down.sql) re-creates done_fixes with the extra column (a function's result columns can't change in place; drop + create in one transaction). listDoneFixes items gain pillar.
-
