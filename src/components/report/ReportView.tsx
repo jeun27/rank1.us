@@ -52,11 +52,14 @@ export function ReportView({
   reports,
   previewSrc,
   actions,
+  connectGa4Href = null,
 }: {
   settings: ReportSettingsView;
   reports: ReportRow[];
   previewSrc: string;
   actions: ReportActions;
+  // The Connections hub, when it exists. GA4 isn't connected, so the GA4 section stays hidden either way.
+  connectGa4Href?: string | null;
 }) {
   const ids = { logo: useId(), color: useId(), recipients: useId(), hint: useId() };
   const [color, setColor] = useState((settings.brand_color ?? DEFAULT_COLOR).toLowerCase());
@@ -75,6 +78,14 @@ export function ReportView({
       )}
       {error && <Banner tone="error">{error}</Banner>}
       {!reports.length && <p className="text-body-lg">{c.empty}</p>}
+      {connectGa4Href && (
+        <a
+          href={connectGa4Href}
+          className="inline-flex min-h-11 items-center self-start text-ui text-jellyDeep underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-jellyDeep"
+        >
+          {c.connectGa4}
+        </a>
+      )}
 
       <Section title={c.preview}>
         <iframe

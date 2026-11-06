@@ -8,6 +8,7 @@ import { getCurrentBusiness } from "@/lib/queries/shell";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { saveReportSettings, sendReportTest, uploadReportLogo } from "./actions";
+import { ga4ConnectHref } from "./ga4";
 
 export const metadata: Metadata = { title: "Reports - Rank1", robots: { index: false } };
 
@@ -32,6 +33,7 @@ export default async function ReportPage() {
       reports={reports}
       previewSrc="/app/report/preview.pdf"
       actions={{ save: saveReportSettings, uploadLogo: uploadReportLogo, sendTest: sendReportTest }}
+      connectGa4Href={ga4ConnectHref()}
     />
   );
 }
