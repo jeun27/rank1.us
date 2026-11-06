@@ -150,6 +150,29 @@ describe("upsert_mention_fix", () => {
     }
   });
 
+  it("concurrent first calls make one R17 and never raise 23505", async () => {
+    const { user, b } = await selfServe("mfix-g");
+    await setMentionTarget(user.db, b, "https://example-eats.test/a", "added");
+    const ids = await Promise.all(Array.from({ length: 5 }, () => upsertMentionFix(user.db, b, DETAIL)));
+    expect(new Set(ids).size).toBe(1);
+    expect(await r17(b)).toHaveLength(1);
+  });
+
+  it("refuses when R17 is disabled (22023 mention_rule_unavailable)", async () => {
+    const { user, b } = await selfServe("mfix-h");
+    await setMentionTarget(user.db, b, "https://example-eats.test/a", "added");
+    must(await s().from("fix_rules").update({ enabled: false }).eq("key", "R17"));
+    try {
+      await expect(upsertMentionFix(user.db, b, DETAIL)).rejects.toMatchObject({
+        code: "22023",
+        message: "mention_rule_unavailable",
+      });
+    } finally {
+      must(await s().from("fix_rules").update({ enabled: true }).eq("key", "R17"));
+    }
+    expect(await r17(b)).toEqual([]);
+  });
+
   it("refuses an empty or over-long detail (22023)", async () => {
     const { user, b } = await selfServe("mfix-f");
     for (const detail of ["  ", "x".repeat(2001)]) {
