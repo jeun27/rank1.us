@@ -253,7 +253,7 @@ describe("getCurrentBusiness", () => {
 });
 
 describe("getTopFixes", () => {
-  it("returns open fixes ranked by size then rule key, never tidy-ups or why_note, at most the limit", async () => {
+  it("returns open fixes in the Fix list order (pillar, then size, then rule key), never tidy-ups or why_note, at most the limit", async () => {
     const { user, businessId } = await selfServe("fixes-top", 1);
     const s = serviceClient();
     const rule = (key: string, grp = "restaurant") => ({
@@ -295,10 +295,11 @@ describe("getTopFixes", () => {
     );
 
     const top = await getTopFixes(user.db, businessId, 3);
+    // X1a: P5 (R14, R10) before P3 (R1) before P2 (R11), so a larger P5 fix beats a smaller P3 one.
     expect(top.map((f) => [f.rule_key, f.size, f.status])).toEqual([
       ["R14", "S", "todo"],
-      ["R1", "S-M", "todo"],
       ["R10", "M-L", "doing"],
+      ["R1", "S-M", "todo"],
     ]);
     expect(top[0].affected_answers).toBeNull();
     expect(JSON.stringify(top)).not.toContain("engineer-only secret");
@@ -311,7 +312,7 @@ describe("getTopFixes", () => {
       "status",
       "title",
     ]);
-    expect((await getTopFixes(user.db, businessId, 10)).map((f) => f.rule_key)).toEqual(["R14", "R1", "R10", "R11"]);
+    expect((await getTopFixes(user.db, businessId, 10)).map((f) => f.rule_key)).toEqual(["R14", "R10", "R1", "R11"]);
 
     const stranger = await newUser("fixes-stranger");
     expect(await getTopFixes(stranger.db, businessId)).toEqual([]);

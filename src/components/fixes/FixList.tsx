@@ -3,7 +3,7 @@ import { useEffect, useState, type KeyboardEvent } from "react";
 import { rovingIndex } from "@/components/workspace/hooks";
 import { Banner } from "@/components/ui/Banner";
 import { Card } from "@/components/ui/Card";
-import type { FixItem, FixStatus, Pillar } from "@/lib/queries/fixes";
+import { PILLAR_ORDER, type FixItem, type FixStatus, type Pillar } from "@/lib/queries/fixes";
 import type { Metric } from "@/types/metrics";
 import { fixCopy as c } from "./copy";
 
@@ -40,8 +40,6 @@ type Row = {
 };
 
 const FILTERS = ["open", "done", "all"] as const;
-// G5: blockers first. P0 (know where you stand) comes last, with the baseline line.
-const PILLAR_ORDER: Pillar[] = ["p5", "p3", "p2", "p1", "p4", "p6", "p0"];
 type Filter = (typeof FILTERS)[number];
 const TOAST_MS = 8000;
 const day = (iso: string) =>
