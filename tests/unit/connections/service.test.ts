@@ -10,6 +10,7 @@ const q = vi.hoisted(() => ({
   getConnectionTokens: vi.fn(),
   updateConnectionTokens: vi.fn(),
   setConnectionEntities: vi.fn(),
+  setConnectionEntityCount: vi.fn(),
   setConnectionStatus: vi.fn(),
   revokeConnection: vi.fn(),
   recordConnectionChange: vi.fn(),
@@ -295,6 +296,18 @@ describe("the entity picker", () => {
     expect(await svc.listConnectionEntities(yt, "conn-1")).toEqual([
       { id: "UCexample000000000000001", name: "Example Ramen House" },
     ]);
+  });
+
+  it("stores how many entities the account offers", async () => {
+    await svc.listConnectionEntities(ctx(gbpFetch()), "conn-1");
+    expect(q.setConnectionEntityCount).toHaveBeenCalledWith(serviceDb, "conn-1", 2);
+  });
+
+  it("a failed count save is logged by code and the list still returns", async () => {
+    q.setConnectionEntityCount.mockRejectedValue({ code: "22023", message: "Unknown connection" });
+    const c = ctx(gbpFetch());
+    expect(await svc.listConnectionEntities(c, "conn-1")).toHaveLength(2);
+    expect(c.log).toHaveBeenCalledWith("connections: entity count not saved (22023)");
   });
 
   it("picking keeps only ids Google listed (no arbitrary ids)", async () => {
