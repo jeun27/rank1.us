@@ -8,12 +8,15 @@ alter table public.fixes
   add column if not exists status_changed_by uuid references auth.users (id) on delete set null;
 create index if not exists fixes_status_changed_by_idx on public.fixes (status_changed_by);
 
--- Set on every status change (the actor is null for the service detector), kept on any other
--- update, so neither can be written directly.
+-- Never the caller's values: null on insert (a new fix has no history yet), set on every status
+-- change (the actor is null for the service detector) and kept on any other update.
 create or replace function private.track_fix_status() returns trigger
 language plpgsql set search_path = '' as $$
 begin
-  if new.status is distinct from old.status then
+  if tg_op = 'INSERT' then
+    new.status_changed_at := null;
+    new.status_changed_by := null;
+  elsif new.status is distinct from old.status then
     new.status_changed_at := now();
     new.status_changed_by := auth.uid();
   else
@@ -25,7 +28,7 @@ end;
 $$;
 revoke all on function private.track_fix_status() from public;
 drop trigger if exists fixes_track_status on public.fixes;
-create trigger fixes_track_status before update on public.fixes
+create trigger fixes_track_status before insert or update on public.fixes
   for each row execute function private.track_fix_status();
 
 -- Who changed a fix's status, for a fix the caller can see: {is_team, name} or null. A team actor

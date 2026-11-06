@@ -139,6 +139,24 @@ describe("status history", () => {
     expect(await history(id)).toMatchObject({ status: "todo", status_changed_by: owner.id });
   });
 
+  it("an insert with spoofed history values gets none, for a member and for the service role", async () => {
+    const spoof = { status_changed_by: team.id, status_changed_at: "2020-01-01T00:00:00Z" };
+    const row = (db: TestUser["db"], rule_key: string, status: string) =>
+      db
+        .from("fixes")
+        .insert({ business_id: ownerBusiness, rule_key, size: "S", title: "Example", status, ...spoof })
+        .select("id, status_changed_at, status_changed_by")
+        .single();
+    for (const [db, rule, status] of [
+      [owner.db, "R10", "done"],
+      [s(), "R14", "done"],
+    ] as const) {
+      const inserted = must(await row(db, rule, status));
+      expect(inserted).toMatchObject({ status_changed_at: null, status_changed_by: null });
+      must(await s().from("fixes").delete().eq("id", inserted.id));
+    }
+  });
+
   it("the detector's auto-close records the time with no actor", async () => {
     const x = await named("hist-auto", "Example Auto");
     await ensureSelfServeWorkspace(x.db);
