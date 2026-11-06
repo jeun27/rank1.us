@@ -896,3 +896,11 @@ Blocked/open
   - create_free_audit: p.daily_limit is a whole number (else 22023); the server passes auditDailyLimit(), so AUDIT_DAILY_LIMIT stays the one knob (lead Q1). Missing or null skips the DB cap so the live v0.5.0 build keeps working on the shared hosted DB (lead); the app-level check still runs. Under a transaction advisory lock it counts free audits since UTC midnight and raises P0429 at the cap. A lead that already has a run still gets it back. startFreeAudit already logs the code and returns no run (lead Q2: no new copy).
 - README "Releasing": apply missing migrations to the hosted DB, then `notify pgrst, 'reload schema'`, before the deploy.
 - Tests: the claim-order test now expects the half-and-half split (the rule changed, lead-approved). free-audit and e2e inputs pass daily_limit.
+
+## v3 PR 2a (frontend): the /app shell (branch feat/v3-shell)
+
+- Rail (D14): the App nav is the rail. It holds the logo, the pages in 4 groups with icons (Dashboard | Competitors, Questions, Sources | What to fix next, Reports, History | Billing) and Account at the foot. It's dark in both themes (rail token #0B0C0E, §7) and a sideways row on phones. During onboarding it keeps the logo and Account but no page links.
+- Top bar (D42): a breadcrumb, Rank1 / business / page (aria-label "Breadcrumb", lead copy). The business crumb is the Business switcher (a 6px trigger, overlay popover); the theme toggle is on the right. The "/" separators are CSS ::before content, so the <ol> holds only <li>s.
+- /dev/app renders every state inside the shell; the switcher states put the switcher in the breadcrumb.
+- Theme on navigation: ThemeSync (#92) re-applies themeFor on pathname changes. The e2e covers the rail logo, the breadcrumb Rank1 and the /client header logo (local stack).
+- Split (lead D1): 2a is /app; 2b is the /team shell (the client switcher listbox in the breadcrumb, the Context panel on the right, the document as main).

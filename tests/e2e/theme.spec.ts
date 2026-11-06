@@ -56,6 +56,7 @@ test("a saved light theme never leaks onto public pages through client-side link
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
 });
 
+<<<<<<< HEAD
 // #92 review, the logo path: a saved light theme on /app → the rail logo → the landing is dark → back is light.
 for (const [where, link] of [
   ["the rail logo", "App"],
@@ -74,3 +75,21 @@ for (const [where, link] of [
     await page.waitForURL("**/dev/app**");
     await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   });
+=======
+// #92 review, the header logo (AppHeader on /client): needs the local stack to sign a client in.
+test("light on /client → the header logo → the landing is dark → back to /client is light", async ({ page }) => {
+  test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
+  const { newUser, openMagicLink } = await import("./helpers/auth");
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.addInitScript(() => localStorage.setItem("rank1.workspace", JSON.stringify({ theme: "light" })));
+  await openMagicLink(page, (await newUser("theme-client", "dfy_client")).email);
+  await page.waitForURL("**/client");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await page.getByRole("banner").getByRole("link", { name: "Rank1" }).click();
+  await page.waitForURL((u) => u.pathname === "/");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.goBack();
+  await page.waitForURL("**/client");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+});
+>>>>>>> ed35bc4 (test(e2e): light on /client, the header logo, the landing is dark, back is light)
