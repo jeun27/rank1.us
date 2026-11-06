@@ -126,6 +126,9 @@ describe("Hero", () => {
     const rows = [...demo.querySelectorAll("[data-demo-row]")];
     expect(rows.map((r) => r.getAttribute("data-demo-row"))).toEqual(demoBoard(demoThisWeek).map((r) => r.brand));
     expect(within(rows.find((r) => r.hasAttribute("data-you")) as HTMLElement).getByText("You")).toBeInTheDocument();
+    // The n rule (lead): the leaderboard's sample size sits under it, from the fixture.
+    expect(demo.querySelector("[data-demo-sample]")?.textContent).toBe(`From ${demoThisWeek.denominator} answers`);
+    expect(demo.querySelector("[data-demo-sample]")?.textContent).toBe("From 160 answers");
   });
 
   it("has no numbers of its own: a different fixture changes everything the demo shows", async () => {
@@ -178,5 +181,6 @@ describe("Hero", () => {
       "Example B",
       "Example C",
     ]);
+    expect(demo.querySelector("[data-demo-sample]")?.textContent).toBe("From 80 answers");
   });
 });

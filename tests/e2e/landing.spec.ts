@@ -326,6 +326,11 @@ test("demo window: a 12px frame with the window shadow; Example data; the typed 
   expect(await q.evaluate((el) => getComputedStyle(el).fontFamily)).toMatch(/JetBrains Mono/i);
   await expect(d.locator("[data-demo-bar]")).toHaveCount(4);
   await expect(d.locator("[data-demo-row]")).toHaveCount(4);
+  // The n rule: the sample size sits under the leaderboard.
+  const sample = d.locator("[data-demo-sample]");
+  await expect(sample).toHaveText("From 160 answers");
+  const [board, under] = [(await d.locator("ol").boundingBox())!, (await sample.boundingBox())!];
+  expect(under.y).toBeGreaterThanOrEqual(board.y + board.height - 1);
 });
 
 // The final state, as the server renders it: 34% of 160, You 2nd (past Example Udon House), bars full.
