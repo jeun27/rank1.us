@@ -37,6 +37,8 @@ test("landing: one H1, 9 sections in order (social proof hidden), axe clean", as
 });
 
 test("every visible string is in docs/COPY.md (fixture data excluded)", async ({ page }) => {
+  // Reduced motion: the hero demo shows its settled card line (COPY.md), not a mid-run count-up frame.
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   // Open every FAQ and tab so hidden copy is checked too.
   for (const d of await page.locator("details").all())
@@ -315,7 +317,9 @@ test("demo window: a 12px frame with the window shadow; Example data; the typed 
     const c = getComputedStyle(el);
     return { radius: c.borderTopLeftRadius, shadow: c.boxShadow, border: c.borderTopWidth };
   });
-  expect(css).toEqual({ radius: "12px", shadow: "rgba(0, 0, 0, 0.7) 0px 30px 80px -20px", border: "1px" });
+  // Tailwind lists its (empty) ring layers before the shadow token.
+  expect(css).toMatchObject({ radius: "12px", border: "1px" });
+  expect(css.shadow).toMatch(/rgba\(0, 0, 0, 0\.7\) 0px 30px 80px -20px$/);
   await expect(d.getByText("Example data")).toBeVisible();
   const q = d.locator("[data-demo-question]");
   await expect(q).toHaveText("best ramen in Irvine");
