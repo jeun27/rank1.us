@@ -20,7 +20,8 @@ describe("Button", () => {
     expect(cls).toContain("md:h-10");
     expect(cls).not.toContain("md:h-8");
   });
-  it("secondary is a jellyDeep text link with a 44px tap area and an arrow that nudges on hover", () => {
+  // Portal R1: links are the link colour (white in dark) and always underlined, never colour alone.
+  it("secondary is an underlined link-colour text link with a 44px tap area and an arrow that nudges on hover", () => {
     render(
       <Button variant="secondary" href="/pricing">
         See pricing
@@ -28,7 +29,8 @@ describe("Button", () => {
     );
     const a = screen.getByRole("link", { name: "See pricing" });
     expect(a).toHaveAttribute("href", "/pricing");
-    expect(a.className).toMatch(/text-jellyDeep/);
+    expect(a.className.split(" ")).toEqual(expect.arrayContaining(["text-link", "underline"]));
+    expect(a.className).not.toMatch(/hover:underline/);
     expect(a.className).toMatch(/min-h-11/);
     expect(a.className).not.toMatch(/bg-|shadow/);
     const arrow = a.lastElementChild!;

@@ -62,7 +62,7 @@ export function DocPane(props: {
   return (
     <>
       <div className="flex h-12 shrink-0 items-center gap-1 border-b border-border px-2">
-        <h1 className="shrink-0 px-2 text-ui font-medium">{props.title}</h1>
+        <h1 className="heading-gradient shrink-0 px-2 text-ui font-medium">{props.title}</h1>
         <div role="tablist" aria-label="Document" className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
           {tabs.map((t, i) => {
             const on = t.id === activeTab.id;

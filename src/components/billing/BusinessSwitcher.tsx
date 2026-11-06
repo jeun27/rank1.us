@@ -110,7 +110,7 @@ export function BusinessSwitcher({
             <button
               type="button"
               onClick={() => poll(Date.now())}
-              className="min-h-11 px-1 text-jellyDeep underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-jellyDeep"
+              className="min-h-11 px-1 text-link underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-jellyDeep"
             >
               {c.retry}
             </button>
@@ -197,7 +197,7 @@ export function BusinessSwitcher({
           <button
             type="button"
             onClick={() => setDialog({ kind: "add" })}
-            className={`${row} rounded-card text-ui font-semibold text-jellyDeep`}
+            className={`${row} rounded-card text-ui font-semibold text-link`}
           >
             {c.addRow}
           </button>
@@ -205,7 +205,7 @@ export function BusinessSwitcher({
             {c.agency}{" "}
             <Link
               href="/contact"
-              className="text-jellyDeep underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-jellyDeep"
+              className="text-link underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-jellyDeep"
             >
               {c.contact}
             </Link>
