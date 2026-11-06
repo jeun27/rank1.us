@@ -28,7 +28,8 @@ test("dark /app: black page and rail, gradient H1 with tight tracking, white pri
   expect(h1.color).toBe("rgba(0, 0, 0, 0)");
   expect(h1["background-image"]).toContain("linear-gradient");
   expect(parseFloat(h1["letter-spacing"])).toBeLessThan(0);
-  const primary = page.getByRole("button", { name: "Add my business" });
+  // The empty state's primary is a link styled as the primary button.
+  const primary = page.getByRole("link", { name: "Add my business" });
   expect(await primary.evaluate((b) => [getComputedStyle(b).backgroundColor, getComputedStyle(b).color])).toEqual([
     "rgb(255, 255, 255)",
     "rgb(0, 0, 0)",
@@ -76,3 +77,25 @@ test("R3: the business line on the visibility chart is the white accent", async 
   const line = page.locator("svg path[fill='none']").first();
   expect(await line.evaluate((p) => getComputedStyle(p).stroke)).toBe("rgb(255, 255, 255)");
 });
+
+// Visuals: each page waits for its H1 before the capture, so no shot is a blank shell.
+for (const theme of ["dark", "light"] as const)
+  test(`visuals ${theme}`, async ({ page }, info) => {
+    const pages: [string, string][] = [
+      ["dashboard", "/dev/app?state=dashboard-success"],
+      ["competitors", "/dev/app?state=competitors-success"],
+      ["fixes", "/dev/app?state=fixes-success"],
+      ["history", "/dev/app?state=history-success"],
+      ["team", "/dev/team"],
+    ];
+    for (const [name, path] of pages) {
+      await open(page, path, theme);
+      await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
+      await page.screenshot({ path: `test-results/screenshots/portal-${name}-${theme}-${info.project.name}.png` });
+    }
+    if (theme === "dark") {
+      await page.goto("/");
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      await page.screenshot({ path: `test-results/screenshots/portal-landing-dark-${info.project.name}.png` });
+    }
+  });
