@@ -956,6 +956,11 @@ Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/
 - Without can_connect_business: statuses only, no buttons.
 - Copy: drafted, then signed off by the lead with 3 edits (2026-11-06): the first consent line names openid as well as the scope ("to know which Google account you used. We don't get your email or profile."), GBP edits happen "only after you or the Rank1 team confirm", and the statuses read "Needs reconnect" / "Disconnected" (the enums stay needs_reauth / revoked). In COPY.md "Connections (lead, 2026-11-06)".
 
+## Fix status history (backend): for the check-off Fix list (branch feat/fix-status-history)
+- Lead decisions (2026-11-06): additive only and compatible with live v0.5.0 on the shared DB. A team actor shows as is_team only (the UI says "Rank1 team"); a display name shows only for a non-team member of the same business; never the email.
+- Migration 20261105000023 (+ .down.sql): fixes.status_changed_at / status_changed_by (→ auth.users, on delete set null), null on existing rows (fixes has no updated_at to backfill from). A BEFORE INSERT OR UPDATE trigger forces them: null on insert (reviewer: never the caller's values), set on every status change (actor null for the service detector), kept on any other update, so neither can be written directly. set_fix_status and listFixes are unchanged.
+- done_fixes(business) (invoker, through the fixes RLS): done fixes, newest change first (nulls last), with changed_by from private.fix_status_actor (definer, re-checks the caller can see the fix). Query: listDoneFixes in src/lib/queries/fixes.ts.
+
 ## G2 (backend): "Can AI see your site?" storage (branch feat/ai-access-db)
 - GAS brief (briefs/rank1-gas.md), lead decisions 2026-11-06. The check itself (robots.txt rules, visible words, the GPTBot-UA compare, the Cloudflare hint, the SSRF guard) is data-pipeline's. Behind ENABLE_AI_ACCESS_CHECK.
 - Migration 20261105000025 (+ .down.sql), additive (live v0.5.0 never touches it): ai_access_checks, one row per run (on delete cascade with the run). Read like the run: members incl. the dfy_client and the team on DFY; a free audit's check is service-only (served by token). No user writes.
