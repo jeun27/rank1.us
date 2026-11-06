@@ -995,9 +995,3 @@ Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/
 - Lead OK 2026-11-06 (Q1, Q2). src/app/robots.ts: in production, one group for "*" plus GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot and Google-Extended, each "Allow: /" and disallowing /app /team /client /api /dev /admin /auth. /audit is left to its noindex. Sitemap: <origin>/sitemap.xml.
 - Previews and every non-production build (VERCEL_ENV !== "production"): "Disallow: /" for everyone.
 - src/app/sitemap.ts: the public pages only (/, /contact, /privacy, /terms). Origin = NEXT_PUBLIC_SITE_URL when it is https, else https://rank1.us (src/lib/site/origin.ts).
-
-## G4 (backend): narrative word lists (branch feat/narrative-words)
-- GAS brief, lead decisions 2026-11-06: no in-app LLM; G4 is word matching on stored answer text (U4: the word plus simple endings, data-pipeline's). Behind ENABLE_NARRATIVE. A dfy_client never sets the words; the team sets them with the client (lead Q1).
-- Lead Q3 (2026-11-06): the match is computed on read from the latest run's stored answers (data-pipeline), not stored per run. This supersedes the brief's "matching in the weekly run": editing the words updates the card at once, nothing goes stale, and the snippet is stored answer text by construction. Lead Q4: 8 words per list.
-- Migration 20261105000028 (+ .down.sql), additive: businesses.narrative_want / narrative_avoid (text[], default empty, a CHECK: ≤ 8 lowercase trimmed words of 2–40 characters, no repeats, none in both; not member-writable). set_narrative_words(business, want, avoid) (definer, can_write_business) trims, lowercases and dedupes, 22023 on bad lists.
-- Queries: src/lib/queries/narrative.ts (getNarrativeWords, setNarrativeWords, NARRATIVE_MAX_WORDS = 8).
