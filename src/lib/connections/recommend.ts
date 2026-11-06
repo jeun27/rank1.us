@@ -10,7 +10,7 @@ export type Industry = Vertical;
 
 // Copy keys for the niche helper text on each tile (strings live in COPY.md, not here).
 export type Niche =
-  "local" | "restaurant_booking" | "site" | "dtc_store" | "dtc_amazon" | "saas_reviews" | "ai_referrals";
+  "local" | "restaurant_booking" | "site" | "dtc_store" | "dtc_amazon" | "saas_reviews" | "ai_referrals" | "video";
 
 const LOCAL: Industry[] = [
   "restaurant",
@@ -43,6 +43,8 @@ export const CONNECTORS = {
   bing_places: { niche: "local", later: LOCAL },
   yelp: { niche: "local", later: LOCAL },
   amazon: { niche: "dtc_amazon", later: ["dtc"] },
+  // G1 (GAS-Q3): Recommended for saas + dtc, Optional for everyone else; read-only (GAS-Q4).
+  youtube: { niche: "video", recommended: ["saas", "dtc"], optional: [...LOCAL, "other"] },
 } as const satisfies Record<ConnectorKey, Rule>;
 export type Connector = ConnectorKey;
 

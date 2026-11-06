@@ -248,10 +248,12 @@ describe("'Start a test' form", () => {
 });
 
 describe("Fix list: 'Start a before/after test' (on since Step 17)", () => {
-  it("each fix links to the form with its id, only with canWrite", () => {
+  // X7: collapsed rows keep the link inside the fix's body, so open each one first.
+  it("each fix links to the form with its id, only with canWrite", async () => {
     const { rerender } = render(
       <FixList ranked={exampleFixes} tidyUps={[]} unchecked={[]} noDomain={false} canWrite onStatus={vi.fn()} />,
     );
+    for (const b of screen.getAllByRole("button", { expanded: false })) await userEvent.click(b);
     const links = screen.getAllByRole("link", { name: "Start a before/after test" });
     expect(links.map((l) => l.getAttribute("href"))).toEqual(
       exampleFixes.map((f) => `/app/experiments/new?fix=${f.id}`),

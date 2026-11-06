@@ -3,14 +3,15 @@ import { expect, type Page, type Route } from "@playwright/test";
 
 export const DUMMY_TOKEN = "XXXX.DUMMY.TOKEN.XXXX";
 
-// Stands in for Cloudflare's api.js: render() adds the hidden cf-turnstile-response input like the real widget.
+// Stands in for Cloudflare's api.js: render() adds the hidden cf-turnstile-response input and calls back
+// with the token like the real widget (the audit form waits for the callback); reset() issues a new one.
 export async function stubTurnstile(page: Page) {
   await page.route("https://challenges.cloudflare.com/**", (route) =>
     route.fulfill({
       contentType: "application/javascript",
       body: `window.turnstile = {
-        render(el) { const i = document.createElement("input"); i.type = "hidden"; i.name = "cf-turnstile-response"; i.value = ${JSON.stringify(DUMMY_TOKEN)}; el.appendChild(i); return "w1"; },
-        reset() {}, remove() {}
+        render(el, o) { window.__ts = o; const i = document.createElement("input"); i.type = "hidden"; i.name = "cf-turnstile-response"; i.value = ${JSON.stringify(DUMMY_TOKEN)}; el.appendChild(i); setTimeout(() => o && o.callback && o.callback(${JSON.stringify(DUMMY_TOKEN)})); return "w1"; },
+        reset() { const o = window.__ts; setTimeout(() => o && o.callback && o.callback(${JSON.stringify(DUMMY_TOKEN)})); }, remove() {}
       };`,
     }),
   );

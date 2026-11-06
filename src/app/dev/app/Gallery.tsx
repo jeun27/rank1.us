@@ -1,5 +1,7 @@
 "use client";
 import { CompetitorsView } from "@/components/app/CompetitorsView";
+import { AiAccessPanel, AiReassure } from "@/components/audit/AiAccessPanel";
+import { exampleAiAccess } from "@/components/audit/example-data";
 import { Dashboard } from "@/components/app/Dashboard";
 import { HistoryView } from "@/components/app/HistoryView";
 import { QuestionsView } from "@/components/app/QuestionsView";
@@ -165,6 +167,35 @@ export const STATES: Record<string, () => React.ReactNode> = {
         onStatus={noop}
       />
     </Page>
+  ),
+  // G2: the AI access panel as the evidence on the R14 fix, and the dashboard's quiet good line.
+  "fixes-ai-access": () => (
+    <Page title="What to fix next">
+      <Measured {...latestMeasured(exampleLatest)} now={NOW} />
+      <FixList
+        ranked={pillarFixes.map((f) =>
+          f.rule_key === "R14"
+            ? { ...f, evidence: <AiAccessPanel check={exampleAiAccess("search")} now={NOW} level={4} /> }
+            : f,
+        )}
+        tidyUps={pillarTidyUps}
+        done={pillarDone}
+        unchecked={[]}
+        noDomain={false}
+        canWrite
+        onStatus={noop}
+      />
+    </Page>
+  ),
+  "dashboard-ai-good": () => (
+    <Dashboard
+      business={exampleBusiness}
+      latest={exampleLatest}
+      series={series}
+      fixes={exampleFixes}
+      now={NOW}
+      reassure={<AiReassure check={exampleAiAccess("good")} now={NOW} />}
+    />
   ),
   "fixes-partial": () => (
     <Page title="What to fix next">

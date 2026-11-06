@@ -129,7 +129,7 @@ describe("the grouped fix rule", () => {
       enabled: true,
       pillar: "p3",
       title: "Get on these lists",
-      customer_copy: "{n} lists AI cites name {rivals} but not you.",
+      customer_copy: "{n} lists AI cite name {rivals} but not you.",
     });
     const visible = must(await owner.db.from("fix_rules_public").select("*").eq("key", "R17"));
     expect(visible).toHaveLength(1);

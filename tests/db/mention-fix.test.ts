@@ -8,7 +8,7 @@ import { must, newUser, serviceClient, type TestUser } from "./helpers";
 // 0033: the one grouped R17 fix ("Get on these lists"), built from a business's 'added' mention
 // decisions. Self-serve members or the team on DFY; never a dfy_client. One open R17 at most.
 const s = () => serviceClient();
-const DETAIL = "2 lists AI cites name Example Noodle Bar but not you.";
+const DETAIL = "2 lists AI cite name Example Noodle Bar but not you.";
 
 const business = {
   name: "Example Ramen House",

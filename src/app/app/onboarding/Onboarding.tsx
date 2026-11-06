@@ -71,7 +71,7 @@ export const emptyDraft: Draft = {
 const ghost =
   "inline-flex min-h-11 items-center justify-center rounded-full border border-fieldBorder bg-white px-5 text-ui font-semibold text-ink hover:bg-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
 const select =
-  "h-12 w-full rounded-full border bg-white px-5 text-ui text-ink shadow-field focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep";
+  "h-11 w-full rounded-control border bg-paper px-3 text-ui text-ink focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep md:h-9";
 const chip =
   "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-fieldBorder bg-white px-4 text-ui has-checked:border-jellyDeep has-checked:bg-infoBg has-disabled:cursor-not-allowed has-disabled:opacity-60 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-jellyDeep";
 
@@ -255,7 +255,7 @@ function BusinessStep({
           <div role="status" className="flex flex-col gap-3">
             <p className="text-caption text-inkMuted">{copy.readingSite}</p>
             {[0, 1, 2].map((i) => (
-              <div key={i} className="h-12 animate-pulse rounded-full bg-white motion-reduce:animate-none" />
+              <div key={i} className="h-11 animate-pulse rounded-control bg-white motion-reduce:animate-none md:h-9" />
             ))}
           </div>
         )}
@@ -289,7 +289,7 @@ function BusinessStep({
               aria-labelledby={sellsId}
               value={v}
               onChange={(e) => setB({ sells: b.sells.map((x, j) => (j === i ? e.target.value : x)) })}
-              className="h-12 rounded-full border border-fieldBorder bg-white px-5 text-ui shadow-field focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep"
+              className="h-11 rounded-control border border-fieldBorder bg-paper px-3 text-ui focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep md:h-9"
             />
           ))}
         </fieldset>

@@ -88,3 +88,44 @@ describe("AuditView: Audit results (UI.md 4b)", () => {
     expect(screen.queryByRole("link", { name: "Download CSV" })).not.toBeInTheDocument();
   });
 });
+
+// G2 (lead OK 2026-11-06, U6): "Can AI see your site?" sits below the leaderboard, only with a stored check.
+describe("AuditView: the AI access panel", () => {
+  const aiAccess = {
+    run_id: "r1",
+    business_id: null,
+    domain: "exampleramen.test",
+    checked_at: "2026-11-05T12:30:00Z",
+    outcome: "good" as const,
+    crawlers: [],
+    visible_words: 420,
+    status_normal: 200,
+    status_gptbot: 200,
+    cloudflare: false,
+    pages_checked: 1,
+    error: null,
+  };
+  const free = (check: typeof aiAccess | null) =>
+    render(
+      <AuditView
+        results={exampleRun("complete", { kind: "free_audit" })}
+        metrics={exampleMetrics}
+        free
+        exportBase="/audit/tok"
+        now={now}
+        aiAccess={check}
+      />,
+    );
+
+  it("below the leaderboard", () => {
+    free(aiAccess);
+    const panel = screen.getByRole("region", { name: "Can AI see your site?" });
+    const leaderboard = screen.getByRole("heading", { name: "Competitors" });
+    expect(leaderboard.compareDocumentPosition(panel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("no stored check: no panel", () => {
+    free(null);
+    expect(screen.queryByRole("region", { name: "Can AI see your site?" })).toBeNull();
+  });
+});

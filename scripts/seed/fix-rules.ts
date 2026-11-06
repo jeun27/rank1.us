@@ -1,5 +1,5 @@
 // fix_rules seed: R1-R15 and H1, parsed from docs/SCHEMA.md section 5b so copy stays verbatim.
-// A1-A6 come from migration 0014, R16 from 0025, R17 from 0030 and R18 from 0031 (so the hosted DB gets them), never the seed.
+// A1-A6 come from migration 0014, R16 from 0025, R17 from 0030, R18 from 0031 and R19-R21 from 0035 (so the hosted DB gets them), never the seed.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -57,7 +57,7 @@ const cells = (line: string) =>
     .slice(1, -1)
     .map((c) => c.trim().replace(/\\\|/g, "|"));
 
-const MIGRATION_RULES = new Set(["R16", "R17", "R18"]);
+const MIGRATION_RULES = new Set(["R16", "R17", "R18", "R19", "R20", "R21"]);
 
 export function fixRules(schemaMd = readFileSync(join(process.cwd(), "docs", "SCHEMA.md"), "utf8")): FixRuleSeed[] {
   const section = schemaMd.split("# 5b.")[1];

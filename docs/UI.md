@@ -82,20 +82,20 @@ Hairlines (1.1–1.4:1) are decorative dividers only. No control relies on a hai
 
 ## Type
 
-Inter (variable, optical size 14–32; SIL OFL) for all text. JetBrains Mono (SIL OFL) for data only (D33). Load only the weights used: Inter 400–700, Mono 400/500. Tabular figures everywhere.
+Inter (variable, optical size 14–32; SIL OFL) for all text. JetBrains Mono (SIL OFL) for data only (D33). Weights 400/500/600 only (lead F1, 2026-11-06); Mono 400/500. Each face is one variable file from next/font (display swap, metric-matched fallback). No faux bold or italic (`font-synthesis: none`). Tabular figures everywhere: a global rule covers numbers (`data-computed`), mono and table cells.
 
 | Role | Font | Size / line, weight |
 |---|---|---|
 | Landing display (H1) | Inter 600, -0.04em | fluid 40/41 → 68/69 |
 | Landing H2 | Inter 600, -0.03em | fluid 26/29 → 40/44 |
 | Landing lead | Inter 400, text2 | 17/27 → 18/28 at md+ |
-| Landing body | Inter 450 | 15/24 |
-| App page title (H1) | Inter 600, -0.02em | 22/28 |
-| Section / card title | Inter 500 | 13/18 |
-| UI body, table cells, nav | Inter 450 | 13/19 |
+| Landing body | Inter 400 | 15/24 |
+| App page title (H1) | Inter 600, -0.02em | 22/28 (`text-title`) |
+| Section / card title | Inter 500 | 13/18 (`text-section`) |
+| UI body, table cells, nav | Inter 400 | 13/19 |
 | Caption, table header, freshness | Inter 400–500, muted | 12/16 |
 | Tag / badge | Inter 500 | 11/1 |
-| Form fields (input, select, textarea) | Inter 450 | 16px below md to prevent iOS focus zoom; the UI size (13/19) from md (lead R2, 2026-11-06) |
+| Form fields (input, select, textarea) | Inter 400 | 16px below md to prevent iOS focus zoom; the UI size (13/19) from md (lead R2, 2026-11-06) |
 | Hero number | Inter 600, -0.04em, tabular | 36–44 / 1.1 |
 | KPI and table numbers | JetBrains Mono 500, tabular, -0.03em | 22–24 (KPI), 12–13 (tables) |
 
@@ -126,7 +126,7 @@ Inter (variable, optical size 14–32; SIL OFL) for all text. JetBrains Mono (SI
 | Info banner | infoBg fill, 1px info hairline at 25%, radius 8, 28px info icon chip, info-colour text |
 | Empty | Panel, 48–64px Jelly, centred 15px message, DomainField ('yoursite.com' / 'Add my business') |
 | Loading + progress | Panel, squishing 64px Jelly, 14px accent spinner + message, 6px track (overlay) with an accent fill (scaleX transform), 'n of d answers' muted left, the floored percent in link colour right (both mono). Reduced motion stops the spinner and squish |
-| Nav rail | Rail colour, 220–232px (64 collapsed), icon 16px + label Inter 450 13px, 32h rows, radius 6. Groups separated by 1px hairlines; no group headings unless COPY.md has them. Active: raised fill + hairline ring + accent icon. Account at the bottom. Phones: a sideways-scrolling row with a fade at the right edge |
+| Nav rail | Rail colour, 220–232px (64 collapsed), icon 16px + label Inter 400 13px, 32h rows, radius 6. Groups separated by 1px hairlines; no group headings unless COPY.md has them. Active: raised fill + hairline ring + accent icon. Account at the bottom. Phones: a sideways-scrolling row with a fade at the right edge |
 | Top bar | 48h, page fill, bottom hairline. Breadcrumb 'Rank1 / [avatar] business / page' with drawn slash separators (D42). /app shows the business name only (one business). /team puts the client switcher in the breadcrumb (D20). Right side: Location select, the theme toggle (/app, /team), Account |
 | Context panel (/team) | Right side, toggled by "Context" (D21). Freshness + facts card, the item list, then the Prompt template composer (page fill, hairline, radius 8, accent focus ring) with "Copy context" (primary) and "Open in Claude" (text action). Nothing calls a model |
 | Logo | Bar mark (public/logo-mark.svg, currentColor) left of the wordmark 'Rank1' in Inter 600 15–16px, -0.02em, 8px gap. App icon unchanged |
