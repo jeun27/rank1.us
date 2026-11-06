@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { ThemeSync } from "@/components/ui/ThemeSync";
 import { themeScript } from "@/lib/theme";
 import "./globals.css";
 
@@ -25,7 +27,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {/* Sets data-theme before first paint: dark for public pages, the saved or system theme for /app and /team. */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="min-h-full bg-paper font-sans text-body text-ink">{children}</body>
+      <body className="min-h-full bg-paper font-sans text-body text-ink">
+        {/* usePathname needs a Suspense boundary under cacheComponents; it renders nothing. */}
+        <Suspense>
+          <ThemeSync />
+        </Suspense>
+        {children}
+      </body>
     </html>
   );
 }
