@@ -17,11 +17,12 @@ export function LocationSelect({
 }) {
   const id = useId();
   return (
-    <form method="get" action={action} className="flex flex-col gap-1.5">
+    // X11: one compact row (label, select, Show) beside the freshness line.
+    <form method="get" action={action} className="flex flex-wrap items-center gap-2">
       <label htmlFor={id} className="text-caption font-semibold">
         {c.location}
       </label>
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex items-center gap-2">
         {Object.entries(hidden).map(([k, v]) => (
           <input key={k} type="hidden" name={k} value={v} />
         ))}
@@ -29,7 +30,7 @@ export function LocationSelect({
           id={id}
           name="location"
           defaultValue={value ?? ""}
-          className="h-11 w-full max-w-xs rounded-control border border-fieldBorder bg-white px-3 text-ui md:h-8 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep"
+          className="h-11 max-w-xs min-w-0 rounded-control border border-fieldBorder bg-white px-3 text-ui md:h-8 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep"
         >
           <option value="">{c.allLocations}</option>
           {locations.map((l) => (
