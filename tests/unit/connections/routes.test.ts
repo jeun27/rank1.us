@@ -1,3 +1,4 @@
+import { LIVE_CONNECTORS } from "@/lib/connections/recommend";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
@@ -66,11 +67,32 @@ describe("GET /api/connections/google/start", () => {
     expect(db.createClient).not.toHaveBeenCalled();
   });
 
-  it("YouTube is refused (400) while it isn't in LIVE_CONNECTORS (lead, #146 S1)", async () => {
-    const res = await start.GET(req("/api/connections/google/start?business=b&connector=youtube"));
-    expect(res.status).toBe(400);
-    expect(svc.beginGoogleConnect).not.toHaveBeenCalled();
-    expect(db.createClient).not.toHaveBeenCalled();
+  // G1: YouTube's tile is live, so it connects. The #146 S1 gate still holds: an OAuth connector that isn't
+  // in LIVE_CONNECTORS is refused (checked by taking YouTube out for this test).
+  it("YouTube connects now its tile is live (G1)", async () => {
+    svc.beginGoogleConnect.mockResolvedValue({
+      url: "https://accounts.google.com/o/oauth2/v2/auth?x=1",
+      cookie: "c0ok",
+    });
+    await start.GET(req("/api/connections/google/start?business=b&connector=youtube"));
+    expect(svc.beginGoogleConnect).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ connector: "youtube" }),
+    );
+  });
+
+  it("a connector not in LIVE_CONNECTORS is refused (400) before any access check (lead, #146 S1)", async () => {
+    const live = LIVE_CONNECTORS as string[];
+    const at = live.indexOf("youtube");
+    live.splice(at, 1);
+    try {
+      const res = await start.GET(req("/api/connections/google/start?business=b&connector=youtube"));
+      expect(res.status).toBe(400);
+      expect(svc.beginGoogleConnect).not.toHaveBeenCalled();
+      expect(db.createClient).not.toHaveBeenCalled();
+    } finally {
+      live.splice(at, 0, "youtube");
+    }
   });
 
   it("an unknown connector or no business → 400, no access check", async () => {

@@ -80,7 +80,9 @@ test("Disconnect asks first, with the one-grant warning", async ({ page }) => {
     .getByRole("article", { name: "Google Business Profile" })
     .getByRole("button", { name: "Disconnect" })
     .click();
-  await expect(page.getByRole("dialog")).toContainText("This also disconnects Search Console and Analytics");
+  await expect(page.getByRole("dialog")).toContainText(
+    "This disconnects every Google service Rank1 uses: Business Profile, Search Console, Analytics and YouTube.",
+  );
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });

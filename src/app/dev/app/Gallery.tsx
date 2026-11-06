@@ -1,5 +1,7 @@
 "use client";
 import { CompetitorsView } from "@/components/app/CompetitorsView";
+import { exampleYoutubeFixVideos } from "@/components/youtube/example-data";
+import { YoutubeFixEvidence } from "@/components/youtube/YoutubeFixEvidence";
 import { narrativeCopy } from "@/components/narrative/copy";
 import {
   exampleNarrative,
@@ -295,6 +297,48 @@ export const STATES: Record<string, () => React.ReactNode> = {
       now={NOW}
       reassure={<AiReassure check={exampleAiAccess("good")} now={NOW} />}
     />
+  ),
+  // G1: each YouTube fix with its own stored videos (#150 review), and the live YouTube tile.
+  "fixes-youtube": () => (
+    <Page title="What to fix next">
+      <FixList
+        ranked={(
+          [
+            ["R19", "Put your keyword in your video titles", "1 video needs your keyword in the title."],
+            [
+              "R20",
+              "Put your keyword in the first two lines of the description",
+              "2 videos don't have your keyword in the first two lines of the description.",
+            ],
+            ["R21", "Add chapters on videos 5 minutes or longer", "1 video 5 minutes or longer has no chapters."],
+          ] as const
+        ).map(([rule, title, detail]) => ({
+          ...fixes[0],
+          id: `example-${rule}`,
+          rule_key: rule,
+          title,
+          detail,
+          pillar: "p4" as const,
+          evidence: (
+            <YoutubeFixEvidence
+              rule={rule}
+              videos={exampleYoutubeFixVideos[rule]}
+              keyword="ramen"
+              business="Example Ramen House"
+            />
+          ),
+        }))}
+        tidyUps={[]}
+        done={[]}
+        unchecked={[]}
+        noDomain={false}
+        canWrite
+        onStatus={noop}
+      />
+    </Page>
+  ),
+  "connections-youtube": () => (
+    <Hub industry="other" connections={[{ id: "ex-yt", provider: "youtube", status: "connected", selected: [] }]} />
   ),
   "fixes-partial": () => (
     <Page title="What to fix next">

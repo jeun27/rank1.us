@@ -5,6 +5,8 @@ import { latestMeasured, Measured, Page } from "@/components/app/Page";
 import { AiAccessPanel } from "@/components/audit/AiAccessPanel";
 import { FixList, type FixView } from "@/components/fixes/FixList";
 import { MentionsEvidence } from "@/components/mentions/MentionsSection";
+import { loadYoutubeFixVideos, type YoutubeRule } from "@/components/youtube/load";
+import { YoutubeFixEvidence } from "@/components/youtube/YoutubeFixEvidence";
 import { loadMentions, mentionsEnabled } from "@/lib/mentions/service";
 import { getLatestAiAccessCheck } from "@/lib/queries/ai-access";
 import { fixCopy as c } from "@/components/fixes/copy";
@@ -26,15 +28,32 @@ export default async function FixesPage() {
     mentionsEnabled() ? loadMentions(db, business.id) : null,
   ]);
   const added = mentions && mentions !== "disabled" ? mentions.added : [];
+  // G1 (#150 review S1): the stored evidence of the open R19–R21 fixes, no live YouTube read.
+  const youtube = await loadYoutubeFixVideos(
+    db,
+    business.id,
+    ranked.map((f) => f.rule_key),
+  );
+  const youtubeEvidence = (rule: string) => {
+    const videos = youtube?.byRule[rule as YoutubeRule];
+    return videos ? (
+      <YoutubeFixEvidence
+        rule={rule as YoutubeRule}
+        videos={videos}
+        keyword={youtube!.keyword}
+        business={business.name}
+      />
+    ) : null;
+  };
   const now = new Date();
   // G2 (lead 2026-11-06): the AI access panel is the evidence on the P5 fixes it decides. G7 (lead Q3):
-  // the grouped R17 fix shows the added lists.
+  // the grouped R17 fix shows the added lists. G1: the P4 fixes R19–R21 show their own stored videos.
   const withEvidence = (f: FixView): FixView =>
     access && G2_RULES.has(f.rule_key)
       ? { ...f, evidence: <AiAccessPanel check={access} now={now} level={4} /> }
       : f.rule_key === "R17" && added.length
         ? { ...f, evidence: <MentionsEvidence added={added} /> }
-        : f;
+        : { ...f, evidence: youtubeEvidence(f.rule_key) ?? f.evidence };
   return (
     <Page title={c.title}>
       <Measured {...latestMeasured(latest)} now={now} />

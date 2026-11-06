@@ -8,6 +8,7 @@ import type { GoogleConnector } from "@/lib/connections/oauth";
 import { recommend, type Industry, type Tile } from "@/lib/connections/recommend";
 import type { ConnectionEntity, ConnectionProvider, ConnectionStatus, ConnectorKey } from "@/lib/queries/connections";
 import { Consent, startUrl } from "./Consent";
+import { youtubeCopy } from "@/components/youtube/copy";
 import { connectionsCopy as c } from "./copy";
 
 type Result = Promise<{ error: string } | undefined | void>;
@@ -37,6 +38,8 @@ export type HubProps = {
   // The callback's ?connection=&status=.
   outcome: { connector: string | null; status: string } | null;
   actions: HubActions;
+  // G1: the business has no keyword (cuisine null), so no R19–R21 fixes exist; the tile says so.
+  youtubeNoKeyword?: boolean;
 };
 
 const STATUS_TONE = { connected: "success", needs_reauth: "warn", revoked: "error" } as const;
@@ -186,6 +189,9 @@ function TileCard({
         )}
       </header>
       <p className="text-caption text-text2">{c.niches[tile.niche]}</p>
+      {connector === "youtube" && conn?.status === "connected" && props.youtubeNoKeyword && (
+        <p className="text-caption">{youtubeCopy.noKeyword}</p>
+      )}
       {conn && conn.status !== "revoked" && conn.selected.length > 0 && (
         <ul className="flex flex-col gap-1 text-caption text-ink">
           {conn.selected.map((s) => (

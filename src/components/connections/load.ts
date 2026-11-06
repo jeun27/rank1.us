@@ -1,4 +1,5 @@
 import "server-only";
+import { cuisineOf } from "@/components/youtube/load";
 import { connectCardState, type CardState } from "@/lib/connections/connect-card";
 import { INDUSTRIES, type Industry } from "@/lib/connections/recommend";
 import {
@@ -31,6 +32,9 @@ export async function loadHub(
     canConnectBusiness(db, businessId),
   ]);
   const status = one(params.status);
+  // G1 (#150 review): no live YouTube read here. The tile's no-keyword line comes from the cuisine.
+  const yt = connections.some((c) => c.provider === "youtube" && c.status === "connected");
+  const noKeyword = yt ? !(await cuisineOf(db, businessId)) : false;
   return {
     businessId,
     industry: industryOf(vertical),
@@ -45,6 +49,7 @@ export async function loadHub(
     canConnect,
     returnTo,
     outcome: status ? { connector: one(params.connection), status } : null,
+    youtubeNoKeyword: noKeyword,
   };
 }
 

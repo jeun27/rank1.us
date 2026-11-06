@@ -44,13 +44,14 @@ export const CONNECTORS = {
   yelp: { niche: "local", later: LOCAL },
   amazon: { niche: "dtc_amazon", later: ["dtc"] },
   // G1 (GAS-Q3): Recommended for saas + dtc, Optional for everyone else; read-only (GAS-Q4).
-  youtube: { niche: "video", recommended: ["saas", "dtc"], optional: [...LOCAL, "other"] },
+  // G1 (lead 2026-11-06): Optional for every vertical; no cuisine keyword to check saas/dtc videos yet.
+  youtube: { niche: "video", optional: [...LOCAL, "saas", "dtc", "other"] },
 } as const satisfies Record<ConnectorKey, Rule>;
 export type Connector = ConnectorKey;
 
 // Only these have a working flow; every other tile is "Coming soon" + Notify me (no fake connect buttons).
-// youtube joins once frontend's tile + consent ship (G1); that also adds it to saas/dtc readiness.
-export const LIVE_CONNECTORS: readonly string[] = ["gbp", "search_console", "ga4"];
+// G1: youtube is live with its tile + consent (read-only); readiness follows its tier in CONNECTORS.
+export const LIVE_CONNECTORS: readonly string[] = ["gbp", "search_console", "ga4", "youtube"];
 
 export type Tile = { connector: Connector; niche: Niche; available: "live" | "coming_soon" };
 export type Recommendations = { recommended: Tile[]; optional: Tile[]; later: Tile[] };

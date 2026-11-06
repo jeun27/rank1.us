@@ -82,7 +82,8 @@ describe("tiles by industry (one recommend() table)", () => {
 });
 
 describe("live tiles: consent, then Google", () => {
-  it.each(["gbp", "search_console", "ga4"] as const)(
+  // G1: YouTube is live too (read-only).
+  it.each(["gbp", "search_console", "ga4", "youtube"] as const)(
     "%s: Connect opens the consent sheet; Continue goes to the start route",
     async (k) => {
       const { user } = hub({ industry: "other" });
@@ -102,7 +103,7 @@ describe("live tiles: consent, then Google", () => {
   // in plain words with the scope name in parentheses. Read from the real startAuth URL, not a copy of it.
   it("the first consent line covers every scope the auth URL requests: the connector's scope and openid", () => {
     const env = { GOOGLE_CLIENT_ID: "x", GOOGLE_CLIENT_SECRET: "y", NEXT_PUBLIC_SITE_URL: "https://rank1.example" };
-    for (const k of ["gbp", "search_console", "ga4"] as const) {
+    for (const k of ["gbp", "search_console", "ga4", "youtube"] as const) {
       const asked = new URL(startAuth(k, "b1", env).url).searchParams.get("scope")!.split(" ");
       expect(asked.sort()).toEqual(["openid", GOOGLE_SCOPES[k]].sort());
       const first = c.consent[k][0];
@@ -115,7 +116,7 @@ describe("live tiles: consent, then Google", () => {
 
   it("the rest states what the code does: the GBP fields after a confirm, review + log, revoke, no passwords", () => {
     const text = (k: keyof typeof c.consent) => c.consent[k].join(" ");
-    for (const k of ["gbp", "search_console", "ga4"] as const) {
+    for (const k of ["gbp", "search_console", "ga4", "youtube"] as const) {
       expect(text(k)).toMatch(/password/);
       expect(text(k)).toMatch(/myaccount\.google\.com\/permissions/);
       expect(text(k)).toContain(c.disconnect);
@@ -126,7 +127,7 @@ describe("live tiles: consent, then Google", () => {
     for (const f of GBP_EDIT_FIELDS) expect(c.consent.gbp[1].toLowerCase()).toContain(c.fields[f].toLowerCase());
     expect(text("gbp")).toMatch(/shown before it's applied/);
     expect(text("gbp")).toMatch(/logged/);
-    for (const k of ["search_console", "ga4"] as const) expect(text(k)).toMatch(/read-only/i);
+    for (const k of ["search_console", "ga4", "youtube"] as const) expect(text(k)).toMatch(/read-only/i);
   });
 });
 
@@ -177,7 +178,10 @@ describe("connection states", () => {
     const { a, user } = hub({ connections: [gbp("connected")] });
     await user.click(within(tile(c.names.gbp)).getByRole("button", { name: c.disconnect }));
     const dialog = screen.getByRole("dialog");
-    expect(dialog).toHaveTextContent("This also disconnects Search Console and Analytics");
+    // G1 (lead): the grant is shared, so Disconnect names every Google service.
+    expect(dialog).toHaveTextContent(
+      "This disconnects every Google service Rank1 uses: Business Profile, Search Console, Analytics and YouTube.",
+    );
     expect(a.revoke).not.toHaveBeenCalled();
     await user.click(within(dialog).getByRole("button", { name: c.disconnect }));
     expect(a.revoke).toHaveBeenCalledWith("c1");
@@ -322,5 +326,26 @@ describe("one primary per screen (UI.md)", () => {
     const sc = within(tile(c.names.search_console)).getByRole("button", { name: c.connect });
     expect(gbp.className).toContain("bg-accent");
     expect(sc.className).not.toContain("bg-accent");
+  });
+});
+
+// G1 (lead Q3): the YouTube tile shows status only, "Connected · {n} videos checked"; the checklist itself is
+// the evidence on the P4 fixes. The picker reads "Choose channel".
+describe("the YouTube tile", () => {
+  const yt = { id: "y1", provider: "youtube" as const, status: "connected" as const, selected: [] };
+  // #150 review: no live read, and nothing stores a "videos checked" count, so the tile shows the status only.
+  it("connected: Connected, Choose channel and Disconnect", () => {
+    hub({ industry: "other", connections: [yt] });
+    const t = tile(c.names.youtube);
+    expect(within(t).getByTestId("status")).toHaveTextContent(c.statuses.connected);
+    expect(t).not.toHaveTextContent("videos checked");
+    expect(within(t).getByRole("button", { name: c.pick.youtube })).toBeInTheDocument();
+    expect(c.pick.youtube).toBe("Choose channel");
+  });
+
+  // No keyword (cuisine null): no R19–R21 fixes exist, so the checklist never shows; the tile says it instead.
+  it("connected, no keyword: the tile adds the plain no-keyword line", () => {
+    hub({ industry: "other", connections: [yt], youtubeNoKeyword: true });
+    expect(tile(c.names.youtube)).toHaveTextContent("Add your main keyword to check your videos.");
   });
 });
