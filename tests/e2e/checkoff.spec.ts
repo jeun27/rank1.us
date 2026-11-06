@@ -14,6 +14,8 @@ for (const theme of ["dark", "light"] as const)
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     const first = page.getByRole("checkbox").first();
     await expect(first).toHaveAttribute("aria-checked", "false");
+    // X7: only the first fix starts open; open the in-progress one to see who started it.
+    await page.getByRole("button", { name: /^Dish-level pages/, expanded: false }).click();
     await expect(page.getByText("In progress").first()).toBeVisible();
     await expect(page.getByText("Rank1 team · Nov 5")).toBeVisible();
     await axe();
@@ -25,6 +27,7 @@ for (const theme of ["dark", "light"] as const)
     await page.screenshot({ path: shot("toast") });
     await page.getByRole("status").getByRole("button", { name: "Undo" }).click();
     await page.getByRole("radio", { name: /Done/ }).click();
+    await page.getByRole("button", { name: "Opening hours in the Business Profile", expanded: false }).click();
     await expect(page.getByText("Done Nov 4 · Example Owner")).toBeVisible();
     await axe();
     await page.screenshot({ path: shot("done") });
@@ -36,3 +39,13 @@ for (const theme of ["dark", "light"] as const)
     await axe();
     await page.screenshot({ path: shot("readonly") });
   });
+
+// X7 + X1: the Dashboard card links to /app/fixes#fix-{id}; that fix opens, scrolls into view and takes focus.
+test("a #fix-{id} link opens that fix and focuses its title", async ({ page }) => {
+  await page.goto("/dev/app?state=fixes-success#fix-f2");
+  const title = page.getByRole("button", { name: /^Dish-level pages/ });
+  await expect(title).toHaveAttribute("aria-expanded", "true");
+  await expect(title).toBeFocused();
+  await expect(title).toBeInViewport();
+  await expect(page.getByText("In progress")).toBeVisible();
+});
