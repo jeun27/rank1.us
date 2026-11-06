@@ -1,5 +1,13 @@
 "use client";
 import { CompetitorsView } from "@/components/app/CompetitorsView";
+import { narrativeCopy } from "@/components/narrative/copy";
+import {
+  exampleNarrative,
+  exampleNarrativeNoClash,
+  exampleNarrativeNoWords,
+} from "@/components/narrative/example-data";
+import { NarrativeDashboard } from "@/components/narrative/NarrativeDashboard";
+import { WordsEditor } from "@/components/narrative/WordsEditor";
 import { MentionsEvidence, MentionsSection } from "@/components/mentions/MentionsSection";
 import { exampleMentions, exampleMentionsNone } from "@/components/mentions/example-data";
 import { AiAccessPanel, AiReassure } from "@/components/audit/AiAccessPanel";
@@ -97,6 +105,42 @@ export const STATES: Record<string, () => React.ReactNode> = {
   ),
   "onboarding-connect": () => <ConnectStep card={exampleCards.connect} />,
   "onboarding-connect-done": () => <ConnectStep card={{ ...exampleCards.ready, fixesHref: null }} />,
+  // G4: the Dashboard's clash card and quiet no-words line, and Settings → How should AI describe you?
+  "dashboard-narrative-clash": () => (
+    <Dashboard
+      business={exampleBusiness}
+      latest={exampleLatest}
+      series={series}
+      fixes={exampleFixes}
+      now={NOW}
+      narrative={<NarrativeDashboard view={exampleNarrative} />}
+    />
+  ),
+  "dashboard-narrative-nowords": () => (
+    <Dashboard
+      business={exampleBusiness}
+      latest={exampleLatest}
+      series={series}
+      fixes={exampleFixes}
+      now={NOW}
+      narrative={<NarrativeDashboard view={exampleNarrativeNoWords} />}
+    />
+  ),
+  "settings-narrative": () => (
+    <Page title={narrativeCopy.settingsTitle}>
+      <WordsEditor words={exampleNarrative.words} result={exampleNarrative.result} save={async () => ({ ok: true })} />
+    </Page>
+  ),
+  "settings-narrative-noclash": () => (
+    <Page title={narrativeCopy.settingsTitle}>
+      <p className="text-ui">{narrativeCopy.noClash}</p>
+      <WordsEditor
+        words={exampleNarrativeNoClash.words}
+        result={exampleNarrativeNoClash.result}
+        save={async () => ({ ok: true })}
+      />
+    </Page>
+  ),
   "dashboard-partial": () => (
     <Dashboard
       business={exampleBusiness}
@@ -415,6 +459,7 @@ const CRUMB: Record<string, string> = {
   report: "Reports",
   experiments: "Experiments",
   connections: "Settings",
+  settings: "Settings",
   switcher: "Dashboard",
 };
 

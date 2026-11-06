@@ -38,6 +38,18 @@ export function connectionsTarget(pathname: string): boolean {
   );
 }
 
+// G4: Settings → How should AI describe you? follows ENABLE_NARRATIVE. The Settings index opens when either
+// section is on; the connections pages keep ENABLE_CONNECTIONS. True = a real 404.
+export function settingsBlocked(pathname: string, env: Record<string, string | undefined> = process.env): boolean {
+  const path = normalizePath(pathname);
+  if (path === null) return false;
+  const connections = env.ENABLE_CONNECTIONS === "true";
+  const narrative = env.ENABLE_NARRATIVE === "true";
+  if (path === "/app/settings") return !connections && !narrative;
+  if (path === "/app/settings/narrative") return !narrative;
+  return connectionsTarget(path) && !connections;
+}
+
 // /team?b=<id> streams too (Step 11): the client id, when the path is /team.
 export function teamClient(pathname: string, params: URLSearchParams): string | null {
   return normalizePath(pathname) === "/team" ? params.get("b") || null : null;
@@ -97,7 +109,7 @@ export async function updateSession(request: NextRequest) {
   // Checks run on the normalized path, so %61dmin, admin%2Ftest, //admin or /./app can't slip past them.
   const path = normalizePath(pathname);
   if (path === null) return notFound();
-  if (connectionsTarget(path) && process.env.ENABLE_CONNECTIONS !== "true") return notFound();
+  if (settingsBlocked(path)) return notFound();
   const admin = isAdminPath(path);
   const gated = isProtected(path);
   // Supabase not connected: public pages still work, app areas stay closed.

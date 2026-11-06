@@ -24,6 +24,7 @@ export function Dashboard({
   now,
   notice,
   reassure,
+  narrative,
 }: {
   business: { name: string; paid: boolean } | null;
   latest: Loaded | null;
@@ -34,6 +35,8 @@ export function Dashboard({
   notice?: ReactNode;
   // G2: the quiet "AI can read your site" line, after the hero and the next-fix card (ENABLE_AI_ACCESS_CHECK).
   reassure?: ReactNode;
+  // G4: the clash card or the quiet no-words line, after the C-b card and before the chart (ENABLE_NARRATIVE).
+  narrative?: ReactNode;
 }) {
   if (!business)
     return (
@@ -88,6 +91,7 @@ export function Dashboard({
       )}
       {reassure}
       {notice}
+      {narrative}
       {series.visible && (
         <Section title={c.visibility}>
           <VisibilityLine points={series.points} />
