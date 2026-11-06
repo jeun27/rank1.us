@@ -48,12 +48,11 @@ const setup = (over: Partial<TeamConnectionsData> = {}, dismiss = vi.fn(async ()
 };
 
 describe("TeamConnections: the G3 notice", () => {
+  // Only the connected ones are named (Search Console needs reconnecting in this fixture).
   it("ready and not dismissed: the title, what connected and when, Start on the fix list, Dismiss", async () => {
     const { dismiss, onStart, user } = setup();
     const notice = screen.getByRole("region", { name: "Example Ramen House is ready for GAS" });
-    expect(notice).toHaveTextContent(
-      "Google Business Profile, Google Search Console and Google Analytics connected 12 min ago.",
-    );
+    expect(notice).toHaveTextContent("Google Business Profile and Google Analytics connected 12 min ago.");
     await user.click(within(notice).getByRole("button", { name: c.start }));
     expect(onStart).toHaveBeenCalled();
     await user.click(within(notice).getByRole("button", { name: c.dismiss }));
