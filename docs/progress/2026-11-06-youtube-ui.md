@@ -5,6 +5,6 @@
 - The tile shows "Connected · {n} videos checked" (loadHub's live read, nothing on a failure).
 - The checklist (YoutubeChecklistPanel) is the evidence on open R19/R20/R21 rows (loadYoutubeEvidence reads only with the flag, an open P4 fix and a non-revoked connection).
   - "Keyword: {keyword} · {n} videos", then per video a safe new-tab link and the four checks as text plus tone: Yes / No / Not needed / Can't check / No keyword. The captions reason sits under the list.
-  - No keyword: the plain line. No videos, no channel, reconnect (needs_reauth/revoked/not_connected → "Reconnect YouTube") and a try-again line for temporary failures.
+  - No keyword: the plain line alone, never a list of "No keyword" cells (lead). No videos, no channel, reconnect (needs_reauth/revoked/not_connected → "Reconnect YouTube") and a try-again line for temporary failures.
 - Suggest fix (copy-only): "{keyword} | {title}", "{keyword} at {business}: {line}" and "0:00 Intro" (chapters needs no keyword), each with Copy → Copied. "Apply in YouTube" is disabled with "Coming soon". No clicks create fixes.
-- New, for the lead to confirm: "No YouTube channel on this Google account." and "We couldn't load your videos. Try again."
+- Lead C4/C5: "No YouTube channel on this Google account." and "We couldn't load your videos. Try again."

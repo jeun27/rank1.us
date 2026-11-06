@@ -477,12 +477,12 @@ G7 "Lists that name your rivals but not you" (/app/sources, and the R17 fix's ev
 | Title | "Search-ready checklist" |
 | Header | "Keyword: {keyword}" · "{n} videos" |
 | Checks | "Keyword in title", "Keyword in the first two lines", "Chapters", "Says the keyword" |
-| Values (text + tone) | "Yes", "No", "Not needed", "Can't check", "No keyword" |
+| Values (text + tone) | "Yes", "No", "Not needed", "Can't check", "No keyword" (edge cases only; with no keyword the checklist shows the plain line alone) |
 | Can't check reason | "YouTube doesn't share captions with read-only access." |
 | No keyword (plain text, no action, lead Q2) | "Add your main keyword to check your videos." |
 | No videos | "No videos on this channel yet." |
-| No channel (frontend; lead to confirm) | "No YouTube channel on this Google account." |
-| Read failed (frontend; lead to confirm) | "We couldn't load your videos. Try again." |
+| No channel (lead C4) | "No YouTube channel on this Google account." |
+| Read failed (lead C5) | "We couldn't load your videos. Try again." |
 | Reconnect (needs reconnect / revoked) | "Reconnect YouTube" |
 | Suggest fix (copy-only) | "Suggest fix", "Copy", "Copied", "Apply in YouTube" (disabled) + "Coming soon" |
 

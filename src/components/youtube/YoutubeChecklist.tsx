@@ -153,8 +153,10 @@ export function YoutubeChecklistPanel({
             {checklist.keyword ? `${c.keyword(checklist.keyword)} · ` : ""}
             {c.videos(checklist.videos.length)}
           </p>
-          {!checklist.keyword && <p className="text-ui">{c.noKeyword}</p>}
-          {checklist.videos.length === 0 ? (
+          {/* No keyword (lead): the plain line alone, never a list of "No keyword" cells. */}
+          {!checklist.keyword ? (
+            <p className="text-ui">{c.noKeyword}</p>
+          ) : checklist.videos.length === 0 ? (
             <p className="text-ui">{c.noVideos}</p>
           ) : (
             <>
