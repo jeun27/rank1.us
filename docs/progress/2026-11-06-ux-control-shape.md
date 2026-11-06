@@ -1,0 +1,6 @@
+# Founder fix: one control shape, nested radii, clean select chevrons
+
+- `--radius-nested` (globals.css) = control radius + the 6px inset. DomainField, the only field with a button inside (the audit form and /signin put the button below), hugs its button with p-1.5 on every side and uses `rounded-nested`. No fixed 60px height, no pill.
+- `ui/Select` is every select: appearance-none, pr-10, the ui/Icon `chevronDown` (new path) at right-3, centred. `wrap` sizes the wrapper. ClientSwitcher's `nojs-only` moves to the wrapper so the chevron hides with it.
+- Pills and 8px controls → `rounded-control`: Reports' textarea/color/file/test-send, BusinessSwitcher search, ClientsPanel ghost, billing Dialog Cancel, /team Sidebar rows + icon buttons, DocPane tabs, admin EngineTestForm fields. Left alone: the theme switch (a switch is a pill by definition), meter tracks, and ContextPane's card-style rows (card radius).
+- Tests: nested-radii.spec (equal right/bottom inset, outer = inner + inset, 375 + 1280) and control-shape.spec (10 surfaces: no control over 6px, every select appearance:none with the chevron ≥ 12px in, centred, inside the padding). `/contact` loads with "load", because Turnstile keeps the network busy.
