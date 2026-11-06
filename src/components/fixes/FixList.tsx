@@ -54,6 +54,11 @@ const day = (iso: string) =>
   );
 const who = (a: Actor | null) => (!a ? null : a.is_team ? c.rankTeam : a.name);
 const joined = (...parts: (string | null)[]) => parts.filter(Boolean).join(" · ");
+// "In progress · Rank1 team · Nov 5" / "Done Nov 4 · Ana": who moved a fix and when (/client, X3).
+export const statusLine = (state: "doing" | "done", at: string | null, by: Actor | null) =>
+  state === "doing"
+    ? joined(c.inProgress, who(by), at ? day(at) : null)
+    : joined(at ? c.doneOn(day(at)) : c.doneTab, who(by));
 const focus = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
 const control = `inline-flex h-11 shrink-0 items-center rounded-control border border-fieldBorder bg-raised px-3 text-ui font-medium text-ink hover:bg-overlay md:h-8 ${focus}`;
 

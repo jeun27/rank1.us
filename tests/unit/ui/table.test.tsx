@@ -50,3 +50,27 @@ describe("Table stack + pin", () => {
     expect(first).not.toHaveClass("bg-infoBg");
   });
 });
+
+// Reviewer S1 on #130: Safari can drop table semantics when CSS changes display on tr/tbody, so the
+// stacked table states its roles; each cell still resolves its column header.
+describe("Table stack roles", () => {
+  it("stacked tables carry explicit table, rowgroup, row, columnheader and cell roles", () => {
+    const { container } = render(<Table caption="Competitors" columns={columns} rows={rows} stack />);
+    expect(container.querySelector("table")).toHaveAttribute("role", "table");
+    for (const g of container.querySelectorAll("thead, tbody")) expect(g).toHaveAttribute("role", "rowgroup");
+    for (const r of container.querySelectorAll("tr")) expect(r).toHaveAttribute("role", "row");
+    for (const h of container.querySelectorAll("th")) expect(h).toHaveAttribute("role", "columnheader");
+    for (const d of container.querySelectorAll("td")) expect(d).toHaveAttribute("role", "cell");
+    const table = screen.getByRole("table", { name: "Competitors" });
+    expect(
+      within(table)
+        .getAllByRole("columnheader")
+        .map((h) => h.textContent),
+    ).toEqual(["Business", "Visibility", "Change"]);
+  });
+
+  it("plain tables stay plain markup", () => {
+    const { container } = render(<Table caption="Competitors" columns={columns} rows={rows} />);
+    expect(container.querySelector("table")).not.toHaveAttribute("role");
+  });
+});

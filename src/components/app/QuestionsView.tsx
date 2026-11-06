@@ -10,6 +10,36 @@ import type { QuestionsWithLatestAnswers, QuestionWithAnswers } from "@/lib/quer
 import { appCopy as c } from "./copy";
 import { Page } from "./Page";
 
+// COPY.md "UX (lead, 2026-11-06)" X18.
+const LEGEND = { named: "Named", notNamed: "Not named" };
+
+const Dot = ({ named }: { named: boolean }) => (
+  <span
+    data-dot={named ? "named" : "not-named"}
+    className={`size-2.5 rounded-full border-2 border-jellyDeep ${named ? "bg-jellyDeep" : ""}`}
+  />
+);
+
+// X18: what the dots mean, once, above the list (recognition over recall).
+function Legend() {
+  return (
+    <p data-legend className="-mt-4 flex items-center gap-4 text-caption text-inkMuted">
+      <span className="flex items-center gap-1.5">
+        <span aria-hidden className="flex">
+          <Dot named />
+        </span>
+        {LEGEND.named}
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span aria-hidden className="flex">
+          <Dot named={false} />
+        </span>
+        {LEGEND.notNamed}
+      </span>
+    </p>
+  );
+}
+
 // One dot per answer of the latest run: filled = named, ring = not named, '–' = failed (not counted).
 function Dots({ q }: { q: QuestionWithAnswers }) {
   return (
@@ -27,10 +57,7 @@ function Dots({ q }: { q: QuestionWithAnswers }) {
                     –
                   </span>
                 ) : (
-                  <span
-                    key={a.run_index}
-                    className={`size-2.5 rounded-full border-2 border-jellyDeep ${a.mentioned ? "bg-jellyDeep" : ""}`}
-                  />
+                  <Dot key={a.run_index} named={Boolean(a.mentioned)} />
                 ),
               )}
             </span>
@@ -150,6 +177,7 @@ export function QuestionsView({ data }: { data: QuestionsWithLatestAnswers }) {
     );
   return (
     <Page title={c.questions}>
+      <Legend />
       <ul className="flex flex-col gap-2">
         {data.questions.map((x) => (
           <li key={x.id}>
@@ -165,7 +193,7 @@ export function QuestionsView({ data }: { data: QuestionsWithLatestAnswers }) {
                 <span data-computed className="text-ui font-semibold">
                   {x.text}
                 </span>
-                <Badge tone="info">{locationLabel(x.location_level)}</Badge>
+                <Badge tone="neutral">{locationLabel(x.location_level)}</Badge>
               </span>
               <Dots q={x} />
             </button>
