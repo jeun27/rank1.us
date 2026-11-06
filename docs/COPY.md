@@ -410,8 +410,8 @@ Strings from the GAS prototype report (share/gas-proto/REPORT.md, lead copy). Fi
 | R18 customer copy (lead, every vertical) | "Your homepage shows almost no text without JavaScript, so ChatGPT can't read what you offer." |
 | R19 title (G1) | "Put your keyword in your video titles" |
 | R19 customer copy | "{n} videos need your keyword in the title." / one: "1 video needs your keyword in the title." |
-| R20 title (G1) | "Put your keyword in the first lines of the description" |
-| R20 customer copy | "{n} videos don't have your keyword in the first lines of the description." / one: "1 video doesn't have your keyword in the first lines of the description." |
+| R20 title (G1) | "Put your keyword in the first two lines of the description" |
+| R20 customer copy | "{n} videos don't have your keyword in the first two lines of the description." / one: "1 video doesn't have your keyword in the first two lines of the description." |
 | R21 title (G1) | "Add chapters on videos 5 minutes or longer" |
 | R21 customer copy | "{n} videos 5 minutes or longer have no chapters." / one: "1 video 5 minutes or longer has no chapters." |
 | G2 edge hint (the GPTBot-UA request got a different answer: a soft hint, never "blocked") | "Your site may be blocking AI crawlers at the edge (for example a Cloudflare bot setting). Check your bot settings." |

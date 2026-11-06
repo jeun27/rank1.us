@@ -2,15 +2,15 @@ import { describe, expect, it } from "vitest";
 import { must, newUser, serviceClient } from "./helpers";
 
 // 0035: the YouTube (G1) fix rules, one grouped fix per check (lead Q1): R19 keyword in the title,
-// R20 keyword in the first lines of the description, R21 chapters on videos 5 minutes or longer.
+// R20 keyword in the first two lines of the description, R21 chapters on videos 5 minutes or longer.
 const RULES = {
   R19: {
     title: "Put your keyword in your video titles",
     customer_copy: "{n} videos need your keyword in the title.",
   },
   R20: {
-    title: "Put your keyword in the first lines of the description",
-    customer_copy: "{n} videos don't have your keyword in the first lines of the description.",
+    title: "Put your keyword in the first two lines of the description",
+    customer_copy: "{n} videos don't have your keyword in the first two lines of the description.",
   },
   R21: {
     title: "Add chapters on videos 5 minutes or longer",
