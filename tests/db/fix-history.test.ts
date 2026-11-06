@@ -191,6 +191,15 @@ describe("done_fixes", () => {
     expect(JSON.stringify(done)).not.toContain("@");
   });
 
+  it("carries each done fix's pillar, for the per-group done counts", async () => {
+    const done = await listDoneFixes(owner.db, ownerBusiness);
+    const rows = must(
+      await s().from("fixes").select("id, pillar").eq("business_id", ownerBusiness).eq("status", "done"),
+    );
+    expect(done.map((f) => [f.id, f.pillar]).sort()).toEqual(rows.map((r) => [r.id, r.pillar]).sort());
+    expect(done.find((f) => f.rule_key === "R10")?.pillar).toBe("p5");
+  });
+
   it("team actors show as is_team only, to the dfy_client and to the team", async () => {
     const id = await fixId(dfyBusiness, "R10");
     await setFixStatus(team.db, id, "done");

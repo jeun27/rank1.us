@@ -38,31 +38,30 @@ describe("FixList (UI.md 4b Fix list)", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("writers get a labelled Status select; choosing calls onStatus with the fix id", async () => {
+  // Portal (b): the Status select became the check-off circle (tests/unit/fixes/checkoff.test.tsx).
+  it("writers get a circle checkbox per fix; checking it calls onStatus(done) with the fix id", async () => {
     const onStatus = vi.fn(async () => undefined);
     render(<FixList {...base} onStatus={onStatus} />);
-    const selects = screen.getAllByLabelText("Status");
-    expect(
-      within(selects[0])
-        .getAllByRole("option")
-        .map((o) => o.textContent),
-    ).toEqual(["To do", "Doing", "Done"]);
-    await userEvent.selectOptions(selects[1], "done");
+    const boxes = screen.getAllByRole("checkbox");
+    expect(boxes.map((b) => b.getAttribute("aria-label"))).toEqual(
+      [...exampleFixes, ...exampleTidyUps].map((f) => f.title),
+    );
+    await userEvent.click(boxes[1]);
     expect(onStatus).toHaveBeenCalledWith(exampleFixes[1].id, "done");
   });
 
   it("a failed status change shows the banner and puts the old value back", async () => {
     render(<FixList {...base} onStatus={async () => ({ error: "42501" })} />);
-    const select = screen.getAllByLabelText("Status")[0];
-    await userEvent.selectOptions(select, "doing");
+    const box = screen.getAllByRole("checkbox")[0];
+    await userEvent.click(box);
     expect(await screen.findByRole("alert")).toHaveTextContent("We couldn't save that. Try again.");
-    expect(select).toHaveValue("todo");
+    expect(box).toHaveAttribute("aria-checked", "false");
   });
 
-  it("read-only (clients): a status label, no control", () => {
+  it("read-only (clients): the circle is status only, no control", () => {
     render(<FixList {...base} canWrite={false} />);
-    expect(screen.queryByLabelText("Status")).not.toBeInTheDocument();
-    expect(screen.getAllByText("To do").length).toBeGreaterThan(0);
+    expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
+    expect(screen.getByRole("img", { name: `${exampleFixes[0].title}: To do` })).toBeInTheDocument();
   });
 
   it("partial: unchecked rows say 'We couldn’t check this yet.'; no domain adds the 4b note once", () => {

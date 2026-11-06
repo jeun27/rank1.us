@@ -2,7 +2,7 @@ import "server-only";
 import { loadPaidRun } from "@/components/audit/load";
 import type { TeamExtras } from "@/components/workspace/team";
 import { computeSources } from "@/lib/metrics";
-import { listFixes } from "@/lib/queries/fixes";
+import { listDoneFixes, listFixes } from "@/lib/queries/fixes";
 import { getQuestionsWithLatestAnswers, listRunSummaries } from "@/lib/queries/shell";
 import { listClientUsers } from "@/lib/queries/clients";
 import { listDfyBusinesses } from "@/lib/queries/team";
@@ -29,12 +29,13 @@ export async function loadTeam(picked: string | undefined): Promise<TeamData> {
   if (!businesses.length) return { kind: "no-clients" };
   const business = picked ? businesses.find((b) => b.id === picked) : businesses[0];
   if (!business) return { kind: "missing" };
-  const [rows, summaries, questions, fixes, clientUsers] = await Promise.all([
+  const [rows, summaries, questions, fixes, clientUsers, done] = await Promise.all([
     getWorkspaceRows(db, business.id),
     listRunSummaries(db, business.id, 8, ["complete", "partial"]),
     getQuestionsWithLatestAnswers(db, business.id),
     listFixes(db, business.id),
     listClientUsers(db, business.id),
+    listDoneFixes(db, business.id),
   ]);
   if (!rows) return { kind: "missing" };
   const latest = summaries[0] ? await loadPaidRun(summaries[0].id) : null;
@@ -53,7 +54,7 @@ export async function loadTeam(picked: string | undefined): Promise<TeamData> {
         questions: questions.questions,
         checks: summaries,
       },
-      fixes: { ...fixes, noDomain: !business.domain },
+      fixes: { ...fixes, done, noDomain: !business.domain },
       loadSuggestions: teamSuggestions,
       // Emails reach the team UI only; never logged.
       clients: {

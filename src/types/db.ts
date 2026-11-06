@@ -104,14 +104,14 @@ isOneToOne: false
                   ]
                 },"businesses": {
                   Row: {
-                    "aliases": (string)[],"archive_at": string | null,"archived_at": string | null,"brand_color": string | null,"city": string,"country": string,"created_at": string,"cuisine": string | null,"domain": string | null,"fix_list_visible": boolean,"gas_ready_at": string | null,"gas_ready_dismissed_at": string | null,"ga4_property_id": string | null,"id": string,"logo_path": string | null,"name": string,"report_recipients": (string)[],"service": string,"state": string,"vertical": string,"workspace_id": string
+                    "aliases": (string)[],"archive_at": string | null,"archived_at": string | null,"brand_color": string | null,"city": string,"country": string,"created_at": string,"cuisine": string | null,"domain": string | null,"fix_list_visible": boolean,"gas_ready_at": string | null,"gas_ready_dismissed_at": string | null,"ga4_property_id": string | null,"id": string,"logo_path": string | null,"narrative_avoid": (string)[],"narrative_want": (string)[],"name": string,"report_recipients": (string)[],"service": string,"state": string,"vertical": string,"workspace_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "aliases"?: (string)[],"archive_at"?: string | null,"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"gas_ready_at"?: string | null,"gas_ready_dismissed_at"?: string | null,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"name": string,"report_recipients"?: (string)[],"service"?: string,"state"?: string,"vertical"?: string,"workspace_id": string
+                    "aliases"?: (string)[],"archive_at"?: string | null,"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"gas_ready_at"?: string | null,"gas_ready_dismissed_at"?: string | null,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"narrative_avoid"?: (string)[],"narrative_want"?: (string)[],"name": string,"report_recipients"?: (string)[],"service"?: string,"state"?: string,"vertical"?: string,"workspace_id": string
                   }
                   Update: {
-                    "aliases"?: (string)[],"archive_at"?: string | null,"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"gas_ready_at"?: string | null,"gas_ready_dismissed_at"?: string | null,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"name"?: string,"report_recipients"?: (string)[],"service"?: string,"state"?: string,"vertical"?: string,"workspace_id"?: string
+                    "aliases"?: (string)[],"archive_at"?: string | null,"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"gas_ready_at"?: string | null,"gas_ready_dismissed_at"?: string | null,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"narrative_avoid"?: (string)[],"narrative_want"?: (string)[],"name"?: string,"report_recipients"?: (string)[],"service"?: string,"state"?: string,"vertical"?: string,"workspace_id"?: string
                   }
                   Relationships: [
                     {
@@ -546,6 +546,26 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"mention_target_decisions": {
+                  Row: {
+                    "business_id": string,"decided_at": string,"decided_by": string | null,"status": string,"url": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "business_id": string,"decided_at"?: string,"decided_by"?: string | null,"status": string,"url": string
+                  }
+                  Update: {
+                    "business_id"?: string,"decided_at"?: string,"decided_by"?: string | null,"status"?: string,"url"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "mention_target_decisions_business_id_fkey"
+      columns: ["business_id"]
+isOneToOne: false
+      referencedRelation: "businesses"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"questions": {
                   Row: {
                     "active": boolean,"active_form": string,"business_id": string,"city": string | null,"country": string | null,"dfs_location_code": number | null,"id": string,"location_level": string,"long_text": string | null,"short_text": string,"state": string | null,"template_key": string | null
@@ -789,7 +809,7 @@ isOneToOne: false
 { Args: { "p_business_id": string }; Returns: undefined
                            },
 "done_fixes":
-{ Args: { "p_business_id": string }; Returns: { "changed_by": Json,"detail": string | null,"id": string,"rule_key": string,"status_changed_at": string | null,"title": string }[]
+{ Args: { "p_business_id": string }; Returns: { "changed_by": Json,"detail": string | null,"id": string,"pillar": string,"rule_key": string,"status_changed_at": string | null,"title": string }[]
                            },
 "end_experiment":
 { Args: { "p_experiment_id": string }; Returns: boolean
@@ -886,6 +906,12 @@ isOneToOne: false
                            },
 "set_fix_status":
 { Args: { "p_fix_id": string,"p_status": string }; Returns: undefined
+                           },
+"set_mention_target":
+{ Args: { "p_business_id": string,"p_status": string,"p_url": string }; Returns: undefined
+                           },
+"set_narrative_words":
+{ Args: { "p_avoid": string[],"p_business_id": string,"p_want": string[] }; Returns: undefined
                            },
 "set_report_settings":
 { Args: { "p_brand_color": string | null,"p_business_id": string,"p_report_recipients": string[] }; Returns: undefined
