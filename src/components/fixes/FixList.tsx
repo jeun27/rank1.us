@@ -206,18 +206,23 @@ function FixRow({
                 {c.undo}
               </button>
             )}
-            {canWrite && !done && (
-              <a
-                href={`/app/experiments/new?fix=${encodeURIComponent(row.id)}`}
-                className="inline-flex min-h-11 items-center text-ui text-link underline underline-offset-4 md:min-h-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
-              >
-                {c.startTest}
-              </a>
-            )}
+            {canWrite && done && <TestLink id={row.id} />}
           </div>
         </div>
       </div>
     </li>
+  );
+}
+
+// X27: a before/after test needs a change to test, so it's offered once a fix is done (toast, done rows).
+function TestLink({ id }: { id: string }) {
+  return (
+    <a
+      href={`/app/experiments/new?fix=${encodeURIComponent(id)}`}
+      className="inline-flex min-h-11 items-center text-ui text-link underline underline-offset-4 md:min-h-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+    >
+      {c.startTest}
+    </a>
   );
 }
 
@@ -604,9 +609,12 @@ export function FixList({
       {toast && (
         <div
           role="status"
-          className="fixed right-4 bottom-4 z-30 flex max-w-[calc(100vw-2rem)] items-center gap-4 rounded-card border border-border bg-overlay px-4 py-3 text-ui shadow-overlay"
+          className="fixed right-4 bottom-4 z-30 flex max-w-[calc(100vw-2rem)] flex-wrap items-center gap-x-4 gap-y-1 rounded-card border border-border bg-overlay px-4 py-3 text-ui shadow-overlay"
         >
-          <span data-computed>{c.marked(toast.title)}</span>
+          <span data-computed className="max-md:basis-full">
+            {c.marked(toast.title)}
+          </span>
+          <TestLink id={toast.id} />
           <button
             type="button"
             onClick={async () => {
