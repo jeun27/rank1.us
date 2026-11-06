@@ -397,6 +397,10 @@ C-c task lines (at most one per connection):
 - "Ask the client to reconnect {connection}"
 - "Ask the client to choose their {locations|sites|properties}" (lead Q5)
 
+C-c PR 3 (lead Q6, 2026-11-06). The team sets a DFY client's narrative words and decides its mention lists. Everything else reuses the G4 and G7 strings, including the editor's labels "Words that fit you" and "Words to avoid", which are the client's words.
+
+- Client switcher row and document title: "How AI describes {Business}" (in the team view "you" would mean the team)
+
 **C-b, signed off by the lead (2026-11-06).** The onboarding connect step and the dashboard card, plus the G3 client "You're all set" state. "{names}" joins the connector names with "and"; one name reads "is connected".
 
 | Where | String |

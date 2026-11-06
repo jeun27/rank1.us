@@ -4,6 +4,8 @@ import { AddCompetitorForm, CompetitorSuggestions } from "@/components/app/Compe
 import { appCopy } from "@/components/app/copy";
 import { FixList } from "@/components/fixes/FixList";
 import { MentionsSection } from "@/components/mentions/MentionsSection";
+import { narrativeCopy } from "@/components/narrative/copy";
+import { NarrativeSettings } from "@/components/narrative/NarrativeSettings";
 import { Badge } from "@/components/ui/Badge";
 import { Freshness } from "@/components/ui/Freshness";
 import { Icon } from "@/components/ui/Icon";
@@ -168,6 +170,19 @@ function ConnectionsDoc({
         onDismiss={async () => a.dismissReady?.(b)}
         onStartFixes={() => onPick({ kind: "section", section: "fixes" })}
       />
+    </Doc>
+  );
+}
+
+// C-c D3: "How AI describes {Business}" for the selected DFY client (team only, ENABLE_NARRATIVE). The editor
+// keeps the client's own labels ("Words that fit you"): they're the client's words.
+function NarrativeDoc({ view, now }: { view: WorkspaceView; now: Date | null }) {
+  const team = useTeam();
+  if (!team?.narrative || !team.actions.saveNarrative) return null;
+  const { businessId: b, actions: a } = team;
+  return (
+    <Doc title={narrativeCopy.teamTitle(view.business.name)} view={view} now={now}>
+      <NarrativeSettings key={b} view={team.narrative} save={(w) => a.saveNarrative!(b, w)} />
     </Doc>
   );
 }
@@ -438,6 +453,7 @@ export function DocView({
   if (sel.kind === "new") return <NewTab onPick={onPick} />;
   if (sel.kind === "clients") return <ClientsDoc view={view} now={now} />;
   if (sel.kind === "connections") return <ConnectionsDoc view={view} now={now} onPick={onPick} />;
+  if (sel.kind === "narrative") return <NarrativeDoc view={view} now={now} />;
   const title = contextFor(view, sel).title;
   return (
     <Doc title={title} view={view} now={now}>

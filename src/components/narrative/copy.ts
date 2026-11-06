@@ -2,6 +2,8 @@
 export const narrativeCopy = {
   title: "How AI describes you",
   settingsTitle: "How should AI describe you?",
+  // C-c D3 (lead Q6, 2026-11-06): the team's switcher row and document; "you" would mean the team there.
+  teamTitle: (business: string) => `How AI describes ${business}`,
   want: "Words that fit you",
   avoid: "Words to avoid",
   helper:

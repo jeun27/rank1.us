@@ -14,6 +14,7 @@ import {
 } from "@/lib/queries/connections";
 import { getGasReady } from "@/lib/queries/gas-ready";
 import { loadMentions } from "@/lib/mentions/service";
+import { loadNarrative } from "@/lib/narrative/service";
 import { toTeamChanges } from "@/components/workspace/team-connections-data";
 import { getWorkspaceRows, type WorkspaceRows } from "@/lib/queries/workspace";
 import { createClient } from "@/lib/supabase/server";
@@ -22,6 +23,7 @@ import {
   addTeamCompetitor,
   decideTeamMention,
   dismissTeamReady,
+  saveTeamNarrativeWords,
   dismissTeamSuggestion,
   inviteTeamClient,
   removeTeamClient,
@@ -53,14 +55,15 @@ export async function loadTeam(picked: string | undefined): Promise<TeamData> {
   if (!rows) return { kind: "missing" };
   // C-c: the client's Connections document, only with ENABLE_CONNECTIONS (stored data, no provider calls).
   const connectionsOn = process.env.ENABLE_CONNECTIONS === "true";
-  // C-c D4: the client's G7 lists ("disabled" without ENABLE_MENTIONS).
-  const [latest, conns, changes, actors, interest, gas, mentions] = await Promise.all([
+  // C-c D3/D4: the client's narrative words and G7 lists ("disabled" without ENABLE_NARRATIVE / ENABLE_MENTIONS).
+  const [latest, conns, changes, actors, interest, gas, narrative, mentions] = await Promise.all([
     summaries[0] ? loadPaidRun(summaries[0].id) : null,
     connectionsOn ? listConnections(db, business.id) : [],
     connectionsOn ? listConnectionChanges(db, business.id, 50) : [],
     connectionsOn ? listConnectionChangeActors(db, business.id) : [],
     connectionsOn ? listConnectorInterest(db, business.id) : [],
     connectionsOn ? getGasReady(db, business.id) : null,
+    loadNarrative(db, business.id),
     loadMentions(db, business.id),
   ]);
   return {
@@ -105,6 +108,7 @@ export async function loadTeam(picked: string | undefined): Promise<TeamData> {
             interest: [...new Set(interest.map((i) => i.provider))],
           }
         : null,
+      narrative: narrative === "disabled" ? null : narrative,
       mentions:
         mentions === "disabled"
           ? null
@@ -117,6 +121,7 @@ export async function loadTeam(picked: string | undefined): Promise<TeamData> {
         removeClient: removeTeamClient,
         setFixListVisible: setTeamFixListVisible,
         dismissReady: dismissTeamReady,
+        saveNarrative: saveTeamNarrativeWords,
         decideMention: decideTeamMention,
       },
     },

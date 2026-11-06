@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { narrativeCopy } from "@/components/narrative/copy";
 import { Icon } from "@/components/ui/Icon";
 import type { TeamExtras } from "./team";
 
@@ -13,11 +14,14 @@ export function ClientSwitcher({
   team,
   onClients,
   onConnections,
+  onNarrative,
 }: {
   team: Pick<TeamExtras, "businesses" | "businessId" | "formAction" | "hidden">;
   onClients?: () => void;
   // C-c: the Connections document (ENABLE_CONNECTIONS).
   onConnections?: () => void;
+  // C-c D3: "How AI describes {Business}" (ENABLE_NARRATIVE).
+  onNarrative?: () => void;
 }) {
   const id = useId();
   const form = useRef<HTMLFormElement>(null);
@@ -173,6 +177,21 @@ export function ClientSwitcher({
             >
               <Icon name="link" className="size-4" />
               Connections
+            </button>
+          )}
+          {onNarrative && (
+            <button
+              type="button"
+              onClick={() => {
+                close(false);
+                onNarrative();
+              }}
+              className={`${row} text-text2 hover:bg-raised hover:text-ink ${focus}`}
+            >
+              <Icon name="file" className="size-4" />
+              <span data-computed className="truncate">
+                {narrativeCopy.teamTitle(current.name)}
+              </span>
             </button>
           )}
         </div>

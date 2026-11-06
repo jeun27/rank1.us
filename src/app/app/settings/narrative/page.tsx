@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { loadShell } from "@/components/app/load";
 import { Page } from "@/components/app/Page";
 import { narrativeCopy as c } from "@/components/narrative/copy";
-import { WordsEditor } from "@/components/narrative/WordsEditor";
+import { NarrativeSettings } from "@/components/narrative/NarrativeSettings";
 import { loadNarrative } from "@/lib/narrative/service";
 import { saveNarrativeWordsAction } from "./actions";
 
@@ -16,12 +16,9 @@ export default async function NarrativeSettingsPage() {
   if (!business) redirect("/app");
   const view = await loadNarrative(db, business.id);
   if (view === "disabled" || !view) redirect("/app");
-  const r = view.result;
   return (
     <Page title={c.settingsTitle}>
-      {r?.tooFew && <p className="text-ui">{c.tooFew}</p>}
-      {r && !r.tooFew && r.clashes === 0 && view.words.avoid.length > 0 && <p className="text-ui">{c.noClash}</p>}
-      <WordsEditor words={view.words} result={r && !r.tooFew ? r : null} save={saveNarrativeWordsAction} />
+      <NarrativeSettings view={view} save={saveNarrativeWordsAction} />
     </Page>
   );
 }
