@@ -201,3 +201,35 @@ describe("ClientSwitcher: Connections", () => {
     expect(screen.queryByRole("button", { name: c.title })).toBeNull();
   });
 });
+
+// C-c PR 2: the GBP row offers "Edit Business Profile" only when it's connected with a chosen location and
+// the team's edit actions exist; the editor opens in place.
+describe("TeamConnections: Edit Business Profile", () => {
+  const edit = { preview: vi.fn(async () => ({ changes: [] })), apply: vi.fn(async () => ({ applied: 0 })) };
+  it("connected with a location: the toggle opens the editor", async () => {
+    const user = userEvent.setup();
+    render(<TeamConnections data={data()} now={NOW} onDismiss={vi.fn()} onStartFixes={vi.fn()} gbpEdit={edit} />);
+    const gbp = screen.getByRole("listitem", { name: "Google Business Profile" });
+    await user.click(within(gbp).getByRole("button", { name: "Edit Business Profile" }));
+    expect(within(gbp).getByLabelText("Description")).toBeInTheDocument();
+  });
+
+  it.each([
+    ["no edit actions", undefined, data()],
+    [
+      "no chosen location",
+      edit,
+      data({ connections: [{ id: "g1", provider: "gbp", status: "connected", selected: [] }] }),
+    ],
+    [
+      "needs reconnect",
+      edit,
+      data({
+        connections: [{ id: "g1", provider: "gbp", status: "needs_reauth", selected: [{ id: "l1", name: "L" }] }],
+      }),
+    ],
+  ] as const)("%s: no toggle", (_, e, d) => {
+    render(<TeamConnections data={d} now={NOW} onDismiss={vi.fn()} onStartFixes={vi.fn()} gbpEdit={e} />);
+    expect(screen.queryByRole("button", { name: "Edit Business Profile" })).toBeNull();
+  });
+});
