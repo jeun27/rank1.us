@@ -1,5 +1,71 @@
 # QA
 
+## v0.7.0: portal look, check-off Fix list with pillar groups, robots.txt/sitemap.xml
+
+Checked 2026-11-06 on main at b9f12ca:
+- #104: template portal look (D44 in docs/design/v3.md)
+- #107 + #115: check-off Fix list and pillar groups (G5)
+- #110: robots.txt and sitemap.xml (G6)
+- #109: the /client theme toggle (re-checked in #119)
+
+Main doesn't auto-deploy, so the UI checks ran against #115's final head preview 9b1ae2d. It differs from b9f12ca only by backend #114 (mention decisions), docs and the e2e Connections flag probe (#118), with no UI change. The e2e suite ran from a b9f12ca worktree on the Mac. Unit, typecheck, lint, format and build ran in the sandbox. test-db is from CI on main. Example data only. Per the lead, the live production GETs of /robots.txt and /sitemap.xml ran after v0.7.0 deployed (see the P3 live row).
+Preview: https://rank1-sd643fjzq-bryan-flowhighlevels-projects.vercel.app (sha 9b1ae2d, READY).
+Sources: docs/design/v3.md D44, UI.md, COPY.md "Fix list (lead, 2026-11-06)" and the pillar rows, briefs/rank1-gas.md (G5, G6).
+
+Result: PASS. No blocking problems. P3 live was checked after v0.7.0 deployed (tag at bb0ac29, deployment dpl_5UwCnKiheK8Xq2ohrG6cmCQwwdYQ): PASS.
+
+### Commands
+
+| Command | Result |
+|---|---|
+| `pnpm test` (sandbox, b9f12ca) | PASS. 126 files, 1424 tests passed |
+| `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build` (sandbox) | PASS |
+| CI on main push b9f12ca (run 42182246214) | test, typecheck, lint, format green. test-db 30 files / 501 tests (fixes.test 11, fix-history.test 11, migrations.test 3). e2e was cancelled when main moved on: see the next row |
+| CI on main bb0ac29 (b9f12ca + backend #120 and #116 + docs #121; src changes only in src/lib/queries/ai-access.ts and src/types/db.ts; run 42183787185) | PASS. All checks green. e2e 647 passed, 13 skipped. test-db 510 tests. a996003's e2e was also cancelled by the next push |
+| `E2E_BASE_URL=<preview> pnpm exec playwright test` (Mac, b9f12ca worktree) | PASS. 577 passed, 83 skipped, 0 failed. The connections.spec:87 preview failure from the v3 re-check is gone (#118 probes the flag on the target) |
+| `.next/static` scan for service role, Resend, Stripe, webhook, CRON and Google client secrets | PASS. No matches |
+
+### Checks
+
+The sweep covered 20 pages at 375 and 1280, with a saved dark and a saved light choice (80 loads):
+- public: / and /signin;
+- /dev/app: dashboard, competitors, questions, sources, history, report, billing, experiments, and all 6 fixes states;
+- /dev/team and /dev/client.
+
+| Check | Result | Evidence |
+|---|---|---|
+| P1 D44 surfaces | PASS | The dark body background is rgb(0, 0, 0) on every page. Light is #F6F7F9. tests/unit/tokens.test.ts "dark (default) has the portal values", "light (O2) has the exact §7 values" |
+| P1 white accent | PASS | tokens.test "the white accent is the fill and the chart line: ≥ 4.5 on page, panel and raised". e2e portal.spec "white primary with black text", "R3: the business line on the visibility chart is the white accent" |
+| P1 R1 links: white and always underlined (light #1A5FBF) | PASS | Every visible text link (no fill, no border) in main is underlined on all 80 loads. Dark text links are rgb(255, 255, 255). Light ones are rgb(26, 95, 191). Section headings that are links ("What to fix next" on the Dashboard) inherit the heading: in dark the gradient is clipped to the text (computed colour transparent), and a screenshot confirms the underline is drawn and visible. In light they use the ink heading colour, also underlined. e2e "R1: links are white and underlined" |
+| P1 R2 info blue only for You/info/focus | PASS | e2e "R2: the You row keeps the blue info fill" |
+| P1 heading gradient on app h1/h2, dark only | PASS | App h1 has a gradient clipped to the text in dark on every /dev page, and plain in light (as designed: "light keeps plain headings"). Forced colours fall back to CanvasText (globals.css). e2e "gradient H1 with tight tracking", "light /app keeps plain headings" |
+| P1 no glows in the app | PASS | No element with a radial-gradient background on any /dev/app, /dev/team or /dev/client page in either theme. The landing keeps its 4 hero glow elements (D44 bans glows in the app only). e2e "no glows in /app or /team; the landing keeps its hero glow" |
+| P1 AA in both themes | PASS | axe (incl. color-contrast) 0 violations on all 80 loads. tokens.test "every text pair passes AA (4.5)", "control edges pass 3:1" |
+| P1 no theme flash | PASS | `data-theme` captured at `<body>` insertion (the corrected method from the v3 re-check) and after: the expected theme from the first frame on all 80 loads (public pages dark) |
+| P1 44px targets below md, no side scroll | PASS | At 375: no link, button, input, select, tab or checkbox under 44px (inline links inside paragraphs excepted). scrollWidth = viewport on every page |
+| P2 checkbox semantics | PASS | The fixes-success circles are `role=checkbox`, named by the fix title, aria-checked false / mixed (In progress) / true. aria-keyshortcuts "x", tooltip "Mark done (x)". Unit checkoff.test "named by the fix title; unchecked for To do, mixed for In progress, checked for Done", "the shortcut is in its tooltip and aria-keyshortcuts" |
+| P2 x / s keys and Undo | PASS | Preview: focus + x shows "Marked “robots.txt allows AI search crawlers” done" with Undo, and the row leaves Open. Undo brings it back unchecked in place. s on a To do fix sets it to mixed (In progress). Unit "keyboard: x marks the focused fix done, s starts it", "click = done … Undo puts it back", "Undo after finishing an in-progress fix returns it to In progress", "the toast goes away by itself" |
+| P2 who/when: "Rank1 team" or a name, never an email | PASS | Preview: "Rank1 team" appears on the team-actor row, and no email-shaped text is in main on any page. Unit "who/when: 'Rank1 team' for a team actor, the member's name otherwise, never an email; none when null". CI db "team actors show as is_team only, to the dfy_client and to the team" |
+| P2 dfy_client / read-only | PASS | Preview fixes-readonly at 375 and 1280: no `role=checkbox` controls, no Start or Undo buttons (status circles only). Unit "without canWrite: the circles are status only, no Start or Undo, done rows still listed". CI db "a dfy_client still can't change a status (42501)", "a dfy_client reads only when fix_list_visible is on, and never writes" |
+| P2 pillar order P5→P3→P2→P1→P4→P6, then P0 | PASS | FixList.tsx `PILLAR_ORDER = ["p5","p3","p2","p1","p4","p6","p0"]`; empty groups are hidden. The preview gallery has fixes in P5 and P2 only and renders P5 then P2. Unit pillars.test "in the fixed order P5, P3, P2, P1 (P4 and P6 have no fixes, so they're hidden), with the brief's labels" |
+| P2 per-group counts | PASS | Preview: "P5 Technical access 0/1" (1 open row), "P2 Content 1/4" (3 open rows + 1 done). Unit "each group counts '{done}/{total}' (open + done with that pillar); a done fix with no pillar counts nowhere" |
+| P2 P0 baseline line | PASS | Preview: "Your baseline: 33% visibility, named in 80 of 240 answers." at the bottom (COPY.md string, with n). Unit "P0 is one baseline line at the bottom, linking to the dashboard; none without a run" |
+| P2 every Fix list state, both themes and widths | PASS | fixes-success, -partial, -readonly, -empty, -loading and -error: axe 0, no flash, no side scroll, no small targets. e2e "fixes: each check-off circle is keyboard reachable; read-only has none" and checkoff.spec |
+| P3 robots.txt / sitemap.xml, production logic | PASS (unit + e2e) | src/app/robots.ts: production allows / for * and for GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot and Google-Extended by name, disallows /app /team /client /api /dev /admin /auth, and points the sitemap at the site origin. Unit robots-sitemap.test "allows / for everyone and for each named AI crawler, disallowing exactly the private areas", "/audit is not listed (its noindex covers it); the sitemap line uses the site origin", "falls back to https://rank1.us for %s", "lists the public pages only, as absolute URLs on the site origin". e2e "robots.txt and sitemap.xml are served; every sitemap URL's path answers 200" |
+| P3 preview robots | PASS | Preview /robots.txt: 200 text/plain, exactly "User-Agent: * / Disallow: /". Unit "VERCEL_ENV=preview/development/undefined: Disallow / for everyone" |
+| P3 sitemap content | PASS | Preview /sitemap.xml: 200 application/xml, `<loc>` https://rank1.us/, /contact, /privacy, /terms only. No private path, no /audit |
+| P3 live production GETs (v0.7.0, after deploy) | PASS | One read-only GET each, 2026-11-06 ~08:05 UTC. https://rank1.us/robots.txt: 200, text/plain; charset=utf-8. One block each for `*`, GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot and Google-Extended, each `Allow: /` plus `Disallow:` /app, /team, /client, /api, /dev, /admin, /auth. Ends with `Sitemap: https://rank1.us/sitemap.xml`. https://rank1.us/sitemap.xml: 200, application/xml, `<loc>` https://rank1.us/, /contact, /privacy, /terms only (no private path, no /audit) |
+| P4 /client toggle on the new look | PASS | /dev/client in dark and light at both widths: correct theme from the first frame, axe 0. Full re-check in the v3 section (#109) |
+
+### Blocking problems
+
+None.
+
+### Non-blocking notes
+
+- N1: after Undo in the toast, keyboard focus falls to `<body>` instead of returning to the restored row's checkbox. A keyboard user loses their place in the list. Suggest moving focus back to the restored checkbox.
+- N2: the signed-in live items (Step 14 portal open, Step 16 history download, Step 17 create/end/delete) still wait for the founder's session.
+
 ## v3 restyle: Supabase-style dark (Design v3)
 
 Checked 2026-11-06 on main at 3258a85:
