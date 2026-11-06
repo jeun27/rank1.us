@@ -110,36 +110,42 @@ export function HeroDemo() {
           </p>
         </div>
 
-        <ol className="flex flex-col self-start overflow-hidden rounded-card border border-border">
-          {board.map((r, i) => {
-            const from = before.findIndex((b) => b.brand === r.brand);
-            // Before the climb, rows sit where last week put them; the climb slides them into place.
-            const shift = f.climbed ? 0 : from - i;
-            return (
-              <li
-                key={r.brand}
-                data-demo-row={r.brand}
-                data-you={r.you ? "" : undefined}
-                data-demo-anim
-                style={{ transform: `translateY(${shift * 100}%)` }}
-                className={`flex h-9 items-center gap-3 border-border px-3 text-caption transition-transform duration-300 ease-[cubic-bezier(.16,1,.3,1)] motion-reduce:transition-none [&+li]:border-t ${
-                  r.you ? "bg-infoBg" : "bg-white"
-                }`}
-              >
-                <span data-computed className="w-4 font-mono text-inkMuted tabular-nums">
-                  {f.climbed ? r.rank : before[from].rank}
-                </span>
-                <span data-computed className="min-w-0 flex-1 truncate text-ink">
-                  {r.brand}
-                </span>
-                {r.you && <Badge tone="info">You</Badge>}
-                <span data-computed className="font-mono text-text2 tabular-nums">
-                  {formatPercent(r.you ? f.visibility : r.named)}
-                </span>
-              </li>
-            );
-          })}
-        </ol>
+        <div className="self-start">
+          <ol className="flex flex-col overflow-hidden rounded-card border border-border">
+            {board.map((r, i) => {
+              const from = before.findIndex((b) => b.brand === r.brand);
+              // Before the climb, rows sit where last week put them; the climb slides them into place.
+              const shift = f.climbed ? 0 : from - i;
+              return (
+                <li
+                  key={r.brand}
+                  data-demo-row={r.brand}
+                  data-you={r.you ? "" : undefined}
+                  data-demo-anim
+                  style={{ transform: `translateY(${shift * 100}%)` }}
+                  className={`flex h-9 items-center gap-3 border-border px-3 text-caption transition-transform duration-300 ease-[cubic-bezier(.16,1,.3,1)] motion-reduce:transition-none [&+li]:border-t ${
+                    r.you ? "bg-infoBg" : "bg-white"
+                  }`}
+                >
+                  <span data-computed className="w-4 font-mono text-inkMuted tabular-nums">
+                    {f.climbed ? r.rank : before[from].rank}
+                  </span>
+                  <span data-computed className="min-w-0 flex-1 truncate text-ink">
+                    {r.brand}
+                  </span>
+                  {r.you && <Badge tone="info">You</Badge>}
+                  <span data-computed className="font-mono text-text2 tabular-nums">
+                    {formatPercent(r.you ? f.visibility : r.named)}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+          {/* The n rule: every number shows its sample size (lead copy "From {n} answers"). */}
+          <p data-demo-sample className="mt-2 text-caption text-inkMuted">
+            From <span className="font-mono tabular-nums">{demoThisWeek.denominator}</span> answers
+          </p>
+        </div>
       </div>
 
       {/* 72px on the corner (60px below 1220px), hidden on phones. Static until jelly.svg has an eye layer. */}
