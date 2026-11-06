@@ -42,6 +42,8 @@ export function MentionsSection({
   canDecide,
   fixId: initialFix,
   decide,
+  level = 2,
+  onView,
 }: {
   // null before the first run.
   targets: MentionTargets | null;
@@ -49,8 +51,13 @@ export function MentionsSection({
   // The open grouped R17 fix, for "View".
   fixId: string | null;
   decide: Decide;
+  // The team's Sources document sits under its own title (C-c D4).
+  level?: 2 | 3;
+  // The team opens its Fixes document instead of /app/fixes (that's the team member's own business).
+  onView?: () => void;
 }) {
   const heading = useId();
+  const Heading = level === 3 ? "h3" : "h2";
   const [override, setOverride] = useState<Record<string, Status>>({});
   const [failed, setFailed] = useState<Record<string, boolean>>({});
   const [fixId, setFixId] = useState(initialFix);
@@ -93,11 +100,17 @@ export function MentionsSection({
         </p>
         <div className="flex flex-wrap items-center gap-3">
           {status === "added" && <Badge tone="success">{c.added}</Badge>}
-          {status === "added" && fixId && (
-            <Link href={`/app/fixes#fix-${fixId}`} className={action}>
-              {c.view}
-            </Link>
-          )}
+          {status === "added" &&
+            fixId &&
+            (onView ? (
+              <button type="button" onClick={onView} className={action}>
+                {c.view}
+              </button>
+            ) : (
+              <Link href={`/app/fixes#fix-${fixId}`} className={action}>
+                {c.view}
+              </Link>
+            ))}
           {canDecide && status === null && (
             <>
               <Button variant="alt" onClick={() => set(t.url, "added")}>
@@ -133,9 +146,9 @@ export function MentionsSection({
   return (
     <section aria-labelledby={heading} className="flex flex-col gap-3">
       <div>
-        <h2 id={heading} className="heading-gradient font-display text-section font-medium">
+        <Heading id={heading} className="heading-gradient font-display text-section font-medium">
           {c.title}
-        </h2>
+        </Heading>
         <p className="text-ui text-text2">{c.sub}</p>
       </div>
       {!targets ? (

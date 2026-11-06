@@ -13,12 +13,14 @@ import {
   listConnectorInterest,
 } from "@/lib/queries/connections";
 import { getGasReady } from "@/lib/queries/gas-ready";
+import { loadMentions } from "@/lib/mentions/service";
 import { toTeamChanges } from "@/components/workspace/team-connections-data";
 import { getWorkspaceRows, type WorkspaceRows } from "@/lib/queries/workspace";
 import { createClient } from "@/lib/supabase/server";
 import { loadQueue } from "./queue";
 import {
   addTeamCompetitor,
+  decideTeamMention,
   dismissTeamReady,
   dismissTeamSuggestion,
   inviteTeamClient,
@@ -51,13 +53,15 @@ export async function loadTeam(picked: string | undefined): Promise<TeamData> {
   if (!rows) return { kind: "missing" };
   // C-c: the client's Connections document, only with ENABLE_CONNECTIONS (stored data, no provider calls).
   const connectionsOn = process.env.ENABLE_CONNECTIONS === "true";
-  const [latest, conns, changes, actors, interest, gas] = await Promise.all([
+  // C-c D4: the client's G7 lists ("disabled" without ENABLE_MENTIONS).
+  const [latest, conns, changes, actors, interest, gas, mentions] = await Promise.all([
     summaries[0] ? loadPaidRun(summaries[0].id) : null,
     connectionsOn ? listConnections(db, business.id) : [],
     connectionsOn ? listConnectionChanges(db, business.id, 50) : [],
     connectionsOn ? listConnectionChangeActors(db, business.id) : [],
     connectionsOn ? listConnectorInterest(db, business.id) : [],
     connectionsOn ? getGasReady(db, business.id) : null,
+    loadMentions(db, business.id),
   ]);
   return {
     kind: "ok",
@@ -101,6 +105,10 @@ export async function loadTeam(picked: string | undefined): Promise<TeamData> {
             interest: [...new Set(interest.map((i) => i.provider))],
           }
         : null,
+      mentions:
+        mentions === "disabled"
+          ? null
+          : { targets: mentions, fixId: fixes.ranked.find((f) => f.rule_key === "R17")?.id ?? null },
       actions: {
         status: setTeamFixStatus,
         add: addTeamCompetitor,
@@ -109,6 +117,7 @@ export async function loadTeam(picked: string | undefined): Promise<TeamData> {
         removeClient: removeTeamClient,
         setFixListVisible: setTeamFixListVisible,
         dismissReady: dismissTeamReady,
+        decideMention: decideTeamMention,
       },
     },
   };

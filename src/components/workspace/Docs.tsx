@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { AddCompetitorForm, CompetitorSuggestions } from "@/components/app/CompetitorActions";
 import { appCopy } from "@/components/app/copy";
 import { FixList } from "@/components/fixes/FixList";
+import { MentionsSection } from "@/components/mentions/MentionsSection";
 import { Badge } from "@/components/ui/Badge";
 import { Freshness } from "@/components/ui/Freshness";
 import { Icon } from "@/components/ui/Icon";
@@ -257,6 +258,17 @@ function SectionDoc({
     case "sources":
       return (
         <>
+          {team?.mentions && team.actions.decideMention && (
+            <MentionsSection
+              key={team.businessId}
+              targets={team.mentions.targets}
+              canDecide
+              fixId={team.mentions.fixId}
+              decide={(url, status) => team.actions.decideMention!(team.businessId, url, status)}
+              level={3}
+              onView={() => onPick({ kind: "section", section: "fixes" })}
+            />
+          )}
           <Table
             caption="Sources"
             columns={[
