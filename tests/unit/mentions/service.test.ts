@@ -12,7 +12,7 @@ vi.mock("@/lib/queries/mentions", async (real) => ({ ...(await real<object>()), 
 vi.mock("@/lib/queries/shell", async (real) => ({ ...(await real<object>()), listRunSummaries: q.listRunSummaries }));
 vi.mock("@/lib/queries/results", async (real) => ({ ...(await real<object>()), getRunResults: q.getRunResults }));
 
-const { decideMention, loadMentions, R17_COPY } = await import("@/lib/mentions/service");
+const { decideMention, loadMentions, R17_MANY, R17_ONE } = await import("@/lib/mentions/service");
 
 const userDb = {} as never;
 const ON = { ENABLE_MENTIONS: "true" };
@@ -69,7 +69,7 @@ describe("decideMention", () => {
     expect(q.upsertMentionFix).toHaveBeenCalledWith(
       userDb,
       "biz-1",
-      "1 lists AI cites name Example Noodle Bar but not you.",
+      "1 list AI cites names Example Noodle Bar but not you.",
     );
     expect(q.setMentionTarget.mock.invocationCallOrder[0]).toBeLessThan(q.upsertMentionFix.mock.invocationCallOrder[0]);
   });
@@ -88,7 +88,7 @@ describe("decideMention", () => {
       { url: "https://old-list.test/gone", status: "added", decided_at: "y" },
     ]);
     await decideMention(userDb, "biz-1", LIST, "added", ON);
-    expect(q.upsertMentionFix.mock.calls[0][2]).toBe("2 lists AI cites name Example Noodle Bar but not you.");
+    expect(q.upsertMentionFix.mock.calls[0][2]).toBe("2 lists AI cite name Example Noodle Bar but not you.");
   });
 
   it("a dfy_client (42501 from either RPC) → not_allowed; flag off → disabled, nothing written", async () => {
@@ -107,10 +107,14 @@ describe("decideMention", () => {
 });
 
 describe("R17 copy", () => {
-  it("is migration 0030's customer_copy, verbatim", () => {
-    const sql = readFileSync(`${process.cwd()}/supabase/migrations/20261105000030_mention_decisions.sql`, "utf8");
-    const at = sql.indexOf("values ('R17'");
-    expect(at).toBeGreaterThanOrEqual(0);
-    expect(sql.slice(at, sql.indexOf(";", at)).replace(/''/g, "'")).toContain(`'${R17_COPY}'`);
+  // Lead, 2026-11-06: singular for one list, and the plural verb "cite". The detail text is built here and
+  // sent to upsert_mention_fix, so the source of truth is COPY.md (migration 0030's row still holds the
+  // first wording; backend updates it). Test change, with reason: it used to check 0030 verbatim.
+  it("both forms are COPY.md's, verbatim", () => {
+    const copy = readFileSync(`${process.cwd()}/docs/COPY.md`, "utf8");
+    expect(R17_ONE).toBe("1 list AI cites names {rivals} but not you.");
+    expect(R17_MANY).toBe("{n} lists AI cite name {rivals} but not you.");
+    expect(copy).toContain(`"${R17_ONE}"`);
+    expect(copy).toContain(`"${R17_MANY}"`);
   });
 });

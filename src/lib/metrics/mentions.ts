@@ -95,7 +95,7 @@ export function mentionTargets(input: MentionInput, decisions: MentionDecision[]
   };
 }
 
-// R17 "{n} lists AI cites name {rivals} but not you.": n = the added lists; rivals = up to 3 names, those on
+// R17's fill ("1 list AI cites names…" / "{n} lists AI cite name {rivals}…"): n = the added lists; rivals = up to 3 names, those on
 // the most added lists first (ties alphabetical). Null when nothing is added (no R17 fix).
 export function r17Fill(added: MentionTarget[]): { n: string; rivals: string } | null {
   if (!added.length) return null;

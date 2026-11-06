@@ -13,9 +13,8 @@ Built from briefs/rank1-gas.md (G7) + the lead's OK on the design note (2026-11-
 - r17Fill(added) → {n, rivals}: up to 3 rivals, those on the most added lists first (ties alphabetical), "A, B and C".
 - src/lib/mentions/service.ts (server-only, the caller's client):
   - loadMentions(db, b) uses the latest complete/partial run.
-  - decideMention(db, b, url, status|null) calls setMentionTarget, then upsertMentionFix with "{n} lists AI cites name {rivals} but not you.". n = every added list, and rivals come from the added lists still cited (else the business's competitors, else the lead's R17 title).
+  - decideMention(db, b, url, status|null) calls setMentionTarget, then upsertMentionFix with the R17 copy below. n = every added list, and rivals come from the added lists still cited (else the business's competitors, else the lead's R17 title).
   - 42501 → not_allowed (a dfy_client), 22023 → bad_url.
 - R17 copy is checked verbatim against migration 0030.
 
-## Open
-- Copy: "{n} lists…" reads "1 lists" for one list. Asked the lead whether to add a singular form.
+- R17 copy (lead, 2026-11-06): "1 list AI cites names {rivals} but not you." for one list, "{n} lists AI cite name {rivals} but not you." otherwise (COPY.md GAS). The detail is built in mentions/service.ts, so its test checks COPY.md. Test change, with reason: it used to check migration 0030's row, which still has the first wording; backend updates that row.
