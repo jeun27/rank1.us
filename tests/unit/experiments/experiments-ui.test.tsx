@@ -137,11 +137,12 @@ describe("states and the canWrite gate", () => {
     expect(a.end).toHaveBeenCalledWith("run");
   });
 
+  // X29: the confirm is inline in the card (a labelled group), not a modal dialog.
   it("Delete test asks first ('Delete this test? Its results go too.'), then deletes", async () => {
     const a = actions();
     render(<ExperimentList experiments={[card()]} canWrite actions={a} />);
     await userEvent.click(screen.getByRole("button", { name: c.remove }));
-    const dialog = screen.getByRole("dialog");
+    const dialog = screen.getByRole("group", { name: c.confirmDelete });
     expect(dialog).toHaveTextContent("Delete this test? Its results go too.");
     expect(a.remove).not.toHaveBeenCalled();
     await userEvent.click(within(dialog).getByRole("button", { name: c.remove }));
