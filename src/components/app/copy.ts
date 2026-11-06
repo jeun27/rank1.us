@@ -13,7 +13,8 @@ export const appCopy = {
   experiments: "Experiments",
   settings: "Settings",
   reports: "Reports",
-  noFixes: "Nothing to fix yet. Run your first check.",
+  // COPY.md "PDF section headings".
+  byEngine: "By engine",
   dashboardEmpty: "Nothing tracked yet. Add your domain and I'll find the questions.",
   addBusiness: "Add my business",
   noChecks: "No weekly checks yet. Your first one runs Monday.",

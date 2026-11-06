@@ -363,6 +363,7 @@ Tile helper text (the niche key in src/lib/connections/recommend.ts):
 | dtc_amazon | "For brands that sell on Amazon." |
 | saas_reviews | "For software with review listings." |
 | ai_referrals | "Shows visits that came from AI answers." |
+| video | "For businesses that post videos." |
 
 **C-a, signed off by the lead (2026-11-06).** The hub, Settings → Connections. Every consent line states only what the code does (the scope and openid, the GBP fields after a confirm, review + log, revoke, no passwords).
 
@@ -370,7 +371,7 @@ Tile helper text (the niche key in src/lib/connections/recommend.ts):
 |---|---|
 | Page title | "Connections" |
 | Tier headings | "Recommended", "Optional", "Coming soon" |
-| Tile names | "Google Business Profile", "Google Search Console", "Google Analytics", "Website / CMS", "Shopify", "G2 / Capterra", "OpenTable", "Resy", "Apple Business Connect", "Bing Places", "Yelp", "Amazon" |
+| Tile names | "Google Business Profile", "Google Search Console", "Google Analytics", "Website / CMS", "Shopify", "G2 / Capterra", "OpenTable", "Resy", "Apple Business Connect", "Bing Places", "Yelp", "Amazon", "YouTube" |
 | Status tags | "Connected", "Needs reconnect", "Disconnected"; a tile without a working flow: "Coming soon" |
 | Buttons | "Connect", "Reconnect", "Disconnect", "Notify me", "Continue to Google", "Cancel", "Save" |
 | Notify me, after | "We'll let you know." |
@@ -405,10 +406,31 @@ Strings from the GAS prototype report (share/gas-proto/REPORT.md, lead copy). Fi
 | R16 title | "Your site lets AI in, but Cloudflare may be blocking it." |
 | R16 customer copy | "Your site runs on Cloudflare. Its AI bot blocking is on by default for many new sites, and robots.txt can't show it. Check Security, then Bots, in your Cloudflare dashboard." |
 | R17 title (G7, the grouped fix) | "Get on these lists" |
-| R17 customer copy | "{n} lists AI cites name {rivals} but not you." |
+| R17 customer copy, one list (lead, 2026-11-06) | "1 list AI cites names {rivals} but not you." |
+| R17 customer copy, 2+ lists (lead, 2026-11-06) | "{n} lists AI cite name {rivals} but not you." |
+| R17, one list, no known rivals (lead, #131) | "1 list AI cites doesn't name you." |
+| R17, 2+ lists, no known rivals (lead, #131) | "{n} lists AI cite don't name you." |
 | R18 title (G2, JS-empty homepage) | "Your homepage needs JavaScript to show its text" |
 | R18 customer copy (lead, every vertical) | "Your homepage shows almost no text without JavaScript, so ChatGPT can't read what you offer." |
+| R19 title (G1) | "Put your keyword in your video titles" |
+| R19 customer copy | "{n} videos need your keyword in the title." / one: "1 video needs your keyword in the title." |
+| R20 title (G1) | "Put your keyword in the first two lines of the description" |
+| R20 customer copy | "{n} videos don't have your keyword in the first two lines of the description." / one: "1 video doesn't have your keyword in the first two lines of the description." |
+| R21 title (G1) | "Add chapters on videos 5 minutes or longer" |
+| R21 customer copy | "{n} videos 5 minutes or longer have no chapters." / one: "1 video 5 minutes or longer has no chapters." |
 | G2 edge hint (the GPTBot-UA request got a different answer: a soft hint, never "blocked") | "Your site may be blocking AI crawlers at the edge (for example a Cloudflare bot setting). Check your bot settings." |
+| G2 panel title (/audit, and the evidence in the R14/R16/R18 fixes) | "Can AI see your site?" |
+| G2 count | "{n} of 6 AI crawlers can read your site" |
+| G2 answer, good | "AI can read your site." |
+| G2 answer, a search crawler blocked (R14's OAI-SearchBot, PerplexityBot) | "AI search can't read your site: {bots} {is/are} blocked in robots.txt." |
+| G2 answer, only other crawlers blocked (info; lead N2: ChatGPT-User is a user-triggered fetcher, not training) | "AI search can read your site. You block {n} other AI crawlers, which is your call." (n=1: "1 other AI crawler") |
+| G2 answer, unreachable (the domain only when it's a hostname) | "We couldn't reach {domain}." / "We couldn't reach your site." |
+| G2 JavaScript-off row | "With JavaScript off", "{n} words show" |
+| G2 crawler access | "Allowed", "Blocked", "No rule" |
+| G2 table headers (lead C1) | "Crawler", "Access", "robots.txt line" |
+| G2 checked line | "Checked {age} ago · robots.txt + homepage" |
+| G2 explainer | "We read robots.txt and load your homepage the way AI crawlers would." |
+| G2 dashboard line (/app, good only) | "AI can read your site · checked {age} ago" |
 
 ## Landing (lead, 2026-11-06)
 
