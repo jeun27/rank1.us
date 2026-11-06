@@ -88,8 +88,8 @@ export const type = {
 } as const;
 
 export const spacing = [4, 8, 12, 16, 24, 32, 48, 64, 96] as const;
-// v3 (D35/D36): 6px controls, 8px panels and banners.
-export const radius = { control: 6, card: 8, surface: 8, banner: 8 } as const;
+// v3 (D35/D36): 6px controls, 8px panels and banners, 12px landing frames (UI.md radius frame).
+export const radius = { control: 6, card: 8, surface: 8, banner: 8, frame: 12 } as const;
 
 // v3 (D36): hairlines instead of shadows. The names stay so components need no change; only overlay menus,
 // the Google button and the demo window lift keep a real shadow. Mirrored as --shadow-* in globals.css.
@@ -102,9 +102,12 @@ export const shadows = {
   track: "0 0 #0000",
   fill: "0 0 #0000",
   overlay: "0 12px 32px rgb(0 0 0 / 0.4)",
+  // The landing demo window only (UI.md shadow-window).
+  window: "0 30px 80px -20px rgb(0 0 0 / 0.7)",
 } as const;
 
-// The only gradient: the aurora ring on the Google sign-in button.
+// The aurora ring on the Google sign-in button, and (D39) the decorative accent glow on the landing.
 export const aurora = "linear-gradient(90deg, #E8B85A, #5FB8B3, #279EF2)";
+export const glow = "radial-gradient(closest-side, rgb(39 158 242 / 0.18), transparent)";
 export const maxWidth = 1120;
 export const breakpoints = { sm: 640, md: 768, lg: 1024 } as const;

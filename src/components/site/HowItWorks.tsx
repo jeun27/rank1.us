@@ -18,9 +18,12 @@ export function HowItWorks() {
             Pasting questions into 4 chatbots by hand and logging answers in a spreadsheet.
           </p>
         </div>
-        <ol className="flex list-decimal flex-col gap-4 pl-6 text-body-lg marker:font-display marker:font-semibold">
+        {/* D38: the steps as one bordered list. */}
+        <ol className="flex list-inside list-decimal flex-col divide-y divide-border self-start rounded-frame border border-border bg-white text-body-lg marker:font-mono marker:text-accent">
           {steps.map((s) => (
-            <li key={s}>{s}</li>
+            <li key={s} className="px-4 py-4 md:px-6">
+              {s}
+            </li>
           ))}
         </ol>
       </div>

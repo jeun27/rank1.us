@@ -75,6 +75,7 @@
   --radius-card: 8px;
   --radius-surface: 8px;
   --radius-banner: 8px;
+  --radius-frame: 12px;
 
   /* v3 (D36): hairlines instead of shadows (src/styles/tokens.ts shadows); the names stay. */
   --shadow-field: 0 0 #0000;
@@ -85,6 +86,7 @@
   --shadow-track: 0 0 #0000;
   --shadow-fill: 0 0 #0000;
   --shadow-overlay: 0 12px 32px rgb(0 0 0 / 0.4);
+  --shadow-window: 0 30px 80px -20px rgb(0 0 0 / 0.7);
   --container-page: 1120px;
 
   /* Jelly loading squish: scaleY 0.95 -> 1.0, ~1.2 s loop. */
@@ -95,10 +97,12 @@
   }
 }
 
-/* The only gradient: the aurora ring, Google sign-in button only. A white padding-box layer over the
-   gradient border-box gives a 2px gradient edge that follows the pill radius. */
+/* The two gradients. The aurora ring, Google sign-in button only: a white padding-box layer over the
+   gradient border-box gives a 2px gradient edge that follows the pill radius. The accent glow (D39),
+   decorative and landing-only, never behind text that needs it for contrast. */
 :root {
   --aurora: linear-gradient(90deg, #E8B85A, #5FB8B3, #279EF2);
+  --glow: radial-gradient(closest-side, rgb(39 158 242 / 0.18), transparent);
 }
 
 /* O2 light theme (/app, /team): set on <html> by the theme script before paint. */
@@ -187,3 +191,14 @@
    win over display utilities. */
 html:not(.js) .js-only { display: none; }
 .js .nojs-only { display: none; }
+
+@utility glow {
+  background: var(--glow);
+  filter: blur(32px);
+}
+
+/* The hero demo (v3 PR 3): the server renders its final state. With JS and motion allowed, its moving parts
+   stay hidden until the run starts, so the final numbers never flash before the start state. */
+@media (prefers-reduced-motion: no-preference) {
+  .js [data-demo-state="final"]:not([data-demo-ran]) [data-demo-anim] { visibility: hidden; }
+}

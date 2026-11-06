@@ -69,9 +69,13 @@ const features = [
 export function Features() {
   return (
     <section id="features" aria-label="Features" className={`${container} py-16 md:py-24`}>
-      <ul className="grid gap-6 md:grid-cols-3">
+      {/* D38: one hairline bento, the cards share their borders. */}
+      <ul
+        data-bento
+        className="grid divide-y divide-border overflow-hidden rounded-frame border border-border md:grid-cols-3 md:divide-x md:divide-y-0"
+      >
         {features.map((f) => (
-          <li key={f.title} className="rounded-surface bg-white p-4 shadow-card md:p-6">
+          <li key={f.title} className="bg-white p-4 md:p-6">
             {f.icon}
             <h2 className="mt-4 font-display text-h3 font-semibold">{f.title}</h2>
             <ul className="mt-3 flex list-disc flex-col gap-1 pl-5">

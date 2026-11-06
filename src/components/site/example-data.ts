@@ -11,9 +11,8 @@ const metric = (numerator: number, denominator: number): Metric => ({
   denominator,
 });
 
-// Hero card: this week's and last week's check for one example business.
-export const heroThisWeek = metric(55, 160);
-export const heroLastWeek = metric(45, 160);
+// Hero card: this week's and last week's check for one example business, from the demo fixture.
+export { demoThisWeek as heroThisWeek, demoLastWeek as heroLastWeek } from "./demo-data";
 
 // "named in 34% of 160 answers, +6 pts", computed, never typed.
 export const heroCardText = (now: Metric, before: Metric) =>
