@@ -24,7 +24,6 @@ const MAPPING: Record<string, string> = {
   R13: "p3",
   R14: "p5",
   R15: "p3",
-  R16: "p5",
   H1: "p2",
   A1: "p1",
   A6: "p1",
@@ -73,24 +72,26 @@ describe("rule pillars", () => {
     expect(Object.fromEntries(rows.map((r) => [r.key, r.pillar]))).toEqual(MAPPING);
   });
 
-  it("a new rule without a pillar gets p2; a given pillar is kept; anything outside p0..p6 is refused", async () => {
-    must(
-      await s()
-        .from("fix_rules")
-        .upsert([{ ...rule("Z1"), enabled: false }], { onConflict: "key" }),
-    );
-    must(
-      await s()
-        .from("fix_rules")
-        .upsert([{ ...rule("Z2"), enabled: false, pillar: "p4" }], { onConflict: "key" }),
-    );
-    const rows = must(await s().from("fix_rules").select("key, pillar").in("key", ["Z1", "Z2"]).order("key"));
-    expect(rows).toEqual([
-      { key: "Z1", pillar: "p2" },
-      { key: "Z2", pillar: "p4" },
-    ]);
-    const bad = await s().from("fix_rules").update({ pillar: "p7" }).eq("key", "Z1");
+  it("a rule inserted without a pillar gets the mapping's; a given pillar is kept; p7 is refused", async () => {
+    // fix_rules.key only allows the known keys, so re-insert the disabled placeholder A5 (no fixes).
+    const a5 = must(await s().from("fix_rules").select("*").eq("key", "A5").single());
+    const reinsert = async (pillar?: string) => {
+      must(await s().from("fix_rules").delete().eq("key", "A5"));
+      const { pillar: _old, ...row } = a5;
+      void _old;
+      return must(
+        await s()
+          .from("fix_rules")
+          .insert({ ...row, ...(pillar ? { pillar } : {}) })
+          .select("pillar")
+          .single(),
+      ).pillar;
+    };
+    expect(await reinsert("p4")).toBe("p4");
+    expect(await reinsert()).toBe("p1");
+    const bad = await s().from("fix_rules").update({ pillar: "p7" }).eq("key", "A5");
     expect(bad.error?.code).toBe("23514");
+    expect(must(await s().from("fix_rules").select("pillar").eq("key", "A5").single()).pillar).toBe("p1");
   });
 });
 
