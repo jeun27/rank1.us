@@ -187,13 +187,18 @@
   background: linear-gradient(var(--color-white), var(--color-white)) padding-box, var(--aurora) border-box;
 }
 
+/* No-JS fallbacks (lead, v3 PR 2b): the head script adds .js to <html> before paint. Unlayered, so these
+   win over display utilities. */
+html:not(.js) .js-only { display: none; }
+.js .nojs-only { display: none; }
+
 @utility glow {
   background: var(--glow);
   filter: blur(32px);
 }
 
 /* The hero demo (v3 PR 3): the server renders its final state. With JS and motion allowed, its moving parts
-   stay hidden until the client arms the run, so the final numbers never flash before the start state. */
+   stay hidden until the run starts, so the final numbers never flash before the start state. */
 @media (prefers-reduced-motion: no-preference) {
   .js [data-demo-state="final"]:not([data-demo-ran]) [data-demo-anim] { visibility: hidden; }
 }

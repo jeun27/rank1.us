@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { ClientSwitcher } from "@/components/workspace/ClientSwitcher";
 import { ContextPane } from "@/components/workspace/ContextPane";
 import { DocView } from "@/components/workspace/Docs";
 import { NAV_SECTIONS } from "@/components/workspace/Sidebar";
@@ -69,8 +70,9 @@ describe("team workspace on real data (Step 11)", () => {
     ]);
   });
 
+  // v3 D20: the switcher moved from the context pane to the breadcrumb (tests/unit/team/client-switcher.test.tsx).
   it("the Client switcher is a GET form: select name b, labelled Client, with a Show button", () => {
-    pane(team());
+    render(<ClientSwitcher team={team()} />);
     const select = screen.getByLabelText("Client");
     const form = select.closest("form")!;
     expect(form).toHaveAttribute("method", "get");

@@ -129,7 +129,9 @@ test("a seeded team user lands on /team with no self-serve workspace", async ({ 
   await openMagicLink(page, user.email, "/app/billing");
   expect(new URL(page.url()).pathname).toBe("/team");
   await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toBeVisible();
-  await expect(page.locator("nav")).toBeAttached();
+  // v3 PR 2b: the team rail plus the breadcrumb nav.
+  await expect(page.locator("#ws-nav")).toBeAttached();
+  await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toBeAttached();
   expect(await workspacesOwnedBy(user.id)).toEqual([]);
 });
 
