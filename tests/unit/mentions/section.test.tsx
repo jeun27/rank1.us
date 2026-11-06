@@ -54,14 +54,16 @@ describe("MentionsSection", () => {
     setup();
     expect(section()).toHaveTextContent(c.sub);
     const a = row("https://lists.example.test/a");
-    const link = within(a).getByRole("link", { name: "Example list a" });
+    const link = within(a).getByRole("link", { name: "Example list a (opens in a new tab)" });
     expect(link).toHaveAttribute("href", "https://lists.example.test/a");
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
     expect(a).toHaveTextContent("Names Example Noodle Bar, Example Izakaya, Example Udon Spot +2");
     expect(a).toHaveTextContent("In 12 of 240 answers · ChatGPT, Gemini");
     expect(
-      within(row("https://lists.example.test/b")).getByRole("link", { name: "lists.example.test" }),
+      within(row("https://lists.example.test/b")).getByRole("link", {
+        name: "lists.example.test (opens in a new tab)",
+      }),
     ).toBeInTheDocument();
   });
 
@@ -144,6 +146,53 @@ describe("MentionsSection", () => {
       />,
     );
     expect(section()).toHaveTextContent("None in your last run. We check again on every run.");
+  });
+});
+
+// #142 S1 (security): a cited URL becomes a link only with an http: or https: protocol; anything else is
+// plain text with the domain. New-tab links say so to screen readers. The title uses the F1 section scale.
+describe("MentionsSection: safe links and the heading", () => {
+  const one = (url: string, over: Partial<MentionTarget> = {}) =>
+    render(
+      <MentionsSection
+        targets={{
+          n: 240,
+          candidates: [{ ...t("https://lists.example.test/x"), url, domain: "evil.example.test", ...over }],
+          added: [],
+          dismissed: [],
+        }}
+        canDecide
+        fixId={null}
+        decide={vi.fn()}
+      />,
+    );
+
+  it.each(["javascript:alert(1)", "data:text/html,<b>x</b>", "not a url", "ftp://files.example.test/list"])(
+    "%s: plain text with the domain, no link",
+    (url) => {
+      one(url, { title: "A list" });
+      const r = document.querySelector("[data-url]") as HTMLElement;
+      expect(within(r).queryByRole("link")).toBeNull();
+      expect(r).toHaveTextContent("evil.example.test");
+    },
+  );
+
+  it("https: a new-tab link that says it opens in a new tab", () => {
+    one("https://lists.example.test/ok", { title: "A list" });
+    const link = within(document.querySelector("[data-url]") as HTMLElement).getByRole("link");
+    expect(link).toHaveAttribute("href", "https://lists.example.test/ok");
+    expect(link).toHaveAccessibleName("A list (opens in a new tab)");
+    expect(within(link).getByText("(opens in a new tab)")).toHaveClass("sr-only");
+  });
+
+  it("the evidence links are safe too", () => {
+    render(<MentionsEvidence added={[{ ...t("https://lists.example.test/1"), url: "javascript:alert(1)" }]} />);
+    expect(screen.queryByRole("link")).toBeNull();
+  });
+
+  it("the title is an F1 section title, like the other /app sections", () => {
+    setup();
+    expect(screen.getByRole("heading", { level: 2, name: c.title })).toHaveClass("text-section", "font-medium");
   });
 });
 
