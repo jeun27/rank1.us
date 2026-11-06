@@ -995,9 +995,3 @@ Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/
 - Lead OK 2026-11-06 (Q1, Q2). src/app/robots.ts: in production, one group for "*" plus GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot and Google-Extended, each "Allow: /" and disallowing /app /team /client /api /dev /admin /auth. /audit is left to its noindex. Sitemap: <origin>/sitemap.xml.
 - Previews and every non-production build (VERCEL_ENV !== "production"): "Disallow: /" for everyone.
 - src/app/sitemap.ts: the public pages only (/, /contact, /privacy, /terms). Origin = NEXT_PUBLIC_SITE_URL when it is https, else https://rank1.us (src/lib/site/origin.ts).
-
-
-## /client theme toggle (frontend, branch fix/client-theme-toggle)
-
-- QA/reviewer gap (UI.md:8, D40): /client had the theme but no toggle. AppHeader (the /client header, also the /team placeholders) now carries the same ThemeToggle ("Dark theme", aria-pressed) on the same prefs. The before-paint script already themes /client (THEMED covers it), so a saved choice wins from the first paint. /dev/client renders the same header.
-- QA N1, two flaky e2e tests made deterministic without weakening them: experiments.spec waits for the first cell; the landing demo test holds the IntersectionObserver until it fires it and drives the run with the page clock, so the start and mid-run frames are exact.
