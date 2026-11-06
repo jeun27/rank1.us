@@ -87,13 +87,59 @@ describe("checkFreeAuditAccess (the run-jobs hook for free audits)", () => {
     }
   });
 
+  it("a bad domain is recorded unreachable (bad_domain) without fetching, and never comes back", async () => {
+    const recorded = new Map<string, unknown>();
+    const next = vi.fn(async () => (recorded.has("run-x") ? null : { runId: "run-x", domain: "not a domain" }));
+    const record = vi.fn(async (runId: string, c: unknown) => void recorded.set(runId, c));
+    const d = deps({ next, record });
+    expect(await checkFreeAuditAccess(d)).toEqual({ checked: 1, failed: true });
+    expect(d.check).not.toHaveBeenCalled();
+    expect(recorded.get("run-x")).toMatchObject({ outcome: "unreachable", errorCode: "bad_domain", crawlers: [] });
+    expect(await checkFreeAuditAccess(d)).toEqual({ checked: 0, skipped: "none" });
+    expect(record).toHaveBeenCalledTimes(1);
+  });
+
+  it("the domain is normalised before the check (scheme, www, case, path stripped)", async () => {
+    const d = deps({
+      next: vi.fn().mockResolvedValue({ runId: "run-9", domain: " HTTPS://www.Example-Ramen.test/menu " }),
+    });
+    await checkFreeAuditAccess(d);
+    expect(d.check).toHaveBeenCalledWith("example-ramen.test");
+  });
+
+  it("a refused record (e.g. 22023) is retried once with the minimal unreachable row, so the queue moves on", async () => {
+    const record = vi
+      .fn<FreeAuditAccessDeps["record"]>()
+      .mockRejectedValueOnce(Object.assign(new Error("bad input"), { code: "22023" }))
+      .mockResolvedValueOnce(undefined);
+    const d = deps({ record });
+    expect(await checkFreeAuditAccess(d)).toEqual({ checked: 1, failed: true });
+    expect(record.mock.calls[1]).toEqual([
+      "run-9",
+      {
+        domain: "example-ramen.test",
+        outcome: "unreachable",
+        errorCode: "record_failed",
+        crawlers: [],
+        visibleWords: null,
+        statusNormal: null,
+        statusGptbot: null,
+        cloudflare: false,
+        pagesChecked: 0,
+      },
+    ]);
+  });
+
   it("errors never throw, and the log carries the PG code only (no domain or run id)", async () => {
+    // Requirement change (lead, #117 S2): a refused record is retried once, so it logs the retry too.
     const d = deps({
       record: vi.fn().mockRejectedValue(Object.assign(new Error("example-ramen.test bad"), { code: "22023" })),
     });
     expect(await checkFreeAuditAccess(d)).toEqual({ checked: 0, error: "22023" });
-    const logged = d.log.mock.calls.flat().join(" ");
-    expect(logged).toBe("ai access: free audit failed (22023)");
+    expect(d.log.mock.calls.flat()).toEqual([
+      "ai access: free audit record refused (22023), retrying minimal",
+      "ai access: free audit failed (22023)",
+    ]);
     const n = deps({ next: vi.fn().mockRejectedValue(Object.assign(new Error("x"), { code: "42501" })) });
     expect(await checkFreeAuditAccess(n)).toEqual({ checked: 0, error: "42501" });
   });
