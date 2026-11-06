@@ -63,3 +63,22 @@ describe("themeScript", () => {
     expect(html.dataset.theme).toBe("light");
   });
 });
+
+describe("ThemeSync", () => {
+  it("re-applies the rule when the path changes (client-side navigation)", async () => {
+    const { render } = await import("@testing-library/react");
+    const { vi } = await import("vitest");
+    const nav = { path: "/team" };
+    vi.doMock("next/navigation", () => ({ usePathname: () => nav.path }));
+    vi.stubGlobal("matchMedia", () => ({ matches: false }));
+    localStorage.setItem("rank1.workspace", JSON.stringify({ theme: "light" }));
+    const { ThemeSync } = await import("@/components/ui/ThemeSync");
+    const { rerender } = render(<ThemeSync />);
+    expect(document.documentElement.dataset.theme).toBe("light");
+    nav.path = "/contact";
+    rerender(<ThemeSync key="2" />);
+    expect(document.documentElement.dataset.theme).toBe("dark");
+    localStorage.clear();
+    vi.unstubAllGlobals();
+  });
+});
