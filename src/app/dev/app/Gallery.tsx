@@ -5,7 +5,9 @@ import { HistoryView } from "@/components/app/HistoryView";
 import { QuestionsView } from "@/components/app/QuestionsView";
 import { SourcesView } from "@/components/app/SourcesView";
 import { latestMeasured, Measured, Page } from "@/components/app/Page";
+import { AppShell } from "@/components/app/AppShell";
 import { BillingView } from "@/components/billing/BillingView";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { BusinessSwitcher, type SwitcherBusiness } from "@/components/billing/BusinessSwitcher";
 import { FixList } from "@/components/fixes/FixList";
 import { ReportView } from "@/components/report/ReportView";
@@ -169,8 +171,8 @@ export const STATES: Record<string, () => React.ReactNode> = {
   ),
   "report-loading": () => <Skeleton title="Reports" />,
   "report-error": () => <ErrorState title="Reports" message={results} reset={() => {}} />,
-  "switcher-one": () => <WithSwitcher businesses={switcherBusinesses.slice(0, 1)} />,
-  "switcher-many": () => <WithSwitcher businesses={switcherBusinesses} />,
+  "switcher-one": () => <WithSwitcher />,
+  "switcher-many": () => <WithSwitcher />,
 };
 
 // Example data: invented reports and settings; the preview is the real PDF on Example data.
@@ -202,26 +204,50 @@ const switcherBusinesses: SwitcherBusiness[] = [
   { id: "b2", name: "Example Taco Stand", city: "Tustin", visibility: exampleRuns[1].visibility, active: true },
   { id: "b3", name: "Example Pho Spot", city: "Costa Mesa", visibility: null, active: false },
 ];
-function WithSwitcher({ businesses }: { businesses: SwitcherBusiness[] }) {
+// The switcher sits in the shell's breadcrumb (D42), as in the real /app layout.
+const switcher = (businesses: SwitcherBusiness[]) => (
+  <BusinessSwitcher
+    businesses={businesses}
+    currentId="b1"
+    seats={businesses.length}
+    periodEnd="2026-12-01T00:00:00Z"
+    actions={{ select: noop, add: noop, remove: noop, seats: async () => businesses.length }}
+  />
+);
+function WithSwitcher() {
   return (
-    <div className="flex w-full flex-col">
-      <header className="flex items-center gap-3 px-5 py-3 md:px-8">
-        <BusinessSwitcher
-          businesses={businesses}
-          currentId="b1"
-          seats={businesses.length}
-          periodEnd="2026-12-01T00:00:00Z"
-          actions={{ select: noop, add: noop, remove: noop, seats: async () => businesses.length }}
-        />
-      </header>
-      <Page title="Dashboard">
-        <p className="text-ui">{"Example data."}</p>
-      </Page>
-    </div>
+    <Page title="Dashboard">
+      <p className="text-ui">{"Example data."}</p>
+    </Page>
+  );
+}
+const CRUMB: Record<string, string> = {
+  dashboard: "Dashboard",
+  competitors: "Competitors",
+  questions: "Questions",
+  sources: "Sources",
+  fixes: "What to fix next",
+  history: "History",
+  billing: "Billing",
+  report: "Reports",
+  switcher: "Dashboard",
+};
+
+// Every state inside the v3 shell (rail + breadcrumb), Example data only.
+export function Gallery({ state = "dashboard-success", location }: { state?: string; location?: string }) {
+  const business = state.startsWith("switcher-")
+    ? switcher(state === "switcher-one" ? switcherBusinesses.slice(0, 1) : switcherBusinesses)
+    : exampleBusiness.name;
+  return (
+    <AppShell business={business} actions={<ThemeToggle />} page={CRUMB[state.split("-")[0]] ?? "Dashboard"}>
+      <div className="mx-auto flex w-full max-w-page">
+        <State state={state} location={location} />
+      </div>
+    </AppShell>
   );
 }
 
-export function Gallery({ state = "dashboard-success", location: picked }: { state?: string; location?: string }) {
+function State({ state, location: picked }: { state: string; location?: string }) {
   // The location form round trip (QA #49): the form submits back here with ?location=.
   if (state === "sources-form") {
     const location = picked || undefined;

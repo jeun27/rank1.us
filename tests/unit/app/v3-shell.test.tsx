@@ -24,7 +24,8 @@ describe("v3 /app shell", () => {
       ["What to fix next", "Reports", "History"],
       ["Billing"],
     ]);
-    for (const a of within(nav).getAllByRole("link")) expect(a.querySelector("svg[aria-hidden]")).not.toBeNull();
+    for (const g of groups)
+      for (const a of within(g).getAllByRole("link")) expect(a.querySelector("svg[aria-hidden]")).not.toBeNull();
   });
 
   it("the rail is a dark subtree in both themes; the breadcrumb is Rank1 / business / page", () => {
