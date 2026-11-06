@@ -141,6 +141,7 @@ describe("record_fix_results", () => {
       "changed_by",
       "detail",
       "id",
+      "pillar",
       "rule_key",
       "status",
       "status_changed_at",

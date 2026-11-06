@@ -961,6 +961,12 @@ Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/
 - Migration 20261105000023 (+ .down.sql): fixes.status_changed_at / status_changed_by (→ auth.users, on delete set null), null on existing rows (fixes has no updated_at to backfill from). A BEFORE INSERT OR UPDATE trigger forces them: null on insert (reviewer: never the caller's values), set on every status change (actor null for the service detector), kept on any other update, so neither can be written directly. set_fix_status and listFixes are unchanged.
 - done_fixes(business) (invoker, through the fixes RLS): done fixes, newest change first (nulls last), with changed_by from private.fix_status_actor (definer, re-checks the caller can see the fix). Query: listDoneFixes in src/lib/queries/fixes.ts.
 
+## G5 (backend): a pillar on every fix (branch feat/fix-pillars)
+- GAS brief (briefs/rank1-gas.md), lead decisions 2026-11-06: pillars P0 Know where you stand, P1 Prompts & keywords, P2 Content, P3 Brand mentions, P4 YouTube & video, P5 Technical access, P6 Measure & prove. The Fix list orders P5, P3, P2, P1, P4, P6, with P0 a baseline line.
+- Rule mapping (lead Q2): p5 = R10, R14, R16 (crawl/read access); p3 = R1–R9, R12, R13, R15 (listings, reviews, the web naming you; R15 hours is mostly GBP); p2 = R11 and H1 (H1 is housekeeping and keeps its tidy-up flag, so it never sorts as a P5 blocker); p1 = A1–A6; any new rule without one = p2.
+- Migration 20261105000024 (+ .down.sql), additive and compatible with live v0.5.0: fix_rules.pillar and fixes.pillar, NOT NULL, checked p0..p6, backfilled. A trigger gives new rules the mapping's pillar when none is sent (the seed, new rules), and another always gives a fix its rule's pillar on insert or a rule change, so v0.5.0's record_fix_results inserts get it.
+- listFixes items gain pillar (PILLARS / Pillar in src/lib/queries/fixes.ts); the item key test lists it.
+
 ## Who/when on open fixes (backend): listFixes actors (branch feat/open-fix-actors)
 - Lead (2026-11-06): listFixes items carry status_changed_at and changed_by {is_team, name} | null, with the same safe mapping as done_fixes (team → is_team only, never an email), null on todo rows. Additive, and listFixes' signature is unchanged.
 - Migration 20261105000026 (+ .down.sql): open_fix_actors(business) (invoker, through the fixes RLS) returns the doing fixes' time and actor via 0023's private.fix_status_actor. listFixes merges it by fix id; the item key test lists the two new fields.
