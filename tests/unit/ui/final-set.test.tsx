@@ -15,7 +15,10 @@ const audit = {
 const field = () => document.querySelector("[data-field]")!.className.split(" ");
 
 describe("DomainField", () => {
-  it("default: labeled input, globe icon, 60px pill (stacked below 21rem) with fieldBorder and the field shadow, primary submit inside", () => {
+  // Founder fix (17:05): a square button doesn't go inside a circle. The field is a rounded rectangle whose
+  // radius nests the 6px button: rounded-nested (control radius + the 6px inset), in both layouts. The field
+  // hugs the button with the same inset on every side, so it no longer has a fixed 60px height.
+  it("default: labeled input, globe icon, nested-radius field (stacked below 21rem) with fieldBorder and the field shadow, primary submit inside", () => {
     render(<DomainField {...audit} />);
     const input = screen.getByRole("textbox", { name: "Your domain" });
     expect(input).toHaveAttribute("placeholder", "yourbusiness.com");
@@ -23,10 +26,9 @@ describe("DomainField", () => {
     expect(input).not.toHaveAttribute("aria-invalid");
     expect(input).not.toHaveAttribute("aria-describedby");
     for (const c of [
-      "@min-[21rem]:h-15",
-      "@min-[21rem]:rounded-full",
       "@min-[21rem]:flex-row",
-      "rounded-banner",
+      "rounded-nested",
+      "p-1.5",
       "flex-col",
       "bg-white",
       "border",
@@ -36,6 +38,7 @@ describe("DomainField", () => {
     ]) {
       expect(field()).toContain(c);
     }
+    expect(field().filter((c) => /rounded-(full|banner)|h-15/.test(c))).toEqual([]);
     expect(document.querySelector("[data-field] [data-icon=globe]")).toHaveAttribute("aria-hidden", "true");
     const b = screen.getByRole("button", { name: "Get my free audit" });
     expect(b).toHaveAttribute("type", "submit");
