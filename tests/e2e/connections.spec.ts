@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type APIRequestContext, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
 // Connections C-a: the Settings → Connections hub. The gallery (/dev/app) shows it on Example data whatever
@@ -84,8 +84,14 @@ test("Disconnect asks first, with the one-grant warning", async ({ page }) => {
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });
 
-test("ENABLE_CONNECTIONS off: the Settings and Connections pages are a real 404", async ({ page }) => {
-  test.skip(process.env.ENABLE_CONNECTIONS === "true", "the flag is on for this run");
+// The target's own flag, not the runner's env (Preview deployments run with it on). The OAuth start route
+// checks the flag itself, separately from the proxy that gates the pages, so it's an independent probe:
+// 404 means off; on, it answers 400/503 for the missing params.
+const flagOn = async (request: APIRequestContext) =>
+  (await request.get("/api/connections/google/start", { maxRedirects: 0 })).status() !== 404;
+
+test("ENABLE_CONNECTIONS off: the Settings and Connections pages are a real 404", async ({ page, request }) => {
+  test.skip(await flagOn(request), "the flag is on for this deployment");
   for (const path of ["/app/settings", "/app/settings/connections", "/client/settings/connections"]) {
     const res = await page.goto(path);
     expect(res?.status(), path).toBe(404);
