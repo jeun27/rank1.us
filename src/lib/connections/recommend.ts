@@ -49,6 +49,7 @@ export const CONNECTORS = {
 export type Connector = ConnectorKey;
 
 // Only these have a working flow; every other tile is "Coming soon" + Notify me (no fake connect buttons).
+// youtube joins once frontend's tile + consent ship (G1); that also adds it to saas/dtc readiness.
 export const LIVE_CONNECTORS: readonly string[] = ["gbp", "search_console", "ga4"];
 
 export type Tile = { connector: Connector; niche: Niche; available: "live" | "coming_soon" };

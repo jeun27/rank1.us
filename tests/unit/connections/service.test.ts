@@ -287,6 +287,16 @@ describe("the entity picker", () => {
     ]);
   });
 
+  it("lists the owner's YouTube channels", async () => {
+    const yt = ctx(
+      vi.fn(async () => json(fx.ytChannels)),
+      userDb(conn({ provider: "youtube" })),
+    );
+    expect(await svc.listConnectionEntities(yt, "conn-1")).toEqual([
+      { id: "UCexample000000000000001", name: "Example Ramen House" },
+    ]);
+  });
+
   it("picking keeps only ids Google listed (no arbitrary ids)", async () => {
     const r = await svc.pickConnectionEntities(ctx(gbpFetch()), "conn-1", [
       "locations/2000000000000000002",

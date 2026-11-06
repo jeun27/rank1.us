@@ -28,9 +28,10 @@ import {
   refreshAccessToken,
   revokeGrant,
   startAuth,
-  type GoogleConnector,
+  type OAuthConnector,
 } from "./oauth";
 import { listSites } from "./search-console";
+import { listMyChannels } from "./youtube";
 import { refreshReadiness } from "./readiness";
 import { ConnectionError, withGoogleToken, type TokenDeps } from "./tokens";
 
@@ -137,7 +138,7 @@ function failure(e: unknown): Failure {
 
 export async function beginGoogleConnect(
   ctx: Ctx,
-  input: { businessId: string; connector: GoogleConnector; returnTo?: string },
+  input: { businessId: string; connector: OAuthConnector; returnTo?: string },
 ): Promise<{ url: string; cookie: string } | Failure> {
   if (!connectionsEnabled(envOf(ctx))) return "disabled";
   if (!(await canConnectBusiness(ctx.userDb, input.businessId))) return "not_allowed";
@@ -151,7 +152,7 @@ export async function beginGoogleConnect(
 
 export type ConnectOutcome = {
   status: "connected" | "denied" | "error";
-  connector: GoogleConnector | null;
+  connector: OAuthConnector | null;
   returnTo: string;
 };
 
@@ -236,6 +237,7 @@ async function entitiesFor(
   }
   if (provider === "search_console")
     return (await listSites(token, deps)).filter((s) => s.readable).map((s) => ({ id: s.siteUrl, name: s.siteUrl }));
+  if (provider === "youtube") return (await listMyChannels(token, deps)).map((c) => ({ id: c.id, name: c.title }));
   if (provider === "ga4")
     return (await listGa4Properties(token, deps)).map((p) => ({
       id: p.property,

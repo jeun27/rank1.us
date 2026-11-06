@@ -5,6 +5,7 @@ import {
   CALLBACK_PATH,
   exchangeCode,
   GOOGLE_SCOPES,
+  OAUTH_SCOPES,
   OAuthError,
   readState,
   redirectUri,
@@ -98,6 +99,14 @@ describe("startAuth", () => {
       search_console: "https://www.googleapis.com/auth/webmasters.readonly",
       ga4: "https://www.googleapis.com/auth/analytics.readonly",
     });
+  });
+
+  it("OAuth also accepts read-only YouTube on the same grant (G1), kept apart from the hub's connectors", () => {
+    expect(OAUTH_SCOPES).toEqual({ ...GOOGLE_SCOPES, youtube: "https://www.googleapis.com/auth/youtube.readonly" });
+    const { url } = startAuth("youtube", "biz-1", ENV, NOW);
+    expect(new URL(url).searchParams.get("scope")!.split(" ").sort()).toEqual(
+      ["openid", "https://www.googleapis.com/auth/youtube.readonly"].sort(),
+    );
   });
 
   it("returnTo must be a relative path under /app, /client or /team; anything else → /app/settings (open-redirect guard)", () => {
