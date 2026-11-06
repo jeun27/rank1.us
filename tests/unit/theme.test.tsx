@@ -23,7 +23,7 @@ describe("themeFor", () => {
 
 describe("themeScript", () => {
   const run = (path: string, saved: string | null, prefersLight: boolean) => {
-    const html = { dataset: {} as Record<string, string> };
+    const html = { dataset: {} as Record<string, string>, classList: new Set<string>() };
     const g = {
       location: { pathname: path },
       localStorage: { getItem: () => (saved === null ? null : JSON.stringify({ theme: saved })) },
@@ -49,7 +49,7 @@ describe("themeScript", () => {
   });
 
   it("survives blocked storage (falls back to the media query)", () => {
-    const html = { dataset: {} as Record<string, string> };
+    const html = { dataset: {} as Record<string, string>, classList: new Set<string>() };
     new Function("location", "localStorage", "matchMedia", "document", themeScript)(
       { pathname: "/app" },
       {
@@ -61,6 +61,22 @@ describe("themeScript", () => {
       { documentElement: html },
     );
     expect(html.dataset.theme).toBe("light");
+    expect(html.classList.has("js")).toBe(true);
+  });
+
+  // v3 PR 2b (lead): no-JS fallbacks (the /team client switcher's GET form) show only without .js, and
+  // the JS controls only with it. Set before paint on every path, so nothing swaps after load.
+  it("adds the js class to <html> on every path", () => {
+    for (const path of ["/", "/team", "/app", "/contact"]) {
+      const html = { dataset: {} as Record<string, string>, classList: new Set<string>() };
+      new Function("location", "localStorage", "matchMedia", "document", themeScript)(
+        { pathname: path },
+        { getItem: () => null },
+        () => ({ matches: false }),
+        { documentElement: html },
+      );
+      expect([...html.classList], path).toEqual(["js"]);
+    }
   });
 });
 
