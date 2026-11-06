@@ -52,6 +52,13 @@ test("owner saves recipients and a color, they persist; a history download redir
   await expect(page.getByLabel("Recipients")).toHaveValue("a@example.test\nb@example.test");
   await expect(page.getByText("#0A7F3C")).toBeVisible();
 
+  // The preview is last month's real PDF for the current business, never cached.
+  const preview = await page.request.get("/app/report/preview.pdf");
+  expect(preview.status()).toBe(200);
+  expect(preview.headers()["content-type"]).toBe("application/pdf");
+  expect(preview.headers()["cache-control"]).toContain("no-store");
+  expect((await preview.body()).subarray(0, 5).toString()).toBe("%PDF-");
+
   const res = await page.request.get(`/app/report/${report.id}/download`, { maxRedirects: 0 });
   expect(res.status()).toBe(302);
   expect(res.headers()["location"]).toContain("/storage/v1/object/sign/reports/");
