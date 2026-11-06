@@ -1,0 +1,101 @@
+import { describe, expect, it } from "vitest";
+import { CONNECTORS, INDUSTRIES, LIVE_CONNECTORS, recommend, type Industry } from "@/lib/connections/recommend";
+
+const ids = (tiles: { connector: string }[]) => tiles.map((t) => t.connector).sort();
+const LOCAL: Industry[] = [
+  "restaurant",
+  "hvac",
+  "plumbing",
+  "roofing",
+  "pest_control",
+  "auto",
+  "beauty",
+  "gym",
+  "events",
+  "dental",
+];
+
+// The founder's connector map (2026-11-06), one row per industry.
+const EXPECTED: Record<Industry, { recommended: string[]; optional: string[]; later: string[] }> = {
+  restaurant: {
+    recommended: ["google_business_profile"],
+    optional: ["opentable_resy", "search_console", "site_cms"],
+    later: ["apple_business_connect", "bing_places", "yelp"],
+  },
+  ...Object.fromEntries(
+    (["hvac", "plumbing", "roofing", "pest_control", "auto", "beauty", "gym", "dental"] as const).map((i) => [
+      i,
+      {
+        recommended: ["google_business_profile"],
+        optional: ["search_console", "site_cms"],
+        later: ["apple_business_connect", "bing_places", "yelp"],
+      },
+    ]),
+  ),
+  events: {
+    recommended: ["google_business_profile", "site_cms"],
+    optional: ["search_console"],
+    later: ["apple_business_connect", "bing_places", "yelp"],
+  },
+  saas: {
+    recommended: ["g2_capterra", "search_console", "site_cms"],
+    optional: ["ga4"],
+    later: [],
+  },
+  dtc: {
+    recommended: ["search_console", "shopify", "site_cms"],
+    optional: ["ga4"],
+    later: ["amazon"],
+  },
+  other: { recommended: [], optional: ["ga4", "google_business_profile", "search_console"], later: [] },
+} as unknown as Record<Industry, { recommended: string[]; optional: string[]; later: string[] }>;
+
+describe("recommend (industry → connectors)", () => {
+  it.each(INDUSTRIES)("%s matches the founder's map", (industry) => {
+    const r = recommend(industry);
+    expect(ids(r.recommended)).toEqual([...EXPECTED[industry].recommended].sort());
+    expect(ids(r.optional)).toEqual([...EXPECTED[industry].optional].sort());
+    expect(ids(r.later)).toEqual([...EXPECTED[industry].later].sort());
+  });
+
+  it("GBP is recommended to every local niche and to no online-only one", () => {
+    for (const i of LOCAL) expect(ids(recommend(i).recommended)).toContain("google_business_profile");
+    for (const i of ["saas", "dtc", "other"] as const)
+      expect(ids(recommend(i).recommended)).not.toContain("google_business_profile");
+  });
+
+  it("med-spa isn't an industry; it falls under other, which has nothing recommended", () => {
+    expect(INDUSTRIES).not.toContain("med_spa");
+    expect(recommend("other").recommended).toEqual([]);
+  });
+
+  it("a restaurant never sees Shopify, G2, Amazon or GA4", () => {
+    const all = Object.values(recommend("restaurant")).flatMap(ids);
+    for (const c of ["shopify", "g2_capterra", "amazon", "ga4"]) expect(all).not.toContain(c);
+  });
+
+  it("each tile appears in one tier at most, carries a niche, and only Google connectors are live", () => {
+    for (const i of INDUSTRIES) {
+      const r = recommend(i);
+      const all = [...r.recommended, ...r.optional, ...r.later];
+      expect(new Set(all.map((t) => t.connector)).size).toBe(all.length);
+      for (const t of all) {
+        expect(t.niche).toBeTruthy();
+        expect(t.available).toBe(LIVE_CONNECTORS.includes(t.connector) ? "live" : "coming_soon");
+      }
+      // "later" tiles are never connectable yet.
+      for (const t of r.later) expect(t.available).toBe("coming_soon");
+    }
+    expect([...LIVE_CONNECTORS].sort()).toEqual(["ga4", "google_business_profile", "search_console"]);
+    expect(Object.keys(CONNECTORS).length).toBe(11);
+  });
+
+  it("tiles keep the config order, so the hub is stable", () => {
+    expect(recommend("saas")).toEqual(recommend("saas"));
+    const order = Object.keys(CONNECTORS);
+    for (const tier of Object.values(recommend("restaurant"))) {
+      const pos = tier.map((t) => order.indexOf(t.connector));
+      expect(pos).toEqual([...pos].sort((a, b) => a - b));
+    }
+  });
+});
