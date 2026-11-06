@@ -88,3 +88,14 @@ export async function recordAiAccessCheck(serviceDb: DbClient, runId: string, c:
   });
   if (error) throw error;
 }
+
+// Service client only. Finished free audits of the last 7 days with no check yet, oldest first
+// (at most 100). The run-jobs hook takes 1 per tick. 42501 for any other caller.
+export async function listRunsNeedingAiAccess(
+  serviceDb: DbClient,
+  limit: number,
+): Promise<{ runId: string; domain: string }[]> {
+  const { data, error } = await serviceDb.rpc("runs_needing_ai_access_check", { p_limit: limit });
+  if (error) throw error;
+  return data.map((r) => ({ runId: r.run_id, domain: r.domain }));
+}
