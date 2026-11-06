@@ -16,7 +16,8 @@ describe("AppHeader (the /client header)", () => {
     render(<AppHeader />);
     const header = screen.getByRole("banner");
     // X9a: md+ shows it in the bar (hidden below md); phones get the same toggle inside Account.
-    const [bar, phone] = within(header).getAllByRole("button", { name: "Dark theme" });
+    const bar = within(header).getByRole("button", { name: "Dark theme" });
+    const phone = within(header).getByRole("switch", { name: "Dark theme" });
     expect(bar).toHaveAttribute("aria-pressed");
     expect(bar.closest("details")).toBeNull();
     expect(bar.parentElement).toHaveClass("max-md:hidden");

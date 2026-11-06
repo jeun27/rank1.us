@@ -27,7 +27,8 @@ test("/app: phones show only the page crumb; the theme toggle is in Account and 
   expect(Math.round((await header.boundingBox())!.height)).toBe(48);
   await expect(header.getByRole("button", { name: "Dark theme" })).toBeHidden();
   await page.getByText("Account", { exact: true }).first().click();
-  const toggle = page.getByRole("button", { name: "Dark theme" }).locator("visible=true");
+  // #145 review: in Account it is a switch that shows its state.
+  const toggle = page.getByRole("switch", { name: "Dark theme" }).locator("visible=true");
   await expect(toggle).toHaveCount(1);
   const was = await page.locator("html").getAttribute("data-theme");
   await toggle.click();
@@ -59,5 +60,5 @@ test("/client: phones move the toggle into Account", async ({ page }) => {
   await page.goto("/dev/client");
   await expect(page.getByRole("banner").getByRole("button", { name: "Dark theme" })).toBeHidden();
   await page.getByText("Account", { exact: true }).first().click();
-  await expect(page.getByRole("button", { name: "Dark theme" }).locator("visible=true")).toHaveCount(1);
+  await expect(page.getByRole("switch", { name: "Dark theme" }).locator("visible=true")).toHaveCount(1);
 });

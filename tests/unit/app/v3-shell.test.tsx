@@ -55,7 +55,8 @@ describe("v3 /app shell", () => {
     expect(within(crumbs).getByText("Sources")).toHaveAttribute("aria-current", "page");
     expect(within(crumbs).getByRole("link", { name: "Rank1" })).toHaveAttribute("href", "/");
     // X9a: the actions sit in the top bar from md, and inside Account below md.
-    const [account, bar] = screen.getAllByRole("button", { name: "Dark theme" });
+    const bar = screen.getByRole("button", { name: "Dark theme" });
+    const account = screen.getByRole("switch", { name: "Dark theme" });
     expect(screen.getByRole("banner")).toContainElement(bar);
     expect(bar.parentElement).toHaveClass("max-md:hidden");
     expect(account.closest("details")).not.toBeNull();

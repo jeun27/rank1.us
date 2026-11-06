@@ -5,3 +5,4 @@
 - The theme toggle is md+ in the bar. Below md it's in Account, above Sign out, as "Dark theme" with its icon (`ThemeToggle labelled`, the same prefs and aria-pressed). /app (AppShell), /client (AppHeader) and /team (Sidebar Account) all work this way.
 - AppShell renders the toggle itself. Its `actions` prop is removed (both callers passed `<ThemeToggle />`).
 - Tests changed for the new phone layout: v3-drift C5 counts visible crumbs; theme.spec skips the Rank1-crumb path below md; client-theme.spec uses the Account toggle on phones; three unit shell tests tell the bar toggle from the Account copy.
+- Review follow-up: in Account the toggle is a `role="switch"` with `aria-checked`, ink text (not muted), a visible on/off track and a 44px row. Not `menuitemcheckbox`: the Account popup isn't a `role="menu"`, and axe requires that parent for menuitemcheckbox. The bar's icon button keeps `aria-pressed`.

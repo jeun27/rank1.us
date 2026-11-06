@@ -45,7 +45,8 @@ describe("v3 /team shell", () => {
     const bar = screen.getByRole("banner");
     expect(within(bar).getByRole("button", { name: "Dark theme" }).parentElement).toHaveClass("max-md:hidden");
     // X9a: in the rail only as the phone copy inside Account.
-    const inRail = within(rail).queryAllByRole("button", { name: "Dark theme" });
+    const inRail = within(rail).queryAllByRole("switch", { name: "Dark theme" });
+    expect(within(rail).queryByRole("button", { name: "Dark theme" })).toBeNull();
     expect(inRail).toHaveLength(1);
     expect(inRail[0].closest("details")).not.toBeNull();
     expect(inRail[0].parentElement).toHaveClass("md:hidden");
