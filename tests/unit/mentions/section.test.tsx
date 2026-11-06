@@ -105,6 +105,24 @@ describe("MentionsSection", () => {
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
+  it("a row with no known rivals: the no-rivals line instead of Names", () => {
+    render(
+      <MentionsSection
+        targets={{
+          ...targets,
+          candidates: [t("https://lists.example.test/z", { rivals: [] })],
+          added: [],
+          dismissed: [],
+        }}
+        canDecide
+        fixId={null}
+        decide={vi.fn()}
+      />,
+    );
+    expect(row("https://lists.example.test/z")).toHaveTextContent("1 list AI cites doesn't name you.");
+    expect(row("https://lists.example.test/z")).not.toHaveTextContent(/Names/);
+  });
+
   it("read-only: the lists, no actions", () => {
     setup({ canDecide: false });
     expect(within(section()).queryByRole("button")).toBeNull();
@@ -137,6 +155,12 @@ describe("MentionsEvidence (the R17 fix's evidence)", () => {
     expect(screen.getByRole("link", { name: c.more(2) })).toHaveAttribute("href", "/app/sources");
   });
 
+  it("a list with no known rivals says R17's no-rivals copy, not an empty Names line (lead, #131)", () => {
+    render(<MentionsEvidence added={[t("https://lists.example.test/1", { rivals: [] })]} />);
+    expect(screen.getByRole("listitem")).toHaveTextContent("1 list AI cites doesn't name you.");
+    expect(screen.queryByText(/^Names/)).toBeNull();
+  });
+
   it("3 or fewer: no more link", () => {
     render(<MentionsEvidence added={[t("https://lists.example.test/1")]} />);
     expect(screen.queryByRole("link", { name: /more/ })).toBeNull();
@@ -160,6 +184,7 @@ describe("copy", () => {
       c.failed,
     ])
       expect(copy, s).toContain(`"${s}"`);
+    expect(copy).toContain(`"${c.noRivals}"`);
     for (const s of ['"Names {rivals}"', '"+{n}"', '"In {k} of {n} answers"', '"Not relevant ({n})"', '"+{n} more"'])
       expect(copy, s).toContain(s);
   });
