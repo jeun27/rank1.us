@@ -27,4 +27,17 @@ describe("readinessSet", () => {
       );
     }
   });
+
+  it("YouTube is never Recommended, so going live can't change anyone's readiness (lead, #146 Q1)", () => {
+    for (const v of VERTICALS) {
+      expect(
+        recommend(v).recommended.map((t) => t.connector),
+        v,
+      ).not.toContain("youtube");
+      expect(
+        recommend(v).optional.map((t) => t.connector),
+        v,
+      ).toContain("youtube");
+    }
+  });
 });
