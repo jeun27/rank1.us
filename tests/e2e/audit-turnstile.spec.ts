@@ -69,3 +69,22 @@ test("Turnstile blocked: the fallback stays, the button works once the fields ar
   await expect(page.locator("form").getByRole("alert")).toBeVisible();
   expect(bodies).toHaveLength(1);
 });
+
+// #129 S1: autofill can fill both fields without input events. Submit must reveal Turnstile and say what's
+// missing, not go nowhere.
+test("autofill with no events, then submit: Turnstile is revealed with 'Check the box to continue'", async ({
+  page,
+}) => {
+  await page.goto("/dev/forms");
+  const reveal = page.locator("[data-turnstile-reveal]");
+  await page.evaluate(() => {
+    (document.querySelector('input[name="email"]') as HTMLInputElement).value = "owner@example.test";
+    (document.querySelector('input[name="domain"]') as HTMLInputElement).value = "ramenhouse.com";
+  });
+  await expect(reveal).toHaveAttribute("data-revealed", "false");
+  await page.evaluate(() => document.querySelector("form")!.requestSubmit());
+  await expect(reveal).toHaveAttribute("data-revealed", "true");
+  await expect(page.getByRole("button", { name: "Get my free audit" })).toHaveAccessibleDescription(
+    /Check the box to continue|^$/,
+  );
+});

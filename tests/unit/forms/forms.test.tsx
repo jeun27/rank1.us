@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AuditRequestForm } from "@/components/forms/AuditRequestForm";
@@ -164,6 +164,40 @@ describe("AuditRequestForm", () => {
       await userEvent.click(button());
       expect(screen.getByText("Add the ending, like ramenhouse.com")).toBeInTheDocument();
     });
+
+    // #129 S1: autofill can set both fields without input events. The form re-reads the real values on
+    // focus, blur, animationstart (autofill) and submit; valid on submit with no token reveals the widget.
+    const autofill = () => {
+      (screen.getByLabelText("Email") as HTMLInputElement).value = "owner@example.test";
+      (screen.getByLabelText("Your domain") as HTMLInputElement).value = "ramenhouse.com";
+    };
+
+    it("autofill with no events, then submit: reveals Turnstile and says 'Check the box to continue'", async () => {
+      vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "1x00000000000000000000AA");
+      widget();
+      const { fetch } = pendingFetch(202, { status: "queued" });
+      render(<AuditRequestForm />);
+      autofill();
+      expect(region()).toHaveAttribute("data-revealed", "false");
+      fireEvent.submit(button().closest("form")!);
+      expect(region()).toHaveAttribute("data-revealed", "true");
+      expect(button()).toHaveAccessibleDescription("Check the box to continue");
+      expect(screen.queryByText("Add the ending, like ramenhouse.com")).toBeNull();
+      expect(fetch).not.toHaveBeenCalled();
+    });
+
+    it.each(["focus", "blur", "animationStart"] as const)(
+      "autofill with no input events, then %s: the form re-reads the values and reveals",
+      async (event) => {
+        vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "1x00000000000000000000AA");
+        widget();
+        render(<AuditRequestForm />);
+        autofill();
+        fireEvent[event](screen.getByLabelText("Email"));
+        expect(region()).toHaveAttribute("data-revealed", "true");
+        expect(button()).toHaveAccessibleDescription("Check the box to continue");
+      },
+    );
 
     it("an expired token: inactive again and the widget is reset", async () => {
       vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "1x00000000000000000000AA");
