@@ -70,3 +70,9 @@ test("no glows in /app or /team; the landing keeps its hero glow", async ({ page
   await page.goto("/");
   await expect(page.locator("#hero [data-glow]").first()).toBeAttached();
 });
+
+test("R3: the business line on the visibility chart is the white accent", async ({ page }) => {
+  await open(page, "/dev/app?state=dashboard-success");
+  const line = page.locator("svg path[fill='none']").first();
+  expect(await line.evaluate((p) => getComputedStyle(p).stroke)).toBe("rgb(255, 255, 255)");
+});
