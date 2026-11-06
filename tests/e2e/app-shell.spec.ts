@@ -105,16 +105,17 @@ test("rule 3 on Competitors (both widths) and History", async ({ page }) => {
   await expect(page.getByText(/Checked .* ago · \d+ answers · API-measured, directional/)).toBeVisible();
 });
 
-test("fixes: each Status select is keyboard reachable; read-only has none", async ({ page }) => {
+// Portal (b): the Status select became the check-off circle, a real checkbox.
+test("fixes: each check-off circle is keyboard reachable; read-only has none", async ({ page }) => {
   await page.goto("/dev/app?state=fixes-success");
-  const selects = page.getByLabel("Status");
+  const selects = page.getByRole("checkbox");
   await expect(selects).toHaveCount(4);
   // focus() doesn't wait for visibility; the streamed content is hidden until React moves it into place.
   await expect(selects.first()).toBeVisible();
   await selects.first().focus();
   await expect(selects.first()).toBeFocused();
   await page.goto("/dev/app?state=fixes-readonly");
-  await expect(page.getByLabel("Status")).toHaveCount(0);
+  await expect(page.getByRole("checkbox")).toHaveCount(0);
 });
 
 test("tap targets are at least 44px on every page", async ({ page }) => {
@@ -200,10 +201,12 @@ test("signed-in owner: What to fix next lists open fixes, Tidy-ups, and Done rem
 
   // Done closes the fix: it leaves the list and the row is saved.
   const r10 = fixes.data.find((f) => f.rule_key === "R10")!;
-  await page.getByRole("listitem").filter({ hasText: "put your menu" }).getByLabel("Status").selectOption("done");
+  await page.getByRole("listitem").filter({ hasText: "put your menu" }).getByRole("checkbox").click();
   await expect(page.getByText("Example data: put your menu on a page as text")).toHaveCount(0);
-  const saved = await db.from("fixes").select("status").eq("id", r10.id).single();
-  expect(saved.data?.status).toBe("done");
+  // The circle is optimistic (the row moves at once), so wait for the save itself to land.
+  await expect
+    .poll(async () => (await db.from("fixes").select("status").eq("id", r10.id).single()).data?.status)
+    .toBe("done");
 });
 
 // QA STEP 9 (#49): the selector is a plain GET form submitted by its Show button (the form markup is

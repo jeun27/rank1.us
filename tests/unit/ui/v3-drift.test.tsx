@@ -24,8 +24,9 @@ describe("ProgressBar (UI.md Loading + progress)", () => {
   });
 });
 
-describe("FixList status (UI.md controls: radius 6, 44px below md, 32px from md)", () => {
-  it("the Status select is a 6px control, not a pill; the status label is a Badge", () => {
+describe("FixList controls (UI.md: radius 6, 44px below md, 32px from md)", () => {
+  // Portal (b): the Status select became the circle checkbox; Start is the 6px control now.
+  it("Start is a 6px control, not a pill", () => {
     render(
       <FixList
         ranked={exampleFixes}
@@ -36,16 +37,15 @@ describe("FixList status (UI.md controls: radius 6, 44px below md, 32px from md)
         onStatus={vi.fn()}
       />,
     );
-    const select = screen.getAllByLabelText("Status")[0];
-    expect(select.className.split(" ")).toEqual(expect.arrayContaining(["rounded-control", "h-11", "md:h-8"]));
-    expect(select.className).not.toContain("rounded-full");
+    const start = screen.getAllByRole("button", { name: fixCopy.start })[0];
+    expect(start.className.split(" ")).toEqual(expect.arrayContaining(["rounded-control", "h-11", "md:h-8"]));
+    expect(start.className).not.toContain("rounded-full");
   });
 
-  it("read-only (client view): the status label uses the Badge tag shape", () => {
+  it("read-only (client view): the circle is a status image, not a control", () => {
     render(<FixList ranked={exampleFixes} tidyUps={[]} unchecked={[]} noDomain={false} canWrite={false} />);
     const card = within(screen.getByRole("list", { name: "What to fix next" })).getAllByRole("listitem")[0];
-    const label = within(card).getByText(fixCopy.statuses[exampleFixes[0].status]);
-    expect(label.className.split(" ")).toEqual(expect.arrayContaining(["rounded-tag", "bg-infoBg"]));
-    expect(label.className).not.toContain("rounded-full");
+    expect(within(card).getByRole("img", { name: `${exampleFixes[0].title}: To do` })).toBeInTheDocument();
+    expect(within(card).queryByRole("checkbox")).toBeNull();
   });
 });

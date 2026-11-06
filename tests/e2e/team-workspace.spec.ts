@@ -324,14 +324,14 @@ test("no DFY clients: one H1 and the empty state, axe clean", async ({ page }) =
   await axeClean(page);
 });
 
-test("the gallery's Fix list is the shared FixList with a Status select per fix", async ({ page }) => {
+test("the gallery's Fix list is the shared FixList with a check-off circle per fix", async ({ page }) => {
   await open(page, "light");
   await show(page, "Nav");
   await navTo(page, "Fix list");
   await show(page, "Document");
   const panel = page.getByRole("tabpanel");
   await expect(panel.getByRole("region", { name: "Tidy-ups" })).toBeVisible();
-  await expect(panel.getByLabel("Status").first()).toBeVisible();
+  await expect(panel.getByRole("checkbox").first()).toBeVisible();
   await expect(page.locator("#ws-nav").getByRole("button", { name: "Experiments", exact: true })).toHaveCount(0);
   await axeClean(page);
 });

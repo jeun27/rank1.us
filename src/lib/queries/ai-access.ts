@@ -23,7 +23,8 @@ export type CrawlerResult = { agent: AiCrawler; allowed: boolean; line: string |
 export type AiAccessCheck = {
   run_id: string;
   business_id: string | null;
-  domain: string;
+  // As checked; on an unreachable check it may be the raw input (≤ 253 chars) or null.
+  domain: string | null;
   checked_at: string;
   outcome: AiAccessOutcome;
   crawlers: CrawlerResult[];
@@ -32,10 +33,12 @@ export type AiAccessCheck = {
   status_gptbot: number | null;
   cloudflare: boolean;
   pages_checked: number;
+  // Set on a failed check (outcome unreachable): a short code, never message text.
+  error: string | null;
 };
 
 const COLUMNS =
-  "run_id, business_id, domain, checked_at, outcome, crawlers, visible_words, status_normal, status_gptbot, cloudflare, pages_checked";
+  "run_id, business_id, domain, checked_at, outcome, crawlers, visible_words, status_normal, status_gptbot, cloudflare, pages_checked, error";
 
 const toCheck = (r: Record<string, unknown>) => r as unknown as AiAccessCheck;
 
@@ -60,7 +63,8 @@ export async function getLatestAiAccessCheck(db: DbClient, businessId: string): 
 }
 
 export type AiAccessInput = {
-  domain: string;
+  // Must be a hostname, except on an unreachable check (stored as given, capped at 253).
+  domain: string | null;
   outcome: AiAccessOutcome;
   crawlers: CrawlerResult[];
   visibleWords: number | null;
@@ -68,6 +72,8 @@ export type AiAccessInput = {
   statusGptbot: number | null;
   cloudflare: boolean;
   pagesChecked: number;
+  // A failed check: a short code (timeout, blocked_address, error or a PG code), never message text.
+  errorCode?: string | null;
 };
 
 // Service client only. Stores (or replaces) a run's check. Errors: 22023 bad input or unknown run,
@@ -84,6 +90,7 @@ export async function recordAiAccessCheck(serviceDb: DbClient, runId: string, c:
       status_gptbot: c.statusGptbot,
       cloudflare: c.cloudflare,
       pages_checked: c.pagesChecked,
+      error: c.errorCode ?? null,
     } as unknown as Json,
   });
   if (error) throw error;

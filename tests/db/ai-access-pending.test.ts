@@ -73,6 +73,70 @@ describe("runs_needing_ai_access_check", () => {
     expect(all.find((r) => r.runId === older)).toEqual({ runId: older, domain: `older-${tag}.test` });
   });
 
+  it("a failed check records outcome unreachable with its error code, and leaves the list", async () => {
+    const tag = randomUUID().slice(0, 8);
+    const run = await freeAudit(`down-${tag}.test`, "complete", daysAgo(2));
+    await recordAiAccessCheck(s(), run, {
+      ...check(`down-${tag}.test`),
+      outcome: "unreachable",
+      crawlers: [],
+      visibleWords: null,
+      statusNormal: null,
+      statusGptbot: null,
+      pagesChecked: 0,
+      errorCode: "timeout",
+    });
+    expect(must(await s().from("ai_access_checks").select("outcome, error").eq("run_id", run).single())).toEqual({
+      outcome: "unreachable",
+      error: "timeout",
+    });
+    expect((await listRunsNeedingAiAccess(s(), 100)).map((r) => r.runId)).not.toContain(run);
+  });
+
+  it("stores an unreachable check for a bad or missing domain (as given, ≤ 253 chars), and it leaves the list", async () => {
+    const tag = randomUUID().slice(0, 8);
+    const failed = { crawlers: [], visibleWords: null, statusNormal: null, statusGptbot: null, pagesChecked: 0 };
+    const cases: [string, string | null, string | null][] = [
+      ["not a domain", "not a domain", "not a domain"],
+      ["missing", null, null],
+      ["too long", `x${"y".repeat(300)}`, `x${"y".repeat(252)}`],
+    ];
+    for (const [, given, stored] of cases) {
+      const run = await freeAudit(`snap-${tag}-${randomUUID().slice(0, 4)}.test`, "complete", daysAgo(2));
+      await recordAiAccessCheck(s(), run, {
+        ...check("ignored.test"),
+        ...failed,
+        domain: given as string,
+        outcome: "unreachable",
+        errorCode: "invalid_domain",
+      });
+      expect(must(await s().from("ai_access_checks").select("domain, outcome").eq("run_id", run).single())).toEqual({
+        domain: stored,
+        outcome: "unreachable",
+      });
+      expect((await listRunsNeedingAiAccess(s(), 100)).map((r) => r.runId)).not.toContain(run);
+    }
+  });
+
+  it("still refuses a bad domain on any other outcome (22023)", async () => {
+    const run = await freeAudit(`other-${randomUUID().slice(0, 8)}.test`, "complete", daysAgo(2));
+    await expect(recordAiAccessCheck(s(), run, { ...check("not a domain"), outcome: "blocked" })).rejects.toMatchObject(
+      {
+        code: "22023",
+      },
+    );
+  });
+
+  it("refuses an error that isn't a short code (22023)", async () => {
+    const tag = randomUUID().slice(0, 8);
+    const run = await freeAudit(`bad-${tag}.test`, "complete", daysAgo(2));
+    for (const errorCode of ["connect ECONNREFUSED 10.0.0.1:443", "x".repeat(41)]) {
+      await expect(
+        recordAiAccessCheck(s(), run, { ...check(`bad-${tag}.test`), outcome: "unreachable", errorCode }),
+      ).rejects.toMatchObject({ code: "22023" });
+    }
+  });
+
   it("honours the limit; a null or non-positive limit returns nothing", async () => {
     const tag = randomUUID().slice(0, 8);
     await freeAudit(`a-${tag}.test`, "complete", daysAgo(1));
