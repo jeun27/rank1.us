@@ -45,6 +45,17 @@ test("150 DFY clients: /team is 200 and the queue lists them all", async ({ page
     await expect(seeded).toHaveCount(150);
     await expect(table.getByRole("link", { name: names[0] })).toHaveAttribute("href", `/team?b=${ids[0]}`);
     await expect(table.getByRole("link", { name: names[149] })).toBeVisible();
+    for (const theme of ["dark", "light"] as const) {
+      // The theme is set on load, so switch the scheme and reload.
+      await page.emulateMedia({ colorScheme: theme });
+      await page.reload();
+      await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+      await expect(seeded).toHaveCount(150);
+      await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== "running"));
+      await page.screenshot({
+        path: `test-results/screenshots/team-queue-150-${theme}-${test.info().project.name}.png`,
+      });
+    }
   } finally {
     // The local stack is shared: archive the seeded clients so other tests' queues stay small.
     await admin().from("businesses").update({ archived_at: new Date().toISOString() }).in("id", ids);
