@@ -23,3 +23,54 @@ begin
 end;
 $$;
 revoke all on function public.runs_needing_ai_access_check(int) from public, anon, authenticated;
+
+-- Reviewer S1: a failed check still records a row (outcome unreachable) so it leaves the list above,
+-- with a short error code (timeout, blocked_address, a PG code...; never message text).
+alter table public.ai_access_checks add column if not exists error text check (error ~ '^[A-Za-z0-9_]{1,40}$');
+
+-- Redefined from 0025: also stores p.error (optional, a short code; 22023 otherwise).
+create or replace function public.record_ai_access_check(p_run_id uuid, p jsonb) returns void
+language plpgsql security definer set search_path = '' as $$
+declare
+  biz uuid;
+begin
+  if coalesce(auth.role(), '') <> 'service_role' then
+    raise exception 'Service role only' using errcode = 'insufficient_privilege';
+  end if;
+  select business_id into biz from public.runs where id = p_run_id;
+  if not found then
+    raise exception 'Unknown run' using errcode = 'invalid_parameter_value';
+  end if;
+  if not private.is_hostname(lower(p ->> 'domain'))
+     or coalesce(p ->> 'outcome', '') not in ('good', 'blocked', 'js_empty', 'cloudflare', 'unreachable')
+     or jsonb_typeof(coalesce(p -> 'crawlers', '[]')) <> 'array'
+     or exists (
+       select 1 from jsonb_array_elements(coalesce(p -> 'crawlers', '[]')) c
+       where jsonb_typeof(c) <> 'object'
+          or coalesce(c ->> 'agent', '') not in ('GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'ClaudeBot',
+                                                 'PerplexityBot', 'Google-Extended')
+          or jsonb_typeof(c -> 'allowed') <> 'boolean'
+          or char_length(c ->> 'line') > 500) then
+    raise exception 'Bad AI access check' using errcode = 'invalid_parameter_value';
+  end if;
+  if p ? 'error' and jsonb_typeof(p -> 'error') <> 'null' and (p ->> 'error') !~ '^[A-Za-z0-9_]{1,40}$' then
+    raise exception 'error must be a short code' using errcode = 'invalid_parameter_value';
+  end if;
+  begin
+    insert into public.ai_access_checks (run_id, business_id, domain, checked_at, outcome, crawlers, visible_words,
+                                         status_normal, status_gptbot, cloudflare, pages_checked, error)
+    values (p_run_id, biz, lower(p ->> 'domain'), now(), p ->> 'outcome', coalesce(p -> 'crawlers', '[]'),
+            (p ->> 'visible_words')::int, (p ->> 'status_normal')::int, (p ->> 'status_gptbot')::int,
+            coalesce((p ->> 'cloudflare')::boolean, false), coalesce((p ->> 'pages_checked')::int, 0),
+            p ->> 'error')
+    on conflict (run_id) do update
+      set domain = excluded.domain, checked_at = excluded.checked_at, outcome = excluded.outcome,
+          crawlers = excluded.crawlers, visible_words = excluded.visible_words,
+          status_normal = excluded.status_normal, status_gptbot = excluded.status_gptbot,
+          cloudflare = excluded.cloudflare, pages_checked = excluded.pages_checked, error = excluded.error;
+  exception when check_violation or invalid_text_representation or numeric_value_out_of_range then
+    raise exception 'Bad AI access check' using errcode = 'invalid_parameter_value';
+  end;
+end;
+$$;
+

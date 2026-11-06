@@ -32,10 +32,12 @@ export type AiAccessCheck = {
   status_gptbot: number | null;
   cloudflare: boolean;
   pages_checked: number;
+  // Set on a failed check (outcome unreachable): a short code, never message text.
+  error: string | null;
 };
 
 const COLUMNS =
-  "run_id, business_id, domain, checked_at, outcome, crawlers, visible_words, status_normal, status_gptbot, cloudflare, pages_checked";
+  "run_id, business_id, domain, checked_at, outcome, crawlers, visible_words, status_normal, status_gptbot, cloudflare, pages_checked, error";
 
 const toCheck = (r: Record<string, unknown>) => r as unknown as AiAccessCheck;
 
@@ -68,6 +70,8 @@ export type AiAccessInput = {
   statusGptbot: number | null;
   cloudflare: boolean;
   pagesChecked: number;
+  // A failed check: a short code (timeout, blocked_address, error or a PG code), never message text.
+  errorCode?: string | null;
 };
 
 // Service client only. Stores (or replaces) a run's check. Errors: 22023 bad input or unknown run,
@@ -84,6 +88,7 @@ export async function recordAiAccessCheck(serviceDb: DbClient, runId: string, c:
       status_gptbot: c.statusGptbot,
       cloudflare: c.cloudflare,
       pages_checked: c.pagesChecked,
+      error: c.errorCode ?? null,
     } as unknown as Json,
   });
   if (error) throw error;
