@@ -44,13 +44,16 @@ test("team sees a DFY client on real data, writes its fix status, and never a se
   const res = await page.goto(`/team?b=${dfy}`);
   expect(res?.status()).toBe(200);
 
-  // The Client switcher lists DFY clients only, with the selected one chosen.
-  await show(page, "Context");
-  const client = page.getByLabel("Client");
-  await expect(client).toHaveValue(dfy);
-  await expect(client.locator("option", { hasText: dfyName })).toHaveCount(1);
-  await expect(client.locator("option", { hasText: selfName })).toHaveCount(0);
+  // The Client switcher (in the breadcrumb, v3 D20) lists DFY clients only, with the selected one chosen.
+  await expect(page.locator('select[name="b"]')).toHaveValue(dfy);
+  await page.getByRole("button", { name: `Client ${dfyName}` }).click();
+  const list = page.getByRole("listbox", { name: "Client" });
+  await expect(list.getByRole("option", { name: dfyName })).toHaveAttribute("aria-selected", "true");
+  await expect(list.getByRole("option", { name: selfName })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(list).toHaveCount(0);
   await expect(page.getByText("Example data")).toHaveCount(0);
+  await show(page, "Context");
 
   // Copy context is the stored-data brief for this client.
   await page.getByRole("button", { name: "Copy context" }).click();
@@ -132,7 +135,7 @@ test("a DFY client with only an audit run shows its numbers in the panes and the
   await show(page, "Context");
   await expect(
     page
-      .locator("main")
+      .locator("aside")
       .getByText(/· 2 answers ·/)
       .first(),
   ).toBeVisible();

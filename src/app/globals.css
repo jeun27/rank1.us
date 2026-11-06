@@ -187,6 +187,11 @@
   background: linear-gradient(var(--color-white), var(--color-white)) padding-box, var(--aurora) border-box;
 }
 
+/* No-JS fallbacks (lead, v3 PR 2b): the head script adds .js to <html> before paint. Unlayered, so these
+   win over display utilities. */
+html:not(.js) .js-only { display: none; }
+.js .nojs-only { display: none; }
+
 /* Form fields stay 16px below md, so iPhone Safari doesn't zoom the page on focus (lead R2). Unlayered, so
    it wins over the 13px text-ui utility. */
 @media (width < 48rem) {

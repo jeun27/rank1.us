@@ -2,10 +2,9 @@
 import Link from "next/link";
 import { AccountMenu } from "@/components/auth/AppHeader";
 import { Icon, type IconName } from "@/components/ui/Icon";
+import { Logo } from "@/components/ui/Logo";
 import { authCopy } from "@/lib/auth/copy";
-import type { WorkspaceView } from "@/lib/queries/workspace";
 import { SECTIONS, SECTION_LABEL, type Section } from "@/lib/workspace/context";
-import type { Theme } from "@/lib/workspace/prefs";
 import type { Tab } from "./DocPane";
 
 export const SECTION_ICON: Record<Section, IconName> = {
@@ -29,37 +28,26 @@ const row = `flex min-h-11 w-full items-center gap-3 rounded-card px-3 text-left
 const iconButton = `grid size-11 place-items-center rounded-card text-inkMuted hover:bg-raised hover:text-ink ${focus}`;
 
 export function Sidebar(props: {
-  view: WorkspaceView;
   section: Section;
   onNav: (s: Section) => void;
   mode: "workspace" | "analytics";
   onMode: (m: "workspace" | "analytics") => void;
   recents: Tab[];
   onRecent: (t: Tab) => void;
-  theme: Theme | null;
-  onTheme: () => void;
   collapsed: boolean;
   onCollapse: () => void;
 }) {
-  const { view, section, collapsed } = props;
+  const { section, collapsed } = props;
   // Rail (icons only) when collapsed, and always between md and lg. Full width on phones.
   const label = collapsed ? "md:sr-only" : "md:max-lg:sr-only";
   const wide = collapsed ? "md:hidden" : "md:max-lg:hidden";
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 px-2 py-3 md:px-1.5 lg:px-2">
-      <div className="flex min-h-11 items-center gap-2.5 px-2.5">
-        <span
-          aria-hidden
-          data-computed
-          className="grid size-6 shrink-0 place-items-center rounded-[6px] bg-warnBg text-caption font-semibold text-warnText"
-        >
-          {view.business.name[0]}
-        </span>
-        <span data-computed className={`truncate text-ui font-semibold ${label}`}>
-          {view.business.name}
-        </span>
-      </div>
+      {/* v3 D20: the client is in the breadcrumb; the rail starts with the logo, as on /app. */}
+      <Link href="/" aria-label="Rank1" className={`flex min-h-11 items-center px-2.5 ${focus}`}>
+        <Logo wordmarkClassName={label} />
+      </Link>
 
       <div className={`grid grid-cols-2 gap-1 rounded-card bg-raised p-1 ${wide}`}>
         {(["workspace", "analytics"] as const).map((m) => (
@@ -129,15 +117,6 @@ export function Sidebar(props: {
         <Link href="/contact" aria-label="Help" className={iconButton}>
           <Icon name="help" className="size-4" />
         </Link>
-        <button
-          type="button"
-          aria-label="Dark theme"
-          aria-pressed={props.theme === "dark"}
-          onClick={props.onTheme}
-          className={iconButton}
-        >
-          <Icon name="moon" className="size-4" />
-        </button>
         <button
           type="button"
           aria-label="Collapse sidebar"

@@ -28,6 +28,8 @@ function Tool(props: { icon: IconName; label: string; pressed?: boolean; onClick
 }
 
 export function DocPane(props: {
+  // The page's one H1: the section label (v3 PR 2b, lead Q1).
+  title: string;
   view: WorkspaceView;
   tabs: Tab[];
   active: string;
@@ -60,6 +62,7 @@ export function DocPane(props: {
   return (
     <>
       <div className="flex h-12 shrink-0 items-center gap-1 border-b border-border px-2">
+        <h1 className="shrink-0 px-2 text-ui font-medium">{props.title}</h1>
         <div role="tablist" aria-label="Document" className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
           {tabs.map((t, i) => {
             const on = t.id === activeTab.id;

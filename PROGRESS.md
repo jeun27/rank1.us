@@ -826,6 +826,8 @@ Changed
 - Unused google_tokens table: drop with founder OK (lead, 2026-11-06).
 - Capped free-audit lead UX: decide copy. When create_free_audit's own daily cap hits (P0429, a race past the route check), the lead already got the 202 "queued" answer; it stays stored with no run and gets no email (lead, 2026-11-06).
 - Make create_free_audit's p.daily_limit required once every deployed build passes it. Until then a missing one skips the DB cap, because prod and preview share the hosted DB and v0.5.0 doesn't pass it (lead, 2026-11-06).
+- Pages render nothing without JS (Suspense streaming keeps them in a hidden template): /app, /dev/app, /team, /dev/team (docs/QA.md known note; lead, 2026-11-06).
+- Google revoke in Rank1 drops that Google account for every Rank1 business using it (self-heals to needs_reauth): decide copy or per-business tokens (lead, 2026-11-06).
 
 ## Connections (data-pipeline): Google OAuth, GBP and Search Console (branch feat/connections)
 - Built from the founder's Connections spec (2026-11-06) + the lead's decisions in briefs/rank1-connections.md. Behind ENABLE_CONNECTIONS.
@@ -904,6 +906,14 @@ Blocked/open
 - /dev/app renders every state inside the shell; the switcher states put the switcher in the breadcrumb.
 - Theme on navigation: ThemeSync (#92) re-applies themeFor on pathname changes. The e2e covers the rail logo, the breadcrumb Rank1 and the /client header logo (local stack).
 - Split (lead D1): 2a is /app; 2b is the /team shell (the client switcher listbox in the breadcrumb, the Context panel on the right, the document as main).
+
+## v3 PR 2b (frontend): the /team shell (branch feat/v3-team-shell)
+
+- Layout (lead OK on the 2b note): the dark rail #ws-nav (bg-rail, logo at the top, the theme toggle moved to the top bar) | a top bar with the breadcrumb Rank1 / client switcher / section and the "Context" toggle | main#ws-document (the one H1 = the section label, lead Q1, then the document tabs) and aside#ws-context on the right (D21). The resize separator sizes the document, as before (same split pref).
+- "Context" (aria-expanded, aria-controls ws-context) is open by default and not saved; it is md+ only. Phones keep the tab bar Nav / Context / Document and now start on Document; Nav and Context open as sheets under the top bar.
+- Client switcher (D20): one GET form in the breadcrumb. With JS it is a listbox (arrows, Home/End, Enter, Escape, the current client selected) driving the form; the last row "Clients" opens the invites tab (it moved out of the context pane). Without JS the form's "Client" select + "Show" submit it.
+- No-JS fallback (lead Q2): the head script adds .js to <html> before paint; globals.css hides .js-only without it and .nojs-only with it. The server renders both, so nothing swaps after load. Unit tests check the server markup against the real CSS rules with and without .js.
+- Finding: with JS fully off, Next keeps the streamed workspace in <div hidden id="S:0">, so /team (and /dev/team) is blank without JS. The no-JS e2e removes .js from a loaded page and submits the real form instead (flagged to the lead).
 
 ## v3 component drift (frontend, branch fix/v3-component-drift)
 
