@@ -123,7 +123,7 @@ export function HeroDemo() {
                   data-you={r.you ? "" : undefined}
                   data-demo-anim
                   style={{ transform: `translateY(${shift * 100}%)` }}
-                  className={`flex h-9 items-center gap-3 border-border px-3 text-caption transition-transform duration-300 ease-[cubic-bezier(.16,1,.3,1)] motion-reduce:transition-none [&+li]:border-t ${
+                  className={`flex h-9 items-center gap-3 border-border px-3 text-caption transition-transform duration-300 ease-out motion-reduce:transition-none [&+li]:border-t ${
                     r.you ? "bg-infoBg" : "bg-white"
                   }`}
                 >
