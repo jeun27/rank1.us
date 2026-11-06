@@ -189,7 +189,7 @@ describe("role gate", () => {
         code: "42501",
       });
     }
-    const id = await createExperiment(owner.db, { businessId: f.businessId, test: [q1] });
+    const id = await createExperiment(owner.db, { businessId: f.businessId, test: [q1], name: "Menu page" });
     for (const db of [outsider.db, team.db]) {
       expect(await listExperiments(db, f.businessId)).toEqual([]);
       expect(await getExperimentData(db, id)).toBeNull();
@@ -199,7 +199,7 @@ describe("role gate", () => {
   });
 
   it("nobody updates experiments or experiment_questions directly", async () => {
-    const id = await createExperiment(owner.db, { businessId: f.businessId, test: [q1] });
+    const id = await createExperiment(owner.db, { businessId: f.businessId, test: [q1], name: "Menu page" });
     const e = await owner.db.from("experiments").update({ status: "running", change_date: d }).eq("id", id);
     expect(e.error?.code).toBe("42501");
     const g = await owner.db.from("experiment_questions").update({ grp: "test" }).eq("experiment_id", id);
@@ -283,6 +283,7 @@ describe("create_experiment input and defaults", () => {
 describe("deletes the group rules never block", () => {
   it("a plain business and question with no experiments delete", async () => {
     const s = serviceClient();
+    must(await s.from("workspaces").update({ seats_quantity: 5 }).eq("id", f.workspaceId));
     const b = must(
       await s.from("businesses").insert({ workspace_id: f.workspaceId, name: "Example Plain" }).select("id").single(),
     );
@@ -307,7 +308,7 @@ describe("group rules on direct writes", () => {
   });
 
   it("a question from another business can't join an experiment (23514)", async () => {
-    const id = await createExperiment(owner.db, { businessId: f.businessId, test: [q1] });
+    const id = await createExperiment(owner.db, { businessId: f.businessId, test: [q1], name: "Menu page" });
     const { error } = await owner.db
       .from("experiment_questions")
       .insert({ experiment_id: id, question_id: other.questionId, grp: "control" });
@@ -317,7 +318,13 @@ describe("group rules on direct writes", () => {
 
 describe("experiment_data windows", () => {
   it("counts ok answers of audit/weekly runs in [d-28, d) and [d, d+28)", async () => {
-    const id = await createExperiment(owner.db, { businessId: f.businessId, test: [q1], control: [q2], changeDate: d });
+    const id = await createExperiment(owner.db, {
+      businessId: f.businessId,
+      test: [q1],
+      control: [q2],
+      changeDate: d,
+      name: "Menu page",
+    });
     expect(await getExperimentData(owner.db, id)).toEqual({
       before: { start: addDays(d, -28), end: d },
       after: { start: d, end: addDays(d, 28) },
@@ -327,7 +334,13 @@ describe("experiment_data windows", () => {
   });
 
   it("puts a run one minute before LA midnight on d in before, and midnight in after", async () => {
-    const id = await createExperiment(owner.db, { businessId: f.businessId, test: [q4], control: [q2], changeDate: d });
+    const id = await createExperiment(owner.db, {
+      businessId: f.businessId,
+      test: [q4],
+      control: [q2],
+      changeDate: d,
+      name: "Menu page",
+    });
     expect((await getExperimentData(owner.db, id))?.test).toEqual({
       before: { named: 1, n: 1 },
       after: { named: 0, n: 1 },
@@ -335,7 +348,13 @@ describe("experiment_data windows", () => {
   });
 
   it("an ended test's after window stops at the end day (included)", async () => {
-    const id = await createExperiment(owner.db, { businessId: f.businessId, test: [q1], control: [q2], changeDate: d });
+    const id = await createExperiment(owner.db, {
+      businessId: f.businessId,
+      test: [q1],
+      control: [q2],
+      changeDate: d,
+      name: "Menu page",
+    });
     must(
       await serviceClient()
         .from("experiments")
@@ -350,12 +369,18 @@ describe("experiment_data windows", () => {
   });
 
   it("status is done once LA today is 28 days after the change date", async () => {
-    const id = await createExperiment(owner.db, { businessId: f.businessId, test: [q1], changeDate: d });
+    const id = await createExperiment(owner.db, {
+      businessId: f.businessId,
+      test: [q1],
+      changeDate: d,
+      name: "Menu page",
+    });
     expect((await listExperiments(owner.db, f.businessId)).find((e) => e.id === id)?.status).toBe("done");
     const recent = await createExperiment(owner.db, {
       businessId: f.businessId,
       test: [q1],
       changeDate: addDays(laToday(), -27),
+      name: "Menu page",
     });
     expect((await listExperiments(owner.db, f.businessId)).find((e) => e.id === recent)?.status).toBe("running");
   });
@@ -366,6 +391,7 @@ describe("experiment_data windows", () => {
       test: [q1, q3],
       control: [q2],
       changeDate: d,
+      name: "Menu page",
     });
     expect((await getExperimentData(owner.db, id))?.test.before).toEqual({ named: 3, n: 5 });
     must(await serviceClient().from("questions").delete().eq("id", q3));
