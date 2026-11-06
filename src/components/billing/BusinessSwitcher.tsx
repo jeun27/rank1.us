@@ -85,7 +85,8 @@ export function BusinessSwitcher({
 
   return (
     <div
-      className="relative min-w-0"
+      // A shrinking column, so the trigger narrows with the breadcrumb and its name ends in an ellipsis (C5).
+      className="relative flex min-w-0 flex-col"
       onKeyDown={(e) => {
         if (e.key === "Escape" && open && !dialog) close();
       }}
