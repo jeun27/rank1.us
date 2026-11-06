@@ -1,5 +1,15 @@
 "use client";
 import { CompetitorsView } from "@/components/app/CompetitorsView";
+import { narrativeCopy } from "@/components/narrative/copy";
+import {
+  exampleNarrative,
+  exampleNarrativeNoClash,
+  exampleNarrativeNoWords,
+} from "@/components/narrative/example-data";
+import { NarrativeDashboard } from "@/components/narrative/NarrativeDashboard";
+import { WordsEditor } from "@/components/narrative/WordsEditor";
+import { MentionsEvidence, MentionsSection } from "@/components/mentions/MentionsSection";
+import { exampleMentions, exampleMentionsNone } from "@/components/mentions/example-data";
 import { AiAccessPanel, AiReassure } from "@/components/audit/AiAccessPanel";
 import { exampleAiAccess } from "@/components/audit/example-data";
 import { Dashboard } from "@/components/app/Dashboard";
@@ -95,6 +105,42 @@ export const STATES: Record<string, () => React.ReactNode> = {
   ),
   "onboarding-connect": () => <ConnectStep card={exampleCards.connect} />,
   "onboarding-connect-done": () => <ConnectStep card={{ ...exampleCards.ready, fixesHref: null }} />,
+  // G4: the Dashboard's clash card and quiet no-words line, and Settings → How should AI describe you?
+  "dashboard-narrative-clash": () => (
+    <Dashboard
+      business={exampleBusiness}
+      latest={exampleLatest}
+      series={series}
+      fixes={exampleFixes}
+      now={NOW}
+      narrative={<NarrativeDashboard view={exampleNarrative} />}
+    />
+  ),
+  "dashboard-narrative-nowords": () => (
+    <Dashboard
+      business={exampleBusiness}
+      latest={exampleLatest}
+      series={series}
+      fixes={exampleFixes}
+      now={NOW}
+      narrative={<NarrativeDashboard view={exampleNarrativeNoWords} />}
+    />
+  ),
+  "settings-narrative": () => (
+    <Page title={narrativeCopy.settingsTitle}>
+      <WordsEditor words={exampleNarrative.words} result={exampleNarrative.result} save={async () => ({ ok: true })} />
+    </Page>
+  ),
+  "settings-narrative-noclash": () => (
+    <Page title={narrativeCopy.settingsTitle}>
+      <p className="text-ui">{narrativeCopy.noClash}</p>
+      <WordsEditor
+        words={exampleNarrativeNoClash.words}
+        result={exampleNarrativeNoClash.result}
+        save={async () => ({ ok: true })}
+      />
+    </Page>
+  ),
   "dashboard-partial": () => (
     <Dashboard
       business={exampleBusiness}
@@ -130,6 +176,59 @@ export const STATES: Record<string, () => React.ReactNode> = {
   "questions-empty": () => <QuestionsView data={{ run: null, questions: [] }} />,
   "sources-success": () => (
     <SourcesView sources={computeSources({ questions: exampleQuestions.questions })} location={undefined} {...fresh} />
+  ),
+  // G7: the mentions section at the top of Sources (ENABLE_MENTIONS), and the R17 fix's evidence.
+  ...Object.fromEntries(
+    (
+      [
+        ["sources-mentions", exampleMentions, true],
+        ["sources-mentions-readonly", exampleMentions, false],
+        ["sources-mentions-first", null, true],
+        ["sources-mentions-none", exampleMentionsNone, true],
+      ] as const
+    ).map(([k, targets, canDecide]) => [
+      k,
+      () => (
+        <SourcesView
+          sources={computeSources({ questions: exampleQuestions.questions })}
+          location={undefined}
+          {...fresh}
+          mentions={
+            <MentionsSection
+              targets={targets}
+              canDecide={canDecide}
+              fixId="example-r17"
+              decide={async () => ({ fixId: "example-r17" })}
+            />
+          }
+        />
+      ),
+    ]),
+  ),
+  "fixes-mentions": () => (
+    <Page title="What to fix next">
+      <Measured {...latestMeasured(exampleLatest)} now={NOW} />
+      <FixList
+        ranked={[
+          {
+            ...fixes[0],
+            id: "example-r17",
+            rule_key: "R17",
+            title: "Get on these lists",
+            detail: "1 list AI cites names Example Noodle Bar, Example Izakaya but not you.",
+            pillar: "p3",
+            evidence: <MentionsEvidence added={[...exampleMentions.added, ...exampleMentions.candidates]} />,
+          },
+          ...pillarFixes.slice(1),
+        ]}
+        tidyUps={[]}
+        done={[]}
+        unchecked={[]}
+        noDomain={false}
+        canWrite
+        onStatus={noop}
+      />
+    </Page>
   ),
   "sources-partial": () => {
     const all = computeSources({ questions: exampleQuestions.questions });
@@ -360,6 +459,7 @@ const CRUMB: Record<string, string> = {
   report: "Reports",
   experiments: "Experiments",
   connections: "Settings",
+  settings: "Settings",
   switcher: "Dashboard",
 };
 
