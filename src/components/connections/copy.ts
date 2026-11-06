@@ -90,8 +90,8 @@ export const connectionsCopy = {
       const joined = one ? names[0] : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
       const head = `${joined} ${one ? "is" : "are"} connected.`;
       return audience === "dfy"
-        ? `${head} The Rank1 team takes it from here, and every change shows in your change log.`
-        : `${head} Your fix list and reports now use ${one ? "it" : "them"}.`;
+        ? `${head} The Rank1 team takes it from here, and every change shows under Changes.`
+        : head;
     },
     industry: "What kind of business?",
     verticals: {

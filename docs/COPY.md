@@ -380,7 +380,7 @@ Tile helper text (the niche key in src/lib/connections/recommend.ts):
 | Consent, Search Console | "Rank1 asks Google for read-only access to Search Console (webmasters.readonly) and to know which Google account you used. We don't get your email or profile.", "We can only read. We never change anything in Search Console.", "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.", "We never ask for your password." |
 | Consent, Google Analytics | "Rank1 asks Google for read-only access to Google Analytics (analytics.readonly) and to know which Google account you used. We don't get your email or profile.", "We can only read. We never change anything in Google Analytics.", "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.", "We never ask for your password." |
 
-**C-b, signed off by the lead (2026-11-06).** The onboarding connect step and the dashboard card, plus the G3 client "You're all set" state. "{names}" joins the connector names with "and"; one name reads "is connected … use it".
+**C-b, signed off by the lead (2026-11-06).** The onboarding connect step and the dashboard card, plus the G3 client "You're all set" state. "{names}" joins the connector names with "and"; one name reads "is connected".
 
 | Where | String |
 |---|---|
@@ -389,8 +389,8 @@ Tile helper text (the niche key in src/lib/connections/recommend.ts):
 | Card count | "{n} of {m} connected" |
 | Onboarding step | "Skip for now", "Go to your dashboard" |
 | All set, title | "You're all set. We'll take it from here." |
-| All set, self-serve | "{names} are connected. Your fix list and reports now use them." |
-| All set, DFY client (lead Q1: no timing) | "{names} are connected. The Rank1 team takes it from here, and every change shows in your change log." |
+| All set, self-serve (review: nothing reads connections yet) | "{names} are connected." |
+| All set, DFY client (lead Q1: no timing; review: the hub's "Changes" label) | "{names} are connected. The Rank1 team takes it from here, and every change shows under Changes." |
 | Onboarding step 1, behind ENABLE_CONNECTIONS | "What kind of business?" |
 | Business types | "Restaurant", "HVAC", "Plumbing", "Roofing", "Pest control", "Auto repair", "Beauty & salons", "Gyms & fitness", "Events & venues", "Dental", "Software (SaaS)", "Online store", "Other" |
 
