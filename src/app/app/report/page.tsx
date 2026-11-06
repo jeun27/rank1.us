@@ -5,6 +5,7 @@ import { selectedBusinessId } from "@/app/app/current";
 import { ReportView } from "@/components/report/ReportView";
 import { getLogoUrl, getReportSettings, listReports } from "@/lib/queries/reports";
 import { getCurrentBusiness } from "@/lib/queries/shell";
+import { nextReportDate } from "@/lib/reports/month";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { saveReportSettings, sendReportTest, uploadReportLogo } from "./actions";
@@ -32,6 +33,7 @@ export default async function ReportPage() {
       }}
       reports={reports}
       previewSrc="/app/report/preview.pdf"
+      nextReport={nextReportDate(new Date())}
       actions={{ save: saveReportSettings, uploadLogo: uploadReportLogo, sendTest: sendReportTest }}
       connectGa4Href={ga4ConnectHref()}
     />
