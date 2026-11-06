@@ -262,3 +262,24 @@ describe("dark accent", () => {
       expect(ratio(darkColors.accent, darkColors[bg]), `accent on ${bg}`).toBeGreaterThanOrEqual(4.5);
   });
 });
+
+// UI.md Motion: app motion 120–260ms on one curve, cubic-bezier(.16,1,.3,1). The landing demo (the one
+// focal moment) may run longer. Durations come from the default or the duration scale, never one-offs.
+describe("motion tokens", () => {
+  const motionTheme = css.slice(css.indexOf("/* Motion tokens"));
+  it("defines the one ease and a 150ms default for every transition", () => {
+    expect(motionTheme).toMatch(/--ease-out:\s*cubic-bezier\(0?\.16,\s*1,\s*0?\.3,\s*1\)/);
+    expect(motionTheme).toMatch(/--default-transition-duration:\s*150ms/);
+    expect(motionTheme).toMatch(/--default-transition-timing-function:\s*var\(--ease-out\)/);
+  });
+
+  it("no component hard-codes a curve or a duration outside 120–260ms (the landing demo excepted)", () => {
+    for (const file of sources("src")) {
+      const text = readFileSync(file, "utf8");
+      expect(text, file).not.toMatch(/ease-\[cubic-bezier/);
+      if (file.includes("site/HeroDemo")) continue;
+      for (const [, ms] of text.matchAll(/\bduration-(\d+)\b/g))
+        expect(Number(ms), `${file} duration-${ms}`).toBeGreaterThanOrEqual(120);
+    }
+  });
+});
