@@ -967,3 +967,9 @@ Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/
 - Migration 20261105000024 (+ .down.sql), additive and compatible with live v0.5.0: fix_rules.pillar and fixes.pillar, NOT NULL, checked p0..p6, backfilled. A trigger gives new rules the mapping's pillar when none is sent (the seed, new rules), and another always gives a fix its rule's pillar on insert or a rule change, so v0.5.0's record_fix_results inserts get it.
 - listFixes items gain pillar (PILLARS / Pillar in src/lib/queries/fixes.ts); the item key test lists it.
 
+
+## G6 (frontend): robots.txt + sitemap.xml (branch feat/robots-sitemap)
+
+- Lead OK 2026-11-06 (Q1, Q2). src/app/robots.ts: in production, one group for "*" plus GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot and Google-Extended, each "Allow: /" and disallowing /app /team /client /api /dev /admin /auth. /audit is left to its noindex. Sitemap: <origin>/sitemap.xml.
+- Previews and every non-production build (VERCEL_ENV !== "production"): "Disallow: /" for everyone.
+- src/app/sitemap.ts: the public pages only (/, /contact, /privacy, /terms). Origin = NEXT_PUBLIC_SITE_URL when it is https, else https://rank1.us (src/lib/site/origin.ts).
