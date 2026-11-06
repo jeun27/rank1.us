@@ -19,8 +19,8 @@ const done: DoneView[] = [
   {
     id: "d1",
     rule_key: "H1",
-    title: "Restaurant/Menu schema (hygiene only)",
-    detail: "Tidy-up: housekeeping, not an AI visibility fix.",
+    title: "Opening hours in the Business Profile",
+    detail: "Your hours now match on Google and your site.",
     status_changed_at: "2026-11-04T19:00:00Z",
     changed_by: { is_team: false, name: "Ana" },
   },
