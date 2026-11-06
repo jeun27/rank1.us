@@ -65,3 +65,11 @@ export function recommend(industry: Industry): Recommendations {
   }
   return out;
 }
+
+// G3 "Ready for GAS" (lead B1): the Recommended connectors with a live connect flow. Coming-soon ones
+// never block readiness and join automatically once live. Pass this to refreshGasReady; empty = never ready.
+export function readinessSet(industry: Industry): Connector[] {
+  return recommend(industry)
+    .recommended.filter((t) => t.available === "live")
+    .map((t) => t.connector);
+}
