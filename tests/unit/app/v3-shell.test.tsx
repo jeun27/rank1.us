@@ -21,7 +21,8 @@ describe("v3 /app shell", () => {
     ).toEqual([
       ["Dashboard"],
       ["Competitors", "Questions", "Sources"],
-      ["What to fix next", "Reports", "History"],
+      // Step 17: Experiments follows the Fix list.
+      ["What to fix next", "Experiments", "Reports", "History"],
       ["Billing"],
     ]);
     for (const g of groups)
