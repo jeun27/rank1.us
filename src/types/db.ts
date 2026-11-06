@@ -192,14 +192,14 @@ isOneToOne: false
                   ]
                 },"experiments": {
                   Row: {
-                    "business_id": string,"change_date": string | null,"change_note": string | null,"change_url": string | null,"fix_id": string | null,"id": string,"name": string,"status": string | null
+                    "business_id": string,"change_date": string | null,"change_note": string | null,"change_url": string | null,"ended_at": string | null,"fix_id": string | null,"id": string,"name": string,"status": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "business_id": string,"change_date"?: string | null,"change_note"?: string | null,"change_url"?: string | null,"fix_id"?: string | null,"id"?: string,"name": string,"status"?: string | null
+                    "business_id": string,"change_date"?: string | null,"change_note"?: string | null,"change_url"?: string | null,"ended_at"?: string | null,"fix_id"?: string | null,"id"?: string,"name": string,"status"?: string | null
                   }
                   Update: {
-                    "business_id"?: string,"change_date"?: string | null,"change_note"?: string | null,"change_url"?: string | null,"fix_id"?: string | null,"id"?: string,"name"?: string,"status"?: string | null
+                    "business_id"?: string,"change_date"?: string | null,"change_note"?: string | null,"change_url"?: string | null,"ended_at"?: string | null,"fix_id"?: string | null,"id"?: string,"name"?: string,"status"?: string | null
                   }
                   Relationships: [
                     {
@@ -652,6 +652,9 @@ isOneToOne: false
 "create_dfy_client":
 { Args: { "p": Json }; Returns: Json
                            },
+"create_experiment":
+{ Args: { "p": Json }; Returns: string
+                           },
 "create_free_audit":
 { Args: { "p": Json }; Returns: string
                            },
@@ -661,11 +664,17 @@ isOneToOne: false
 "dismiss_competitor":
 { Args: { "p": Json,"p_business_id": string }; Returns: string
                            },
+"end_experiment":
+{ Args: { "p_experiment_id": string }; Returns: boolean
+                           },
 "enqueue_monthly_reports":
 { Args: { "p_month": string }; Returns: Json
                            },
 "enqueue_weekly_runs":
 { Args: { "p_week_start": string }; Returns: Json
+                           },
+"experiment_data":
+{ Args: { "p_experiment_id": string }; Returns: { "ends": string,"grp": string,"n": number,"named": number,"period": string,"starts": string }[]
                            },
 "ensure_self_serve_workspace":
 { Args: Record<PropertyKey, never>; Returns: string
