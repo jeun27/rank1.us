@@ -19,6 +19,18 @@ const addDays = (date: string, days: number) => {
 };
 // Noon in Los Angeles is the same LA date whether the offset is -07 or -08.
 const laNoon = (date: string) => `${date}T12:00:00-08:00`;
+// The UTC instant of 00:00 in Los Angeles on `date` (PDT or PST).
+const laMidnight = (date: string) => {
+  const offset = ["-07:00", "-08:00"].find((o) => {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Los_Angeles",
+      hourCycle: "h23",
+      hour: "2-digit",
+    }).format(new Date(`${date}T00:00:00${o}`));
+    return parts === "00";
+  })!;
+  return new Date(`${date}T00:00:00${offset}`);
+};
 
 let owner: TestUser;
 let f: Fixture;
@@ -30,6 +42,7 @@ let dfy: { workspaceId: string; businessId: string };
 let q1: string;
 let q2: string;
 let q3: string;
+let q4: string;
 let inactive: string;
 let dfyQ: string[];
 const d = addDays(laToday(), -60);
@@ -43,13 +56,19 @@ const question = async (businessId: string, text: string, active = true) =>
       .single(),
   ).id;
 
-// One run on `date` with an answer per entry: [question, status, mentioned].
-async function run(businessId: string, date: string, answers: [string, "ok" | "failed", boolean][], kind = "weekly") {
+// One run on `date` (noon LA) or at an exact instant, with an answer per entry: [question, status, mentioned].
+async function run(
+  businessId: string,
+  at: string | Date,
+  answers: [string, "ok" | "failed", boolean][],
+  kind = "weekly",
+) {
   const s = serviceClient();
+  const started = typeof at === "string" ? laNoon(at) : at.toISOString();
   const r = must(
     await s
       .from("runs")
-      .insert({ business_id: businessId, kind, status: "complete", started_at: laNoon(date) })
+      .insert({ business_id: businessId, kind, status: "complete", started_at: started })
       .select("id")
       .single(),
   );
@@ -62,6 +81,7 @@ async function run(businessId: string, date: string, answers: [string, "ok" | "f
         run_index: i + 1,
         status,
         mentioned,
+        checked_at: started,
         question_text_used: "best ramen in Irvine",
       })),
     ),
@@ -76,6 +96,7 @@ beforeAll(async () => {
   q1 = await question(f.businessId, "ramen near me");
   q2 = await question(f.businessId, "noodles open late");
   q3 = await question(f.businessId, "tonkotsu Irvine");
+  q4 = await question(f.businessId, "ramen delivery Irvine");
   inactive = f.question2Id;
 
   team = await newUser("exp-team");
@@ -118,6 +139,9 @@ beforeAll(async () => {
   }
   await run(f.businessId, addDays(d, 1), [[q1, "ok", true]], "free_audit");
   await run(f.businessId, addDays(d, -3), [[q3, "ok", true]]);
+  // The UTC trap: one minute before LA midnight on d is still d-1 (before); midnight is d (after).
+  await run(f.businessId, new Date(laMidnight(d).getTime() - 60_000), [[q4, "ok", true]]);
+  await run(f.businessId, laMidnight(d), [[q4, "ok", false]]);
 });
 
 describe("role gate", () => {
@@ -193,7 +217,7 @@ describe("create_experiment input and defaults", () => {
     );
     expect(groups.filter((g) => g.grp === "test").map((g) => g.question_id)).toEqual([q1]);
     const control = groups.filter((g) => g.grp === "control").map((g) => g.question_id);
-    expect(control.sort()).toEqual([f.questionId, q2, q3].sort());
+    expect(control.sort()).toEqual([f.questionId, q2, q3, q4].sort());
     expect(control).not.toContain(inactive);
     const row = must(
       await serviceClient().from("experiments").select("name, change_date, fix_id, status").eq("id", id).single(),
@@ -279,6 +303,14 @@ describe("experiment_data windows", () => {
       after: { start: d, end: addDays(d, 28) },
       test: { before: { named: 2, n: 4 }, after: { named: 4, n: 8 } },
       control: { before: { named: 0, n: 2 }, after: { named: 0, n: 4 } },
+    });
+  });
+
+  it("puts a run one minute before LA midnight on d in before, and midnight in after", async () => {
+    const id = await createExperiment(owner.db, { businessId: f.businessId, test: [q4], control: [q2], changeDate: d });
+    expect((await getExperimentData(owner.db, id))?.test).toEqual({
+      before: { named: 1, n: 1 },
+      after: { named: 0, n: 1 },
     });
   });
 
