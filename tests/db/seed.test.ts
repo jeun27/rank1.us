@@ -64,7 +64,7 @@ describe("supabase/seed.sql on a fresh db reset", () => {
     );
     expect(counts).toMatchObject({
       question_templates: 20,
-      fix_rules: 23,
+      fix_rules: 24,
       domain_categories: 5,
       workspaces: 1,
       workspace_members: 1,
@@ -86,8 +86,8 @@ describe("supabase/seed.sql on a fresh db reset", () => {
   });
 
   // Step 10 (lead): migration 0014 adds A1-A6 as disabled placeholders (Build Pack text unavailable).
-  // GAS G2 (lead): migration 0025 adds R16 (Cloudflare), enabled.
-  it("fix_rules: R1-R16 + H1, A1-A6 disabled, only R10, R11, R14, R16, H1 enabled", async () => {
+  // GAS G2 (lead): migration 0025 adds R16 (Cloudflare), enabled; G7: 0030 adds R17 (lists), enabled.
+  it("fix_rules: R1-R17 + H1, A1-A6 disabled, only R10, R11, R14, R16, R17, H1 enabled", async () => {
     const r = await rows<{ key: string; enabled: boolean; unverified: string[]; grp: string; ai_lever: boolean }>(
       `select key, enabled, unverified, grp, ai_lever from public.fix_rules order by key`,
     );
@@ -99,7 +99,7 @@ describe("supabase/seed.sql on a fresh db reset", () => {
         .filter((x) => x.enabled)
         .map((x) => x.key)
         .sort(),
-    ).toEqual(["H1", "R10", "R11", "R14", "R16"]);
+    ).toEqual(["H1", "R10", "R11", "R14", "R16", "R17"]);
     expect(r.filter((x) => !x.enabled).every((x) => x.unverified.length > 0)).toBe(true);
     expect(r.find((x) => x.key === "H1")).toMatchObject({ grp: "hygiene", ai_lever: false });
   });
