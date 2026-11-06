@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { useId } from "react";
+import { linkTarget } from "@/components/ui/link";
 import type { NarrativeView } from "@/lib/narrative/service";
 import { narrativeCopy as c } from "./copy";
 
 const HREF = "/app/settings/narrative";
-const link = "text-ui text-link underline underline-offset-4";
+const link = `${linkTarget} text-ui text-link underline underline-offset-4`;
 
 // G4 on the /app Dashboard (lead Q2, "show the next step only when it's relevant"): the card for a clash,
 // one quiet line when there are no words yet, and nothing otherwise (no clash and too few live in Settings).
