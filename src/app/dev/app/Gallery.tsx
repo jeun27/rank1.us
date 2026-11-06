@@ -8,6 +8,8 @@ import { latestMeasured, Measured, Page } from "@/components/app/Page";
 import { BillingView } from "@/components/billing/BillingView";
 import { BusinessSwitcher, type SwitcherBusiness } from "@/components/billing/BusinessSwitcher";
 import { FixList } from "@/components/fixes/FixList";
+import { ReportView } from "@/components/report/ReportView";
+import type { ReportRow } from "@/lib/queries/reports";
 import { exampleFixes as fixes, exampleTidyUps, exampleUnchecked } from "@/components/fixes/example-data";
 import { ErrorState, Skeleton } from "@/components/app/states";
 import {
@@ -156,8 +158,39 @@ export const STATES: Record<string, () => React.ReactNode> = {
   "billing-paused": () => <BillingView billing={{ ...paidPlan, status: "paused" }} actions={billing} />,
   "billing-loading": () => <Skeleton title="Billing" />,
   "billing-error": () => <ErrorState title="Billing" message={results} reset={() => {}} />,
+  "report-empty": () => <ReportView {...reportProps} reports={[]} />,
+  "report-success": () => <ReportView {...reportProps} />,
+  "report-failed": () => (
+    <ReportView
+      {...reportProps}
+      reports={[{ ...reportProps.reports[0], status: "failed" }, ...reportProps.reports.slice(1)]}
+    />
+  ),
+  "report-loading": () => <Skeleton title="Reports" />,
+  "report-error": () => <ErrorState title="Reports" message={results} reset={() => {}} />,
   "switcher-one": () => <WithSwitcher businesses={switcherBusinesses.slice(0, 1)} />,
   "switcher-many": () => <WithSwitcher businesses={switcherBusinesses} />,
+};
+
+// Example data: invented reports and settings; the preview is the real PDF on Example data.
+const reportRow = (id: string, month: string, status: ReportRow["status"], has_pdf = true): ReportRow => ({
+  id,
+  period_start: `2026-${month}-01`,
+  period_end: `2026-${month}-28`,
+  status,
+  sent_at: status === "sent" ? `2026-${month}-01T15:05:00Z` : null,
+  recipients: 1,
+  has_pdf,
+});
+const reportProps = {
+  settings: { brand_color: "#1D5FC5", report_recipients: ["owner@exampleramen.test"], logoUrl: null },
+  reports: [reportRow("r3", "10", "sent"), reportRow("r2", "09", "sent"), reportRow("r1", "08", "generated")],
+  previewSrc: "/dev/report-preview.pdf",
+  actions: {
+    save: noop,
+    uploadLogo: noop,
+    sendTest: async () => ({ status: "sent" as const, email: "owner@exampleramen.test" }),
+  },
 };
 
 // Example data: invented businesses and a paid plan. The switcher writes nothing here.

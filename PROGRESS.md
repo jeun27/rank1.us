@@ -774,3 +774,19 @@ Changed
 - Bug (reviewer, Step 17): compute.ts floorPct did Math.floor(value × 100). Floating point makes 0.29 × 100 = 28.999…, so 29 of 100 showed as 28% in the leaderboard change, and progress bars were 1 low.
 - One shared helper: floorPct(metric) = Math.floor(numerator × 100 / denominator), null at denominator 0. formatPercent (UI and the report PDF), pointsChange, History and progressPercent all use it. A test fails if any other src file floors a ratio × 100.
 - Tests: 29/100, 57/100, 7/25, 58/200 give exact results in floorPct, formatPercent and progressPercent.
+
+## Step 16 (frontend): the report page (branch feat/step16-report-ui)
+
+- Step 16 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b. The Build Pack isn't readable, so reconcile later.
+- /app/report (nav "Reports", after "What to fix next") for the current business (switcher cookie):
+  - getReportSettings, listReports and getLogoUrl (#76), read through RLS;
+  - UI.md states: no reports → "Your first report sends on the 1st." + Preview; a failed latest report → "The report didn't send to {email}. Check the address." ({email} = the saved recipients, joined, because report rows carry a count only); plus loading and error.
+  - The GA4 partial state isn't built (no GA4 integration yet).
+- Preview: an iframe of the real PDF (data-pipeline's renderReportPdf). /dev/report-preview.pdf renders it on Example data for the gallery. The real /app/report/preview.pdf waits on data-pipeline's renderReportPreview export.
+- Settings:
+  - logo (PNG/JPEG ≤ 512 KB, checked in the browser and again by uploadLogo's magic bytes; SVG rejected);
+  - Brand color (a native color picker, so always #RRGGBB);
+  - Recipients (≤ 10 valid emails, one per line, lowercased and deduped).
+  Save goes through setReportSettings (the definer RPC). 'Send test to me' → sendTestReport (the user's own email only).
+- History: Month / Status / Download. Download is GET /app/report/{id}/download → a short-lived signed URL (302, no-store), and a 404 when RLS hides the row.
+- Lead copy in COPY.md "Report (lead, 2026-11-05)".
