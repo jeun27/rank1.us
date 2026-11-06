@@ -58,7 +58,10 @@ test("owner saves recipients and a color, they persist; a history download redir
   const res = await page.request.get(`/app/report/${report.id}/download`, { maxRedirects: 0 });
   expect(res.status()).toBe(302);
   expect(res.headers()["location"]).toContain("/storage/v1/object/sign/reports/");
-  expect(
-    (await page.request.get("/app/report/00000000-0000-0000-0000-000000000000/download", { maxRedirects: 0 })).status(),
-  ).toBe(404);
+  // N1 (QA #89): a 404 is never cached either.
+  const missing = await page.request.get("/app/report/00000000-0000-0000-0000-000000000000/download", {
+    maxRedirects: 0,
+  });
+  expect(missing.status()).toBe(404);
+  expect(missing.headers()["cache-control"]).toContain("no-store");
 });
