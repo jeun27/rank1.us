@@ -35,7 +35,10 @@ for (const theme of ["dark", "light"] as const)
       await expect(page.getByRole("region", { name: c.heading })).toBeVisible();
       await axeClean(page);
       if (c.shot)
-        await page.screenshot({ path: `test-results/screenshots/connect-${c.shot}-${theme}-${info.project.name}.png` });
+        await page.screenshot({
+          path: `test-results/screenshots/connect-${c.shot}-${theme}-${info.project.name}.png`,
+          fullPage: true,
+        });
     });
 
 test("Connect opens the consent sheet to Google; Esc closes it and focus returns", async ({ page }) => {

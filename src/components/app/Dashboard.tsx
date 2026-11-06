@@ -25,7 +25,7 @@ export function Dashboard({
   series: { points: SeriesPoint[]; visible: boolean };
   fixes: TopFix[];
   now: Date;
-  // C-b: the connect card, above everything (ENABLE_CONNECTIONS).
+  // C-b: the connect card, after the hero (UX plan slot 3, after PR6's next-fix card), or first with no run.
   notice?: ReactNode;
 }) {
   if (!business)
@@ -57,13 +57,13 @@ export function Dashboard({
   const lead = latest.metrics.leaderboard.find((b) => b.kind === "business");
   return (
     <Page title={c.dashboard}>
-      {notice}
       <Hero metrics={latest.metrics} now={now}>
         <div className="flex flex-wrap gap-2">
           {lead?.change != null && <Badge tone="info">{`${lead.change > 0 ? "+" : ""}${lead.change} pts`}</Badge>}
           {run.status === "partial" && <Badge tone="warn">{c.lastPartial(run.jobs_ok, run.jobs_total)}</Badge>}
         </div>
       </Hero>
+      {notice}
       {series.visible && (
         <Section title={c.visibility}>
           <VisibilityLine points={series.points} />

@@ -38,7 +38,7 @@ export function ClientDashboard({
   runs: RunSummary[];
   fixes: ClientFixes | null;
   now: Date;
-  // C-b: the connect card, under the business name (ENABLE_CONNECTIONS).
+  // C-b: the connect card, the slot below the hero (UX plan), or first with no run.
   notice?: ReactNode;
 }) {
   if (!business)
@@ -80,13 +80,13 @@ export function ClientDashboard({
   return (
     <Page title={c.dashboard}>
       {name}
-      {notice}
       <Hero metrics={latest.metrics} now={now}>
         <div className="flex flex-wrap gap-2">
           {lead?.change != null && <Badge tone="info">{`${lead.change > 0 ? "+" : ""}${lead.change} pts`}</Badge>}
           {run.status === "partial" && <Badge tone="warn">{c.lastPartial(run.jobs_ok, run.jobs_total)}</Badge>}
         </div>
       </Hero>
+      {notice}
       {series.visible && (
         <Section title={c.visibility}>
           <VisibilityLine points={series.points} />

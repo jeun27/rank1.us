@@ -1,9 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { Dashboard } from "@/components/app/Dashboard";
-import { exampleBusiness, exampleLatest, exampleRuns } from "@/components/app/example-data";
+import { exampleBusiness, exampleFixes, exampleLatest, exampleRuns } from "@/components/app/example-data";
 import { ClientDashboard } from "@/components/client/ClientDashboard";
-import { exampleFixes } from "@/components/fixes/example-data";
 import { seriesFromSummaries } from "@/lib/metrics";
 
 // UX plan §B (lead 08:06): the C-b card sits after the hero (the next-fix card, PR6, goes between them),
