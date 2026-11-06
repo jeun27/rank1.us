@@ -19,11 +19,12 @@ export const CONNECTOR_KEYS = [
   "g2_capterra",
   "search_console",
   "ga4",
+  "youtube",
 ] as const;
 export type ConnectorKey = (typeof CONNECTOR_KEYS)[number];
 
-// Providers that can hold a connection. gbp, search_console and ga4 share one Google grant.
-export type ConnectionProvider = "gbp" | "search_console" | "ga4" | "shopify";
+// Providers that can hold a connection. gbp, search_console, ga4 and youtube share one Google grant.
+export type ConnectionProvider = "gbp" | "search_console" | "ga4" | "shopify" | "youtube";
 export type ConnectionStatus = "connected" | "needs_reauth" | "revoked";
 
 // The only Business Profile fields a DFY edit may change (the DB refuses others).

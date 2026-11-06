@@ -363,6 +363,7 @@ Tile helper text (the niche key in src/lib/connections/recommend.ts):
 | dtc_amazon | "For brands that sell on Amazon." |
 | saas_reviews | "For software with review listings." |
 | ai_referrals | "Shows visits that came from AI answers." |
+| video | "For businesses that post videos." |
 
 **C-a, signed off by the lead (2026-11-06).** The hub, Settings → Connections. Every consent line states only what the code does (the scope and openid, the GBP fields after a confirm, review + log, revoke, no passwords).
 
@@ -370,7 +371,7 @@ Tile helper text (the niche key in src/lib/connections/recommend.ts):
 |---|---|
 | Page title | "Connections" |
 | Tier headings | "Recommended", "Optional", "Coming soon" |
-| Tile names | "Google Business Profile", "Google Search Console", "Google Analytics", "Website / CMS", "Shopify", "G2 / Capterra", "OpenTable", "Resy", "Apple Business Connect", "Bing Places", "Yelp", "Amazon" |
+| Tile names | "Google Business Profile", "Google Search Console", "Google Analytics", "Website / CMS", "Shopify", "G2 / Capterra", "OpenTable", "Resy", "Apple Business Connect", "Bing Places", "Yelp", "Amazon", "YouTube" |
 | Status tags | "Connected", "Needs reconnect", "Disconnected"; a tile without a working flow: "Coming soon" |
 | Buttons | "Connect", "Reconnect", "Disconnect", "Notify me", "Continue to Google", "Cancel", "Save" |
 | Notify me, after | "We'll let you know." |

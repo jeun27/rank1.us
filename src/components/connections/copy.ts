@@ -16,6 +16,7 @@ export const connectionsCopy = {
     bing_places: "Bing Places",
     yelp: "Yelp",
     amazon: "Amazon",
+    youtube: "YouTube",
   },
   tiers: { recommended: "Recommended", optional: "Optional", later: "Coming soon" },
   niches: {
@@ -26,6 +27,7 @@ export const connectionsCopy = {
     dtc_amazon: "For brands that sell on Amazon.",
     saas_reviews: "For software with review listings.",
     ai_referrals: "Shows visits that came from AI answers.",
+    video: "For businesses that post videos.",
   },
   // Plain words (lead sign-off); the enum names in the code stay connected / needs_reauth / revoked.
   statuses: { connected: "Connected", needs_reauth: "Needs reconnect", revoked: "Disconnected" },

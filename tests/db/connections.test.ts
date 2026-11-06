@@ -415,8 +415,8 @@ describe("multi-entity picker", () => {
 });
 
 describe("connector interest", () => {
-  it("has the 12 connector keys", () => {
-    expect(CONNECTOR_KEYS).toHaveLength(12);
+  it("has the 13 connector keys (youtube since 0036)", () => {
+    expect(CONNECTOR_KEYS).toHaveLength(13);
   });
 
   it("is idempotent per business, provider and user, readable by members and the team on DFY", async () => {
