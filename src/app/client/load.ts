@@ -2,7 +2,7 @@ import "server-only";
 import { connection } from "next/server";
 import { loadPaidRun } from "@/components/audit/load";
 import type { ClientFixes } from "@/components/client/ClientDashboard";
-import { listFixes } from "@/lib/queries/fixes";
+import { listDoneFixes, listFixes } from "@/lib/queries/fixes";
 import { listRunSummaries } from "@/lib/queries/shell";
 import { listDfyBusinesses } from "@/lib/queries/team";
 import { createClient } from "@/lib/supabase/server";
@@ -19,8 +19,8 @@ export async function loadClient() {
   const done = runs.find((r) => r.status === "complete" || r.status === "partial");
   const [latest, list] = await Promise.all([
     done ? loadPaidRun(done.id) : null,
-    business.fix_list_visible ? listFixes(db, business.id) : null,
+    business.fix_list_visible ? Promise.all([listFixes(db, business.id), listDoneFixes(db, business.id)]) : null,
   ]);
-  const fixes: ClientFixes | null = list && { ...list, noDomain: !business.domain };
+  const fixes: ClientFixes | null = list && { ...list[0], done: list[1], noDomain: !business.domain };
   return { business: { name: business.name }, latest, runs, fixes };
 }

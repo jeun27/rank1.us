@@ -74,6 +74,8 @@ test("invite link → /client; fixes only when shown; Remove access → Nothing 
   await expect(client.getByRole("heading", { name: "What to fix next" })).toBeVisible();
   await expect(client.getByText("robots.txt allows AI search crawlers")).toBeVisible();
   await expect(client.getByLabel("Status")).toHaveCount(0);
+  // Portal (b): the check-off circles are status only for a client.
+  await expect(client.getByRole("checkbox")).toHaveCount(0);
 
   // Remove access → the client keeps the role but sees the empty state.
   await panel.getByRole("list", { name: "Clients" }).getByRole("button", { name: "Remove access" }).click();
