@@ -1,6 +1,7 @@
 "use client";
 import { exampleSuggestions } from "@/components/app/example-data";
 import { exampleDone, exampleFixes, exampleTidyUps, exampleUnchecked } from "@/components/fixes/example-data";
+import { exampleMentions } from "@/components/mentions/example-data";
 import { NoClients } from "@/components/workspace/NoClients";
 import { Workspace } from "@/components/workspace/Workspace";
 import type { TeamExtras } from "@/components/workspace/team";
@@ -74,6 +75,7 @@ const extras: TeamExtras = {
     ],
     interest: ["yelp"],
   },
+  mentions: { targets: exampleMentions, fixId: "ex-r17" },
   actions: {
     status: noop,
     add: noop,
@@ -83,6 +85,7 @@ const extras: TeamExtras = {
     removeClient: noop,
     setFixListVisible: noop,
     dismissReady: noop,
+    decideMention: async () => ({ fixId: "ex-r17" }),
   },
 };
 
