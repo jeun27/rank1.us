@@ -63,10 +63,13 @@
   --text-body--line-height: 24px;
   --text-body-lg: 18px;
   --text-body-lg--line-height: 28px;
-  --text-ui: 15px;
-  --text-ui--line-height: 20px;
-  --text-caption: 13px;
-  --text-caption--line-height: 18px;
+  /* v3 (UI.md type table): one size at every breakpoint. */
+  --text-ui: 13px;
+  --text-ui--line-height: 19px;
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+  --text-tag: 11px;
+  --text-tag--line-height: 1;
   --text-micro: 10px;
   --text-micro--line-height: 14px;
   --text-wordmark: 18px;
@@ -75,6 +78,7 @@
   --radius-card: 8px;
   --radius-surface: 8px;
   --radius-banner: 8px;
+  --radius-tag: 4px;
 
   /* v3 (D36): hairlines instead of shadows (src/styles/tokens.ts shadows); the names stay. */
   --shadow-field: 0 0 #0000;
@@ -181,4 +185,10 @@
 @utility aurora-ring {
   border: 2px solid transparent;
   background: linear-gradient(var(--color-white), var(--color-white)) padding-box, var(--aurora) border-box;
+}
+
+/* Form fields stay 16px below md, so iPhone Safari doesn't zoom the page on focus (lead R2). Unlayered, so
+   it wins over the 13px text-ui utility. */
+@media (width < 48rem) {
+  input, select, textarea { font-size: 16px; }
 }

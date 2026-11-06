@@ -88,8 +88,8 @@ export const type = {
 } as const;
 
 export const spacing = [4, 8, 12, 16, 24, 32, 48, 64, 96] as const;
-// v3 (D35/D36): 6px controls, 8px panels and banners.
-export const radius = { control: 6, card: 8, surface: 8, banner: 8 } as const;
+// v3 (D35/D36): 6px controls, 8px panels and banners, 4px tags (UI.md radius tag).
+export const radius = { control: 6, card: 8, surface: 8, banner: 8, tag: 4 } as const;
 
 // v3 (D36): hairlines instead of shadows. The names stay so components need no change; only overlay menus,
 // the Google button and the demo window lift keep a real shadow. Mirrored as --shadow-* in globals.css.
