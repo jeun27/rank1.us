@@ -7,6 +7,8 @@ import type { DbClient } from "./client";
 export const FIX_SIZES = ["S", "S-M", "M", "M-L", "L"] as const;
 export type FixSize = (typeof FIX_SIZES)[number];
 export type FixStatus = "todo" | "doing" | "done";
+export const PILLARS = ["p0", "p1", "p2", "p3", "p4", "p5", "p6"] as const;
+export type Pillar = (typeof PILLARS)[number];
 
 // A fix row as stored, used for ranking (size) and by getTopFixes.
 export type OpenFix = {
@@ -18,6 +20,8 @@ export type OpenFix = {
   // null for site rules (no answer-derived rule is enabled yet); the UI hides it then.
   affected_answers: number | null;
   status: "todo" | "doing";
+  // G5 group: p0..p6 (the rule's pillar). The Fix list orders groups p5, p3, p2, p1, p4, p6, p0.
+  pillar: Pillar;
 };
 
 // What the fix list shows: no size, evidence, why_note or other rule internals.
@@ -33,7 +37,7 @@ export type FixList = {
   lastRunId: string | null;
 };
 
-const FIX_COLUMNS = "id, rule_key, size, title, detail, affected_answers, status";
+const FIX_COLUMNS = "id, rule_key, size, title, detail, affected_answers, status, pillar";
 const byKey = (a: string, b: string) => a.localeCompare(b, "en", { numeric: true });
 const bySize = (a: OpenFix, b: OpenFix) =>
   FIX_SIZES.indexOf(a.size) - FIX_SIZES.indexOf(b.size) || byKey(a.rule_key, b.rule_key);
@@ -65,6 +69,7 @@ const toItem = (f: OpenFix): FixItem => ({
   detail: f.detail,
   affected_answers: f.affected_answers,
   status: f.status,
+  pillar: f.pillar,
 });
 
 // The fix list a member may see through RLS (self-serve and team always; dfy_client only when
