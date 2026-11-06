@@ -57,8 +57,17 @@ async function get(url: URL, deps: Deps): Promise<SitePage | null> {
 // robots.txt rules for an agent (Rank1 by default): its own group if present, else '*'. Longest match
 // wins; Allow wins ties.
 export function robotsAllows(robots: string, path: string, agent = "rank1"): boolean {
+  return robotsDecision(robots, path, agent).allowed;
+}
+
+// The same decision plus the robots.txt line that made it (null when no rule matched).
+export function robotsDecision(
+  robots: string,
+  path: string,
+  agent = "rank1",
+): { allowed: boolean; line: string | null } {
   const me = agent.toLowerCase();
-  const groups: { agents: string[]; rules: { allow: boolean; path: string }[] }[] = [];
+  const groups: { agents: string[]; rules: { allow: boolean; path: string; line: string }[] }[] = [];
   let current: (typeof groups)[number] | null = null;
   for (const line of robots.split(/\r?\n/)) {
     const m = line.replace(/#.*/, "").match(/^\s*([a-z-]+)\s*:\s*(.*?)\s*$/i);
@@ -68,12 +77,12 @@ export function robotsAllows(robots: string, path: string, agent = "rank1"): boo
       if (!current || current.rules.length) groups.push((current = { agents: [], rules: [] }));
       current.agents.push(m[2].toLowerCase());
     } else if ((key === "allow" || key === "disallow") && current) {
-      current.rules.push({ allow: key === "allow", path: m[2] });
+      current.rules.push({ allow: key === "allow", path: m[2], line: line.replace(/#.*/, "").trim() });
     }
   }
   const mine = groups.filter((g) => g.agents.some((a) => a !== "*" && me.startsWith(a)));
   const rules = (mine.length ? mine : groups.filter((g) => g.agents.includes("*"))).flatMap((g) => g.rules);
-  let best: { allow: boolean; len: number } = { allow: true, len: -1 };
+  let best: { allow: boolean; len: number; line: string | null } = { allow: true, len: -1, line: null };
   for (const r of rules) {
     if (!r.path) continue;
     const re = new RegExp(
@@ -83,9 +92,9 @@ export function robotsAllows(robots: string, path: string, agent = "rank1"): boo
         .replace(/\\\$$/, "$")}`,
     );
     if (re.test(path) && (r.path.length > best.len || (r.path.length === best.len && r.allow)))
-      best = { allow: r.allow, len: r.path.length };
+      best = { allow: r.allow, len: r.path.length, line: r.line };
   }
-  return best.allow;
+  return { allowed: best.allow, line: best.line };
 }
 
 const decode = (s: string) =>
