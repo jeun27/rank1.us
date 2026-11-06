@@ -257,3 +257,20 @@ test("/dev/app dashboard: the H1 is 22/28 -0.02em and the hero number is 44px", 
   await expect(h1).toHaveCSS("letter-spacing", "-0.44px");
   await expect(page.locator("main p.text-hero").first()).toHaveCSS("font-size", "44px");
 });
+
+// X9b (UI.md Chart): axis labels are a fixed 10.5px at every width (they were about 7px at 375), and each
+// y label sits on its grid line.
+test("/dev/app dashboard: chart axis labels are 10.5px and line up with the grid", async ({ page }) => {
+  await page.goto("/dev/app?state=dashboard-success");
+  const labels = page.locator("[data-axis]");
+  await expect(labels).toHaveCount(5);
+  for (const size of await labels.evaluateAll((els) => els.map((e) => getComputedStyle(e).fontSize)))
+    expect(size).toBe("10.5px");
+  const [lineTops, labelMids] = await page.evaluate(() => [
+    [...document.querySelectorAll("svg line")].map((l) => l.getBoundingClientRect().top),
+    [...document.querySelectorAll("[data-axis]")]
+      .slice(0, 3)
+      .map((e) => e.getBoundingClientRect().top + e.getBoundingClientRect().height / 2),
+  ]);
+  for (const [i, mid] of labelMids.entries()) expect(Math.abs(mid - lineTops[i])).toBeLessThanOrEqual(1.5);
+});
