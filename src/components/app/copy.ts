@@ -12,6 +12,8 @@ export const appCopy = {
   fixNext: "What to fix next",
   experiments: "Experiments",
   settings: "Settings",
+  // COPY.md "UX (lead, 2026-11-06)" X2: the phone bottom bar's last item.
+  more: "More",
   reports: "Reports",
   // COPY.md "PDF section headings".
   byEngine: "By engine",

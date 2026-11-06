@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { appCopy as c } from "./copy";
 
@@ -28,8 +28,11 @@ export const SETTINGS_ITEM = { href: "/app/settings", label: c.settings, icon: "
 export const isCurrent = (path: string, href: string) =>
   href === "/app" ? path === "/app" : path === href || path.startsWith(`${href}/`);
 
+// X2: phones get these in a bottom bar (thumb zone); the rest and Account sit under "More".
+const BAR = ["/app", "/app/fixes", "/app/competitors"];
+
 // The rail: a header (logo), the page links (hidden while onboarding) and a footer (Account), all in the
-// App nav landmark. A column at md+, a sideways-scrolling row on phones.
+// App nav landmark. A column at md+; on phones a bottom bar instead (X2).
 export function AppNav({
   header,
   footer,
@@ -45,8 +48,12 @@ export function AppNav({
   return (
     <nav aria-label={c.nav} className="flex min-w-0 flex-1 items-center md:flex-col md:items-stretch">
       {header}
+      {!onboarding && <BottomBar groups={groups} path={path} footer={footer} />}
       {!onboarding && (
-        <div className="flex min-w-0 flex-1 gap-1 overflow-x-auto px-2 py-2 md:flex-none md:flex-col md:gap-0 md:overflow-visible md:py-1">
+        <div
+          data-rail
+          className="flex min-w-0 flex-1 gap-1 px-2 py-2 max-md:hidden md:flex-none md:flex-col md:gap-0 md:py-1"
+        >
           {groups.map((group, i) => (
             <ul
               key={i}
@@ -73,8 +80,103 @@ export function AppNav({
           ))}
         </div>
       )}
-      {footer}
+      {/* Phones reach Account under More; during onboarding (no bar) it stays in the rail row. */}
+      <div
+        className={
+          onboarding
+            ? "contents max-md:flex max-md:w-full max-md:justify-end max-md:border-b max-md:border-border max-md:bg-rail max-md:px-2"
+            : "contents max-md:hidden"
+        }
+      >
+        {footer}
+      </div>
     </nav>
+  );
+}
+
+const cell =
+  "flex min-h-14 w-full flex-col items-center justify-center gap-1 text-caption font-medium focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep";
+
+function BottomBar({
+  groups,
+  path,
+  footer,
+}: {
+  groups: { href: string; label: string; icon: IconName }[][];
+  path: string;
+  footer?: ReactNode;
+}) {
+  const more = useRef<HTMLDetailsElement>(null);
+  // A link in the sheet navigates without a reload: close the sheet on the new page.
+  useEffect(() => {
+    if (more.current) more.current.open = false;
+  }, [path]);
+  const all = groups.flat();
+  const rest = all.filter((i) => !BAR.includes(i.href));
+  const restOn = rest.some((i) => isCurrent(path, i.href));
+  return (
+    <ul
+      data-bottom-nav
+      className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-border bg-rail pb-[env(safe-area-inset-bottom)] md:hidden"
+    >
+      {BAR.map((href) => {
+        const item = all.find((i) => i.href === href)!;
+        const on = isCurrent(path, href);
+        return (
+          <li key={href}>
+            <Link
+              href={href}
+              aria-current={on ? "page" : undefined}
+              className={`${cell} ${on ? "text-ink" : "text-text2"}`}
+            >
+              <Icon name={item.icon} className={`size-5 ${on ? "text-accent" : "text-inkMuted"}`} />
+              {item.label}
+            </Link>
+          </li>
+        );
+      })}
+      <li>
+        <details
+          ref={more}
+          className="group h-full"
+          onKeyDown={(e) => {
+            if (e.key !== "Escape" || !more.current?.open) return;
+            more.current.open = false;
+            more.current.querySelector("summary")?.focus();
+          }}
+        >
+          <summary className={`${cell} cursor-pointer list-none ${restOn ? "text-ink" : "text-text2"}`}>
+            <Icon name="more" className={`size-5 ${restOn ? "text-accent" : "text-inkMuted"}`} />
+            {c.more}
+          </summary>
+          <div
+            data-more-sheet
+            className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] max-h-[70dvh] overflow-y-auto border-t border-border bg-rail p-2"
+          >
+            <ul className="flex flex-col">
+              {rest.map((item) => {
+                const on = isCurrent(path, item.href);
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      aria-current={on ? "page" : undefined}
+                      className={`flex h-11 items-center gap-2.5 rounded-control px-2.5 text-ui focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep ${
+                        on ? "bg-raised text-ink" : "text-text2"
+                      }`}
+                    >
+                      <Icon name={item.icon} className={`size-4 ${on ? "text-accent" : "text-inkMuted"}`} />
+                      {item.label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+            {footer && <div className="mt-2 border-t border-border pt-2">{footer}</div>}
+          </div>
+        </details>
+      </li>
+    </ul>
   );
 }
 

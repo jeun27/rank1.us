@@ -166,7 +166,10 @@ test("sign out from the Account menu, then /app is closed again", async ({ page 
   test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
   const user = await newUser("signout");
   await openMagicLink(page, user.email);
-  await page.getByText(c.account, { exact: true }).click();
+  // X2: on phones Account sits under More in the bottom bar.
+  const more = page.locator("[data-bottom-nav]").getByText("More", { exact: true });
+  if (await more.isVisible()) await more.click();
+  await page.getByText(c.account, { exact: true }).locator("visible=true").click();
   await page.getByRole("button", { name: c.signOut }).click();
   await page.waitForURL(/\/signin$/);
   await page.goto("/app/onboarding");

@@ -623,6 +623,7 @@ export function FixList({
           )}
         </p>
       )}
+      {/* X2: below md the toast sits above the bottom bar (56px + the home-indicator inset + 16px). */}
       {toast && (
         <div
           role="status"
@@ -632,7 +633,7 @@ export function FixList({
           onBlur={(e) => {
             if (!e.currentTarget.contains(e.relatedTarget)) setHeld((h) => ({ ...h, focus: false }));
           }}
-          className="fixed right-4 bottom-4 z-30 flex max-w-[calc(100vw-2rem)] flex-wrap items-center gap-x-4 gap-y-1 rounded-card border border-border bg-overlay px-4 py-3 text-ui shadow-overlay"
+          className="fixed right-4 bottom-4 z-30 flex max-md:bottom-[calc(4.5rem+env(safe-area-inset-bottom))] max-w-[calc(100vw-2rem)] flex-wrap items-center gap-x-4 gap-y-1 rounded-card border border-border bg-overlay px-4 py-3 text-ui shadow-overlay"
         >
           <span data-computed className="max-md:basis-full">
             {c.marked(toast.title)}

@@ -32,7 +32,8 @@ describe("AppNav (lead: only pages that exist; Step 9 adds Sources after Questio
   it("lists Dashboard, Competitors, Questions, History, Billing and marks the current one", () => {
     path.current = "/app/competitors";
     render(<AppNav />);
-    const nav = screen.getByRole("navigation", { name: "App" });
+    // X2: the md+ rail column; phones use the bottom bar (bottom-nav.spec).
+    const nav = screen.getByRole("navigation", { name: "App" }).querySelector<HTMLElement>("[data-rail]")!;
     expect(
       within(nav)
         .getAllByRole("link")
