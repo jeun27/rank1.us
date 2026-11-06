@@ -73,7 +73,7 @@ export function MentionsSection({
           </span>
         </div>
         <p data-computed className="text-ui">
-          {c.names(t.rivals)}
+          {c.rivalsLine(t.rivals)}
         </p>
         <p data-computed className="text-caption text-inkMuted tabular-nums">
           {c.answers(t.answers, targets!.n, engines)}
@@ -169,7 +169,7 @@ export function MentionsEvidence({ added }: { added: MentionTarget[] }) {
           <li key={t.url} className="flex flex-col gap-0.5">
             <PageLink t={t} />
             <span data-computed className="text-caption text-inkMuted">
-              {c.names(t.rivals)}
+              {c.rivalsLine(t.rivals)}
             </span>
           </li>
         ))}

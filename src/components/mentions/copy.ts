@@ -5,6 +5,9 @@ export const mentionsCopy = {
   // Up to 3 rivals, then "+{n}".
   names: (rivals: string[]) =>
     `Names ${rivals.slice(0, 3).join(", ")}${rivals.length > 3 ? ` +${rivals.length - 3}` : ""}`,
+  // A list with no known rivals: R17's one-list no-rivals copy (COPY.md GAS, lead #131).
+  noRivals: "1 list AI cites doesn't name you.",
+  rivalsLine: (rivals: string[]) => (rivals.length ? mentionsCopy.names(rivals) : mentionsCopy.noRivals),
   answers: (k: number, n: number, engines: string[]) =>
     `In ${k} of ${n} answers${engines.length ? ` · ${engines.join(", ")}` : ""}`,
   add: "Add to fixes",
