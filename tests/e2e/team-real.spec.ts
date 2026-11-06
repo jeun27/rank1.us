@@ -8,8 +8,12 @@ import { seedBusiness } from "./helpers/team";
 test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
 
 const isMobile = (page: Page) => page.viewportSize()!.width < 768;
+// Phones switch panes with the tab bar. On desktop, Context starts closed (X16), so showing it presses the
+// top-bar toggle.
 const show = async (page: Page, pane: "Nav" | "Context" | "Document") => {
-  if (isMobile(page)) await page.getByRole("tab", { name: pane, exact: true }).click();
+  if (isMobile(page)) return page.getByRole("tab", { name: pane, exact: true }).click();
+  const toggle = page.getByRole("banner").getByRole("button", { name: "Context", exact: true });
+  if (pane === "Context" && (await toggle.getAttribute("aria-expanded")) === "false") await toggle.click();
 };
 const must = <T>(r: { data: T; error: unknown }): NonNullable<T> => {
   if (r.error) throw r.error;
@@ -64,7 +68,7 @@ test("team sees a DFY client on real data, writes its fix status, and never a se
 
   // Fix list: the shared FixList; Done saves through set_fix_status.
   await show(page, "Nav");
-  await page.locator("nav").getByRole("button", { name: "Fix list", exact: true }).first().click();
+  await page.locator("nav").getByRole("button", { name: "What to fix next", exact: true }).first().click();
   await show(page, "Document");
   const card = page.getByRole("tabpanel").getByRole("listitem").filter({ hasText: "robots.txt allows" });
   await expect(card).toBeVisible();

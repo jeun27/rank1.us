@@ -474,6 +474,14 @@ G7 "Lists that name your rivals but not you" (/app/sources, and the R17 fix's ev
 |---|---|
 | Hero demo, under the leaderboard | "From {n} answers" (the sample size, n = the demo fixture's answers; the demo shows "From 160 answers") |
 
+## UX (lead, 2026-11-06)
+
+Strings the lead approved for the UX plan (share/ux-plan, founder OK 2026-11-06 07:58 UTC).
+
+| Where | String |
+|---|---|
+| The fixes page, everywhere (X16) | "What to fix next": the /app and /team rail item and the page and document title (/team said "Fix list") |
+
 ## Engine location tooltip
 
 Greyed tooltip copy: "{Engine} can't target a city yet, so we check it for the whole country."

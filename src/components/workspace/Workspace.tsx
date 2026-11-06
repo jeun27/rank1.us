@@ -46,7 +46,8 @@ export function Workspace({ view, team = null }: { view: WorkspaceView; team?: T
   const [expanded, setExpanded] = useState(false);
   const [split, setSplit] = useState(false);
   const [pane, setPane] = useState<Pane>("Document");
-  const [contextOpen, setContextOpen] = useState(true);
+  // X16: closed by default, so the document is the one focal panel; the D21 toggle opens it.
+  const [contextOpen, setContextOpen] = useState(false);
   const newTabs = useRef(0);
   const row = useRef<HTMLDivElement>(null);
 

@@ -84,20 +84,21 @@ describe("v3 /team shell", () => {
     expect(within(main).getByRole("heading", { level: 1 })).toHaveTextContent("Questions");
   });
 
-  it('"Context" toggles the panel: open by default, aria-expanded, controls #ws-context', async () => {
+  // X16: Context starts closed (the document is the one focal panel); the D21 toggle opens it.
+  it('"Context" toggles the panel: closed by default, aria-expanded, controls #ws-context', async () => {
     const user = userEvent.setup();
     render(<Workspace view={view} team={team} />);
     const toggle = within(screen.getByRole("banner")).getByRole("button", { name: "Context" });
     expect(toggle).toHaveAttribute("aria-controls", "ws-context");
-    expect(toggle).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByRole("separator", { name: "Resize panes" })).toHaveAttribute("aria-controls", "ws-document");
-    await user.click(toggle);
     expect(toggle).toHaveAttribute("aria-expanded", "false");
     expect(document.getElementById("ws-context")).toHaveClass("md:hidden");
     expect(screen.queryByRole("separator", { name: "Resize panes" })).toBeNull();
     await user.click(toggle);
     expect(toggle).toHaveAttribute("aria-expanded", "true");
     expect(document.getElementById("ws-context")).not.toHaveClass("md:hidden");
+    expect(screen.getByRole("separator", { name: "Resize panes" })).toHaveAttribute("aria-controls", "ws-document");
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
   });
 
   it("phones: the tab bar is unchanged (Nav, Context, Document) and starts on Document", () => {

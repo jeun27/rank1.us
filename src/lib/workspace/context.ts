@@ -6,10 +6,11 @@ import { floorPct } from "@/lib/metrics/compute";
 import { ENGINES, ENGINE_LABEL, type Engine, type WorkspaceView } from "@/lib/queries/workspace";
 import type { Metric } from "@/types/metrics";
 
+// The /app rail order (X16), so /team reads the same.
 export const SECTIONS = [
   "dashboard",
-  "questions",
   "competitors",
+  "questions",
   "sources",
   "fixes",
   "experiments",
@@ -23,7 +24,7 @@ export const SECTION_LABEL: Record<Section, string> = {
   questions: "Questions",
   competitors: "Competitors",
   sources: "Sources",
-  fixes: "Fix list",
+  fixes: "What to fix next",
   experiments: "Experiments",
   reports: "Reports",
   history: "History",
