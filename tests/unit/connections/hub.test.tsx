@@ -341,6 +341,12 @@ describe("the YouTube tile", () => {
     expect(c.pick.youtube).toBe("Choose channel");
   });
 
+  // No keyword (cuisine null): no R19–R21 fixes exist, so the checklist never shows; the tile says it instead.
+  it("connected, no keyword: the tile adds the plain no-keyword line", () => {
+    hub({ industry: "other", connections: [yt], youtubeVideos: 3, youtubeNoKeyword: true });
+    expect(tile(c.names.youtube)).toHaveTextContent("Add your main keyword to check your videos.");
+  });
+
   it("connected without a count (the read failed): just Connected", () => {
     hub({ industry: "other", connections: [yt] });
     expect(tile(c.names.youtube)).not.toHaveTextContent("videos checked");
