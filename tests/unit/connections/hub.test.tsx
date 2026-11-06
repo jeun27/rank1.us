@@ -283,3 +283,13 @@ describe("copy (DRAFT, lead to sign off)", () => {
     for (const s of Object.values(c.niches)) expect(copy).toContain(`"${s}"`);
   });
 });
+
+describe("one primary per screen (UI.md)", () => {
+  it("only a Recommended tile's Connect is the filled button", () => {
+    hub({ industry: "restaurant" });
+    const gbp = within(tile(c.names.gbp)).getByRole("button", { name: c.connect });
+    const sc = within(tile(c.names.search_console)).getByRole("button", { name: c.connect });
+    expect(gbp.className).toContain("bg-accent");
+    expect(sc.className).not.toContain("bg-accent");
+  });
+});
