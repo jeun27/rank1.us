@@ -4,6 +4,8 @@ import { loadShell } from "@/components/app/load";
 import { latestMeasured, Measured, Page } from "@/components/app/Page";
 import { AiAccessPanel } from "@/components/audit/AiAccessPanel";
 import { FixList, type FixView } from "@/components/fixes/FixList";
+import { MentionsEvidence } from "@/components/mentions/MentionsSection";
+import { loadMentions, mentionsEnabled } from "@/lib/mentions/service";
 import { getLatestAiAccessCheck } from "@/lib/queries/ai-access";
 import { fixCopy as c } from "@/components/fixes/copy";
 import { listDoneFixes, listFixes } from "@/lib/queries/fixes";
@@ -17,15 +19,22 @@ const G2_RULES = new Set(["R14", "R16", "R18"]);
 export default async function FixesPage() {
   const { db, business, latest } = await loadShell();
   if (!business) redirect("/app");
-  const [{ ranked, tidyUps, unchecked }, done, access] = await Promise.all([
+  const [{ ranked, tidyUps, unchecked }, done, access, mentions] = await Promise.all([
     listFixes(db, business.id),
     listDoneFixes(db, business.id),
     process.env.ENABLE_AI_ACCESS_CHECK === "true" ? getLatestAiAccessCheck(db, business.id) : null,
+    mentionsEnabled() ? loadMentions(db, business.id) : null,
   ]);
+  const added = mentions && mentions !== "disabled" ? mentions.added : [];
   const now = new Date();
-  // G2 (lead 2026-11-06): the AI access panel is the evidence on the P5 fixes it decides.
+  // G2 (lead 2026-11-06): the AI access panel is the evidence on the P5 fixes it decides. G7 (lead Q3):
+  // the grouped R17 fix shows the added lists.
   const withEvidence = (f: FixView): FixView =>
-    access && G2_RULES.has(f.rule_key) ? { ...f, evidence: <AiAccessPanel check={access} now={now} level={4} /> } : f;
+    access && G2_RULES.has(f.rule_key)
+      ? { ...f, evidence: <AiAccessPanel check={access} now={now} level={4} /> }
+      : f.rule_key === "R17" && added.length
+        ? { ...f, evidence: <MentionsEvidence added={added} /> }
+        : f;
   return (
     <Page title={c.title}>
       <Measured {...latestMeasured(latest)} now={now} />
