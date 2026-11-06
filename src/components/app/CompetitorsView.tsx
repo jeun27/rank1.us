@@ -1,7 +1,6 @@
 "use client";
 import { Leaderboard } from "@/components/audit/AuditView";
 import type { Loaded } from "@/components/audit/load";
-import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { formatPercent } from "@/components/ui/StatNumber";
 import type { LocalCompetitor } from "@/lib/onboarding/types";
@@ -46,32 +45,7 @@ export function CompetitorsView({
               </p>
             </Card>
           )}
-          {/* Phones: cards with the You row pinned first. */}
-          <ul aria-label={c.competitors} className="flex flex-col gap-2 md:hidden">
-            {[...rows]
-              .sort((a, b) => Number(b.kind === "business") - Number(a.kind === "business"))
-              .map((b) => (
-                <li
-                  key={b.name}
-                  className="flex items-center justify-between gap-3 rounded-card border border-border bg-white px-4 py-3"
-                >
-                  <span className="flex items-center gap-2">
-                    <span data-computed className="text-ui font-semibold">
-                      {b.name}
-                    </span>
-                    {b.kind === "business" && <Badge tone="info">You</Badge>}
-                  </span>
-                  <span data-computed className="text-caption tabular-nums">
-                    {b.tooFew
-                      ? "too few answers"
-                      : `${formatPercent(b.metric)} (named in ${b.metric.numerator} of ${b.metric.denominator} answers)`}
-                  </span>
-                </li>
-              ))}
-          </ul>
-          <div className="max-md:hidden">
-            <Leaderboard metrics={latest.metrics} />
-          </div>
+          <Leaderboard metrics={latest.metrics} />
         </>
       )}
 
