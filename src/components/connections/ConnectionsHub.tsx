@@ -4,7 +4,7 @@ import { Dialog } from "@/components/billing/Dialog";
 import { Badge } from "@/components/ui/Badge";
 import { Banner } from "@/components/ui/Banner";
 import { Button } from "@/components/ui/Button";
-import type { OAuthConnector } from "@/lib/connections/oauth";
+import type { GoogleConnector } from "@/lib/connections/oauth";
 import { recommend, type Industry, type Tile } from "@/lib/connections/recommend";
 import type { ConnectionEntity, ConnectionProvider, ConnectionStatus, ConnectorKey } from "@/lib/queries/connections";
 import { Consent, startUrl } from "./Consent";
@@ -51,7 +51,7 @@ function Picker({
   selected,
   onSave,
 }: {
-  connector: OAuthConnector;
+  connector: GoogleConnector;
   options: ConnectionEntity[];
   selected: ConnectionEntity[];
   onSave: (ids: string[]) => void;
@@ -105,7 +105,7 @@ function TileCard({
   tile: Tile;
   primary: boolean;
   props: HubProps;
-  onConsent: (k: OAuthConnector) => void;
+  onConsent: (k: GoogleConnector) => void;
   onRevoke: (id: string) => void;
   onFailed: () => void;
 }) {
@@ -117,7 +117,7 @@ function TileCard({
   const write = props.canConnect;
   // recommend() marks every tile without a working flow (and the whole later tier) as coming soon.
   const comingSoon = tile.available === "coming_soon";
-  const k = connector as OAuthConnector;
+  const k = connector as GoogleConnector;
   let actions: ReactNode = null;
   if (write && comingSoon)
     actions = noted ? (
@@ -239,7 +239,7 @@ function TileCard({
 // Settings → Connections (C-a): tiles by industry from recommend(), in Recommended / Optional / Coming
 // soon. Only the live Google connectors connect; the rest are Coming soon + Notify me (no fake buttons).
 export function ConnectionsHub(props: HubProps) {
-  const [consent, setConsent] = useState<OAuthConnector | null>(null);
+  const [consent, setConsent] = useState<GoogleConnector | null>(null);
   const [revoke, setRevoke] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const r = recommend(props.industry);
@@ -250,7 +250,7 @@ export function ConnectionsHub(props: HubProps) {
       {o &&
         (o.status === "connected" ? (
           <Banner tone="info">
-            {c.outcomes.connected(c.names[(o.connector ?? "gbp") as OAuthConnector] ?? c.names.gbp)}
+            {c.outcomes.connected(c.names[(o.connector ?? "gbp") as GoogleConnector] ?? c.names.gbp)}
           </Banner>
         ) : o.status === "denied" ? (
           <Banner tone="info">{c.outcomes.denied}</Banner>

@@ -28,7 +28,7 @@ import {
   refreshAccessToken,
   revokeGrant,
   startAuth,
-  type OAuthConnector,
+  type GoogleConnector,
 } from "./oauth";
 import { listSites } from "./search-console";
 import { checkVideo, type VideoChecks } from "@/lib/metrics/youtube-checks";
@@ -139,7 +139,7 @@ function failure(e: unknown): Failure {
 
 export async function beginGoogleConnect(
   ctx: Ctx,
-  input: { businessId: string; connector: OAuthConnector; returnTo?: string },
+  input: { businessId: string; connector: GoogleConnector; returnTo?: string },
 ): Promise<{ url: string; cookie: string } | Failure> {
   if (!connectionsEnabled(envOf(ctx))) return "disabled";
   if (!(await canConnectBusiness(ctx.userDb, input.businessId))) return "not_allowed";
@@ -153,7 +153,7 @@ export async function beginGoogleConnect(
 
 export type ConnectOutcome = {
   status: "connected" | "denied" | "error";
-  connector: OAuthConnector | null;
+  connector: GoogleConnector | null;
   returnTo: string;
 };
 

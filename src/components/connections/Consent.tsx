@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useId, useRef, type KeyboardEvent } from "react";
 import { Button } from "@/components/ui/Button";
-import type { OAuthConnector } from "@/lib/connections/oauth";
+import type { GoogleConnector } from "@/lib/connections/oauth";
 import { connectionsCopy as c } from "./copy";
 
 // Shared by the hub (C-a) and the connect card (C-b).
@@ -15,7 +15,7 @@ export function Consent({
   href,
   onClose,
 }: {
-  connector: OAuthConnector;
+  connector: GoogleConnector;
   href: string;
   onClose: () => void;
 }) {
