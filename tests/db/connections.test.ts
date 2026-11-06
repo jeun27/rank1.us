@@ -37,11 +37,17 @@ const tokens = (tag: string) => ({
   expiresAt: "2026-11-06T01:00:00Z",
 });
 
-const connect = (businessId: string, provider: "gbp" | "search_console" | "ga4" | "shopify", tag: string = provider) =>
+// One Google account (sub) per test unless given, so a business's Google connections share a grant.
+const connect = (
+  businessId: string,
+  provider: "gbp" | "search_console" | "ga4" | "shopify",
+  tag: string = provider,
+  account = provider === "shopify" ? "example-shop.myshopify.com" : "google-sub-example",
+) =>
   saveConnection(svc(), {
     businessId,
     provider,
-    externalAccountId: `accounts/example-${tag}`,
+    externalAccountId: account,
     scopes: [`scope-${provider}`],
     connectedBy: owner.id,
     ...tokens(tag),
@@ -317,6 +323,45 @@ describe("connect, reauth and revoke", () => {
     expect(rows.find((c) => c.provider === "shopify")?.status).toBe("connected");
     expect((await getConnectionTokens(svc(), shop))?.enc_access).toBe("enc:v1:access-v4");
     expect(await revokeConnection(svc(), ids[0])).toEqual([]);
+  });
+
+  it("a different Google account is a separate grant", async () => {
+    const x = await makeWorkspace(owner);
+    const gbp = await connect(x.businessId, "gbp", "a1", "google-sub-a");
+    const ga4 = await connect(x.businessId, "ga4", "b1", "google-sub-b");
+    expect((await getConnectionTokens(svc(), gbp))?.enc_refresh).toBe("enc:v1:refresh-a1");
+    await setConnectionStatus(svc(), ga4, "needs_reauth");
+    expect((await getConnectionTokens(svc(), gbp))?.status).toBe("connected");
+    expect(await revokeConnection(svc(), gbp)).toEqual([gbp]);
+    expect(await getConnectionTokens(svc(), ga4)).toMatchObject({
+      enc_refresh: "enc:v1:refresh-b1",
+      external_account_id: "google-sub-b",
+    });
+  });
+
+  it("a null refresh token keeps the grant's stored one, but never another account's", async () => {
+    const x = await makeWorkspace(owner);
+    const gbp = await connect(x.businessId, "gbp", "n1");
+    const save = (provider: "gbp" | "ga4", account: string) =>
+      saveConnection(svc(), {
+        businessId: x.businessId,
+        provider,
+        externalAccountId: account,
+        scopes: [],
+        connectedBy: owner.id,
+        encAccess: "enc:v1:access-n2",
+        encRefresh: null,
+        expiresAt: null,
+      });
+    const ga4 = await save("ga4", "google-sub-example");
+    expect(await getConnectionTokens(svc(), ga4)).toMatchObject({
+      enc_access: "enc:v1:access-n2",
+      enc_refresh: "enc:v1:refresh-n1",
+    });
+    await save("gbp", "google-sub-example");
+    expect((await getConnectionTokens(svc(), gbp))?.enc_refresh).toBe("enc:v1:refresh-n1");
+    await save("gbp", "google-sub-other");
+    expect((await getConnectionTokens(svc(), gbp))?.enc_refresh).toBeNull();
   });
 
   it("revoking shopify revokes only shopify", async () => {

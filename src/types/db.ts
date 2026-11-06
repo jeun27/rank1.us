@@ -778,7 +778,7 @@ isOneToOne: false
 { Args: { "p_error": string | null,"p_pdf_path": string | null,"p_report_id": string,"p_sent_to": string[] | null,"p_status": string }; Returns: boolean
                            },
 "get_connection_tokens":
-{ Args: { "p_connection_id": string }; Returns: { "enc_access": string | null,"enc_refresh": string | null,"expires_at": string | null,"status": string }[]
+{ Args: { "p_connection_id": string }; Returns: { "enc_access": string | null,"enc_refresh": string | null,"expires_at": string | null,"external_account_id": string | null,"status": string }[]
                            },
 "grant_dfy_client":
 { Args: { "p_business_id": string,"p_user_id": string }; Returns: string

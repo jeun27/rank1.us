@@ -269,25 +269,28 @@ begin
 end;
 $$;
 
--- The connections sharing a connection's grant: every non-revoked Google one (gbp, search_console,
--- ga4) of its business, since one Google grant covers them; otherwise just itself.
+-- The connections sharing a connection's grant: the non-revoked Google ones (gbp, search_console,
+-- ga4) of its business on the same Google account (external_account_id); otherwise just itself.
 create or replace function private.grant_connections(p_connection_id uuid) returns setof uuid
 language sql stable set search_path = '' as $$
   select c2.id from public.connections c
   join public.connections c2 on c2.business_id = c.business_id
   where c.id = p_connection_id
     and (c2.id = c.id or (c.provider in ('gbp', 'search_console', 'ga4')
-                          and c2.provider in ('gbp', 'search_console', 'ga4') and c2.status <> 'revoked'));
+                          and c2.provider in ('gbp', 'search_console', 'ga4') and c2.status <> 'revoked'
+                          and c2.external_account_id = c.external_account_id));
 $$;
 
--- Service only. Connects (or reconnects) a provider and stores its ciphertext tokens. For Google the
--- new tokens cover the whole grant, so the business's other live Google connections get them too.
+-- Service only. Connects (or reconnects) a provider and stores its ciphertext tokens, for the whole
+-- grant. A null refresh token (Google omits it on re-consent) keeps the grant's stored one.
 create or replace function public.save_connection(p_business_id uuid, p_provider text, p_external_account_id text,
                                                   p_scopes text[], p_connected_by uuid, p_enc_access text,
                                                   p_enc_refresh text, p_expires_at timestamptz) returns uuid
 language plpgsql security definer set search_path = '' as $$
 declare
   cid uuid;
+  old_account text;
+  refresh text;
 begin
   perform private.require_service_role();
   if p_provider is null or p_provider not in ('gbp', 'search_console', 'ga4', 'shopify') then
@@ -296,6 +299,8 @@ begin
   if not exists (select 1 from public.businesses where id = p_business_id) then
     raise exception 'Unknown business' using errcode = 'invalid_parameter_value';
   end if;
+  select external_account_id into old_account from public.connections
+  where business_id = p_business_id and provider = p_provider;
   insert into public.connections (business_id, provider, status, external_account_id, scopes, connected_by,
                                   connected_at, last_checked_at)
   values (p_business_id, p_provider, 'connected', p_external_account_id, coalesce(p_scopes, '{}'), p_connected_by,
@@ -307,8 +312,14 @@ begin
 
   update public.connections set status = 'connected', last_checked_at = now()
   where id in (select private.grant_connections(cid)) and status = 'needs_reauth';
+  -- This row's old refresh token counts only if it was for the same account.
+  refresh := coalesce(p_enc_refresh, (
+    select t.enc_refresh from public.connection_tokens t
+    where t.connection_id in (select private.grant_connections(cid)) and t.enc_refresh is not null
+      and (t.connection_id <> cid or old_account is not distinct from p_external_account_id)
+    limit 1));
   insert into public.connection_tokens (connection_id, enc_access, enc_refresh, expires_at)
-  select g, p_enc_access, p_enc_refresh, p_expires_at from private.grant_connections(cid) as g
+  select g, p_enc_access, refresh, p_expires_at from private.grant_connections(cid) as g
   on conflict (connection_id) do update
     set enc_access = excluded.enc_access, enc_refresh = excluded.enc_refresh, expires_at = excluded.expires_at;
   return cid;
@@ -317,12 +328,12 @@ $$;
 
 -- Service only. Ciphertext tokens of a connected or needs_reauth connection; no row when revoked.
 create or replace function public.get_connection_tokens(p_connection_id uuid)
-returns table (enc_access text, enc_refresh text, expires_at timestamptz, status text)
+returns table (enc_access text, enc_refresh text, expires_at timestamptz, status text, external_account_id text)
 language plpgsql stable security definer set search_path = '' as $$
 begin
   perform private.require_service_role();
   return query
-  select t.enc_access, t.enc_refresh, t.expires_at, c.status
+  select t.enc_access, t.enc_refresh, t.expires_at, c.status, c.external_account_id
   from public.connections c join public.connection_tokens t on t.connection_id = c.id
   where c.id = p_connection_id and c.status in ('connected', 'needs_reauth');
 end;
@@ -338,6 +349,8 @@ begin
   update public.connection_tokens
   set enc_access = p_enc_access, expires_at = p_expires_at, enc_refresh = coalesce(p_enc_refresh, enc_refresh)
   where connection_id in (select private.grant_connections(p_connection_id));
+  update public.connections set last_checked_at = now()
+  where id in (select private.grant_connections(p_connection_id));
 end;
 $$;
 

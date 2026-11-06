@@ -126,7 +126,9 @@ export async function noteConnectorInterest(db: DbClient, businessId: string, pr
 
 // Service client only from here on. 42501 for any other caller.
 
-// Connects or reconnects; for Google, the tokens go to every live Google connection of the business.
+// Connects or reconnects. A Google grant is one business + one Google account (externalAccountId,
+// the Google sub): its live gbp/search_console/ga4 connections share the tokens. A null
+// encRefresh keeps the grant's stored refresh token.
 export async function saveConnection(
   serviceDb: DbClient,
   c: {
@@ -159,6 +161,7 @@ export type ConnectionTokens = {
   enc_refresh: string | null;
   expires_at: string | null;
   status: "connected" | "needs_reauth";
+  external_account_id: string | null;
 };
 
 // Null when the connection is revoked or has no tokens.
