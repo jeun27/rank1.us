@@ -345,7 +345,7 @@ describe("connect, reauth and revoke", () => {
     });
   });
 
-  it("a null refresh token keeps the grant's stored one, but never another account's", async () => {
+  it("connecting GA4 after GBP without a refresh token keeps it for both, but never takes another account's", async () => {
     const x = await makeWorkspace(owner);
     const gbp = await connect(x.businessId, "gbp", "n1");
     const save = (provider: "gbp" | "ga4", account: string) =>
@@ -360,10 +360,12 @@ describe("connect, reauth and revoke", () => {
         expiresAt: null,
       });
     const ga4 = await save("ga4", "google-sub-example");
-    expect(await getConnectionTokens(svc(), ga4)).toMatchObject({
-      enc_access: "enc:v1:access-n2",
-      enc_refresh: "enc:v1:refresh-n1",
-    });
+    for (const id of [gbp, ga4]) {
+      expect(await getConnectionTokens(svc(), id)).toMatchObject({
+        enc_access: "enc:v1:access-n2",
+        enc_refresh: "enc:v1:refresh-n1",
+      });
+    }
     await save("gbp", "google-sub-example");
     expect((await getConnectionTokens(svc(), gbp))?.enc_refresh).toBe("enc:v1:refresh-n1");
     await save("gbp", "google-sub-other");
