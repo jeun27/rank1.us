@@ -12,7 +12,20 @@ The lead applied 0019–0021 to the hosted DB before this run. The sandbox Docke
 Preview: https://rank1-dspeuazo1-bryan-flowhighlevels-projects.vercel.app (sha bd79ddf, READY).
 Sources: the lead's brief (rank1-step16.md), UI.md 4b "Report", COPY.md "Report (lead, 2026-11-05)".
 
-Result: FAIL. The GA4 "not connected" partial state is missing (F1). Everything else passes.
+Result: PASS after the re-check on 2026-11-06 (main 9361dda, #91). The first run failed on F1 (GA4 partial state missing). #91 fixed F1 and N1. N2 stays open with #78 for the morning signed-in run.
+
+### Re-check: #91 (fix(app): report GA4 partial state), main 9361dda
+
+#91's preview at 7046a0a (tree identical to 9361dda): https://rank1-2zjzmz9xi-bryan-flowhighlevels-projects.vercel.app (READY).
+
+| Check | Result | Evidence |
+|---|---|---|
+| CI on main push 9361dda | PASS | test, typecheck, lint, format, test-db, e2e green |
+| Report unit tests (sandbox, 9361dda) | PASS | `vitest run tests/unit/report tests/unit/reports`: 7 files, 67 tests passed. ga4-link.test: "is /app/settings/connections when ENABLE_CONNECTIONS is 'true'"; null for unset, "", "false", "1", "TRUE" |
+| F1: 'Connect GA4' only when ENABLE_CONNECTIONS="true", to /app/settings/connections; GA4 section hidden | PASS | src/app/app/report/ga4.ts `ga4ConnectHref` uses `connectionsEnabled()` (`=== "true"`). /app/report passes it to ReportView, which renders the link only when it's set. No GA4 section anywhere. Preview /dev/app?state=report-partial at 375 and 1280: one "Connect GA4" link, href /app/settings/connections, 44 px tall, axe 0, no side scroll, no GA4 heading. report-success and report-empty: no link. e2e "report-partial: 'Connect GA4' links to the Connections hub" plus the 4b state loop. COPY.md row "GA4 not connected (partial)" added |
+| F1: prod shows no link | PASS | `vercel env ls`: ENABLE_CONNECTIONS is set for Preview only, not Production, so `ga4ConnectHref()` is null in prod |
+| N1: 404s carry no-store | PASS | preview.pdf (no business, no PDF) and download 404s now send `Cache-Control: no-store`. report-db e2e (local stack, CI) asserts the download 404's `cache-control` contains no-store |
+
 
 ### Commands
 
