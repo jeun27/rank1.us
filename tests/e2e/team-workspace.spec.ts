@@ -68,7 +68,7 @@ for (const theme of THEMES) {
         await show(page, pane);
         await axeClean(page);
       }
-      await show(page, "Context");
+      await show(page, "Document");
     } else {
       await expect(page.locator("#ws-nav")).toBeVisible();
       await expect(page.locator("main")).toBeVisible();
