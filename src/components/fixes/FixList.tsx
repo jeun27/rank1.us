@@ -103,6 +103,7 @@ function FixRow({
         <button
           type="button"
           role="checkbox"
+          data-computed
           aria-checked={done ? "true" : state === "doing" ? "mixed" : "false"}
           aria-label={row.title}
           aria-keyshortcuts="x"
@@ -113,7 +114,7 @@ function FixRow({
           <Mark state={state} />
         </button>
       ) : (
-        <span role="img" aria-label={`${row.title}: ${c.statuses[state]}`} className="text-ink">
+        <span role="img" data-computed aria-label={`${row.title}: ${c.statuses[state]}`} className="text-ink">
           <Mark state={state} />
         </span>
       )}
@@ -297,6 +298,7 @@ export function FixList({
         <div className="flex items-center gap-3">
           <div
             role="progressbar"
+            data-computed
             aria-label={c.progress(doneRows.length, total)}
             aria-valuemin={0}
             aria-valuemax={total}
