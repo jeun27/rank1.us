@@ -140,6 +140,7 @@ describe("record_fix_results", () => {
       "affected_answers",
       "detail",
       "id",
+      "pillar",
       "rule_key",
       "status",
       "title",
