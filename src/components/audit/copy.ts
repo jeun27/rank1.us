@@ -20,6 +20,7 @@ export const auditCopy = {
   downloadPng: "Download PNG",
   paywall: "Start for $99/mo",
   // COPY.md "UX (lead, 2026-11-06)" X4.
-  ctaLead: "Rank1 checks these 4 AI engines every week and shows you what to fix next.",
+  // X4 (approved). n = the engine list's length, so the sentence stays true if engines change.
+  ctaLead: (n: number) => `Rank1 checks these ${n} AI engines every week and shows you what to fix next.`,
   credit: "Powered by Rank1",
 };

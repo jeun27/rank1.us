@@ -530,7 +530,7 @@ Strings the lead approved for the UX plan (share/ux-plan §C; founder OK 2026-11
 |---|---|
 | The fixes page, everywhere (X16) | "What to fix next": the /app and /team rail item and the page and document title (/team said "Fix list") |
 | Questions dot legend, above the list (X18) | "Named" · "Not named", each beside the real filled / hollow dot |
-| Free audit CTA panel, after the leaderboard (X4) | "Rank1 checks these 4 AI engines every week and shows you what to fix next." with the existing "Start for $99/mo" |
+| Free audit CTA panel, after the leaderboard (X4) | "Rank1 checks these 4 AI engines every week and shows you what to fix next." with the existing "Start for $99/mo" (the 4 is the engine list's count, ENGINE_IDS) |
 | First-check empty states (X25), chosen from run state | A first check queued or running: "Your first check is running." (no action). None queued: Fix list and Dashboard "Your first check runs Monday." + "Review your questions" (→ /app/questions); /client "The team's first check runs Monday."; History keeps "No weekly checks yet. Your first one runs Monday." + "Review your questions" |
 | /client slot 2 section title (X3) | "What the team did" |
 | Phone bottom bar, last item (X2) | "More" (opens the other pages and Account) |
