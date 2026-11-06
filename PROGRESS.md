@@ -988,3 +988,10 @@ Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/
 - Lead (2026-11-06): listFixes items carry status_changed_at and changed_by {is_team, name} | null, with the same safe mapping as done_fixes (team → is_team only, never an email), null on todo rows. Additive, and listFixes' signature is unchanged.
 - Migration 20261105000026 (+ .down.sql): open_fix_actors(business) (invoker, through the fixes RLS) returns the doing fixes' time and actor via 0023's private.fix_status_actor. listFixes merges it by fix id; the item key test lists the two new fields.
 
+
+
+## G6 (frontend): robots.txt + sitemap.xml (branch feat/robots-sitemap)
+
+- Lead OK 2026-11-06 (Q1, Q2). src/app/robots.ts: in production, one group for "*" plus GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot and Google-Extended, each "Allow: /" and disallowing /app /team /client /api /dev /admin /auth. /audit is left to its noindex. Sitemap: <origin>/sitemap.xml.
+- Previews and every non-production build (VERCEL_ENV !== "production"): "Disallow: /" for everyone.
+- src/app/sitemap.ts: the public pages only (/, /contact, /privacy, /terms). Origin = NEXT_PUBLIC_SITE_URL when it is https, else https://rank1.us (src/lib/site/origin.ts).
