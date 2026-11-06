@@ -228,6 +228,8 @@ test("theme toggle, split ratio and sidebar collapse persist across reloads", as
 });
 
 test("tap targets are at least 44px", async ({ page }) => {
+  // v3 (lead, O2): 44px below md (UI.md); from md up the dense 32px controls apply (checked in dev-ui.spec).
+  test.skip(page.viewportSize()!.width >= 768, "44px tap targets apply below md");
   await open(page, "light");
   for (const pane of ["Nav", "Context", "Document"] as const) {
     await show(page, pane);

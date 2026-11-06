@@ -203,6 +203,8 @@ test("comparison: Rank1 column pinned; the only horizontal scroll on the page", 
 });
 
 test("tap targets are at least 44px tall", async ({ page }) => {
+  // v3 (lead, O2): 44px below md (UI.md); from md up the dense 32px controls apply (checked in dev-ui.spec).
+  test.skip(page.viewportSize()!.width >= 768, "44px tap targets apply below md");
   await page.goto("/");
   const small = await page
     .locator("a:visible, button:visible, summary:visible")

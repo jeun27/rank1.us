@@ -41,6 +41,8 @@ test("/dev/ui shows every component and state, accessibly", async ({ page }, inf
 });
 
 test("tap targets are at least 44px tall", async ({ page }) => {
+  // v3 (lead, O2): 44px below md (UI.md); from md up the dense 32px controls apply (checked in dev-ui.spec).
+  test.skip(page.viewportSize()!.width >= 768, "44px tap targets apply below md");
   await page.goto("/dev/ui");
   const heights = await page
     .locator("main button, main a")
@@ -118,4 +120,15 @@ test("Final set screenshot", async ({ page }, info) => {
   await page.goto("/dev/ui");
   const set = page.locator("section", { has: page.getByRole("heading", { level: 2, name: "Final set", exact: true }) });
   await set.screenshot({ path: `test-results/screenshots/final-set-${info.project.name}.png` });
+});
+
+// v3 (D35, lead O2): from md up, buttons are 32px tall and the final/hero size 40px.
+test("desktop: buttons are 32px, the final CTA 40px", async ({ page }) => {
+  test.skip(page.viewportSize()!.width < 768, "dense controls apply from md up");
+  await page.goto("/dev/ui");
+  const checking = page.getByRole("button", { name: "Checking…" }).first();
+  expect(Math.round((await checking.boundingBox())!.height)).toBe(32);
+  await page.goto("/dev/forms");
+  const final = page.getByRole("button", { name: "Get my free audit" });
+  expect(Math.round((await final.boundingBox())!.height)).toBe(40);
 });

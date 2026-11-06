@@ -43,6 +43,10 @@ describe("Tailwind theme matches the v3 tokens", () => {
       infoBg: "#14263B",
       auroraAmber: "#E8B85A",
       auroraTeal: "#5FB8B3",
+      // Chart series (lead, v3 PR 1: supersedes Step 9 Q3 O1), validated on the dark panel.
+      series1: "#3987E5",
+      series2: "#D95926",
+      series3: "#199E70",
     });
   });
 
@@ -73,6 +77,10 @@ describe("Tailwind theme matches the v3 tokens", () => {
       infoBg: "#E5EFFC",
       auroraAmber: "#E8B85A",
       auroraTeal: "#5FB8B3",
+      // Light keeps the Step 9 hues for the 3 solids.
+      series1: "#1A5FBF",
+      series2: "#D98E2B",
+      series3: "#279EF2",
     });
     expect(Object.keys(colors).sort()).toEqual(Object.keys(darkColors).sort());
   });

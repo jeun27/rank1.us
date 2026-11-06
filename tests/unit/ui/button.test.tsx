@@ -2,21 +2,23 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { Button } from "@/components/ui/Button";
 
-// v3 (D35, founder-approved): 6px radius, primary 32h (lg 40h in the landing hero), press feedback (D24).
+// v3 (D35, founder-approved): 6px radius, 32h from md (lg 40h in the landing hero), press feedback (D24).
+// Below md every button is 44px tall (lead, O2: UI.md keeps "44px below md").
 describe("Button", () => {
   it("primary is the accent fill with onAccent text, 32px tall, 6px radius, 1px press", () => {
     render(<Button>Get my free audit</Button>);
     const b = screen.getByRole("button", { name: "Get my free audit" });
     const cls = b.className.split(" ");
-    for (const c of ["bg-accent", "text-onAccent", "h-8", "rounded-control", "active:translate-y-px"])
+    for (const c of ["bg-accent", "text-onAccent", "h-11", "md:h-8", "rounded-control", "active:translate-y-px"])
       expect(cls).toContain(c);
     expect(b.className).not.toMatch(/rounded-full|shadow-button/);
   });
   it("size lg is the 40px landing hero button", () => {
     render(<Button size="lg">Get my free audit</Button>);
     const cls = screen.getByRole("button").className.split(" ");
-    expect(cls).toContain("h-10");
-    expect(cls).not.toContain("h-8");
+    expect(cls).toContain("h-11");
+    expect(cls).toContain("md:h-10");
+    expect(cls).not.toContain("md:h-8");
   });
   it("secondary is a jellyDeep text link with a 44px tap area and an arrow that nudges on hover", () => {
     render(
@@ -38,14 +40,14 @@ describe("Button", () => {
   it("alt is the raised fill with a control-edge hairline (D35 .alt)", () => {
     render(<Button variant="alt">Manage billing</Button>);
     const cls = screen.getByRole("button").className.split(" ");
-    for (const c of ["bg-raised", "border", "border-fieldBorder", "text-ink", "rounded-control", "h-8"])
+    for (const c of ["bg-raised", "border", "border-fieldBorder", "text-ink", "rounded-control", "h-11", "md:h-8"])
       expect(cls).toContain(c);
   });
   it("final CTA uses the accent too (amber is no longer a button colour), at the lg size", () => {
     render(<Button variant="final">Get my free audit</Button>);
     const b = screen.getByRole("button");
     expect(b.className).toMatch(/bg-accent/);
-    expect(b.className).toMatch(/h-10/);
+    expect(b.className).toMatch(/md:h-10/);
     expect(b.className).not.toMatch(/bg-amber/);
   });
   it("loading disables the button, marks it busy, uses jellyLoading and a spinner that stops for reduced motion", () => {

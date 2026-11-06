@@ -118,6 +118,8 @@ test("fixes: each Status select is keyboard reachable; read-only has none", asyn
 });
 
 test("tap targets are at least 44px on every page", async ({ page }) => {
+  // v3 (lead, O2): 44px below md (UI.md); from md up the dense 32px controls apply (checked in dev-ui.spec).
+  test.skip(page.viewportSize()!.width >= 768, "44px tap targets apply below md");
   for (const state of [
     "dashboard-success",
     "competitors-success",
