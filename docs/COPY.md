@@ -7,7 +7,7 @@ Every customer-facing string Rank1 may use, copied verbatim from build pack sect
 | Component | Spec | Source |
 |---|---|---|
 | Freshness | Caption inkMuted: 'Checked 14 h ago · 250 answers · API-measured, directional'. | PAGE + this pack |
-| Error banner | White, 1.5px brick edge, 64px worried Jelly, one brick sentence + one fix action as a text link. | (Final set, Jeun 2026-11-05) |
+| Error banner | errorBg fill, 1px error hairline, radius 8, 48px worried Jelly, one error-colour sentence + one fix action as a text link. | (Design v3, Jeun 2026-11-06) |
 
 ### Final set strings (Final set, Jeun 2026-11-05)
 
@@ -73,15 +73,15 @@ Progress percentages ("48%") are computed from n of d, so they are not copy.
 
 | Section | Exact copy | Notes |
 |---|---|---|
-| 1 Hero | H1 "Be the brand AI names first." Sub "See how often ChatGPT, Gemini, Google AI Overview and Perplexity name your business, how you stack up against competitors, and what to fix next." Primary "Get my free audit" (-> #audit). Text link "See pricing". Micro "Same-day results as CSV + PNG. No card." Right: card "Example data: named in 34% of 160 answers, +6 pts" + Jelly. | 2 cols, stack < md |
+| 1 Hero | H1 "Be the brand AI names first." Sub "See how often ChatGPT, Gemini, Google AI Overview and Perplexity name your business, how you stack up against competitors, and what to fix next." Primary "Get my free audit" (-> #audit). Text link "See pricing". Micro "Same-day results as CSV + PNG. No card." Right: card "Example data: named in 34% of 160 answers, +6 pts" + Jelly. | v3 (D37): H1 + CTA left, sub right, then the live demo window (this card line inside it) with a 72px Jelly; stack < md |
 | 2 Social proof | "Built for businesses that want AI to name them." 4-5 [PLACEHOLDER LOGO] + 1 [PLACEHOLDER TESTIMONIAL - real, with permission]. Hidden: SHOW_SOCIAL_PROOF=false. | Hidden until real |
 | 3 Problem / how it works | H2 "Customers ask AI who to pick. Find out if it names you." Brick 'Before' card: "Pasting questions into 4 chatbots by hand and logging answers in a spreadsheet." Steps: 1 "Add your domain - Rank1 suggests questions. 5-minute setup." 2 "Rank1 checks 4 AI engines every week." 3 "You get a monthly report with GA4 traffic, competitor scores and what to fix next." CTA "Get my free audit". | DECIDED: monthly report, weekly checks (Proposals #6) |
 | 4 Features (3 cards) | "One dashboard": visibility % with sample size, change since last week's check, competitor leaderboard, every weekly check kept in History. "Reports that send themselves": monthly, white-label with your logo, GA4 traffic, competitor scores, what to fix next; no 'Powered by Rank1' on the $99 plan. "Set up in 5 minutes": auto-suggested questions. Small moss and amber icons. | DECIDED: monthly report, weekly checks |
-| 5 Screenshots | H2 "What you see on Monday." Tabs: Dashboard · Monthly report · Audit CSV; 1px ink border; label "Example data". CTA "Get my free audit". | Tablist, arrow keys |
+| 5 Screenshots | H2 "What you see on Monday." Tabs: Dashboard · Monthly report · Audit CSV; 1px hairline border; label "Example data". CTA "Get my free audit". | Tablist, arrow keys |
 | 6 Comparison | H2 "Built for one business, not 500 brands." Columns: Manual checks \| Enterprise AI trackers \| Rank1. Rows: Setup (hours \| sales call + onboarding \| 5 minutes); Competitor leaderboard (manual \| varies \| yes); White-label report (build it yourself \| varies \| yes); GA4 traffic in report (manual \| varies \| yes); Price for one business (your time \| enterprise pricing \| $99/mo self-serve). Footnote "Enterprise column is a general description, not a specific product." CTA "Start with a free audit". No competitor names. | Mobile: scroll, Rank1 column pinned |
 | 7 Pricing | H2 "One plan. One business." "$99/mo, self-serve, for 1 business." Includes: 4 AI engines; 25 questions checked every week; one dashboard; competitor leaderboard; white-label monthly report with GA4 link + what to fix next; no 'Powered by Rank1' credit. CTA "Start for $99/mo"; secondary "Get my free audit first". Under the card: "Agency? $99 per business, white-label included. Contact us." Second line: "Want us to do the work for you? Contact us." | '25 questions' + done-for-you line added from locked plan |
 | 8 FAQ | Which AI engines? (ChatGPT, Gemini, Google AI Overview, Perplexity) / What does visibility % mean? (the share of answers where AI names your business, always shown with the sample size) / How long is setup? (about 5 minutes) / Can I white-label? (yes; the $99 plan includes white-label reports with your own logo and no Rank1 credit) / Do I need GA4? (optional; adds traffic to the report) / What's in the free audit? (same-day CSV + PNG) / Why do results change week to week? (AI answers vary between runs, so we ask each question several times and show how many answers each number is based on) | details/summary; last Q added (Validator: directional) |
-| 9 Final CTA (#audit) | Ink band, paper text. H2 "Find out if AI names your business first." Sub "Free same-day audit as CSV and PNG (includes a small 'Powered by Rank1' credit)." Form: email + your domain; amber button, ink text "Get my free audit". Jelly right, eyes up (hidden on mobile). | Turnstile + honeypot |
+| 9 Final CTA (#audit) | Bordered panel with an accent glow (v3). H2 "Find out if AI names your business first." Sub "Free same-day audit as CSV and PNG (includes a small 'Powered by Rank1' credit)." Form: email + your domain; primary button "Get my free audit". Jelly 96px right, eyes up (hidden on mobile). | Turnstile + honeypot |
 | Footer / meta | Footer: Rank1, Pricing, FAQ, Contact us, Privacy, Terms. Meta title "Rank1 - Be the brand AI names first."; description = hero sub; OG image [PLACEHOLDER]. | Contact email shown as the form, not an address |
 
 - Mobile: hero and cards stack below md; comparison scrolls with the Rank1 column pinned; sticky bottom 'Get my free audit' bar after the hero; final-CTA Jelly hidden.
@@ -270,7 +270,7 @@ Copy in quotes is exact. Every number shows n + checked X ago. Results labeled A
 
 | Business switcher | Spec |
 |---|---|
-| Where | App header, left of the account menu: 'Example Ramen House ▾'. Hidden when the workspace has 1 business (shows the name only) until an agency adds a 2nd. |
+| Where | Top-bar breadcrumb (Rank1 / business / page), left of the account menu: 'Example Ramen House ▾' (v3, D42; in /team this is the client switcher, D20). Hidden when the workspace has 1 business (shows the name only) until an agency adds a 2nd. |
 | List | Each business: name, city, visibility % with n ('34% · 250 answers'), status dot (moss active, brick paused). Max height 360, search when > 8. |
 | Add | Last row: '+ Add a business ($99/mo)'. Dialog: "Add a business? Your plan goes from 1 x $99 to 2 x $99 = $198/mo. Prorated today." Primary 'Add business'. |
 | Remove | Business menu -> 'Remove business'. Dialog: "Remove {name}? Checks continue until {period end date}; then your plan drops to {n-1} x $99." Quantity -1 at period end; data kept read-only. |
