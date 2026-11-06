@@ -977,3 +977,10 @@ Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/
 - Lead (2026-11-06): listFixes items carry status_changed_at and changed_by {is_team, name} | null, with the same safe mapping as done_fixes (team → is_team only, never an email), null on todo rows. Additive, and listFixes' signature is unchanged.
 - Migration 20261105000026 (+ .down.sql): open_fix_actors(business) (invoker, through the fixes RLS) returns the doing fixes' time and actor via 0023's private.fix_status_actor. listFixes merges it by fix id; the item key test lists the two new fields.
 
+## G3 (backend): "Ready for GAS" (branch feat/gas-ready)
+- GAS brief, lead decisions 2026-11-06: ready = the first time every Recommended connection is connected; cleared when one drops. U3: the team notice clears when the team starts the first fix, or on Dismiss. Rides ENABLE_CONNECTIONS. The team email (TEAM_NOTIFY_EMAIL; nothing sent when unset) is data-pipeline's.
+- Migration 20261105000027 (+ .down.sql), additive: businesses.gas_ready_at and gas_ready_dismissed_at (not member-writable).
+- refresh_gas_ready(business, recommended[]) (service only): the Recommended providers come from recommend.ts, so the DB doesn't copy the map. An empty list is never ready. Ready keeps the first gas_ready_at and returns newly_ready once; not ready clears both columns, so the next ready shows the notice again (lead Q2). Unknown keys → 22023.
+- gas_ready(business) (members incl. the dfy_client, the team on DFY; nobody else): ready_at + show_notice (ready, not dismissed, and no fix moved by the team since ready, from 0023's history). dismiss_gas_ready(business): the team on DFY only.
+- Queries: src/lib/queries/gas-ready.ts (refreshGasReady, getGasReady, dismissGasReady).
+
