@@ -29,7 +29,7 @@ export function LocationSelect({
           id={id}
           name="location"
           defaultValue={value ?? ""}
-          className="h-12 w-full max-w-xs rounded-full border border-fieldBorder bg-white px-5 text-ui shadow-field focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep"
+          className="h-11 w-full max-w-xs rounded-control border border-fieldBorder bg-white px-3 text-ui md:h-8 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep"
         >
           <option value="">{c.allLocations}</option>
           {locations.map((l) => (
@@ -40,7 +40,7 @@ export function LocationSelect({
         </select>
         <button
           type="submit"
-          className="inline-flex min-h-11 items-center rounded-full border border-fieldBorder bg-white px-5 text-ui font-semibold hover:bg-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+          className="inline-flex h-11 items-center rounded-control border border-fieldBorder bg-raised px-3 text-ui font-medium text-ink hover:bg-overlay md:h-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
         >
           {c.show}
         </button>

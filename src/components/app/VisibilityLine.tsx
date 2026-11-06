@@ -30,7 +30,7 @@ export function VisibilityLine({ points }: { points: SeriesPoint[] }) {
             </text>
           </g>
         ))}
-        <path d={path} fill="none" stroke="var(--color-jellyDeep)" strokeWidth={2} strokeLinejoin="round" />
+        <path d={path} fill="none" stroke="var(--color-accent)" strokeWidth={2} strokeLinejoin="round" />
         {points.map((p, i) => (
           <g key={p.runId} onMouseEnter={() => setActive(i)}>
             <rect x={x(i) - 18} y={PAD.t} width={36} height={H - PAD.t - PAD.b} fill="transparent" />
@@ -38,7 +38,7 @@ export function VisibilityLine({ points }: { points: SeriesPoint[] }) {
               cx={x(i)}
               cy={y(p.metric.value)}
               r={active === i ? 6 : 4}
-              fill="var(--color-jellyDeep)"
+              fill="var(--color-accent)"
               stroke="var(--color-white)"
               strokeWidth={2}
             />

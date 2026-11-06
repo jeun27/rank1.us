@@ -1,4 +1,5 @@
 import { ENGINE_LABEL } from "@/components/audit/contract";
+import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Table } from "@/components/ui/Table";
 import { CATEGORY_ORDER, type Sources } from "@/lib/metrics";
@@ -126,15 +127,14 @@ export function SourcesView({
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <h2 className="text-ui font-semibold">{label}</h2>
                     {e.locationSupport === "exact" && (
-                      <span className="rounded-full bg-infoBg px-2 text-caption text-jellyDeep">{c.exact}</span>
+                      <Badge tone="info" data-location-tag>
+                        {c.exact}
+                      </Badge>
                     )}
                     {e.locationSupport === "fallback" && (
-                      <span
-                        title={c.fallbackTip(label)}
-                        className="rounded-full border border-border px-2 text-caption text-inkMuted"
-                      >
+                      <Badge tone="neutral" title={c.fallbackTip(label)} data-location-tag>
                         {c.fallback}
-                      </span>
+                      </Badge>
                     )}
                   </div>
                   {e.links ? (
@@ -178,7 +178,7 @@ export function SourcesView({
                     href={`https://${d.domain}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex min-h-11 items-center text-jellyDeep underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-jellyDeep"
+                    className="inline-flex min-h-11 items-center text-link underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-jellyDeep"
                   >
                     <span data-computed>{d.domain}</span>
                   </a>
