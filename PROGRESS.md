@@ -934,3 +934,9 @@ Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/
 - C3: UI.md has one type size at every breakpoint: text-ui 15/20 → 13/19, caption 13/18 → 12/16. R2 (lead O1): form fields stay 16px below md (one unlayered rule in globals.css), so iPhone Safari doesn't zoom on focus.
 - C4: the FixList Status select is a 6px control (44px below md, 32px from md); the read-only status label is a Badge.
 - The old v2 unit tests (pill badge, white banner with a 1.5px edge, ProgressBar width) now assert the v3 values above.
+
+## Fix status history (backend): for the check-off Fix list (branch feat/fix-status-history)
+- Lead decisions (2026-11-06): additive only and compatible with live v0.5.0 on the shared DB. A team actor shows as is_team only (the UI says "Rank1 team"); a display name shows only for a non-team member of the same business; never the email.
+- Migration 20261105000023 (+ .down.sql): fixes.status_changed_at / status_changed_by (→ auth.users, on delete set null), null on existing rows (fixes has no updated_at to backfill from). A BEFORE UPDATE trigger sets both on every status change (actor null for the service detector) and keeps them on any other update, so neither can be written directly. set_fix_status and listFixes are unchanged.
+- done_fixes(business) (invoker, through the fixes RLS): done fixes, newest change first (nulls last), with changed_by from private.fix_status_actor (definer, re-checks the caller can see the fix). Query: listDoneFixes in src/lib/queries/fixes.ts.
+
