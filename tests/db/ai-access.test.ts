@@ -108,7 +108,9 @@ describe("record and read", () => {
       allowed: false,
       line: "User-agent: GPTBot / Disallow: /",
     });
-    for (const db of [outsider.db, team.db, client.db, anonClient()]) expect(await getAiAccessCheck(db, r)).toBeNull();
+    for (const db of [outsider.db, team.db, client.db]) expect(await getAiAccessCheck(db, r)).toBeNull();
+    // anon has no grant at all on the table.
+    await expect(getAiAccessCheck(anonClient(), r)).rejects.toMatchObject({ code: "42501" });
   });
 
   it("is idempotent per run: a repeat replaces the result", async () => {
@@ -144,7 +146,7 @@ describe("record and read", () => {
       const r = await run(businessId, "free_audit");
       await recordAiAccessCheck(s(), r, input({ outcome: "unreachable", visibleWords: null, statusNormal: null }));
       expect(await getAiAccessCheck(owner.db, r)).toBeNull();
-      expect(await getAiAccessCheck(anonClient(), r)).toBeNull();
+      await expect(getAiAccessCheck(anonClient(), r)).rejects.toMatchObject({ code: "42501" });
       expect(await getAiAccessCheck(s(), r)).toMatchObject({ outcome: "unreachable", visible_words: null });
     }
   });
