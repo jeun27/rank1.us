@@ -22,6 +22,12 @@ export function resultTarget(pathname: string): { kind: "run" | "audit"; key: st
   }
 }
 
+// /app/experiments and /new stream (Step 17), so the dfy_client gate is a real 404 here (lead), on top of RLS.
+export function experimentsTarget(pathname: string): boolean {
+  const path = normalizePath(pathname);
+  return path !== null && /^\/app\/experiments(\/new)?$/.test(path);
+}
+
 // /team?b=<id> streams too (Step 11): the client id, when the path is /team.
 export function teamClient(pathname: string, params: URLSearchParams): string | null {
   return normalizePath(pathname) === "/team" ? params.get("b") || null : null;
@@ -46,6 +52,10 @@ async function missingResult(
       .is("archived_at", null)
       .maybeSingle();
     return Boolean(error) || !data;
+  }
+  if (experimentsTarget(pathname) && signedIn) {
+    const { data, error } = await supabase.rpc("my_landing");
+    return Boolean(error) || data === "dfy_client";
   }
   const target = resultTarget(pathname);
   if (target?.kind === "run" && signedIn) {
