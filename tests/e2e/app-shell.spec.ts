@@ -273,6 +273,8 @@ test("/dev/app dashboard: chart axis labels are 10.5px and line up with the grid
       .map((e) => e.getBoundingClientRect().top + e.getBoundingClientRect().height / 2),
   ]);
   for (const [i, mid] of labelMids.entries()) expect(Math.abs(mid - lineTops[i])).toBeLessThanOrEqual(1.5);
+});
+
 // X1 (UX plan L1): the next fix is on the first screen at 375 and 1280, and its one link opens that fix.
 test("/dev/app dashboard: the next-fix card is in the first viewport", async ({ page }) => {
   await page.goto("/dev/app?state=dashboard-success");
