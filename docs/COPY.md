@@ -299,6 +299,8 @@ The check-off Fix list (portal b). Statuses stay "To do" / "Doing" / "Done" in t
 | Progress | "{done} of {total} done" |
 | Filter (segmented) | "Open", "Done", "All" |
 | Tooltips (with aria-keyshortcuts) | "Mark done (x)", "Start (s)" |
+| Pillar groups (G5, briefs/rank1-gas.md) | "P5" tag + label, then "{done}/{total}": "Know where you stand" (P0), "Prompts & keywords" (P1), "Content" (P2), "Brand mentions" (P3), "YouTube & video" (P4), "Technical access" (P5), "Measure & prove" (P6). Order P5, P3, P2, P1, P4, P6; empty groups hidden |
+| P0 baseline line (G5, REPORT.md) | "Your baseline: {pct} visibility, named in {n} of {d} answers." |
 
 ## Experiments (lead, 2026-11-05)
 
@@ -388,6 +390,8 @@ Strings from the GAS prototype report (share/gas-proto/REPORT.md, lead copy). Fi
 | R16 customer copy | "Your site runs on Cloudflare. Its AI bot blocking is on by default for many new sites, and robots.txt can't show it. Check Security, then Bots, in your Cloudflare dashboard." |
 | R17 title (G7, the grouped fix) | "Get on these lists" |
 | R17 customer copy | "{n} lists AI cites name {rivals} but not you." |
+| R18 title (G2, JS-empty homepage) | "Your homepage needs JavaScript to show its text" |
+| R18 customer copy (lead, every vertical) | "Your homepage shows almost no text without JavaScript, so ChatGPT can't read what you offer." |
 
 ## Landing (lead, 2026-11-06)
 

@@ -38,6 +38,11 @@ const none = { points: [], visible: false };
 const noop = async () => undefined;
 const actions = { add: noop, dismiss: noop };
 const experiment = { end: noop, remove: noop };
+// G5: the example fixes with their pillars (robots.txt is P5 Technical access; the menu, dish pages and the
+// schema tidy-up are P2 Content), and the P0 baseline from the example run.
+const pillarFixes = fixes.map((f) => ({ ...f, pillar: f.rule_key === "R14" ? ("p5" as const) : ("p2" as const) }));
+const pillarTidyUps = exampleTidyUps.map((f) => ({ ...f, pillar: "p2" as const }));
+const pillarDone = exampleDone.map((f) => ({ ...f, pillar: "p2" as const }));
 const results = "We couldn't load your results. Try again.";
 const fresh = { checkedAt: exampleQuestions.run!.finished_at, answers: 38, now: NOW };
 // Success = everything answered; partial = the 4b partial state of the same page.
@@ -130,9 +135,11 @@ export const STATES: Record<string, () => React.ReactNode> = {
     <Page title="What to fix next">
       <Measured {...latestMeasured(exampleLatest)} now={NOW} />
       <FixList
-        ranked={fixes}
-        tidyUps={exampleTidyUps}
-        done={exampleDone}
+        ranked={pillarFixes}
+        tidyUps={pillarTidyUps}
+        done={pillarDone}
+        baseline={exampleLatest.metrics.visibility}
+        baselineHref="/app"
         unchecked={[]}
         noDomain={false}
         canWrite
@@ -150,9 +157,11 @@ export const STATES: Record<string, () => React.ReactNode> = {
     <Page title="What to fix next">
       <Measured {...latestMeasured(exampleLatest)} now={NOW} />
       <FixList
-        ranked={fixes}
-        tidyUps={exampleTidyUps}
-        done={exampleDone}
+        ranked={pillarFixes}
+        tidyUps={pillarTidyUps}
+        done={pillarDone}
+        baseline={exampleLatest.metrics.visibility}
+        baselineHref="/app"
         unchecked={[]}
         noDomain={false}
         canWrite={false}
