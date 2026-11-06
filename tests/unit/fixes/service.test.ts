@@ -8,6 +8,10 @@ const ai = vi.hoisted(() => ({ checkAiAccess: vi.fn() }));
 vi.mock("@/lib/site/ai-access", async (real) => ({ ...(await real<object>()), ...ai }));
 const store = vi.hoisted(() => ({ recordAiAccessCheck: vi.fn(async () => {}) }));
 vi.mock("@/lib/queries/ai-access", async (real) => ({ ...(await real<object>()), ...store }));
+const res = vi.hoisted(() => ({ getRunResults: vi.fn() }));
+vi.mock("@/lib/queries/results", async (real) => ({ ...(await real<object>()), ...res }));
+const men = vi.hoisted(() => ({ listMentionDecisions: vi.fn() }));
+vi.mock("@/lib/queries/mentions", async (real) => ({ ...(await real<object>()), ...men }));
 const { checkFixesWith } = await import("@/lib/fixes/service");
 
 // A service client stub: fix_rules.select("key").eq("enabled", true).in("key", [...]).
@@ -119,5 +123,81 @@ describe("checkFixesWith with the AI access check (G2, ENABLE_AI_ACCESS_CHECK)",
     expect(log.mock.calls.flat().join(" ")).toContain("22023");
     expect(log.mock.calls.flat().join(" ")).not.toContain("secret detail");
     log.mockRestore();
+  });
+});
+
+describe("checkFixesWith with mentions (G7 R17, ENABLE_MENTIONS)", () => {
+  const RUN = { runId: "run-1", businessId: "b-1", domain: "example-ramen-house.test" };
+  const RESULTS = {
+    brands: [
+      { name: "Example Ramen House", kind: "business", domain: null },
+      { name: "Example Noodle Bar", kind: "competitor", domain: null },
+    ],
+    answers: [
+      {
+        id: "a1",
+        engine: "gemini",
+        status: "ok",
+        question_id: "q1",
+        mentioned: false,
+        brands: [
+          { name: "Example Ramen House", kind: "business", mentioned: false, position: null },
+          { name: "Example Noodle Bar", kind: "competitor", mentioned: true, position: 1 },
+        ],
+      },
+    ],
+    citations: [
+      {
+        answer_id: "a1",
+        url: "https://example-eats.test/best",
+        domain: "example-eats.test",
+        title: null,
+        category: "news_blog",
+      },
+    ],
+  };
+
+  it("flag on: R17 is read from fix_rules and recorded as a fix from the added lists, in the same call", async () => {
+    const d = db([{ key: "R17" }]);
+    q.listRunsNeedingFixChecks.mockResolvedValue([RUN]);
+    evaluate.mockClear();
+    res.getRunResults.mockResolvedValue(RESULTS);
+    men.listMentionDecisions.mockResolvedValue([
+      { url: "https://example-eats.test/best", status: "added", decided_at: "2026-11-06T08:00:00Z" },
+    ]);
+    await checkFixesWith(d.client, () => 200_000, { ENABLE_MENTIONS: "true" });
+    expect(d.calls.at(-1)).toEqual(["in", "key", ["R10", "R11", "R14", "H1", "R17"]]);
+    expect(evaluate).not.toHaveBeenCalled();
+    expect(res.getRunResults).toHaveBeenCalledWith(d.client, "run-1");
+    expect(men.listMentionDecisions).toHaveBeenCalledWith(d.client, "b-1");
+    expect(q.recordFixResults.mock.calls.at(-1)![3]).toEqual([
+      {
+        rule_key: "R17",
+        result: "fix",
+        evidence: { urls: ["https://example-eats.test/best"] },
+        detail: "1 lists AI cites name Example Noodle Bar but not you.",
+      },
+    ]);
+  });
+
+  it("nothing added → R17 ok (an open R17 fix is then closed by the normal fix flow)", async () => {
+    const d = db([{ key: "R17" }]);
+    q.listRunsNeedingFixChecks.mockResolvedValue([RUN]);
+    res.getRunResults.mockResolvedValue(RESULTS);
+    men.listMentionDecisions.mockResolvedValue([]);
+    await checkFixesWith(d.client, () => 200_000, { ENABLE_MENTIONS: "true" });
+    expect(q.recordFixResults.mock.calls.at(-1)![3]).toEqual([
+      { rule_key: "R17", result: "ok", evidence: { urls: [] }, detail: null },
+    ]);
+  });
+
+  it("flag off: R17 isn't read or evaluated", async () => {
+    const d = db([{ key: "R10" }]);
+    q.listRunsNeedingFixChecks.mockResolvedValue([RUN]);
+    evaluate.mockResolvedValue([{ rule_key: "R10", result: "ok", evidence: {}, detail: null }]);
+    res.getRunResults.mockClear();
+    await checkFixesWith(d.client, () => 200_000, {});
+    expect(d.calls.at(-1)).toEqual(["in", "key", ["R10", "R11", "R14", "H1"]]);
+    expect(res.getRunResults).not.toHaveBeenCalled();
   });
 });
