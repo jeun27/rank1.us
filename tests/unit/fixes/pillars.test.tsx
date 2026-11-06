@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { FixList, type DoneView, type FixView } from "@/components/fixes/FixList";
 import { fixCopy as c } from "@/components/fixes/copy";
@@ -57,12 +58,9 @@ describe("pillar groups", () => {
   it("in the fixed order P5, P3, P2, P1 (P4 and P6 have no fixes, so they're hidden), with the brief's labels", () => {
     setup();
     expect(groups().map((g) => g.getAttribute("data-pillar"))).toEqual(["p5", "p3", "p2", "p1"]);
-    expect(groups().map((g) => within(g).getAllByRole("heading")[0].textContent)).toEqual([
-      `P5${c.pillars.p5}`,
-      `P3${c.pillars.p3}`,
-      `P2${c.pillars.p2}`,
-      `P1${c.pillars.p1}`,
-    ]);
+    // S1 (review): the tag and the label read with a separator.
+    for (const [g, p] of groups().map((g) => [g, g.getAttribute("data-pillar") as keyof typeof c.pillars] as const))
+      expect(within(g).getAllByRole("heading")[0]).toHaveAccessibleName(`${p.toUpperCase()}: ${c.pillars[p]}`);
     expect(c.pillars).toEqual({
       p0: "Know where you stand",
       p1: "Prompts & keywords",
@@ -109,6 +107,40 @@ describe("pillar groups", () => {
     unmount();
     setup({ baseline: null });
     expect(document.querySelector("[data-baseline]")).toBeNull();
+  });
+
+  // S2 (lead): a fully done group stays visible in Done and All (e.g. "1/1") and hides only in Open; done rows
+  // sit in their group, and a done fix with no pillar is listed after the groups.
+  it("Done and All show done rows inside their groups; a fully done group hides only in Open", async () => {
+    const user = userEvent.setup();
+    setup({
+      done: [
+        ...done,
+        {
+          id: "z",
+          rule_key: "R10",
+          title: "Done measure fix",
+          detail: null,
+          status_changed_at: null,
+          changed_by: null,
+          pillar: "p6",
+        },
+      ],
+    });
+    const pillarsShown = () => groups().map((g) => g.getAttribute("data-pillar"));
+    expect(pillarsShown()).not.toContain("p6");
+    await user.click(screen.getByRole("radio", { name: /Done/ }));
+    expect(pillarsShown()).toEqual(["p2", "p6"]);
+    const p6 = groups().find((g) => g.getAttribute("data-pillar") === "p6")!;
+    expect(within(p6).getByTestId("group-count")).toHaveTextContent("1/1");
+    expect(within(p6).getByRole("checkbox", { name: "Done measure fix" })).toHaveAttribute("aria-checked", "true");
+    const p2 = groups().find((g) => g.getAttribute("data-pillar") === "p2")!;
+    expect(within(p2).getByRole("checkbox", { name: "Done content fix" })).toBeInTheDocument();
+    // The pillar-less done fix is still listed, outside the groups.
+    const loose = screen.getByRole("checkbox", { name: "Done with no pillar" });
+    expect(groups().some((g) => g.contains(loose))).toBe(false);
+    await user.click(screen.getByRole("radio", { name: /All/ }));
+    expect(pillarsShown()).toEqual(["p5", "p3", "p2", "p1", "p6"]);
   });
 
   it("without pillars (older fixtures) the list keeps its plain sections", () => {

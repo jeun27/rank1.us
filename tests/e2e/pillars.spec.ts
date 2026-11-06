@@ -11,8 +11,10 @@ for (const theme of ["dark", "light"] as const)
     const groups = page.locator("[data-pillar]");
     await expect(groups).toHaveCount(2);
     expect(await groups.evaluateAll((els) => els.map((e) => e.getAttribute("data-pillar")))).toEqual(["p5", "p2"]);
-    await expect(groups.nth(0).getByRole("heading").first()).toHaveText("P5Technical access");
-    await expect(groups.nth(1).getByTestId("group-count")).toHaveText("0/3");
+    await expect(groups.nth(0).getByRole("heading").first()).toHaveAccessibleName("P5: Technical access");
+    // The example done fix is P2 (review), so the groups add up to "1 of 5 done".
+    await expect(groups.nth(1).getByTestId("group-count")).toHaveText("1/4");
+    await expect(page.getByText("1 of 5 done")).toBeVisible();
     await expect(groups.nth(1).getByRole("region", { name: "Tidy-ups" })).toBeVisible();
     const baseline = page.locator("[data-baseline]");
     await expect(baseline).toContainText("Your baseline:");
