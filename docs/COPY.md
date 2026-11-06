@@ -301,6 +301,25 @@ Strings for the white-label monthly report PDF and email (Step 16). No product n
 | Test send | "Send test to me" → "Test sent to {email}." / reuses "That didn't send. Try again in a minute." |
 | History | "History"; columns "Month", "Status", "Download"; statuses "Queued", "Building", "Ready", "Sent", "Failed" |
 
+## Connections (lead, 2026-11-06)
+
+Strings for Connections. One Google grant covers Business Profile, Search Console and Analytics, so disconnecting one disconnects all three.
+
+| Where | String |
+|---|---|
+| Revoke confirm (any Google connection) | "This also disconnects Search Console and Analytics" |
+
+Tile helper text (the niche key in src/lib/connections/recommend.ts):
+
+| Niche key | String |
+|---|---|
+| local | "For businesses people find on a map." |
+| restaurant_booking | "For restaurants that take reservations." |
+| site | "For businesses with their own website." |
+| dtc_store | "For brands that sell online." |
+| dtc_amazon | "For brands that sell on Amazon." |
+| saas_reviews | "For software with review listings." |
+| ai_referrals | "Shows visits that came from AI answers." |
 
 ## Engine location tooltip
 
