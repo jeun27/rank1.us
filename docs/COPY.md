@@ -346,6 +346,15 @@ Tile helper text (the niche key in src/lib/connections/recommend.ts):
 | saas_reviews | "For software with review listings." |
 | ai_referrals | "Shows visits that came from AI answers." |
 
+## GAS (lead, 2026-11-06)
+
+Strings from the GAS prototype report (share/gas-proto/REPORT.md, lead copy). Fix rule R16 (pillar p5, SCHEMA.md 5b):
+
+| Where | String |
+|---|---|
+| R16 title | "Your site lets AI in, but Cloudflare may be blocking it." |
+| R16 customer copy | "Your site runs on Cloudflare. Its AI bot blocking is on by default for many new sites, and robots.txt can't show it. Check Security, then Bots, in your Cloudflare dashboard." |
+
 ## Landing (lead, 2026-11-06)
 
 | Where | String |
