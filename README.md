@@ -31,6 +31,8 @@ Product, data and design rules live in docs/PRODUCT.md (moved word for word from
    only, phone + desktop, and the sha of the newest commit. New pushes get new visuals.
 8. **Comments are at most 3 lines in a row.** History belongs in the PR, not in the code.
 9. **Merged is not live.** Releases are tagged and deployed only on request.
+10. **Notes in their own files.** Feature PRs add a note file docs/progress/<date>-<slug>.md (and
+    docs/handoff/<date>-<slug>.md for interface notes) instead of editing PROGRESS.md/HANDOFF.md; the lead folds them in.
 
 ## Releasing
 
