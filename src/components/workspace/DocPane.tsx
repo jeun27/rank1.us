@@ -7,7 +7,7 @@ import { DocView } from "./Docs";
 import { rovingIndex } from "./hooks";
 
 // clients: the team's Clients tab for the selected DFY client (Step 12); not a brief selection.
-export type DocSel = Selection | { kind: "new"; n: number } | { kind: "clients" };
+export type DocSel = Selection | { kind: "new"; n: number } | { kind: "clients" } | { kind: "connections" };
 export type Tab = { id: string; title: string; sel: DocSel };
 
 const tool =

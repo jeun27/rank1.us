@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getLanding } from "@/lib/queries/auth";
 import { inviteClient, removeClient, setFixListVisible, type InviteStatus } from "@/lib/queries/clients";
+import { dismissGasReady } from "@/lib/queries/gas-ready";
 
 // Team writes for a DFY client. The browser names the client, so it must be one the caller can read
 // as DFY; the RPCs and RLS check the role again.
@@ -87,4 +88,10 @@ export async function setTeamFixListVisible(businessId: string, visible: boolean
     return { error: (e as { code?: string }).code ?? "failed" };
   }
   revalidatePath("/team");
+}
+
+// C-c: the team dismisses a DFY client's G3 ready notice (ENABLE_CONNECTIONS). dismiss_gas_ready checks the team.
+export async function dismissTeamReady(businessId: string) {
+  if (process.env.ENABLE_CONNECTIONS !== "true") return { error: "disabled" };
+  return run(businessId, (db) => dismissGasReady(db, businessId));
 }

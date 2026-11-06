@@ -12,9 +12,12 @@ const row = "flex min-h-11 w-full items-center gap-2 rounded-control px-2 text-l
 export function ClientSwitcher({
   team,
   onClients,
+  onConnections,
 }: {
   team: Pick<TeamExtras, "businesses" | "businessId" | "formAction" | "hidden">;
   onClients?: () => void;
+  // C-c: the Connections document (ENABLE_CONNECTIONS).
+  onConnections?: () => void;
 }) {
   const id = useId();
   const form = useRef<HTMLFormElement>(null);
@@ -157,6 +160,19 @@ export function ClientSwitcher({
             >
               <Icon name="users" className="size-4" />
               Clients
+            </button>
+          )}
+          {onConnections && (
+            <button
+              type="button"
+              onClick={() => {
+                close(false);
+                onConnections();
+              }}
+              className={`${row} text-text2 hover:bg-raised hover:text-ink ${focus}`}
+            >
+              <Icon name="link" className="size-4" />
+              Connections
             </button>
           )}
         </div>
