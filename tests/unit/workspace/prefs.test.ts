@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_PREFS, PREFS_KEY, readPrefs, resolveTheme, themeScript, writePrefs } from "@/lib/workspace/prefs";
+import { themeScript } from "@/lib/theme";
+import { DEFAULT_PREFS, PREFS_KEY, readPrefs, resolveTheme, writePrefs } from "@/lib/workspace/prefs";
 
 // jsdom has no matchMedia.
 const mockSystem = (dark: boolean) =>
@@ -42,7 +43,8 @@ describe("workspace prefs", () => {
     expect(readPrefs()).toEqual(DEFAULT_PREFS);
   });
 
-  it("the pre-paint script sets data-theme from storage, else from the system", () => {
+  it("the pre-paint script sets data-theme from storage, else from the system (on /team)", () => {
+    history.pushState({}, "", "/team");
     mockSystem(true);
     new Function(themeScript)();
     expect(document.documentElement.dataset.theme).toBe("dark");

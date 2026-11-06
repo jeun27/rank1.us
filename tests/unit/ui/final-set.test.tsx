@@ -69,12 +69,12 @@ describe("DomainField", () => {
 });
 
 describe("AuroraButton", () => {
-  it("is a white pill with the aurora ring and shadow, jellyDeep label and spinner, busy while loading", () => {
+  it("is a panel button (6px) with the aurora ring and shadow, jellyDeep label and spinner, busy while loading", () => {
     render(<AuroraButton loading>Opening Google…</AuroraButton>);
     const b = screen.getByRole("button", { name: "Opening Google…" });
     const cls = b.className.split(" ");
-    for (const c of ["aurora-ring", "rounded-full", "shadow-aurora", "text-jellyDeep", "h-12.5"])
-      expect(cls).toContain(c);
+    // v3 (D35): the ring stays, on the 6px shape.
+    for (const c of ["aurora-ring", "rounded-control", "shadow-aurora", "text-jellyDeep"]) expect(cls).toContain(c);
     expect(b).toBeDisabled();
     expect(b).toHaveAttribute("aria-busy", "true");
     expect(b.querySelector("[data-spinner]")!.getAttribute("class")).toContain("motion-reduce:animate-none");
