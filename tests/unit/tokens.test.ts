@@ -153,6 +153,14 @@ describe("Tailwind theme matches the v3 tokens", () => {
       expect(css).toContain(d);
   });
 
+  // F1 (UI.md type table): section and card titles are 13/18; no faux bold/italic; numbers are tabular.
+  it("has the section title 13/18, no font synthesis, and tabular numbers on data", () => {
+    expect(css).toContain("--text-section: 13px;");
+    expect(css).toContain("--text-section--line-height: 18px;");
+    expect(css).toMatch(/html \{[^}]*font-synthesis: none;/);
+    expect(css).toMatch(/\[data-computed\],\s*\.font-mono,\s*td,\s*th \{\s*font-variant-numeric: tabular-nums;\s*\}/);
+  });
+
   // R2 (lead): fields stay 16px below md, so iPhone Safari doesn't zoom on focus. Unlayered, so it wins.
   it("keeps form fields at 16px below md", () => {
     expect(css).toMatch(/@media \(width < 48rem\) \{\s*input,\s*select,\s*textarea \{ font-size: 16px; \}\s*\}/);

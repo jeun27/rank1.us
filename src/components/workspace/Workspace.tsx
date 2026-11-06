@@ -179,7 +179,7 @@ export function Workspace({ view, team = null }: { view: WorkspaceView; team?: T
             <main
               id="ws-document"
               data-motion
-              className={`flex min-w-0 flex-1 flex-col bg-white ${motion} ${
+              className={`flex min-w-0 flex-1 flex-col bg-white text-ui ${motion} ${
                 showContext ? "md:shrink-0 md:grow-0 md:basis-(--ws-split)" : ""
               }`}
             >

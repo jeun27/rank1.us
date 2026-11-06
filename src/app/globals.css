@@ -67,6 +67,8 @@
   --text-body-lg: 18px;
   --text-body-lg--line-height: 28px;
   /* v3 (UI.md type table): one size at every breakpoint. */
+  --text-section: 13px;
+  --text-section--line-height: 18px;
   --text-ui: 13px;
   --text-ui--line-height: 19px;
   --text-caption: 12px;
@@ -211,6 +213,15 @@ html:not(.js) .js-only { display: none; }
    stay hidden until the run starts, so the final numbers never flash before the start state. */
 @media (prefers-reduced-motion: no-preference) {
   .js [data-demo-state="final"]:not([data-demo-ran]) [data-demo-anim] { visibility: hidden; }
+}
+
+/* F1: no faux bold or italic (only real Inter/Mono weights render), and every number is tabular. */
+html { font-synthesis: none; }
+[data-computed],
+.font-mono,
+td,
+th {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Form fields stay 16px below md, so iPhone Safari doesn't zoom the page on focus (lead R2). Unlayered, so
