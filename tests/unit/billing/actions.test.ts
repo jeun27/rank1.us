@@ -40,7 +40,12 @@ beforeEach(() => {
 });
 
 describe("billing server actions", () => {
-  it.each([null, "canceled"])("no subscription (%s): Checkout", async (status) => {
+  it("the view and the actions share one NO_SUBSCRIPTION rule", async () => {
+    const { NO_SUBSCRIPTION } = await import("@/components/billing/status");
+    expect([...NO_SUBSCRIPTION]).toEqual([null, "canceled", "incomplete_expired"]);
+  });
+
+  it.each([null, "canceled", "incomplete_expired"])("no live subscription (%s): Checkout", async (status) => {
     state.mockResolvedValue(billing(status));
     const { checkoutAction, addBusinessAction } = await import("@/app/app/billing/actions");
     await expect(checkoutAction()).rejects.toThrow("REDIRECT https://checkout.stripe.test/s");
@@ -49,7 +54,7 @@ describe("billing server actions", () => {
     expect(addBusinessSeat).not.toHaveBeenCalled();
   });
 
-  it.each(["active", "trialing", "past_due", "unpaid", "incomplete", "incomplete_expired", "paused"])(
+  it.each(["active", "trialing", "past_due", "unpaid", "incomplete", "paused"])(
     "live subscription (%s): never Checkout; Add raises the seat; Start goes to the portal",
     async (status) => {
       state.mockResolvedValue(billing(status));

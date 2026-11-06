@@ -14,7 +14,8 @@ const paid = { status: "active" as const, seats: 2, nextInvoiceAt: "2026-12-01T0
 // UI.md 4b "Billing + switcher". Amounts are the x $99 math, never fetched from Stripe.
 describe("BillingView (/app/billing)", () => {
   // Lead (#74 review): Checkout only without a live subscription.
-  it.each([null, "canceled"] as const)(
+  // incomplete_expired is terminal in Stripe like canceled, so it may Checkout again (lead).
+  it.each([null, "canceled", "incomplete_expired"] as const)(
     "no live subscription (%s): 'Start for $99/mo' opens Checkout",
     async (status) => {
       const a = actions();
@@ -55,7 +56,7 @@ describe("BillingView (/app/billing)", () => {
   });
 
   // Lead (Q1): every failed-payment status keeps the plan with the "Past due" badge and 'Manage billing'.
-  it.each(["unpaid", "incomplete", "incomplete_expired"] as const)(
+  it.each(["unpaid", "incomplete"] as const)(
     "%s: the failed banner, 'Update card', the plan with the 'Past due' badge and 'Manage billing'",
     (status) => {
       render(<BillingView billing={{ ...paid, status }} actions={actions()} />);
@@ -67,7 +68,7 @@ describe("BillingView (/app/billing)", () => {
     },
   );
 
-  it.each(["incomplete", "incomplete_expired", "past_due", "unpaid"] as const)(
+  it.each(["incomplete", "past_due", "unpaid"] as const)(
     "%s: never a second Checkout; 'Update card' opens the portal",
     async (status) => {
       const a = actions();
@@ -112,6 +113,7 @@ describe("BillingView (/app/billing)", () => {
       "Plan",
       "Next invoice {date}",
       "Adding your business…",
+      "the end of this period",
       "We couldn't open billing. Try again in a minute.",
     ])
       expect(copy).toContain(`"${s}"`);
