@@ -15,5 +15,6 @@ export const teamConnectionsCopy = {
   after: "After",
   byTeam: "by Rank1 team",
   by: (name: string) => `by ${name}`,
+  byFormer: "by a former user",
   failed: "We couldn't do that. Try again.",
 };

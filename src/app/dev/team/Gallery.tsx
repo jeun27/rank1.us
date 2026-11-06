@@ -49,7 +49,7 @@ const extras: TeamExtras = {
         field: "website_uri",
         before: "http://old.exampleramen.test",
         after: "https://exampleramen.test",
-        by: null,
+        by: { kind: "team" },
         at: "2026-11-04T18:00:00Z",
       },
       {
@@ -58,7 +58,7 @@ const extras: TeamExtras = {
         field: "description",
         before: "Ramen in Irvine.",
         after: "Tonkotsu ramen near Diamond Jamboree, open late on weekends.",
-        by: "owner@exampleramen.test",
+        by: { kind: "client", email: "owner@exampleramen.test" },
         at: "2026-11-02T16:30:00Z",
       },
     ],

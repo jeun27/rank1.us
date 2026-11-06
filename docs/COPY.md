@@ -390,7 +390,7 @@ Tile helper text (the niche key in src/lib/connections/recommend.ts):
 |---|---|
 | G3 notice | "{Business} is ready for GAS" · "{connections} connected {age} ago." · "Start on the fix list" · "Dismiss" |
 | Notify-me interest | "Asked to hear about {connectors}" |
-| Change log (team: values) | "Changes"; each entry "Before: …", "After: …", "by Rank1 team" / "by {name}" (a client user's email, team UI only) and the date |
+| Change log (team: values) | "Changes"; each entry "Before: …", "After: …", "by Rank1 team" / "by {name}" (a current client user's email, team UI only) / "by a former user" (lead, #160 S1) and the date |
 
 C-c task lines (at most one per connection):
 

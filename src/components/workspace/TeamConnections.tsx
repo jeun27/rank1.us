@@ -120,7 +120,7 @@ export function TeamConnections({
                   {c.after}: {value(x.after)}
                 </span>
                 <span className="text-caption text-inkMuted">
-                  {x.by ? c.by(x.by) : c.byTeam} ·{" "}
+                  {x.by.kind === "team" ? c.byTeam : x.by.kind === "client" ? c.by(x.by.email) : c.byFormer} ·{" "}
                   <span data-computed className="font-mono">
                     {x.at.slice(0, 10)}
                   </span>
