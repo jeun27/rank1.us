@@ -85,7 +85,7 @@ describe("recommend (industry → connectors)", () => {
       // "later" tiles are never connectable yet.
       for (const t of r.later) expect(t.available).toBe("coming_soon");
     }
-    expect([...LIVE_CONNECTORS].sort()).toEqual(["ga4", "gbp", "search_console"]);
+    expect([...LIVE_CONNECTORS].sort()).toEqual(["ga4", "gbp", "search_console", "youtube"]);
     expect(Object.keys(CONNECTORS).sort()).toEqual(
       [
         "gbp",
