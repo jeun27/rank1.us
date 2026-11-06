@@ -775,7 +775,7 @@ Changed
 - Lead decisions (2026-11-05):
   - Who: self-serve owners/members and the team on DFY. A dfy_client never sees or creates experiments (RLS refuses).
   - Setup: test = the questions the change affects; control = the business's other active questions, or a picked subset. Both ≥ 1, a question in one group only. change_url http/https only. change_date defaults to LA today and can't be in the future. From a fix, the name defaults to the fix title.
-  - Math (no p-values, no significance language): ok answers of audit/weekly runs, on the LA date of runs.started_at. Before = [d-28, d), after = [d, d+28), cut at the LA date of ended_at (end day included). n < 10 in any cell → "Too few answers to call yet." The label is always "Directional".
+  - Math (no p-values, no significance language): ok answers of audit/weekly runs, on the LA date of runs.started_at. Before = [d-28, d), after = [d, d+28), cut at the LA date of ended_at (end day included). An answer's day is its run's started_at, not answers.checked_at (lead, 2026-11-06), so a run's answers stay in one window, as in History/listRunSummaries. n < 10 in any cell → "Too few answers to call yet." The label is always "Directional".
   - Status: 'running' until 28 days after change_date, then 'done' (derived, no cron). The user can end early ('ended', sets ended_at) and delete.
 - Migration 20261105000020 (+ .down.sql), additive and re-runnable:
   - experiments: ended_at, status default 'running' + check running|ended, change_url check (NOT VALID, for legacy rows).
@@ -783,4 +783,5 @@ Changed
   - Deferred constraint triggers check at commit: both groups have a question, questions and the fix belong to the business, change_date not in the future (23514).
   - create_experiment(p jsonb) (invoker, 22023/42501), end_experiment(id) (definer, false when not running or not allowed), experiment_data(id) (invoker, counted like run_summaries).
 - Queries: src/lib/queries/experiments.ts. src/types/db.ts got the 0020 objects by hand in the generator format.
+- Window edges tested at d-29/d-28/d-1/d/d+27/d+28, the ended-early end day, and one minute before LA midnight on d (before) vs midnight (after), the 07:59Z/08:00Z case.
 - tests/db/helpers.ts makeWorkspace now inserts its experiment with both groups in one transaction.
