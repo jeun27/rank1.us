@@ -1,5 +1,65 @@
 # QA
 
+## Step 16: White-label monthly report
+
+Checked 2026-11-06 on main at 386f89f:
+- #76 (87809bf): monthly reports, storage and report settings (migration 0019)
+- #77 (b115f1f): white-label PDF and monthly send
+- #85 (3ad1a3b): report preview export
+- #86 (386f89f): /app/report page with settings, preview and history
+
+The lead applied 0019–0021 to the hosted DB before this run. The sandbox Docker disk is full, so test-db and the local-stack e2e (report-db.spec.ts) come from CI on main's push of 386f89f (run 42145033429). Unit, typecheck, lint, format and build ran locally in the sandbox. The UI checks and full e2e ran from the Mac against #86's preview at bd79ddf, whose tree is identical to 386f89f. Example data only. Per the lead, "Send test to me" was NOT clicked live: the QA account's example.test address can't receive mail. The send path is verified by unit tests.
+Preview: https://rank1-dspeuazo1-bryan-flowhighlevels-projects.vercel.app (sha bd79ddf, READY).
+Sources: the lead's brief (rank1-step16.md), UI.md 4b "Report", COPY.md "Report (lead, 2026-11-05)".
+
+Result: FAIL. The GA4 "not connected" partial state is missing (F1). Everything else passes.
+
+### Commands
+
+| Command | Result |
+|---|---|
+| `pnpm install --frozen-lockfile`, `pnpm test` (sandbox, 386f89f) | PASS. 107 files, 1263 tests passed |
+| `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build` (sandbox) | PASS |
+| CI on main push 386f89f | PASS. test-db 24 files / 438 tests (tests/db/reports.test.ts 16 tests); e2e 366 passed, 2 skipped; test, typecheck, lint, format green |
+| `E2E_BASE_URL=<preview> pnpm exec playwright test` (Mac, bd79ddf) | PASS. 303 passed, 65 skipped (local-stack specs), 0 failed |
+| `.next/static` scan for service role, Resend, Stripe, CRON_SECRET | PASS. No matches |
+
+### Checks
+
+| Check | Result | Evidence |
+|---|---|---|
+| White-label PDF: no "Rank1", "Powered by", Jelly or product logo | PASS | Unit "the rendered PDF has the business and the lead's headings, and no product name or credit" (text extracted from the rendered PDF, with a control check that the business name is found) and "the PDF code and copy have no product name either". Live: the preview's /dev/report-preview.pdf (real renderer, Example data) is 200 application/pdf, `%PDF-`, no-store. The extracted text has "Example Ramen House", all six COPY.md headings and "API-measured, directional", and no rank1/rank 1/powered by/jelly |
+| White-label email: From = business name at REPORT_FROM_EMAIL; COPY.md subject and body | PASS | src/lib/reports/email.ts. Unit "the email: From = the business name at REPORT_FROM_EMAIL, the lead's subject and body, the PDF attached, no product name"; "a business name can't break the From header" (strips < > " and line breaks). No send while REPORT_FROM_EMAIL is unset |
+| Send test to me: the signed-in user only | PASS (unit) | src/lib/reports/service.ts `sendTestReport`: `to = [auth.user.email]` from `db.auth.getUser()`; the action takes no address input. Unit "sends last month's report to the signed-in user's own email only, never the recipients"; signed out or an RLS-hidden business → not_allowed, nothing sent; a Resend error or missing REPORT_FROM_EMAIL → failed. Not clicked live (lead's A10 change) |
+| Idempotency: monthly send key = report id | PASS | process.ts passes `report.report_id`; email.ts sets `idempotency-key`. Unit "renders, stores, sends with the report id as the idempotency key"; "a failed send is not marked sent; it retries (Resend dedupes by the report id)". Test sends use a per-user, per-minute key |
+| Recipients: ≤ 10 valid emails; none → stored, nothing sent | PASS | Action validates, trims, lowercases, dedupes; DB `set_report_settings` enforces it again (db "rejects a bad color, more than 10 recipients, or an invalid email (23514)"). Unit "no recipients → generated and stored, nothing sent"; UI test "more than 10 or a bad email is refused" |
+| Storage: private buckets, signed URLs, no-store | PASS | db "reports and logos are private, with size and type limits"; "signed-in users and anon cannot read or write either bucket directly"; "members list reports and get a signed download URL; strangers get nothing". 60 s signed URLs. Download route 302 with `Cache-Control: no-store`, 404 when RLS hides the row; preview.pdf `no-store`. Signed out on the preview: /app/report, /app/report/preview.pdf and /app/report/{id}/download → 307 /signin |
+| Logo: PNG/JPEG ≤ 512 KB, SVG rejected | PASS | src/lib/queries/reports.ts `uploadLogo` checks magic bytes (PNG, JPEG), size, and `can_write_business`. db "refuses SVG and other types, files over 512 KB, and callers who can't change the business"; "logo_path is server-only and must stay under the business id" |
+| Brand color: accent only, falls back to ink below AA | PASS | contrast.ts `accentColor` (4.5:1 on white, else ink). Unit "keeps a brand color with AA contrast on white, else falls back to ink" |
+| Stored data only, counts-only logs | PASS | Unit "stored data only: n on every %…", "a month with no run: no numbers invented", "forbidden fields never reach the data", "logs carry counts and codes only: no business name, email, id or error text" |
+| DFY fix list | PASS | Unit fix-visibility: hidden → no fixes heading or text in the PDF or email; visible → shown; self-serve always shown. db "the team reads DFY reports but not self-serve ones; a dfy_client reads its own"; "a dfy_client can't change report settings" |
+| DB: enqueue eligibility, idempotency, claims, finish, service-only | PASS | db "queues last month's report for paid, trialing and DFY businesses only; idempotent", "rejects any month but the previous LA month (22023), and non-service callers (42501)", "claims are exclusive under parallel calls", "re-claims a stale report and fails it after 3 attempts", "finishes generated, sent and failed reports once…", "members can't insert, update or delete reports" |
+| Migrations 0019–0021 roll back and re-apply | PASS | CI test-db "rollbacks undo everything in reverse order, and the migrations re-apply" (rollbacks/*0019, 0020, 0021 .down.sql) |
+| Cron schedule, LA window, 401 | PASS | vercel.json /api/cron/monthly-report "0 14,15 1 * *" (pinned by vercel-config.test). month.ts `isMonthlyWindow` = LA day 1, hour 7. Unit "exactly one of the two fires (14:00, 15:00 UTC on the 1st) matches, every month of 2026"; route: wrong/missing/lowercase bearer → 401; "the other UTC fire (06:05 PST) is a no-op without touching the DB". Preview: no header → 401 `{"error":"unauthorized"}` |
+| Drain: ≤ 2 per tick; 500 bodies carry no DB text | PASS | process.ts REPORTS_PER_TICK = 2, one claim at a time, ≥ 60 s left. Unit "at most 2 per tick, claimed one at a time", "never claims with under 60 s left". Monthly route "enqueue fails → 500 with a fixed label and no DB error text" (`{"error":"enqueue_failed"}`) |
+| UI.md 4b empty | PASS | Preview /dev/app?state=report-empty, 375 and 1280: "Your first report sends on the 1st." + "Report preview" iframe; axe 0; one H1; no side scroll |
+| UI.md 4b loading | PASS | report-loading: skeleton, axe 0, one H1, no side scroll |
+| UI.md 4b error | PASS | report-failed: "The report didn't send to {email}. Check the address." and status "Failed"; axe 0 |
+| UI.md 4b success | PASS | report-success: Logo, Upload logo, Brand color, Recipients (hint), Save, Send test to me, History with Month / Status / Download, statuses Sent / Ready; axe 0. e2e "keyboard reaches the settings, the test send and every download" |
+| UI.md 4b partial: GA4 not connected → section hidden + 'Connect GA4' link to /app/settings | FAIL (F1) | No "Connect GA4" link in any report state at 375 or 1280 (`getByRole("link", { name: /connect ga4/i })` = 0). No GA4 reference in src/components/report, src/lib/reports or src/app/app/report, no gallery state, no test |
+| UI.md 4b mobile: preview scales to width | PASS | Preview iframe 335 px wide at 375, 1056 px at 1280, aspect 1:1.414; scrollWidth = viewport. e2e "the preview scales to the width" (both projects) |
+| History downloads | PASS (CI) | Local-stack e2e report-db.spec "owner saves recipients and a color, they persist; a history download redirects to a signed URL" passed in CI. Not live: no stored report exists on the hosted DB until the 1st, and QA has no signed-in preview session (same blocker as Step 14) |
+| Nav "Reports" and COPY.md strings | PASS | AppNav.tsx `{ href: "/app/report", label: "Reports" }`. src/components/report/copy.ts matches COPY.md "/app/report (Step 16 frontend)"; UI test "COPY.md has the lead's Report strings". The brief's suggested "Download PDF" / "Report history" became "Download" / "History" in the lead's COPY.md, which is the source of truth |
+
+### Blocking problems
+
+- F1: UI.md 4b "partial" is not built. The brief (line 11 and line 17: "Build the GA4 section as 'not connected' for now (hidden + 'Connect GA4' link to /app/settings)") requires a 'Connect GA4' link on /app/report while GA4 isn't connected. /app/report and the gallery have no such link or state. Fix: add the hidden-section + "Connect GA4" link to /app/settings in ReportView, add the string to COPY.md, a /dev/app report-partial state and a test.
+
+### Non-blocking notes
+
+- N1: the 404s from /app/report/preview.pdf and /app/report/{id}/download carry no `Cache-Control: no-store` (empty bodies, so low risk).
+- N2: a live signed-in Preview and history download on the hosted DB is still open. It needs a signed-in owner (founder's morning session) and a stored report.
+
 ## Step 13: Weekly cron
 
 Checked 2026-11-05 on main at 9f696c3:
