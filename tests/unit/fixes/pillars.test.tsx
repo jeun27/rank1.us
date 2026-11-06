@@ -57,7 +57,7 @@ describe("pillar groups", () => {
   it("in the fixed order P5, P3, P2, P1 (P4 and P6 have no fixes, so they're hidden), with the brief's labels", () => {
     setup();
     expect(groups().map((g) => g.getAttribute("data-pillar"))).toEqual(["p5", "p3", "p2", "p1"]);
-    expect(groups().map((g) => within(g).getByRole("heading").textContent)).toEqual([
+    expect(groups().map((g) => within(g).getAllByRole("heading")[0].textContent)).toEqual([
       `P5${c.pillars.p5}`,
       `P3${c.pillars.p3}`,
       `P2${c.pillars.p2}`,
