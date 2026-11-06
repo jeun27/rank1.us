@@ -28,6 +28,8 @@ export default async function FixesPage() {
         noDomain={!business.domain}
         canWrite
         onStatus={setFixStatusAction}
+        baseline={latest?.metrics.visibility ?? null}
+        baselineHref="/app"
       />
     </Page>
   );

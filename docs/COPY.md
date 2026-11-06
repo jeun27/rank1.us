@@ -299,6 +299,8 @@ The check-off Fix list (portal b). Statuses stay "To do" / "Doing" / "Done" in t
 | Progress | "{done} of {total} done" |
 | Filter (segmented) | "Open", "Done", "All" |
 | Tooltips (with aria-keyshortcuts) | "Mark done (x)", "Start (s)" |
+| Pillar groups (G5, briefs/rank1-gas.md) | "P5" tag + label, then "{done}/{total}": "Know where you stand" (P0), "Prompts & keywords" (P1), "Content" (P2), "Brand mentions" (P3), "YouTube & video" (P4), "Technical access" (P5), "Measure & prove" (P6). Order P5, P3, P2, P1, P4, P6; empty groups hidden |
+| P0 baseline line (G5, REPORT.md) | "Your baseline: {pct} visibility, named in {n} of {d} answers." |
 
 ## Experiments (lead, 2026-11-05)
 
