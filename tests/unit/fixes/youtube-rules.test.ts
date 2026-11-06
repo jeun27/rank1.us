@@ -63,14 +63,8 @@ describe("youtubeFixes (R19 title, R20 first two lines, R21 chapters)", () => {
     expect(youtubeFixes(["R21"], list([video("v1", { chapters: "not_needed" })]))[0].result).toBe("ok");
   });
 
-  it("a channel with no videos → unchecked (no_videos), never ok", () => {
-    expect(youtubeFixes([...ALL], list([])).map((x) => [x.result, (x.evidence as { reason?: string }).reason])).toEqual(
-      [
-        ["unchecked", "no_videos"],
-        ["unchecked", "no_videos"],
-        ["unchecked", "no_videos"],
-      ],
-    );
+  it("a channel with no videos → no rows (lead, 2026-11-06), never ok", () => {
+    expect(youtubeFixes([...ALL], list([]))).toEqual([]);
   });
 
   it("no connection → no rows (lead, #146 B1); a connected one whose read fails → unchecked with the reason", () => {

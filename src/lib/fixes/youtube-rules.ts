@@ -2,7 +2,7 @@ import type { VideoChecks } from "@/lib/metrics/youtube-checks";
 import type { RuleKey, FixResult } from "./types";
 
 // G1's grouped YouTube fixes (p4, migration 0035): one per rule, evidence = the videos that fail it
-// ({id, title, url}). No videos = unchecked; short videos (chapters not_needed) never count for R21.
+// ({id, title, url}). Short videos (chapters not_needed) never count for R21.
 // Plural copy is the fix_rules row's; the one-video forms are data-pipeline's (COPY.md GAS).
 export const YOUTUBE_RULES = ["R19", "R20", "R21"] as const satisfies readonly RuleKey[];
 export const YOUTUBE_COPY = {
@@ -27,10 +27,10 @@ export type Checklist = {
 // No connection, or no keyword (lead, #146): no rows at all, so nothing noisy reaches the Fix list. The
 // fix pass only asks when youtubeReady; these are the guards behind that.
 export function youtubeFixes(rules: RuleKey[], list: Checklist | null | string): FixResult[] {
-  if (list === null || (typeof list !== "string" && !list.keyword)) return [];
+  // No connection, no keyword, or no videos (lead, 2026-11-06): no rows at all.
+  if (list === null || (typeof list !== "string" && (!list.keyword || !list.videos.length))) return [];
   return YOUTUBE_RULES.filter((k) => rules.includes(k)).map((rule_key): FixResult => {
     if (typeof list === "string") return { rule_key, result: "unchecked", evidence: { reason: list }, detail: null };
-    if (!list.videos.length) return { rule_key, result: "unchecked", evidence: { reason: "no_videos" }, detail: null };
     const field = FIELD[rule_key];
     const failing = list.videos
       .filter((v) => v.checks[field] === "fail")
