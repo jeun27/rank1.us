@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { ENGINE_LABEL } from "@/components/audit/contract";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
@@ -83,6 +84,7 @@ export function SourcesView({
   now,
   formAction,
   formHidden,
+  mentions,
 }: {
   sources: Sources | null;
   location: string | undefined;
@@ -93,11 +95,14 @@ export function SourcesView({
   checkedAt?: string | null;
   answers?: number;
   now?: Date;
+  // G7: "Lists that name your rivals but not you", first on the page (ENABLE_MENTIONS).
+  mentions?: ReactNode;
 }) {
   const any = sources?.engines.some((e) => e.links > 0);
   return (
     <Page title={c.title}>
       <p className="-mt-6 text-body-lg text-inkMuted">{c.subtitle}</p>
+      {mentions}
       {!sources || (!any && !location) ? (
         <Card>
           <p className="text-body-lg">{c.empty}</p>
