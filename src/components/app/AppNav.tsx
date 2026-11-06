@@ -15,6 +15,7 @@ export const NAV_GROUPS: { href: string; label: string; icon: IconName }[][] = [
   ],
   [
     { href: "/app/fixes", label: c.fixNext, icon: "wrench" },
+    { href: "/app/experiments", label: c.experiments, icon: "flask" },
     { href: "/app/report", label: c.reports, icon: "file" },
     { href: "/app/history", label: c.history, icon: "history" },
   ],

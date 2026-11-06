@@ -8,5 +8,7 @@ export const fixCopy = {
   status: "Status",
   statuses: { todo: "To do", doing: "Doing", done: "Done" },
   saveFailed: "We couldn't save that. Try again.",
+  // Step 17: on since the experiments page exists.
+  startTest: "Start a before/after test",
   affected: (n: number) => `${n} affected answers`,
 };
