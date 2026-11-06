@@ -977,3 +977,9 @@ Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/
 - Lead (2026-11-06): listFixes items carry status_changed_at and changed_by {is_team, name} | null, with the same safe mapping as done_fixes (team → is_team only, never an email), null on todo rows. Additive, and listFixes' signature is unchanged.
 - Migration 20261105000026 (+ .down.sql): open_fix_actors(business) (invoker, through the fixes RLS) returns the doing fixes' time and actor via 0023's private.fix_status_actor. listFixes merges it by fix id; the item key test lists the two new fields.
 
+## G4 (backend): narrative word lists and results (branch feat/narrative-words)
+- GAS brief, lead decisions 2026-11-06: no in-app LLM; G4 is word matching on stored answer text (U4: the word plus simple endings, data-pipeline's). Behind ENABLE_NARRATIVE. A dfy_client never sets the words; the team sets them with the client (lead Q1).
+- Migration 20261105000028 (+ .down.sql), additive: businesses.narrative_want / narrative_avoid (text[], default empty, a CHECK: ≤ 20 lowercase trimmed words of 2–40 characters, no repeats, none in both; not member-writable). set_narrative_words(business, want, avoid) (definer, can_write_business) trims, lowercases and dedupes, 22023 on bad lists.
+- narrative_results: one row per run (cascade), read like the run. record_narrative_result(run, p) (service only) refuses words not in the business's lists, counts over n, and a snippet over 400 characters, not found in the run's stored answer text, or without its word (lead: snippets come only from stored answer text, never why_note or vendor fields).
+- Queries: src/lib/queries/narrative.ts (getNarrativeWords, setNarrativeWords, getLatestNarrativeResult, recordNarrativeResult).
+

@@ -104,14 +104,14 @@ isOneToOne: false
                   ]
                 },"businesses": {
                   Row: {
-                    "aliases": (string)[],"archive_at": string | null,"archived_at": string | null,"brand_color": string | null,"city": string,"country": string,"created_at": string,"cuisine": string | null,"domain": string | null,"fix_list_visible": boolean,"ga4_property_id": string | null,"id": string,"logo_path": string | null,"name": string,"report_recipients": (string)[],"service": string,"state": string,"vertical": string,"workspace_id": string
+                    "aliases": (string)[],"archive_at": string | null,"archived_at": string | null,"brand_color": string | null,"city": string,"country": string,"created_at": string,"cuisine": string | null,"domain": string | null,"fix_list_visible": boolean,"ga4_property_id": string | null,"id": string,"logo_path": string | null,"narrative_avoid": (string)[],"narrative_want": (string)[],"name": string,"report_recipients": (string)[],"service": string,"state": string,"vertical": string,"workspace_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "aliases"?: (string)[],"archive_at"?: string | null,"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"name": string,"report_recipients"?: (string)[],"service"?: string,"state"?: string,"vertical"?: string,"workspace_id": string
+                    "aliases"?: (string)[],"archive_at"?: string | null,"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"narrative_avoid"?: (string)[],"narrative_want"?: (string)[],"name": string,"report_recipients"?: (string)[],"service"?: string,"state"?: string,"vertical"?: string,"workspace_id": string
                   }
                   Update: {
-                    "aliases"?: (string)[],"archive_at"?: string | null,"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"name"?: string,"report_recipients"?: (string)[],"service"?: string,"state"?: string,"vertical"?: string,"workspace_id"?: string
+                    "aliases"?: (string)[],"archive_at"?: string | null,"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"narrative_avoid"?: (string)[],"narrative_want"?: (string)[],"name"?: string,"report_recipients"?: (string)[],"service"?: string,"state"?: string,"vertical"?: string,"workspace_id"?: string
                   }
                   Relationships: [
                     {
@@ -546,6 +546,32 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"narrative_results": {
+                  Row: {
+                    "avoid": Json,"business_id": string | null,"checked_at": string,"n": number,"run_id": string,"snippet": string | null,"snippet_word": string | null,"want": Json
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "avoid"?: Json,"business_id"?: string | null,"checked_at"?: string,"n"?: number,"run_id": string,"snippet"?: string | null,"snippet_word"?: string | null,"want"?: Json
+                  }
+                  Update: {
+                    "avoid"?: Json,"business_id"?: string | null,"checked_at"?: string,"n"?: number,"run_id"?: string,"snippet"?: string | null,"snippet_word"?: string | null,"want"?: Json
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "narrative_results_business_id_fkey"
+      columns: ["business_id"]
+isOneToOne: false
+      referencedRelation: "businesses"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "narrative_results_run_id_fkey"
+      columns: ["run_id"]
+isOneToOne: false
+      referencedRelation: "runs"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"questions": {
                   Row: {
                     "active": boolean,"active_form": string,"business_id": string,"city": string | null,"country": string | null,"dfs_location_code": number | null,"id": string,"location_level": string,"long_text": string | null,"short_text": string,"state": string | null,"template_key": string | null
@@ -839,6 +865,9 @@ isOneToOne: false
 "record_connection_change":
 { Args: { "p_actor": string,"p_after": Json,"p_before": Json,"p_connection_id": string,"p_field": string,"p_provider_ref": string }; Returns: string
                            },
+"record_narrative_result":
+{ Args: { "p": Json,"p_run_id": string }; Returns: undefined
+                           },
 "record_stripe_event":
 { Args: { "p_event_id": string,"p_type": string }; Returns: boolean
                            },
@@ -874,6 +903,9 @@ isOneToOne: false
                            },
 "set_fix_status":
 { Args: { "p_fix_id": string,"p_status": string }; Returns: undefined
+                           },
+"set_narrative_words":
+{ Args: { "p_avoid": string[],"p_business_id": string,"p_want": string[] }; Returns: undefined
                            },
 "set_report_settings":
 { Args: { "p_brand_color": string | null,"p_business_id": string,"p_report_recipients": string[] }; Returns: undefined
