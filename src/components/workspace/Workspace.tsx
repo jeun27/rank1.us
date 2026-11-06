@@ -35,7 +35,12 @@ export function Workspace({ view, team = null }: { view: WorkspaceView; team?: T
     sel,
     title: sel.kind === "new" ? "New tab" : sel.kind === "clients" ? "Clients" : contextFor(view, sel).title,
   });
-  const first = tabOf({ kind: "section", section: "dashboard" });
+  // X5: with a client queue, /team opens on it (the Clients document).
+  const first = tabOf(
+    team?.openQueue && team.queue?.length && team.clients
+      ? { kind: "clients" }
+      : { kind: "section", section: "dashboard" },
+  );
 
   const [section, setSection] = useState<Section>("dashboard");
   const [selection, setSelection] = useState<Selection>({ kind: "section", section: "dashboard" });
