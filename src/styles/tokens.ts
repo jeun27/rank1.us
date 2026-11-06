@@ -1,54 +1,77 @@
-// Design tokens from docs/UI.md ("Field Notes"). The Tailwind theme in src/app/globals.css
-// mirrors these values; tests/unit/tokens.test.ts fails if the two drift apart.
+// Design tokens, v3 (design/direction.md §7, founder 2026-11-06: Supabase-style dark). The Tailwind
+// theme in src/app/globals.css mirrors these values; tests/unit/tokens.test.ts fails if they drift apart.
+// Dark is the default on every surface; `colors` is the O2 light theme (/app and /team toggle), and stays
+// the palette of the PDF report and the audit PNG.
 
-export const colors = {
-  paper: "#F7F4EE", // page background
-  ink: "#1E2320", // text; final CTA band
-  inkMuted: "#5C625E", // secondary text, captions, "checked X h ago"
-  moss: "#2F6F4F", // visible / up / success only
-  amber: "#D98E2B", // "Moved" fill; final CTA button (ink text). Never text on paper
-  brick: "#B3443A", // down / alerts / "before" problem only
-  jelly: "#279EF2", // mascot and large decorative fills. Never text, never white text on it
-  jellyDeep: "#1A5FBF", // primary button (white text), links, focus ring
-  border: "rgb(30 35 32 / 0.15)", // ink 15%, 1px: cards, tables, inputs
-  successBg: "#E6EFE9", // success badge/banner (moss text)
-  errorBg: "#F7E6E3", // error banner (brick text)
-  warnBg: "#FBEFD9", // "Moved" badge background
-  warnText: "#8A5A12", // "Moved" badge text
-  infoBg: "#E3EEFB", // info badge, "You" row tag (jellyDeep text), info banner icon chip
-  // Final set (Jeun 2026-11-05)
-  white: "#FFFFFF", // surface: cards, fields, banners; text on jellyDeep
-  jellyLoading: "#316FC5", // primary button while loading (white text 4.99:1)
-  fieldBorder: "rgb(30 35 32 / 0.5)", // ink 50%: domain field edge (3.18:1 on white)
-  auroraAmber: "#E8B85A", // aurora ring stop only. Never text
-  auroraTeal: "#5FB8B3", // aurora ring stop only. Never text
-  // Team workspace (lead, 2026-11-05)
-  raised: "#FFFFFF", // selected rows, active tab, composer
+// Dark (default). AA on panel #151619: ink 15.58, text2 9.00, muted 5.72, link 9.25, Jelly 6.25.
+export const darkColors = {
+  paper: "#000000", // page
+  white: "#0A0A0A", // panel: cards, fields, banners ("white" = the surface token in both themes)
+  raised: "#111214", // selected rows, active tab, secondary buttons
+  overlay: "#18191B", // menus, popovers
+  ink: "#EDEEF0", // text
+  text2: "#B3B7BF", // secondary text
+  inkMuted: "#8C919B", // muted text, captions, "checked X h ago"
+  border: "rgba(55, 65, 81, 0.55)", // hairline (decorative divider only)
+  borderStrong: "#41454D", // strong hairline
+  fieldBorder: "#71767F", // control edge (≥ 3:1)
+  accent: "#FFFFFF", // primary button fill, active icon, chart line (Jelly blue)
+  onAccent: "#000000", // text on accent (6.63)
+  jellyLoading: "#E5E5E5", // primary hover and loading
+  jelly: "#279EF2", // mascot and decorative fills
+  jellyDeep: "#79C0FA", // links and focus ring
+  // Portal R1: links are white and always underlined.
+  link: "#FFFFFF",
+  moss: "#5FBF8E",
+  successBg: "#13291F",
+  brick: "#F08A7E",
+  errorBg: "#33191A",
+  amber: "#D98E2B", // "Moved" fill and chart series only. Never a button, never text
+  warnText: "#E8B45F",
+  warnBg: "#2E2312",
+  infoBg: "#14263B",
+  auroraAmber: "#E8B85A", // aurora ring stop only
+  auroraTeal: "#5FB8B3", // aurora ring stop only
+  // Chart series (lead, v3 PR 1; supersedes Step 9 Q3 O1): 3 solids, validated on the dark panel.
+  series1: "#3987E5",
+  series2: "#D95926",
+  series3: "#199E70",
+  rail: "#000000", // the left rail, dark in both themes (D14)
 } as const;
 
-// Team workspace dark theme ([data-theme="dark"], ENG_HANDOFF_STEP2 §3). Same names, so every component
-// switches with the theme. AA on white (#121214): ink 16.30, inkMuted 8.00, jellyDeep 8.20, amber 7.00.
-export const darkColors = {
-  paper: "#0B0B0C",
-  ink: "#F2EFE9",
-  inkMuted: "#A9A9AE",
-  moss: "#5FBF8E",
-  amber: "#D98E2B",
-  brick: "#F08A7E",
+// Light (O2): cool grey, no beige. Same names, so every component switches with data-theme.
+export const colors = {
+  paper: "#F6F7F9",
+  white: "#FFFFFF",
+  raised: "#F0F2F5",
+  overlay: "#E8EBEF",
+  ink: "#111316",
+  text2: "#4A4F57",
+  inkMuted: "#646A73",
+  border: "#E2E5EA",
+  borderStrong: "#CDD1D8",
+  fieldBorder: "#7D838D",
+  accent: "#1A5FBF",
+  onAccent: "#FFFFFF",
+  jellyLoading: "#18579F",
   jelly: "#279EF2",
-  jellyDeep: "#7AAEF5",
-  border: "#3A3A3F",
-  successBg: "#173626",
-  errorBg: "#3B1D1A",
-  warnBg: "#3A2A12",
-  warnText: "#E8B45F",
-  infoBg: "#17263D",
-  white: "#121214",
-  jellyLoading: "#9DC2F7",
-  fieldBorder: "#707077",
+  jellyDeep: "#1A5FBF",
+  link: "#1A5FBF",
+  moss: "#2F6F4F",
+  successBg: "#E6EFE9",
+  brick: "#B3443A",
+  errorBg: "#F7E6E3",
+  amber: "#D98E2B",
+  warnText: "#8A5A12",
+  warnBg: "#FBEFD9",
+  infoBg: "#E5EFFC",
   auroraAmber: "#E8B85A",
   auroraTeal: "#5FB8B3",
-  raised: "#1E1E21",
+  // Light keeps the Step 9 hues for the 3 solids.
+  series1: "#1A5FBF",
+  series2: "#D98E2B",
+  series3: "#279EF2",
+  rail: "#0B0C0E",
 } as const;
 
 // [font-size px, line-height px]; mobile -> md+ where UI.md gives two sizes.
@@ -68,21 +91,29 @@ export const type = {
 } as const;
 
 export const spacing = [4, 8, 12, 16, 24, 32, 48, 64, 96] as const;
-// Final set (Jeun 2026-11-05): pills use rounded-full.
-export const radius = { card: 8, surface: 24, banner: 28 } as const;
+// v3 (D35/D36): 6px controls, 8px panels and banners, 4px tags (UI.md radius tag), 12px landing frames
+// (UI.md radius frame).
+export const radius = { control: 6, card: 8, surface: 8, banner: 8, tag: 4, frame: 12 } as const;
 
-// Soft shadows (Final set). The only box-shadows allowed; mirrored as --shadow-* in globals.css.
+// v3 (D36): hairlines instead of shadows. The names stay so components need no change; only overlay menus,
+// the Google button and the demo window lift keep a real shadow. Mirrored as --shadow-* in globals.css.
 export const shadows = {
-  field: "inset 0 1px 0 rgb(255 255 255 / 0.9), 0 10px 26px rgb(26 95 191 / 0.12)",
-  button: "inset 0 1px 0 rgb(255 255 255 / 0.25), 0 6px 14px rgb(26 95 191 / 0.3)",
-  card: "inset 0 1px 0 rgb(255 255 255 / 0.9), 0 16px 40px rgb(26 95 191 / 0.1)",
-  "banner-error": "inset 0 1px 0 rgb(255 255 255 / 0.9), 0 10px 26px rgb(179 68 58 / 0.12)",
+  field: "0 0 #0000",
+  button: "0 0 #0000",
+  card: "0 0 0 1px var(--color-border)",
+  "banner-error": "0 0 #0000",
   aurora: "0 8px 22px rgb(39 158 242 / 0.18), 0 4px 14px rgb(232 184 90 / 0.12)",
-  track: "inset 0 1px 2px rgb(30 35 32 / 0.06)",
-  fill: "0 2px 6px rgb(26 95 191 / 0.25)",
+  track: "0 0 #0000",
+  fill: "0 0 #0000",
+  overlay: "0 12px 32px rgb(0 0 0 / 0.4)",
+  // The landing demo window only (UI.md shadow-window).
+  window: "0 30px 80px -20px rgb(0 0 0 / 0.7)",
 } as const;
 
-// The only gradient: the aurora ring on the Google sign-in button.
+// The aurora ring on the Google sign-in button, and (D39) the decorative accent glow on the landing.
 export const aurora = "linear-gradient(90deg, #E8B85A, #5FB8B3, #279EF2)";
+export const glow = "radial-gradient(closest-side, rgb(39 158 242 / 0.18), transparent)";
+// Portal look: h1/h2 in /app, /team and /client fade from white to 60% white (dark only).
+export const headingGradient = "linear-gradient(180deg, #FFFFFF, rgb(255 255 255 / 0.6))";
 export const maxWidth = 1120;
 export const breakpoints = { sm: 640, md: 768, lg: 1024 } as const;

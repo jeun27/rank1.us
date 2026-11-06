@@ -1,14 +1,16 @@
+import type { ReactNode } from "react";
 import { EngineTable, Hero, Leaderboard } from "@/components/audit/AuditView";
 import type { Loaded } from "@/components/audit/load";
 import { appCopy as c } from "@/components/app/copy";
 import { HistoryTable } from "@/components/app/HistoryView";
 import { Page, Section } from "@/components/app/Page";
 import { VisibilityLine } from "@/components/app/VisibilityLine";
-import { FixList, type FixView } from "@/components/fixes/FixList";
+import { FixList, type DoneView, type FixView } from "@/components/fixes/FixList";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Jelly } from "@/components/ui/Jelly";
 import { seriesFromSummaries } from "@/lib/metrics";
+import { deltaTone, signedPts } from "@/lib/metrics/delta";
 import type { RunSummary } from "@/lib/queries/shell";
 
 // docs/COPY.md "Client invites (lead, 2026-11-05)": access removed. No button (nothing to set up).
@@ -17,6 +19,7 @@ const removed = "Nothing tracked yet.";
 export type ClientFixes = {
   ranked: FixView[];
   tidyUps: FixView[];
+  done?: DoneView[];
   unchecked: { rule_key: string; title: string }[];
   noDomain: boolean;
 };
@@ -29,12 +32,15 @@ export function ClientDashboard({
   runs,
   fixes,
   now,
+  notice,
 }: {
   business: { name: string } | null;
   latest: Loaded | null;
   runs: RunSummary[];
   fixes: ClientFixes | null;
   now: Date;
+  // C-b: the connect card, the slot below the hero (UX plan), or first with no run.
+  notice?: ReactNode;
 }) {
   if (!business)
     return (
@@ -62,6 +68,7 @@ export function ClientDashboard({
     return (
       <Page title={c.dashboard}>
         {name}
+        {notice}
         <Card>
           <p className="text-body-lg">{c.noChecks}</p>
         </Card>
@@ -76,10 +83,15 @@ export function ClientDashboard({
       {name}
       <Hero metrics={latest.metrics} now={now}>
         <div className="flex flex-wrap gap-2">
-          {lead?.change != null && <Badge tone="info">{`${lead.change > 0 ? "+" : ""}${lead.change} pts`}</Badge>}
+          {lead?.change != null && (
+            <Badge tone={deltaTone(lead.change)} mono>
+              {signedPts(lead.change)}
+            </Badge>
+          )}
           {run.status === "partial" && <Badge tone="warn">{c.lastPartial(run.jobs_ok, run.jobs_total)}</Badge>}
         </div>
       </Hero>
+      {notice}
       {series.visible && (
         <Section title={c.visibility}>
           <VisibilityLine points={series.points} />

@@ -141,8 +141,24 @@ export async function makeWorkspace(owner: TestUser): Promise<Fixture> {
       .select()
       .single(),
   );
-  const exp = must(await s.from("experiments").insert({ business_id: biz.id, name: "Menu test" }).select().single());
-  must(await s.from("experiment_questions").insert({ experiment_id: exp.id, question_id: q.id, grp: "test" }));
+  // An experiment needs both groups by commit (0020), so it and its questions go in one transaction.
+  const pg = new Client({ connectionString: dbUrl() });
+  await pg.connect();
+  const exp = { id: randomUUID() };
+  try {
+    await pg.query("begin");
+    await pg.query("insert into public.experiments (id, business_id, name) values ($1, $2, 'Menu test')", [
+      exp.id,
+      biz.id,
+    ]);
+    await pg.query(
+      "insert into public.experiment_questions (experiment_id, question_id, grp) values ($1, $2, 'test'), ($1, $3, 'control')",
+      [exp.id, q.id, q2.id],
+    );
+    await pg.query("commit");
+  } finally {
+    await pg.end();
+  }
   const rep = must(
     await s
       .from("reports")

@@ -7,8 +7,12 @@ import type { DbClient } from "./client";
 export const FIX_SIZES = ["S", "S-M", "M", "M-L", "L"] as const;
 export type FixSize = (typeof FIX_SIZES)[number];
 export type FixStatus = "todo" | "doing" | "done";
+export const PILLARS = ["p0", "p1", "p2", "p3", "p4", "p5", "p6"] as const;
+export type Pillar = (typeof PILLARS)[number];
+// G5: blockers first. P0 (know where you stand) comes last, with the baseline line.
+export const PILLAR_ORDER: Pillar[] = ["p5", "p3", "p2", "p1", "p4", "p6", "p0"];
 
-// A fix row as stored, used for ranking (size) and by getTopFixes.
+// A fix row as stored, used for ranking (pillar, size) and by getTopFixes.
 export type OpenFix = {
   id: string;
   rule_key: string;
@@ -18,13 +22,20 @@ export type OpenFix = {
   // null for site rules (no answer-derived rule is enabled yet); the UI hides it then.
   affected_answers: number | null;
   status: "todo" | "doing";
+  // G5 group: p0..p6 (the rule's pillar), ordered by PILLAR_ORDER.
+  pillar: Pillar;
 };
 
-// What the fix list shows: no size, evidence, why_note or other rule internals.
-export type FixItem = Omit<OpenFix, "size">;
+// Who moved a fix to its status: a team actor is { is_team: true, name: null } ("Rank1 team"); a
+// member's display name, never the email. Null when the weekly check did it.
+export type FixActor = { is_team: boolean; name: string | null };
+
+// What the fix list shows: no size, evidence, why_note or other rule internals. status_changed_at
+// and changed_by are set on doing rows only (null on todo).
+export type FixItem = Omit<OpenFix, "size"> & { status_changed_at: string | null; changed_by: FixActor | null };
 
 export type FixList = {
-  // Open fixes, smallest effort first (S, S-M, M, M-L, L), then rule key. Never hygiene rules.
+  // Open fixes by pillar (PILLAR_ORDER), then smallest effort (S … L), then rule key. Never hygiene rules.
   ranked: FixItem[];
   // Open hygiene fixes (H1), shown only under "Tidy-ups".
   tidyUps: FixItem[];
@@ -33,10 +44,13 @@ export type FixList = {
   lastRunId: string | null;
 };
 
-const FIX_COLUMNS = "id, rule_key, size, title, detail, affected_answers, status";
+const FIX_COLUMNS = "id, rule_key, size, title, detail, affected_answers, status, pillar";
 const byKey = (a: string, b: string) => a.localeCompare(b, "en", { numeric: true });
-const bySize = (a: OpenFix, b: OpenFix) =>
-  FIX_SIZES.indexOf(a.size) - FIX_SIZES.indexOf(b.size) || byKey(a.rule_key, b.rule_key);
+// The one fix order: the Fix list groups by it and the Dashboard's next fix is its first item.
+export const byPillarThenSize = (a: OpenFix, b: OpenFix) =>
+  PILLAR_ORDER.indexOf(a.pillar) - PILLAR_ORDER.indexOf(b.pillar) ||
+  FIX_SIZES.indexOf(a.size) - FIX_SIZES.indexOf(b.size) ||
+  byKey(a.rule_key, b.rule_key);
 
 // Open fixes of a business split into ranked and tidy-ups (by the rule's group), plus rule titles.
 export async function openFixes(
@@ -50,7 +64,7 @@ export async function openFixes(
   if (fixes.error) throw fixes.error;
   if (rules.error) throw rules.error;
   const hygiene = new Set(rules.data.filter((r) => r.grp === "hygiene").map((r) => r.key));
-  const items = (fixes.data as OpenFix[]).sort(bySize);
+  const items = (fixes.data as OpenFix[]).sort(byPillarThenSize);
   return {
     ranked: items.filter((f) => !hygiene.has(f.rule_key)),
     tidyUps: items.filter((f) => hygiene.has(f.rule_key)),
@@ -58,19 +72,26 @@ export async function openFixes(
   };
 }
 
-const toItem = (f: OpenFix): FixItem => ({
-  id: f.id,
-  rule_key: f.rule_key,
-  title: f.title,
-  detail: f.detail,
-  affected_answers: f.affected_answers,
-  status: f.status,
-});
+type Actors = Map<string, { status_changed_at: string | null; changed_by: FixActor | null }>;
+
+const toItem =
+  (actors: Actors) =>
+  (f: OpenFix): FixItem => ({
+    id: f.id,
+    rule_key: f.rule_key,
+    title: f.title,
+    detail: f.detail,
+    affected_answers: f.affected_answers,
+    status: f.status,
+    pillar: f.pillar,
+    status_changed_at: actors.get(f.id)?.status_changed_at ?? null,
+    changed_by: actors.get(f.id)?.changed_by ?? null,
+  });
 
 // The fix list a member may see through RLS (self-serve and team always; dfy_client only when
 // fix_list_visible). A caller who can't see it gets empty lists.
 export async function listFixes(db: DbClient, businessId: string): Promise<FixList> {
-  const [{ ranked, tidyUps, titles }, checks] = await Promise.all([
+  const [{ ranked, tidyUps, titles }, checks, doing] = await Promise.all([
     openFixes(db, businessId),
     db
       .from("fix_checks")
@@ -79,14 +100,43 @@ export async function listFixes(db: DbClient, businessId: string): Promise<FixLi
       .order("created_at", { ascending: false })
       .order("rule_key")
       .limit(50),
+    db.rpc("open_fix_actors", { p_business_id: businessId }),
   ]);
   if (checks.error) throw checks.error;
+  if (doing.error) throw doing.error;
+  const actors: Actors = new Map(
+    doing.data.map((a) => [
+      a.id,
+      { status_changed_at: a.status_changed_at, changed_by: a.changed_by as FixActor | null },
+    ]),
+  );
   const lastRunId = checks.data[0]?.run_id ?? null;
   const unchecked = checks.data
     .filter((c) => c.run_id === lastRunId && c.result === "unchecked")
     .map((c) => ({ rule_key: c.rule_key, title: titles.get(c.rule_key) ?? c.rule_key }))
     .sort((a, b) => byKey(a.rule_key, b.rule_key));
-  return { ranked: ranked.map(toItem), tidyUps: tidyUps.map(toItem), unchecked, lastRunId };
+  return { ranked: ranked.map(toItem(actors)), tidyUps: tidyUps.map(toItem(actors)), unchecked, lastRunId };
+}
+
+export type DoneFix = {
+  id: string;
+  rule_key: string;
+  title: string;
+  detail: string | null;
+  // G5 group (the rule's pillar), for the per-group done counts.
+  pillar: Pillar;
+  // Null for fixes closed before status history existed (they sort last).
+  status_changed_at: string | null;
+  // Null when the weekly check closed it.
+  changed_by: FixActor | null;
+};
+
+// The business's done fixes, newest change first, with the same visibility as the fix list.
+// The actor is shown as is_team and a member's display name, never the email.
+export async function listDoneFixes(db: DbClient, businessId: string): Promise<DoneFix[]> {
+  const { data, error } = await db.rpc("done_fixes", { p_business_id: businessId });
+  if (error) throw error;
+  return data.map((f) => ({ ...f, pillar: f.pillar as Pillar, changed_by: f.changed_by as DoneFix["changed_by"] }));
 }
 
 // Sets a fix's status (self-serve members and team only). Errors: 42501 not allowed or not

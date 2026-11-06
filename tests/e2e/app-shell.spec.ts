@@ -39,18 +39,25 @@ const STATES = [
   "history-error",
 ];
 
-for (const state of STATES) {
-  test(`/dev/app ${state}: one H1, axe clean, no side scroll`, async ({ page }, info) => {
-    await page.goto(`/dev/app?state=${state}`);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-    const axe = await new AxeBuilder({ page }).analyze();
-    expect(axe.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(", ")}`)).toEqual([]);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-      page.viewportSize()!.width,
-    );
-    await page.screenshot({ path: `test-results/screenshots/app-${state}-${info.project.name}.png`, fullPage: true });
-  });
-}
+// v3: every state in both themes (the gallery follows prefers-color-scheme, like a first visit to /app).
+for (const theme of ["dark", "light"] as const)
+  for (const state of STATES) {
+    test(`/dev/app ${state} (${theme}): one H1, axe clean, no side scroll`, async ({ page }, info) => {
+      await page.emulateMedia({ colorScheme: theme });
+      await page.goto(`/dev/app?state=${state}`);
+      await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+      const axe = await new AxeBuilder({ page }).analyze();
+      expect(axe.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(", ")}`)).toEqual([]);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+        page.viewportSize()!.width,
+      );
+      await page.screenshot({
+        path: `test-results/screenshots/app-${state}-${theme}-${info.project.name}.png`,
+        fullPage: true,
+      });
+    });
+  }
 
 test("questions drawer: keyboard opens it, Tab stays inside, Esc closes and focus returns", async ({ page }) => {
   await page.goto("/dev/app?state=questions-partial");
@@ -98,19 +105,22 @@ test("rule 3 on Competitors (both widths) and History", async ({ page }) => {
   await expect(page.getByText(/Checked .* ago · \d+ answers · API-measured, directional/)).toBeVisible();
 });
 
-test("fixes: each Status select is keyboard reachable; read-only has none", async ({ page }) => {
+// Portal (b): the Status select became the check-off circle, a real checkbox.
+test("fixes: each check-off circle is keyboard reachable; read-only has none", async ({ page }) => {
   await page.goto("/dev/app?state=fixes-success");
-  const selects = page.getByLabel("Status");
+  const selects = page.getByRole("checkbox");
   await expect(selects).toHaveCount(4);
   // focus() doesn't wait for visibility; the streamed content is hidden until React moves it into place.
   await expect(selects.first()).toBeVisible();
   await selects.first().focus();
   await expect(selects.first()).toBeFocused();
   await page.goto("/dev/app?state=fixes-readonly");
-  await expect(page.getByLabel("Status")).toHaveCount(0);
+  await expect(page.getByRole("checkbox")).toHaveCount(0);
 });
 
 test("tap targets are at least 44px on every page", async ({ page }) => {
+  // v3 (lead, O2): 44px below md (UI.md); from md up the dense 32px controls apply (checked in dev-ui.spec).
+  test.skip(page.viewportSize()!.width >= 768, "44px tap targets apply below md");
   for (const state of [
     "dashboard-success",
     "competitors-success",
@@ -178,10 +188,14 @@ test("signed-in owner: What to fix next lists open fixes, Tidy-ups, and Done rem
   await openMagicLink(page, user.email);
   await page.goto("/app/fixes");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("What to fix next");
+  // G5: real fixes carry their rule's pillar, so the list is grouped. R10 is P5 (an H2 group with the fix
+  // as H3), and the H1 tidy-up sits in Tidy-ups inside P2.
+  const p5 = page.getByRole("region", { name: "P5: Technical access" });
+  await expect(p5.getByRole("heading", { level: 2, name: "P5: Technical access" })).toBeVisible();
   await expect(
-    page.getByRole("heading", { level: 2, name: "Example data: put your menu on a page as text" }),
+    p5.getByRole("heading", { level: 3, name: "Example data: put your menu on a page as text" }),
   ).toBeVisible();
-  const tidy = page.getByRole("region", { name: "Tidy-ups" });
+  const tidy = page.getByRole("region", { name: "P2: Content" }).getByRole("region", { name: "Tidy-ups" });
   await expect(tidy.getByRole("heading", { name: "Example data: add Restaurant schema" })).toBeVisible();
   await expect(
     page.getByRole("navigation", { name: "App" }).getByRole("link", { name: "What to fix next" }),
@@ -191,10 +205,12 @@ test("signed-in owner: What to fix next lists open fixes, Tidy-ups, and Done rem
 
   // Done closes the fix: it leaves the list and the row is saved.
   const r10 = fixes.data.find((f) => f.rule_key === "R10")!;
-  await page.getByRole("listitem").filter({ hasText: "put your menu" }).getByLabel("Status").selectOption("done");
+  await page.getByRole("listitem").filter({ hasText: "put your menu" }).getByRole("checkbox").click();
   await expect(page.getByText("Example data: put your menu on a page as text")).toHaveCount(0);
-  const saved = await db.from("fixes").select("status").eq("id", r10.id).single();
-  expect(saved.data?.status).toBe("done");
+  // The circle is optimistic (the row moves at once), so wait for the save itself to land.
+  await expect
+    .poll(async () => (await db.from("fixes").select("status").eq("id", r10.id).single()).data?.status)
+    .toBe("done");
 });
 
 // QA STEP 9 (#49): the selector is a plain GET form submitted by its Show button (the form markup is
@@ -230,4 +246,14 @@ test("fixes gallery freshness n equals the Dashboard gallery n", async ({ page }
   const dashboard = await n("dashboard-success");
   expect(dashboard).toBeDefined();
   expect(await n("fixes-success")).toBe(dashboard);
+});
+
+// X6 (UI.md D33): the page name renders 22/28 at -0.02em at every width, and the hero number is 44/48.
+test("/dev/app dashboard: the H1 is 22/28 -0.02em and the hero number is 44px", async ({ page }) => {
+  await page.goto("/dev/app?state=dashboard-success");
+  const h1 = page.getByRole("heading", { level: 1 });
+  await expect(h1).toHaveCSS("font-size", "22px");
+  await expect(h1).toHaveCSS("line-height", "28px");
+  await expect(h1).toHaveCSS("letter-spacing", "-0.44px");
+  await expect(page.locator("main p.text-hero").first()).toHaveCSS("font-size", "44px");
 });

@@ -1,4 +1,5 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { readFileSync } from "node:fs";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AuditRequestForm } from "@/components/forms/AuditRequestForm";
@@ -25,14 +26,15 @@ describe("AuditRequestForm", () => {
     await userEvent.click(screen.getByRole("button", { name: "Get my free audit" }));
   };
 
-  it("idle: labeled email + domain, placeholder, amber final submit, hidden honeypot", () => {
+  it("idle: labeled email + domain, placeholder, accent final submit, hidden honeypot", () => {
     render(<AuditRequestForm />);
     expect(screen.getByLabelText("Email")).toHaveAttribute("type", "email");
     expect(screen.getByLabelText("Email")).not.toHaveAttribute("placeholder");
     expect(screen.getByLabelText("Your domain")).toHaveAttribute("placeholder", "yourbusiness.com");
     const button = screen.getByRole("button", { name: "Get my free audit" });
     expect(button).toHaveAttribute("type", "submit");
-    expect(button.className).toMatch(/bg-amber/);
+    // v3 (D34): the final CTA uses the accent; amber is no longer a button colour.
+    expect(button.className).toMatch(/bg-accent/);
     expect(button.className).not.toMatch(/bg-jellyDeep/);
     const trap = document.querySelector('input[name="website"]')!;
     expect(trap).toHaveAttribute("tabindex", "-1");
@@ -92,6 +94,131 @@ describe("AuditRequestForm", () => {
     render(<AuditRequestForm />);
     await fill("owner@example.test", "ramenhouse.com");
     expect(await screen.findByText("Add the ending, like ramenhouse.com")).toBeVisible();
+  });
+
+  // Founder-approved (07:56 UTC): the widget appears once both fields are valid; the button waits for a token.
+  describe("with Turnstile", () => {
+    type Opts = { sitekey: string; callback?: (t: string) => void; "expired-callback"?: () => void };
+    const widget = () => {
+      const w = { opts: null as Opts | null, reset: vi.fn(), remove: vi.fn() };
+      vi.stubGlobal("turnstile", {
+        render: (_el: HTMLElement, o: Opts) => ((w.opts = o), "w1"),
+        reset: w.reset,
+        remove: w.remove,
+      });
+      return w;
+    };
+    afterEach(() => vi.unstubAllEnvs());
+    const button = () => screen.getByRole("button", { name: "Get my free audit" });
+    const region = () => document.querySelector("[data-turnstile-reveal]")!;
+
+    it("empty → partial → valid → token → submit; inactive clicks send nothing", async () => {
+      vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "1x00000000000000000000AA");
+      const w = widget();
+      const { fetch, release } = pendingFetch(202, { status: "queued" });
+      render(<AuditRequestForm />);
+      expect(button()).toHaveAttribute("aria-disabled", "true");
+      expect(button()).toHaveAccessibleDescription("Enter your email and website to continue");
+      expect(region()).toHaveAttribute("data-revealed", "false");
+      expect(region()).toHaveAttribute("inert");
+      await userEvent.type(screen.getByLabelText("Email"), "owner@example.test");
+      expect(region()).toHaveAttribute("data-revealed", "false");
+      await userEvent.type(screen.getByLabelText("Your domain"), "ramenhouse.com");
+      expect(region()).toHaveAttribute("data-revealed", "true");
+      expect(region()).not.toHaveAttribute("inert");
+      expect(button()).toHaveAccessibleDescription("Check the box to continue");
+      await userEvent.click(button());
+      expect(fetch).not.toHaveBeenCalled();
+      await waitFor(() => expect(w.opts?.sitekey).toBe("1x00000000000000000000AA"));
+      act(() => w.opts!.callback!("token-1"));
+      expect(button()).not.toHaveAttribute("aria-disabled");
+      expect(button()).not.toHaveAccessibleDescription();
+      await userEvent.click(button());
+      expect(fetch).toHaveBeenCalledTimes(1);
+      release();
+      expect(await screen.findByRole("status")).toBeInTheDocument();
+    });
+
+    it("editing a field back to invalid: inactive again, the token kept (no reset); valid again: active", async () => {
+      vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "1x00000000000000000000AA");
+      const w = widget();
+      render(<AuditRequestForm />);
+      await userEvent.type(screen.getByLabelText("Email"), "owner@example.test");
+      await userEvent.type(screen.getByLabelText("Your domain"), "ramenhouse.com");
+      await waitFor(() => expect(w.opts).not.toBeNull());
+      act(() => w.opts!.callback!("token-1"));
+      await userEvent.clear(screen.getByLabelText("Your domain"));
+      await userEvent.type(screen.getByLabelText("Your domain"), "ramenhouse");
+      expect(button()).toHaveAttribute("aria-disabled", "true");
+      expect(button()).toHaveAccessibleDescription("Enter your email and website to continue");
+      expect(region()).toHaveAttribute("data-revealed", "true");
+      await userEvent.type(screen.getByLabelText("Your domain"), ".com");
+      expect(button()).not.toHaveAttribute("aria-disabled");
+      expect(w.reset).not.toHaveBeenCalled();
+    });
+
+    it("an inactive click with an invalid field shows the field errors, like before", async () => {
+      vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "1x00000000000000000000AA");
+      widget();
+      render(<AuditRequestForm />);
+      await userEvent.type(screen.getByLabelText("Your domain"), "ramenhouse");
+      await userEvent.click(button());
+      expect(screen.getByText("Add the ending, like ramenhouse.com")).toBeInTheDocument();
+    });
+
+    // #129 S1: autofill can set both fields without input events. The form re-reads the real values on
+    // focus, blur, animationstart (autofill) and submit; valid on submit with no token reveals the widget.
+    const autofill = () => {
+      (screen.getByLabelText("Email") as HTMLInputElement).value = "owner@example.test";
+      (screen.getByLabelText("Your domain") as HTMLInputElement).value = "ramenhouse.com";
+    };
+
+    it("autofill with no events, then submit: reveals Turnstile and says 'Check the box to continue'", async () => {
+      vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "1x00000000000000000000AA");
+      widget();
+      const { fetch } = pendingFetch(202, { status: "queued" });
+      render(<AuditRequestForm />);
+      autofill();
+      expect(region()).toHaveAttribute("data-revealed", "false");
+      fireEvent.submit(button().closest("form")!);
+      expect(region()).toHaveAttribute("data-revealed", "true");
+      expect(button()).toHaveAccessibleDescription("Check the box to continue");
+      expect(screen.queryByText("Add the ending, like ramenhouse.com")).toBeNull();
+      expect(fetch).not.toHaveBeenCalled();
+    });
+
+    it.each(["focus", "blur", "animationStart"] as const)(
+      "autofill with no input events, then %s: the form re-reads the values and reveals",
+      async (event) => {
+        vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "1x00000000000000000000AA");
+        widget();
+        render(<AuditRequestForm />);
+        autofill();
+        fireEvent[event](screen.getByLabelText("Email"));
+        expect(region()).toHaveAttribute("data-revealed", "true");
+        expect(button()).toHaveAccessibleDescription("Check the box to continue");
+      },
+    );
+
+    it("globals.css flags autofilled inputs with a no-op animation, so animationstart fires", () => {
+      const css = readFileSync("src/app/globals.css", "utf8");
+      expect(css).toMatch(/input:-webkit-autofill\s*\{\s*animation:\s*autofill-start 1ms;/);
+      expect(css).toContain("@keyframes autofill-start");
+    });
+
+    it("an expired token: inactive again and the widget is reset", async () => {
+      vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "1x00000000000000000000AA");
+      const w = widget();
+      render(<AuditRequestForm />);
+      await userEvent.type(screen.getByLabelText("Email"), "owner@example.test");
+      await userEvent.type(screen.getByLabelText("Your domain"), "ramenhouse.com");
+      await waitFor(() => expect(w.opts).not.toBeNull());
+      act(() => w.opts!.callback!("token-1"));
+      act(() => w.opts!["expired-callback"]!());
+      expect(button()).toHaveAttribute("aria-disabled", "true");
+      expect(button()).toHaveAccessibleDescription("Check the box to continue");
+      expect(w.reset).toHaveBeenCalledWith("w1");
+    });
   });
 
   it("renders no Turnstile widget without NEXT_PUBLIC_TURNSTILE_SITE_KEY", () => {

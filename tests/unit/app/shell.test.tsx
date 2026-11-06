@@ -43,6 +43,8 @@ describe("AppNav (lead: only pages that exist; Step 9 adds Sources after Questio
       ["Questions", "/app/questions"],
       ["Sources", "/app/sources"],
       ["What to fix next", "/app/fixes"],
+      ["Experiments", "/app/experiments"],
+      ["Reports", "/app/report"],
       ["History", "/app/history"],
       ["Billing", "/app/billing"],
     ]);
@@ -50,10 +52,12 @@ describe("AppNav (lead: only pages that exist; Step 9 adds Sources after Questio
     expect(within(nav).getByRole("link", { name: "Dashboard" })).not.toHaveAttribute("aria-current");
   });
 
-  it("is hidden during onboarding", () => {
+  // v3: the rail (logo + Account) stays during onboarding, so the user can still sign out; only the
+  // page links are hidden.
+  it("hides the page links during onboarding", () => {
     path.current = "/app/onboarding";
-    const { container } = render(<AppNav />);
-    expect(container).toBeEmptyDOMElement();
+    render(<AppNav />);
+    expect(within(screen.getByRole("navigation", { name: "App" })).queryAllByRole("link")).toEqual([]);
   });
 });
 

@@ -2,11 +2,12 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { navLink } from "@/components/site/Header";
 import { Logo } from "@/components/ui/Logo";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { authCopy as c } from "@/lib/auth/copy";
 
-// Signed-in header for /app and /client: logo home link, the /app Business switcher (left of the
-// account menu, UI.md), and the Account menu.
-export function AppHeader({ switcher }: { switcher?: ReactNode }) {
+// Signed-in header for /client (and the /team placeholders): logo home link, an optional switcher, the
+// "Dark theme" toggle (D40: /client themes like /app and /team, same prefs), and the Account menu.
+export function AppHeader({ switcher, connections = false }: { switcher?: ReactNode; connections?: boolean }) {
   return (
     <header className="mx-auto flex max-w-page items-center justify-between gap-3 px-5 py-3 md:px-8">
       <Link href="/" className={navLink} aria-label="Rank1">
@@ -14,6 +15,13 @@ export function AppHeader({ switcher }: { switcher?: ReactNode }) {
       </Link>
       <div className="flex min-w-0 items-center gap-2">
         {switcher}
+        {/* Settings → Connections for a DFY client (ENABLE_CONNECTIONS). */}
+        {connections && (
+          <Link href="/client/settings/connections" className={navLink}>
+            Connections
+          </Link>
+        )}
+        <ThemeToggle />
         <AccountMenu />
       </div>
     </header>

@@ -34,6 +34,12 @@ const TABLES = [
   "run_jobs",
   "free_audits",
   "fix_checks",
+  "connections",
+  "connection_tokens",
+  "connection_changes",
+  "connector_interest",
+  "ai_access_checks",
+  "mention_target_decisions",
 ].sort();
 
 const dir = (sub: string) => join(process.cwd(), "supabase", sub);

@@ -1,4 +1,5 @@
 import { ENGINE_LABEL } from "@/components/audit/contract";
+import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Table } from "@/components/ui/Table";
 import { CATEGORY_ORDER, type Sources } from "@/lib/metrics";
@@ -7,21 +8,21 @@ import { LocationSelect } from "./LocationSelect";
 import { Measured, Page } from "./Page";
 import { sourcesCopy as c } from "./sources-copy";
 
-// Category colors: existing tokens only, validated with the dataviz script (all pairs, paper).
-// The four solid hues pass together; Social (jellyDeep) and Other (neutral inkMuted) are striped,
-// so texture tells them from the solid fills (lead Q3, O1).
-const COLOR: Record<Category, { fill: string; texture?: boolean }> = {
-  reddit: { fill: "var(--color-jellyDeep)" },
-  youtube: { fill: "var(--color-amber)" },
-  social: { fill: "var(--color-jellyDeep)", texture: true },
-  review_directory: { fill: "var(--color-jelly)" },
-  news_blog: { fill: "var(--color-warnText)" },
+// Category colors (lead, v3 PR 1; supersedes Step 9 Q3 O1): dedicated per-theme series tokens, 3 solids +
+// 3 stripes in both themes, validated with the dataviz script (all pairs) on the dark and light panels.
+// Social and News and blogs are striped in the Reddit and YouTube hues, Other in neutral inkMuted.
+export const SERIES_STYLE: Record<Category, { fill: string; texture?: boolean }> = {
+  reddit: { fill: "var(--color-series1)" },
+  youtube: { fill: "var(--color-series2)" },
+  review_directory: { fill: "var(--color-series3)" },
+  social: { fill: "var(--color-series1)", texture: true },
+  news_blog: { fill: "var(--color-series2)", texture: true },
   other: { fill: "var(--color-inkMuted)", texture: true },
 };
 const linksText = (n: number) => `${n} ${n === 1 ? "link" : "links"}`;
 
 function Swatch({ category }: { category: Category }) {
-  const { fill, texture } = COLOR[category];
+  const { fill, texture } = SERIES_STYLE[category];
   return (
     <svg aria-hidden viewBox="0 0 12 12" className="size-3 shrink-0 rounded-[3px]">
       <rect width="12" height="12" fill={texture ? `url(#texture-${category})` : fill} />
@@ -33,7 +34,7 @@ function Swatch({ category }: { category: Category }) {
 const Patterns = () => (
   <svg aria-hidden width="0" height="0" className="absolute">
     <defs>
-      {CATEGORY_ORDER.filter((k) => COLOR[k].texture).map((k) => (
+      {CATEGORY_ORDER.filter((k) => SERIES_STYLE[k].texture).map((k) => (
         <pattern
           key={k}
           id={`texture-${k}`}
@@ -43,7 +44,7 @@ const Patterns = () => (
           patternTransform="rotate(45)"
         >
           <rect width="6" height="6" fill="var(--color-white)" />
-          <rect width="3" height="6" fill={COLOR[k].fill} />
+          <rect width="3" height="6" fill={SERIES_STYLE[k].fill} />
         </pattern>
       ))}
     </defs>
@@ -66,7 +67,7 @@ function Bar({ parts, total }: { parts: Sources["engines"][number]["byCategory"]
           width={(p.count / total) * usable}
           height={16}
           rx={4}
-          fill={COLOR[p.category].texture ? `url(#texture-${p.category})` : COLOR[p.category].fill}
+          fill={SERIES_STYLE[p.category].texture ? `url(#texture-${p.category})` : SERIES_STYLE[p.category].fill}
         />
       ))}
     </svg>
@@ -126,15 +127,14 @@ export function SourcesView({
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <h2 className="text-ui font-semibold">{label}</h2>
                     {e.locationSupport === "exact" && (
-                      <span className="rounded-full bg-infoBg px-2 text-caption text-jellyDeep">{c.exact}</span>
+                      <Badge tone="info" data-location-tag>
+                        {c.exact}
+                      </Badge>
                     )}
                     {e.locationSupport === "fallback" && (
-                      <span
-                        title={c.fallbackTip(label)}
-                        className="rounded-full border border-border px-2 text-caption text-inkMuted"
-                      >
+                      <Badge tone="neutral" title={c.fallbackTip(label)} data-location-tag>
                         {c.fallback}
-                      </span>
+                      </Badge>
                     )}
                   </div>
                   {e.links ? (
@@ -178,7 +178,7 @@ export function SourcesView({
                     href={`https://${d.domain}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex min-h-11 items-center text-jellyDeep underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-jellyDeep"
+                    className="inline-flex min-h-11 items-center text-link underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-jellyDeep"
                   >
                     <span data-computed>{d.domain}</span>
                   </a>

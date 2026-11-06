@@ -12,6 +12,6 @@ export type CompetitorSearch = Omit<LocalCompetitorsResult, "error">;
 export type OnboardingActions = {
   readSite: (domain: string) => Promise<SiteRead>;
   findCompetitors: (q: CompetitorQuery) => Promise<CompetitorSearch>;
-  // Redirects to /app on success; returns an error code otherwise.
+  // Redirects to /app (or the C-b connect step) on success; returns an error code otherwise.
   finish: (input: OnboardingInput) => Promise<{ error: string } | undefined>;
 };

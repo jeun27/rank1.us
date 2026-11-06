@@ -83,3 +83,33 @@ Requests between agents (for example, a new field frontend needs from backend). 
     - `listMyBusinesses(db)` → { id, name, archiveAt }[] for the switcher.
     - `getCurrentBusiness(db, selectedId?)` honors the switcher's id when it's the caller's.
   - Status: done.
+- 2026-11-05, backend -> data-pipeline + frontend: Step 16 on feat/step16-reports-db (src/lib/queries/reports.ts).
+  - Service:
+    - `laPreviousMonthStart(now)` and `enqueueMonthlyReports(serviceDb, laPreviousMonthStart(now))` → { enqueued, skipped }.
+    - `claimReports(serviceDb, 2)` → { report_id, business_id, period_start, period_end, attempt }[].
+    - `finishReport(serviceDb, { reportId, status: "generated" | "sent" | "failed", pdfPath: "<business_id>/<report_id>.pdf" | null, sentTo, error? })` → boolean.
+    - Upload PDFs to bucket REPORTS_BUCKET ("reports") with the service client.
+  - Member/server:
+    - `listReports(db, businessId)` → { id, period_start, period_end, status, sent_at, recipients (count), has_pdf }[].
+    - `getReportSettings(db, businessId)` → { brand_color, report_recipients, has_logo }.
+    - `setReportSettings(db, businessId, { brand_color?, report_recipients? })` through the set_report_settings RPC (self-serve members or the team on DFY; 23514 bad input, 42501 not allowed).
+    - `uploadLogo(userDb, serviceDb, businessId, bytes)` → { status: "saved" | "too_large" | "bad_type" | "not_allowed" }.
+    - `getLogoUrl` / `getReportDownloadUrl(userDb, serviceDb, id)` → 60 s signed URL | null.
+  - Status: done.
+- 2026-11-06, backend -> data-pipeline + frontend: Step 17 experiments on feat/step17-experiments-db (src/lib/queries/experiments.ts), all on the caller's client (RLS; a dfy_client gets nothing).
+  - `listExperiments(db, businessId, now?)` → ExperimentRow[] = { id, fix_id, name, change_note, change_url, change_date, ended_at, status: "running" | "done" | "ended", test, control } (test/control = question counts), newest change first.
+  - `createExperiment(db, { businessId, test, control?, fixId?, name?, changeNote?, changeUrl?, changeDate? })` → id. Errors: 22023 bad input, 42501 not allowed.
+  - `endExperiment(db, id)` / `deleteExperiment(db, id)` → boolean.
+  - `getExperimentData(db, id)` → { before: { start, end }, after: { start, end }, test: { before: Cell, after: Cell }, control: { before: Cell, after: Cell } } | null, with Cell = { named, n }. Dates are LA YYYY-MM-DD, end exclusive.
+  - Pure helpers: `laToday(now?)`, `experimentStatus(row, now?)`, `EXPERIMENT_DAYS = 28`. Status: open.
+- 2026-11-06, backend -> data-pipeline + frontend: Connections on feat/connections-db (src/lib/queries/connections.ts).
+  - Reads (caller's client): listConnections(db, businessId) → { id, provider, status, external_account_id, selected_entities: {id, name}[], scopes, connected_at, last_checked_at }[]; listConnectionChanges(db, businessId, limit = 100) newest first; listConnectorInterest(db, businessId).
+  - Route checks (user's client, before any service call): canConnectBusiness(db, b) and canApplyEdits(db, b). noteConnectorInterest(db, b, key): idempotent, 22023 unknown key, 42501 not allowed.
+  - Service client only: saveConnection(svc, { businessId, provider, externalAccountId, scopes, connectedBy, encAccess, encRefresh, expiresAt }) → id; getConnectionTokens(svc, id) → { enc_access, enc_refresh, expires_at, status, external_account_id } | null (null once revoked); updateConnectionTokens(svc, id, { encAccess, expiresAt, encRefresh? }); setConnectionEntities(svc, id, entities) (≤ 100); setConnectionStatus(svc, id, "connected" | "needs_reauth"); revokeConnection(svc, id) → revoked ids (call after revoking with the provider); recordConnectionChange(svc, { connectionId, actor, field, before, after, providerRef? }) → id. A Google grant = one business + one Google account (externalAccountId = the Google sub): its live gbp/search_console/ga4 connections share tokens, needs_reauth and revoke. A null encRefresh keeps the grant's stored refresh token. updateConnectionTokens also sets last_checked_at.
+  - CONNECTOR_KEYS (12) and GBP_EDIT_FIELDS (6) are exported. VERTICALS (13) and VERTICAL_FOR_INDUSTRY are in onboarding.ts; createBusinessOnboarding/createDfyClient take business.vertical. Status: open.
+- 2026-11-06, backend -> frontend: fix status history on feat/fix-status-history. `listDoneFixes(db, businessId)` → DoneFix[] = { id, rule_key, title, detail, status_changed_at: string | null, changed_by: { is_team, name } | null }, newest change first (nulls last), same visibility as listFixes. changed_by null = the weekly check closed it; is_team true = show "Rank1 team" (name is always null then). listFixes and setFixStatus are unchanged. Status: open.
+
+- 2026-11-06, backend -> data-pipeline + frontend: G2 storage on feat/ai-access-db (src/lib/queries/ai-access.ts). data-pipeline: `recordAiAccessCheck(svc, runId, { domain, outcome: "good"|"blocked"|"js_empty"|"cloudflare"|"unreachable", crawlers: { agent: AiCrawler, allowed, line: string|null }[], visibleWords, statusNormal, statusGptbot, cloudflare, pagesChecked })`, idempotent per run (22023 bad input). P5 fixes via recordFixResults with R14 (blocked), R10 (JS-empty) and the new R16 (Cloudflare, enabled). frontend: `getLatestAiAccessCheck(db, businessId)` for the dashboard card; on /audit, `getAiAccessCheck(serviceDb, run.id)` with the run from getFreeAuditByToken. Status: open.
+- 2026-11-06, backend -> frontend: G5 pillars on feat/fix-pillars. listFixes ranked/tidyUps items now carry `pillar: "p0" | … | "p6"` (PILLARS and Pillar in src/lib/queries/fixes.ts). Group order per the lead: p5, p3, p2, p1, p4, p6, with p0 as the baseline line. H1 is p2 and stays in tidyUps. Status: open.
+
+- 2026-11-06, backend -> frontend: who/when on open fixes on feat/open-fix-actors. listFixes items (ranked and tidyUps) gain `status_changed_at: string | null` and `changed_by: { is_team, name } | null`, set on doing rows only (null on todo). Same mapping as listDoneFixes: is_team true → "Rank1 team" (name always null); otherwise a member's display name, never the email. listFixes' signature is unchanged. Status: open.

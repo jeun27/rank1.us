@@ -5,18 +5,22 @@ import { expectAxeClean, expectNoSideScroll } from "./helpers/forms";
 const STATES = ["success", "fixes", "partial", "no-run", "no-run-fixes", "removed", "loading", "error"] as const;
 
 for (const state of STATES)
-  test(`/dev/client ${state}: one H1, axe clean, no side scroll`, async ({ page }) => {
-    await page.goto(`/dev/client?state=${state}`);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Dashboard");
-    await expectNoSideScroll(page);
-    await expectAxeClean(page);
-  });
+  for (const theme of ["dark", "light"] as const)
+    test(`/dev/client ${state} (${theme}): one H1, axe clean, no side scroll`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: theme });
+      await page.goto(`/dev/client?state=${state}`);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText("Dashboard");
+      await expectNoSideScroll(page);
+      await expectAxeClean(page);
+    });
 
 test("read-only: no Status select, no competitor edits, no billing or prices", async ({ page }) => {
   for (const state of ["success", "fixes"]) {
     await page.goto(`/dev/client?state=${state}`);
     await expect(page.getByLabel("Status")).toHaveCount(0);
+    // Portal (b): the check-off circles are status only for a client.
+    await expect(page.getByRole("checkbox")).toHaveCount(0);
     await expect(page.getByRole("button", { name: /Add|Not a competitor|Start for/ })).toHaveCount(0);
     expect(await page.locator("main").textContent()).not.toMatch(/\$\d/);
   }
@@ -25,7 +29,9 @@ test("read-only: no Status select, no competitor edits, no billing or prices", a
 
 test("keyboard: every link and button on the client dashboard is reachable with Tab", async ({ page }) => {
   await page.goto("/dev/client?state=fixes");
-  const focusable = await page.locator("main a[href], main button").count();
+  // The Fix list's Open / Done / All filter is a radiogroup with roving focus: one radio is in the Tab order
+  // and the arrow keys move between them (ARIA pattern), so the other radios are left out of this count.
+  const focusable = await page.locator('main a[href], main button:not([role="radio"][tabindex="-1"])').count();
   const seen = new Set<string>();
   for (let i = 0; i < focusable + 15; i++) {
     await page.keyboard.press("Tab");

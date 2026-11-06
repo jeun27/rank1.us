@@ -21,7 +21,8 @@ export function readPrefs(): Prefs {
   };
 }
 
-const systemTheme = (): Theme => (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+// v3: dark unless the system asks for light (the same rule as src/lib/theme.ts).
+const systemTheme = (): Theme => (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
 export const resolveTheme = (p: Prefs): Theme => p.theme ?? systemTheme();
 
 const listeners = new Set<() => void>();
@@ -43,6 +44,3 @@ export function subscribePrefs(l: () => void) {
   listeners.add(l);
   return () => listeners.delete(l);
 }
-
-// Runs before first paint so the page never flashes the wrong theme.
-export const themeScript = `(function(){var t;try{t=JSON.parse(localStorage.getItem(${JSON.stringify(PREFS_KEY)})||"{}").theme}catch(e){}if(t!=="light"&&t!=="dark")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=t})()`;

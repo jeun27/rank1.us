@@ -1,12 +1,11 @@
 "use client";
-import { useId, useState } from "react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Freshness } from "@/components/ui/Freshness";
 import { Icon } from "@/components/ui/Icon";
 import type { WorkspaceView } from "@/lib/queries/workspace";
 import {
-  SECTION_LABEL,
   buildBrief,
   buildContextMarkdown,
   CLAUDE_URL,
@@ -17,7 +16,7 @@ import {
   type Section,
   type Selection,
 } from "@/lib/workspace/context";
-import { useTeam, type TeamExtras } from "./team";
+import { useTeam } from "./team";
 
 type Item = { sel: Selection; title: string; detail: string; you?: boolean };
 
@@ -55,56 +54,18 @@ function itemsFor(view: WorkspaceView, section: Section): Item[] {
 
 const same = (a: Selection, b: Selection) => JSON.stringify(a) === JSON.stringify(b);
 
-// A plain GET form, like the Sources location selector: works without JavaScript and doesn't
-// navigate while arrow keys move through the list.
-function ClientSwitcher({ team }: { team: TeamExtras }) {
-  const id = useId();
-  return (
-    <form method="get" action={team.formAction} className="flex items-end gap-2 px-4 pb-3">
-      {Object.entries(team.hidden ?? {}).map(([k, v]) => (
-        <input key={k} type="hidden" name={k} value={v} />
-      ))}
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <label htmlFor={id} className="text-caption font-semibold">
-          Client
-        </label>
-        <select
-          id={id}
-          name="b"
-          defaultValue={team.businessId}
-          className="h-11 min-w-0 rounded-full border border-fieldBorder bg-white px-4 text-ui focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep"
-        >
-          {team.businesses.map((b) => (
-            <option key={b.id} value={b.id}>
-              {b.name}
-            </option>
-          ))}
-        </select>
-      </div>
-      <button
-        type="submit"
-        className="inline-flex min-h-11 items-center rounded-full border border-fieldBorder bg-white px-4 text-ui font-semibold hover:bg-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
-      >
-        Show
-      </button>
-    </form>
-  );
-}
-
 export function ContextPane({
   view,
   section,
   selection,
   now,
   onSelect,
-  onClients,
 }: {
   view: WorkspaceView;
   section: Section;
   selection: Selection;
   now: Date | null;
   onSelect: (s: Selection) => void;
-  onClients?: () => void;
 }) {
   const [prompt, setPrompt] = useState("");
   const [status, setStatus] = useState("");
@@ -132,25 +93,13 @@ export function ContextPane({
 
   return (
     <>
-      <header className="flex h-12 shrink-0 items-center justify-between gap-3 px-4">
-        <h1 className="truncate text-caption font-semibold">{SECTION_LABEL[section]}</h1>
-        {!team?.input && <Badge tone="info">Example data</Badge>}
-      </header>
-      {team && <ClientSwitcher team={team} />}
-      {team?.clients && onClients && (
-        <div className="px-4 pb-3">
-          <button
-            type="button"
-            onClick={onClients}
-            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-fieldBorder bg-white px-4 text-ui font-semibold hover:bg-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
-          >
-            <Icon name="users" className="size-4" />
-            Clients
-          </button>
+      {!team?.input && (
+        <div className="px-4 pt-3">
+          <Badge tone="info">Example data</Badge>
         </div>
       )}
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+      <div className="min-h-0 flex-1 overflow-y-auto p-4">
         <section className="rounded-card border border-border bg-paper p-4">
           {selection.kind !== "section" && (
             <h2 data-computed className="mb-2 text-ui font-semibold">
@@ -235,7 +184,7 @@ export function ContextPane({
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => copy("Brief copied. Paste it in Claude.")}
-            className="inline-flex min-h-11 items-center gap-2 px-1.5 text-ui font-semibold text-jellyDeep underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+            className="inline-flex min-h-11 items-center gap-2 px-1.5 text-ui font-semibold text-link underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
           >
             Open in Claude
             <Icon name="arrowRight" className="size-4" />

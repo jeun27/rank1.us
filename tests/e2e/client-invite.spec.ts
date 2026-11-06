@@ -46,7 +46,8 @@ test("invite link → /client; fixes only when shown; Remove access → Nothing 
   // The team opens the Clients tab: the user is listed; an existing account is refused.
   await openMagicLink(page, (await newUser("team-clients", "team")).email);
   await page.goto(`/team?b=${dfy}`);
-  await show(page, "Context");
+  // v3 D20: the Clients row is the last row of the breadcrumb's client switcher.
+  await page.getByRole("button", { name: `Client ${name}` }).click();
   await page.getByRole("button", { name: "Clients", exact: true }).click();
   await show(page, "Document");
   const panel = page.getByRole("tabpanel");
@@ -73,6 +74,8 @@ test("invite link → /client; fixes only when shown; Remove access → Nothing 
   await expect(client.getByRole("heading", { name: "What to fix next" })).toBeVisible();
   await expect(client.getByText("robots.txt allows AI search crawlers")).toBeVisible();
   await expect(client.getByLabel("Status")).toHaveCount(0);
+  // Portal (b): the check-off circles are status only for a client.
+  await expect(client.getByRole("checkbox")).toHaveCount(0);
 
   // Remove access → the client keeps the role but sees the empty state.
   await panel.getByRole("list", { name: "Clients" }).getByRole("button", { name: "Remove access" }).click();

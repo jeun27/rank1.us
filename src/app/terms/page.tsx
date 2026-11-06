@@ -5,7 +5,7 @@ import { LegalPlaceholder } from "@/components/contact/LegalPlaceholder";
 export const metadata: Metadata = { title: "Terms - Rank1" };
 
 const link =
-  "text-jellyDeep underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
+  "text-link underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
 
 // Placeholder copy (exempt from COPY.md). No legal claims until review.
 export default function TermsPage() {

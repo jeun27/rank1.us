@@ -67,8 +67,8 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with: { node-version: 22, cache: pnpm }
       - run: pnpm install --frozen-lockfile
-      # DB tests need Postgres, Auth (gotrue), PostgREST and the Kong gateway only.
-      - run: pnpm exec supabase start -x realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+      # DB tests need Postgres, Auth (gotrue), PostgREST, Storage (report PDFs and logos) and the Kong gateway.
+      - run: pnpm exec supabase start -x realtime,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
       - run: pnpm test:db
       - if: always()
         run: pnpm exec supabase stop --no-backup
@@ -89,7 +89,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
       # Sign-in e2e need Auth; playwright.config.ts reads the local keys from `supabase status`.
-      - run: pnpm exec supabase start -x realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+      - run: pnpm exec supabase start -x realtime,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
       # playwright.config.ts runs `pnpm build && pnpm start` as its web server.
       - run: pnpm e2e
       - if: always()

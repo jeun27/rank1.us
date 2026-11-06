@@ -1,33 +1,50 @@
 @import "tailwindcss";
 
-/* Colors: docs/UI.md tokens only (src/styles/tokens.ts). Tailwind's default palette is removed. */
-@theme {
-  --color-*: initial;
-  --color-paper: #F7F4EE;
-  --color-ink: #1E2320;
-  --color-inkMuted: #5C625E;
-  --color-moss: #2F6F4F;
-  --color-amber: #D98E2B;
-  --color-brick: #B3443A;
-  --color-jelly: #279EF2;
-  --color-jellyDeep: #1A5FBF;
-  --color-border: rgb(30 35 32 / 0.15);
-  --color-successBg: #E6EFE9;
-  --color-errorBg: #F7E6E3;
-  --color-warnBg: #FBEFD9;
-  --color-warnText: #8A5A12;
-  --color-infoBg: #E3EEFB;
-  --color-white: #FFFFFF;
-  --color-jellyLoading: #316FC5;
-  --color-fieldBorder: rgb(30 35 32 / 0.5);
-  --color-auroraAmber: #E8B85A;
-  --color-auroraTeal: #5FB8B3;
-  --color-raised: #FFFFFF;
+:root {
+  color-scheme: dark;
 }
 
+/* Colors: v3 tokens only (src/styles/tokens.ts, design/direction.md §7). Dark is the default on every
+   surface; [data-theme="light"] is the O2 theme. Tailwind's default palette is removed. */
+@theme {
+  --color-*: initial;
+  --color-paper: #000000;
+  --color-white: #0A0A0A;
+  --color-raised: #111214;
+  --color-overlay: #18191B;
+  --color-ink: #EDEEF0;
+  --color-text2: #B3B7BF;
+  --color-inkMuted: #8C919B;
+  --color-border: rgba(55, 65, 81, 0.55);
+  --color-borderStrong: #41454D;
+  --color-fieldBorder: #71767F;
+  --color-accent: #FFFFFF;
+  --color-onAccent: #000000;
+  --color-jellyLoading: #E5E5E5;
+  --color-jelly: #279EF2;
+  --color-jellyDeep: #79C0FA;
+  --color-link: #FFFFFF;
+  --color-moss: #5FBF8E;
+  --color-successBg: #13291F;
+  --color-brick: #F08A7E;
+  --color-errorBg: #33191A;
+  --color-amber: #D98E2B;
+  --color-warnText: #E8B45F;
+  --color-warnBg: #2E2312;
+  --color-infoBg: #14263B;
+  --color-auroraAmber: #E8B85A;
+  --color-auroraTeal: #5FB8B3;
+  --color-series1: #3987E5;
+  --color-series2: #D95926;
+  --color-series3: #199E70;
+  --color-rail: #000000;
+}
+
+/* v3 (D33): Inter for everything, JetBrains Mono for data only (numbers, domains, question strings). */
 @theme inline {
-  --font-display: var(--font-fraunces), Georgia, serif;
-  --font-sans: var(--font-public-sans), system-ui, sans-serif;
+  --font-display: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 @theme {
@@ -41,32 +58,44 @@
   --text-h2-md--line-height: 42px;
   --text-h3: 20px;
   --text-h3--line-height: 26px;
-  --text-hero: 48px;
-  --text-hero--line-height: 52px;
+  --text-title: 22px;
+  --text-title--line-height: 28px;
+  --text-hero: 44px;
+  --text-hero--line-height: 48px;
   --text-body: 16px;
   --text-body--line-height: 24px;
   --text-body-lg: 18px;
   --text-body-lg--line-height: 28px;
-  --text-ui: 15px;
-  --text-ui--line-height: 20px;
-  --text-caption: 13px;
-  --text-caption--line-height: 18px;
+  /* v3 (UI.md type table): one size at every breakpoint. */
+  --text-section: 13px;
+  --text-section--line-height: 18px;
+  --text-ui: 13px;
+  --text-ui--line-height: 19px;
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+  --text-tag: 11px;
+  --text-tag--line-height: 1;
   --text-micro: 10px;
   --text-micro--line-height: 14px;
   --text-wordmark: 18px;
 
+  --radius-control: 6px;
   --radius-card: 8px;
-  --radius-surface: 24px;
-  --radius-banner: 28px;
+  --radius-surface: 8px;
+  --radius-banner: 8px;
+  --radius-tag: 4px;
+  --radius-frame: 12px;
 
-  /* Final set (Jeun 2026-11-05): the only shadows (src/styles/tokens.ts shadows). */
-  --shadow-field: inset 0 1px 0 rgb(255 255 255 / 0.9), 0 10px 26px rgb(26 95 191 / 0.12);
-  --shadow-button: inset 0 1px 0 rgb(255 255 255 / 0.25), 0 6px 14px rgb(26 95 191 / 0.3);
-  --shadow-card: inset 0 1px 0 rgb(255 255 255 / 0.9), 0 16px 40px rgb(26 95 191 / 0.1);
-  --shadow-banner-error: inset 0 1px 0 rgb(255 255 255 / 0.9), 0 10px 26px rgb(179 68 58 / 0.12);
+  /* v3 (D36): hairlines instead of shadows (src/styles/tokens.ts shadows); the names stay. */
+  --shadow-field: 0 0 #0000;
+  --shadow-button: 0 0 #0000;
+  --shadow-card: 0 0 0 1px var(--color-border);
+  --shadow-banner-error: 0 0 #0000;
   --shadow-aurora: 0 8px 22px rgb(39 158 242 / 0.18), 0 4px 14px rgb(232 184 90 / 0.12);
-  --shadow-track: inset 0 1px 2px rgb(30 35 32 / 0.06);
-  --shadow-fill: 0 2px 6px rgb(26 95 191 / 0.25);
+  --shadow-track: 0 0 #0000;
+  --shadow-fill: 0 0 #0000;
+  --shadow-overlay: 0 12px 32px rgb(0 0 0 / 0.4);
+  --shadow-window: 0 30px 80px -20px rgb(0 0 0 / 0.7);
   --container-page: 1120px;
 
   /* Jelly loading squish: scaleY 0.95 -> 1.0, ~1.2 s loop. */
@@ -77,35 +106,83 @@
   }
 }
 
-/* The only gradient: the aurora ring, Google sign-in button only. A white padding-box layer over the
-   gradient border-box gives a 2px gradient edge that follows the pill radius. */
+/* The two gradients. The aurora ring, Google sign-in button only: a white padding-box layer over the
+   gradient border-box gives a 2px gradient edge that follows the pill radius. The accent glow (D39),
+   decorative and landing-only, never behind text that needs it for contrast. */
 :root {
   --aurora: linear-gradient(90deg, #E8B85A, #5FB8B3, #279EF2);
+  --glow: radial-gradient(closest-side, rgb(39 158 242 / 0.18), transparent);
+  --heading-gradient: linear-gradient(180deg, #FFFFFF, rgb(255 255 255 / 0.6));
 }
 
-/* Team workspace dark theme (src/styles/tokens.ts darkColors). Set by /team's theme toggle only. */
-[data-theme="dark"] {
-  color-scheme: dark;
-  --color-paper: #0B0B0C;
-  --color-ink: #F2EFE9;
-  --color-inkMuted: #A9A9AE;
-  --color-moss: #5FBF8E;
-  --color-amber: #D98E2B;
-  --color-brick: #F08A7E;
+/* O2 light theme (/app, /team): set on <html> by the theme script before paint. */
+[data-theme="light"] {
+  color-scheme: light;
+  --color-paper: #F6F7F9;
+  --color-white: #FFFFFF;
+  --color-raised: #F0F2F5;
+  --color-overlay: #E8EBEF;
+  --color-ink: #111316;
+  --color-text2: #4A4F57;
+  --color-inkMuted: #646A73;
+  --color-border: #E2E5EA;
+  --color-borderStrong: #CDD1D8;
+  --color-fieldBorder: #7D838D;
+  --color-accent: #1A5FBF;
+  --color-onAccent: #FFFFFF;
+  --color-jellyLoading: #18579F;
   --color-jelly: #279EF2;
-  --color-jellyDeep: #7AAEF5;
-  --color-border: #3A3A3F;
-  --color-successBg: #173626;
-  --color-errorBg: #3B1D1A;
-  --color-warnBg: #3A2A12;
-  --color-warnText: #E8B45F;
-  --color-infoBg: #17263D;
-  --color-white: #121214;
-  --color-jellyLoading: #9DC2F7;
-  --color-fieldBorder: #707077;
+  --color-jellyDeep: #1A5FBF;
+  --color-link: #1A5FBF;
+  --color-moss: #2F6F4F;
+  --color-successBg: #E6EFE9;
+  --color-brick: #B3443A;
+  --color-errorBg: #F7E6E3;
+  --color-amber: #D98E2B;
+  --color-warnText: #8A5A12;
+  --color-warnBg: #FBEFD9;
+  --color-infoBg: #E5EFFC;
   --color-auroraAmber: #E8B85A;
   --color-auroraTeal: #5FB8B3;
-  --color-raised: #1E1E21;
+  --color-series1: #1A5FBF;
+  --color-series2: #D98E2B;
+  --color-series3: #279EF2;
+  --color-rail: #0B0C0E;
+}
+
+/* Dark again for subtrees that stay dark in the light theme: the rail (D14). */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --color-paper: #000000;
+  --color-white: #0A0A0A;
+  --color-raised: #111214;
+  --color-overlay: #18191B;
+  --color-ink: #EDEEF0;
+  --color-text2: #B3B7BF;
+  --color-inkMuted: #8C919B;
+  --color-border: rgba(55, 65, 81, 0.55);
+  --color-borderStrong: #41454D;
+  --color-fieldBorder: #71767F;
+  --color-accent: #FFFFFF;
+  --color-onAccent: #000000;
+  --color-jellyLoading: #E5E5E5;
+  --color-jelly: #279EF2;
+  --color-jellyDeep: #79C0FA;
+  --color-link: #FFFFFF;
+  --color-moss: #5FBF8E;
+  --color-successBg: #13291F;
+  --color-brick: #F08A7E;
+  --color-errorBg: #33191A;
+  --color-amber: #D98E2B;
+  --color-warnText: #E8B45F;
+  --color-warnBg: #2E2312;
+  --color-infoBg: #14263B;
+  --color-auroraAmber: #E8B85A;
+  --color-auroraTeal: #5FB8B3;
+  --color-series1: #3987E5;
+  --color-series2: #D95926;
+  --color-series3: #199E70;
+  --color-rail: #000000;
 }
 
 /* Pane open/close and tab switch: 150-200ms, off for reduced motion. */
@@ -120,4 +197,56 @@
 @utility aurora-ring {
   border: 2px solid transparent;
   background: linear-gradient(var(--color-white), var(--color-white)) padding-box, var(--aurora) border-box;
+}
+
+/* No-JS fallbacks (lead, v3 PR 2b): the head script adds .js to <html> before paint. Unlayered, so these
+   win over display utilities. */
+html:not(.js) .js-only { display: none; }
+.js .nojs-only { display: none; }
+
+@utility glow {
+  background: var(--glow);
+  filter: blur(32px);
+}
+
+/* The hero demo (v3 PR 3): the server renders its final state. With JS and motion allowed, its moving parts
+   stay hidden until the run starts, so the final numbers never flash before the start state. */
+@media (prefers-reduced-motion: no-preference) {
+  .js [data-demo-state="final"]:not([data-demo-ran]) [data-demo-anim] { visibility: hidden; }
+}
+
+/* F1: no faux bold or italic (only real Inter/Mono weights render), and every number is tabular. */
+html { font-synthesis: none; }
+[data-computed],
+.font-mono,
+td,
+th {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Form fields stay 16px below md, so iPhone Safari doesn't zoom the page on focus (lead R2). Unlayered, so
+   it wins over the 13px text-ui utility. */
+@media (width < 48rem) {
+  input, select, textarea { font-size: 16px; }
+}
+
+/* Browser autofill fills fields without input events. A no-op 1ms animation on autofilled inputs fires
+   animationstart, so forms that track validity (the audit form, #129 S1) can re-read their fields. */
+@keyframes autofill-start { from { opacity: 1; } to { opacity: 1; } }
+input:-webkit-autofill { animation: autofill-start 1ms; }
+
+/* Portal look: h1/h2 in /app, /team and /client fade from white to 60% white with tight tracking. Dark
+   only (a nested dark subtree such as the rail counts too); light keeps plain headings. */
+@utility heading-gradient {
+  letter-spacing: -0.04em;
+  [data-theme="dark"] & {
+    background: var(--heading-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+/* Forced colours: plain system text, no clipped background. Unlayered, so it wins. */
+@media (forced-colors: active) {
+  [data-theme="dark"] .heading-gradient { background: none; color: CanvasText; }
 }

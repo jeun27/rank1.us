@@ -39,7 +39,8 @@ describe("DomainField", () => {
     expect(document.querySelector("[data-field] [data-icon=globe]")).toHaveAttribute("aria-hidden", "true");
     const b = screen.getByRole("button", { name: "Get my free audit" });
     expect(b).toHaveAttribute("type", "submit");
-    expect(b.className.split(" ")).toContain("bg-jellyDeep");
+    // v3 (D34/D35): the primary fill is the accent.
+    expect(b.className.split(" ")).toContain("bg-accent");
   });
 
   it("focused: 2px jellyDeep edge", () => {
@@ -69,12 +70,12 @@ describe("DomainField", () => {
 });
 
 describe("AuroraButton", () => {
-  it("is a white pill with the aurora ring and shadow, jellyDeep label and spinner, busy while loading", () => {
+  it("is a panel button (6px) with the aurora ring and shadow, jellyDeep label and spinner, busy while loading", () => {
     render(<AuroraButton loading>Opening Google…</AuroraButton>);
     const b = screen.getByRole("button", { name: "Opening Google…" });
     const cls = b.className.split(" ");
-    for (const c of ["aurora-ring", "rounded-full", "shadow-aurora", "text-jellyDeep", "h-12.5"])
-      expect(cls).toContain(c);
+    // v3 (D35): the ring stays, on the 6px shape.
+    for (const c of ["aurora-ring", "rounded-control", "shadow-aurora", "text-jellyDeep"]) expect(cls).toContain(c);
     expect(b).toBeDisabled();
     expect(b).toHaveAttribute("aria-busy", "true");
     expect(b.querySelector("[data-spinner]")!.getAttribute("class")).toContain("motion-reduce:animate-none");
@@ -97,7 +98,8 @@ describe("ProgressBar", () => {
     expect(bar).toHaveAttribute("aria-valuemin", "0");
     expect(bar).toHaveAttribute("aria-valuemax", "250");
     expect(bar).toHaveAttribute("aria-valuenow", "120");
-    expect((bar.firstElementChild as HTMLElement).style.width).toBe("48%");
+    // v3 (UI.md Loading + progress): the fill is sized by scaleX.
+    expect((bar.firstElementChild as HTMLElement).style.transform).toBe("scaleX(0.48)");
     expect(screen.getByText("48%").className).toContain("text-jellyDeep");
     expect(screen.getByText("120 of 250 answers").className).toContain("text-inkMuted");
   });

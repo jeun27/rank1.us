@@ -1,121 +1,154 @@
 # Section 4. Full UI spec
 
-Source: field-notes-spec.md + UI/UX Page section 13. PAGE = from research #4. ADOPTED = approved by Jeun, adjustable. Screens below supersede #4 Sections 3-4.
+Design v3 (Jeun 2026-11-06: "yes to all, O2"), then the template portal look (D44, founder 2026-11-06 05:23-05:31 UTC). Pure black surfaces, 1px hairlines instead of shadows, compact Inter type, mono for numbers only, 6px radii, dense controls, one accent: white in dark (#1A5FBF in light). Decisions, the before/after and every contrast pair: [docs/design/v3.md](design/v3.md). This replaces the "Field Notes" world (paper, Fraunces, pills, light-only customer pages). Sections 4a and 4b below keep their exact copy; only the visual notes changed.
 
-## Colors
+## Themes
 
-| Token | Value | Use | Source |
+- Dark is the default on every surface: landing, /signin, /audit, /app, /client, /team, /admin (D32).
+- /app, /client and /team add a light theme, toggled by "Dark theme" (aria-pressed). It defaults to dark, the choice is saved in localStorage, and it is set by `data-theme` on `<html>`, never by a CSS media query (D40 = O2).
+- The landing, /signin and /audit are dark only.
+- The nav rail is always dark, even in the light theme (D14).
+- The monthly report PDF and the white-label report stay light: they are printed and client-branded.
+
+## Color tokens
+
+Same token names in both themes, so every component switches with `data-theme`.
+
+| Token | Dark (default) | Light | Use |
 |---|---|---|---|
-| paper | #F7F4EE | Page background | PAGE |
-| ink | #1E2320 | Text; final CTA band | PAGE |
-| inkMuted | #5C625E | Secondary text, captions, 'checked X h ago' | ADOPTED |
-| moss | #2F6F4F | Visible / up / success only | PAGE |
-| amber | #D98E2B | 'Moved' highlight fill; final CTA button (ink text). Never text on paper (2.44:1) | PAGE |
-| brick | #B3443A | Down / alerts / 'before' problem only | PAGE |
-| jelly | #279EF2 | Mascot and large decorative fills. Never text, never white text on it | PAGE |
-| jellyDeep | #1A5FBF | Primary button (white text), links, focus ring | PAGE |
-| border | ink 15%, 1px | Cards, tables, inputs | PAGE |
-| successBg | #E6EFE9 | Success badge/banner (moss text, 5.10:1) | ADOPTED |
-| errorBg | #F7E6E3 | Error banner (brick text, 4.57:1) | ADOPTED |
-| warnBg / warnText | #FBEFD9 / #8A5A12 | 'Moved' badge (5.19:1) | ADOPTED |
-| infoBg | #E3EEFB | Info badge, 'You' row tag (jellyDeep text, 5.21:1); info banner icon chip | ADOPTED |
-| white | #FFFFFF | Surface: cards, fields, banners, aurora button; text on jellyDeep | (Final set, Jeun 2026-11-05) |
-| jellyLoading | #316FC5 | Primary button while loading (white text, 4.99:1). The design's jellyDeep at 85% opacity was 4.29:1 | (Final set, Jeun 2026-11-05) |
-| fieldBorder | ink 50%, 1px | Domain field edge (3.18:1 on white and paper; the design's ink 10% was 1.22:1 and failed WCAG 1.4.11) | (Final set, Jeun 2026-11-05) |
-| auroraAmber / auroraTeal | #E8B85A / #5FB8B3 | Aurora ring stops only (with jelly). Never text | (Final set, Jeun 2026-11-05) |
+| page | #000000 | #F6F7F9 | Page background |
+| panel | #0A0A0A | #FFFFFF | Panels, cards, table surfaces, pane backgrounds |
+| raised | #111214 | #F0F2F5 | Hovered or selected rows, secondary buttons, KPI tiles, active tab |
+| overlay | #18191B | #E8EBEF | Menus, popovers, tooltips, the switcher list |
+| rail | #000000 | #000000 | Nav rail, both themes |
+| hairline | rgba(55, 65, 81, 0.55) | #E2E5EA | 1px borders and dividers (decorative) |
+| hairlineStrong | #41454D | #CDD1D8 | Active-tab ring, menu border |
+| controlEdge | #71767F | #7D838D | 1px edge of inputs, selects, chips and secondary buttons (≥3:1, WCAG 1.4.11) |
+| text | #EDEEF0 | #111316 | Primary text |
+| text2 | #B3B7BF | #4A4F57 | Secondary text, rail labels |
+| muted | #8C919B | #646A73 | Captions, table headers, 'Checked 14 h ago' |
+| accent | #FFFFFF | #1A5FBF | The one accent (D44, was Jelly blue in D34): primary button fill, chart business line (R3), active nav icon, the landing glows |
+| onAccent | #000000 | #FFFFFF | Text on the accent fill (white buttons, black text) |
+| accentHover | #E5E5E5 | #18579F | Primary button hover |
+| link | #FFFFFF | #1A5FBF | Links and secondary text actions, always underlined (R1: never colour alone) |
+| success / successBg | #5FBF8E / #13291F | #2F6F4F / #E6EFE9 | Up / visible / complete |
+| error / errorBg | #F08A7E / #33191A | #B3443A / #F7E6E3 | Down / alerts / 'Before' / failed |
+| warn / warnBg | #E8B45F / #2E2312 | #8A5A12 / #FBEFD9 | 'Moved', partial runs, "Doing". A state colour only, never a button |
+| info / infoBg | #79C0FA / #14263B | #1A5FBF / #E5EFFC | Info badge, 'You' row and tag, 'Example data', info banners, focus rings (R2: the blue stays) |
+| jelly | #279EF2 | #279EF2 | The mascot (never recoloured); no longer the accent (D44) |
 
-Contrast: ink/paper 14.53, white/jellyDeep 6.12, jellyDeep/paper 5.57, moss/paper 5.45, ink/amber 5.97, brick/paper 5.03. Never: white on jelly (2.89), jelly text on paper (2.64), amber text on paper (2.44). Light mode only on customer pages; the /team workspace is light + dark with an always-dark nav (see "Team workspace dark theme" below; Jeun, ENG_HANDOFF_OVERNIGHT §3 / ENG_HANDOFF_STEP2 §3). (Final set, Jeun 2026-11-05): white/jellyLoading 4.99, brick/white 5.52, jellyDeep/white 6.12, inkMuted/white 6.24, jellyDeep/infoBg 5.21, fieldBorder/white 3.18. Disabled pill text is inkMuted at 75% opacity (3.45:1); WCAG 1.4.3 exempts disabled controls, so it must be a real `<button disabled>`. The aurora ring is decorative (stops 1.84-2.89 on white); the button is identified by its jellyDeep label.
+Rules:
+- One accent. Amber and green are state colours, not brand colours. Do not use Supabase green or any competitor's colour.
+- Status colours only where they carry meaning.
+- The dark accent is white, so text on it is #000000 (21:1). Headings h1/h2 in /app, /team and /client fade from white to 60% white (heading-gradient, -0.04em, dark only; forced colours show plain text). No glows in the app areas; the landing keeps its glows (D39).
 
-## Team workspace dark theme (ENG_HANDOFF_STEP2 §3, lead 2026-11-05)
+## Contrast (checked, WCAG AA)
 
-/team only, set by `data-theme="dark"`. The team nav always carries it, in both themes; the panes follow the toggle in the sidebar (defaults to the system setting, saved in localStorage). Same token names as the light set, so every component switches with it. `raised` is new in both themes: selected rows, active tab, composer (light #FFFFFF).
+Text needs 4.5:1. UI edges and chart lines need 3:1.
 
-| Token | Dark value | Contrast |
+| Pair | Dark | Light |
 |---|---|---|
-| paper (sidebar, page) | #0B0B0C | |
-| white (panes, cards) | #121214 | |
-| raised | #1E1E21 | |
-| ink | #F2EFE9 | 16.30 on white, 14.49 on raised |
-| inkMuted | #A9A9AE | 8.00 on white, 7.11 on raised |
-| amber (accent, may be text in dark) | #D98E2B | 7.00 on white, 6.22 on raised |
-| jellyDeep (links, focus, primary button with white text) | #7AAEF5 | 8.20 on white; white on it 8.20 |
-| jellyLoading | #9DC2F7 | white on it 10.24 |
-| moss / successBg | #5FBF8E / #173626 | 8.31 on white; 5.86 on successBg |
-| brick / errorBg | #F08A7E / #3B1D1A | 7.70 on white; 6.28 on errorBg |
-| warnText / warnBg | #E8B45F / #3A2A12 | 7.32 |
-| infoBg | #17263D | jellyDeep on it 6.66 |
-| border (decorative dividers) | #3A3A3F | |
-| fieldBorder | #707077 | 3.81 on white, 4.00 on paper |
-| jelly, auroraAmber, auroraTeal | unchanged | never text |
+| text on page / panel / raised / overlay | 18.09 / 17.05 / 16.14 / 15.15 | 17.36 / 18.61 / 16.59 / – |
+| text2 on page / panel / raised / overlay | 10.44 / 9.84 / 9.32 / 8.75 | 7.69 / 8.24 / 7.35 / – |
+| muted on page / panel / raised / overlay | 6.64 / 6.26 / 5.92 / 5.56 | 5.09 / 5.45 / 4.86 / – |
+| link on page / panel / raised / overlay | 21.00 / 19.80 / 18.74 / 17.59 | 5.71 / 6.12 / 5.45 / – |
+| onAccent on accent / on accentHover | 21.00 / 16.67 | 6.12 / – |
+| accent line or icon on page / panel / raised | 21.00 / 19.80 / 18.74 | 5.71 / 6.12 / 5.45 |
+| success on successBg | 6.84 | 5.10 (5.99 on panel) |
+| error on errorBg | 6.67 | 4.57 (5.52 on panel, 4.92 on raised) |
+| warn on warnBg | 8.15 | 5.19 (5.91 on panel) |
+| info on infoBg | 7.83 | 5.27 |
+| controlEdge on page / panel / raised / overlay | 4.60 / 4.34 / 4.11 / 3.85 | 3.82 on panel / 3.40 on raised |
+| rail text / rail icon on rail | 9.73 / 6.19 | same (rail is dark) |
+| competitor-average line (text at 60%) | 6.42 | 4.88 |
 
-## Shape, shadow and gradient tokens (Final set, Jeun 2026-11-05)
+Hairlines (1.1–1.4:1) are decorative dividers only. No control relies on a hairline alone.
+
+## Shape, depth and glow
 
 | Token | Value | Use |
 |---|---|---|
-| radius pill | 9999px (`rounded-full`) | Primary button 48h, field 60h, aurora and disabled 50h, badges |
-| radius surface | 24px | Card, EmptyState, LoadingState |
-| radius banner | 28px | Error and info banners |
-| radius card | 8px | Final CTA ink band |
-| shadow-field | inset 0 1px 0 white/90%, 0 10px 26px jellyDeep/12% | Domain field, info banner |
-| shadow-button | inset 0 1px 0 white/25%, 0 6px 14px jellyDeep/30% | Primary button |
-| shadow-card | inset 0 1px 0 white/90%, 0 16px 40px jellyDeep/10% | Card |
-| shadow-banner-error | inset 0 1px 0 white/90%, 0 10px 26px brick/12% | Error banner |
-| shadow-aurora | 0 8px 22px jelly/18%, 0 4px 14px auroraAmber/12% | Aurora button |
-| shadow-track | inset 0 1px 2px ink/6% | Progress track |
-| shadow-fill | 0 2px 6px jellyDeep/25% | Progress fill |
-| aurora | linear-gradient(90deg, auroraAmber, auroraTeal, jelly), 2px ring | Google sign-in button only. The only gradient |
+| radius control | 6px | Buttons, inputs, selects, chips, tabs, menu rows (D35) |
+| radius panel | 8px | Cards, panels, banners, tables, panes |
+| radius frame | 10–12px | Landing frames: demo window, bento, pricing, final CTA |
+| radius tag | 4px | Badges and tags |
+| radius full | 9999px | Avatars, status dots, progress tracks only |
+| depth | 1px hairline | Panels and cards have no shadow (D36) |
+| shadow-overlay | 0 16px 40px rgb(0 0 0 / 0.5) | Menus, popovers and tooltips only |
+| shadow-window | 0 30px 80px -20px rgb(0 0 0 / 0.7) | The landing demo window only |
+| glow | radial-gradient of Jelly blue (#279EF2) at 18%, blurred | Decorative only, on the landing: hero, behind the demo, pricing top edge, final CTA corner. Never in /app, /team or /client (D44). Never behind text that needs it for contrast (D39) |
+| heading-gradient | linear-gradient(180deg, #FFFFFF, 60% white), background-clip text, -0.04em | App h1/h2 in /app, /team and /client, dark only; plain text in light and in forced colours (D44) |
+| aurora | linear-gradient(90deg, #E8B85A, #5FB8B3, #279EF2), 2px ring | Google sign-in button only (kept, on a 6px shape) |
 
 ## Type
 
-| Role | Font | Size / line (mobile -> md+) |
+Inter (variable, optical size 14–32; SIL OFL) for all text. JetBrains Mono (SIL OFL) for data only (D33). Weights 400/500/600 only (lead F1, 2026-11-06); Mono 400/500. Each face is one variable file from next/font (display swap, metric-matched fallback). No faux bold or italic (`font-synthesis: none`). Tabular figures everywhere: a global rule covers numbers (`data-computed`), mono and table cells.
+
+| Role | Font | Size / line, weight |
 |---|---|---|
-| Display (hero H1) | Fraunces 600 | 40/44 -> 56/60 |
-| H2 | Fraunces 600 | 28/34 -> 36/42 |
-| H3 / card title | Fraunces 600 | 20/26 |
-| Hero number | Fraunces 600, tabular | 48/52 |
-| Body | Public Sans 400 | 16/24 |
-| Body large | Public Sans 400 | 18/28 |
-| UI / button | Public Sans 600 | 15/20 |
-| Caption | Public Sans 400 | 13/18 |
-| Micro (audit credit) | Public Sans 400 | 10/14 |
-| Header wordmark 'Rank1' | Fraunces 600, ink | 18 |
+| Landing display (H1) | Inter 600, -0.04em | fluid 40/41 → 68/69 |
+| Landing H2 | Inter 600, -0.03em | fluid 26/29 → 40/44 |
+| Landing lead | Inter 400, text2 | 17/27 → 18/28 at md+ |
+| Landing body | Inter 400 | 15/24 |
+| App page title (H1) | Inter 600, -0.02em | 22/28 (`text-title`) |
+| Section / card title | Inter 500 | 13/18 (`text-section`) |
+| UI body, table cells, nav | Inter 400 | 13/19 |
+| Caption, table header, freshness | Inter 400–500, muted | 12/16 |
+| Tag / badge | Inter 500 | 11/1 |
+| Form fields (input, select, textarea) | Inter 400 | 16px below md to prevent iOS focus zoom; the UI size (13/19) from md (lead R2, 2026-11-06) |
+| Hero number | Inter 600, -0.04em, tabular | 36–44 / 1.1 |
+| KPI and table numbers | JetBrains Mono 500, tabular, -0.03em | 22–24 (KPI), 12–13 (tables) |
+
+- **Mono is for data only:** numbers, percentages, answer counts ("240 answers" counts in tables), deltas ("+2 pts"), rank numbers, domains, and the typed demo question.
+- Mono is never used for headings, nav, labels, eyebrows, buttons, status words ("To do", "Doing") or sentences ("named in 9 of 30 answers" stays Inter).
+- No serif. No italic accent words. No eyebrow labels above headings. No 01/02/03 labels.
+- `text-wrap: balance` on headings, `pretty` on body.
 
 ## Components
 
-| Component | Spec | Source |
-|---|---|---|
-| Button primary | Pill, jellyDeep bg, white text, 48h, padding 0 20, shadow-button, hover darken 8%, focus 2px jellyDeep ring offset 2. Loading: jellyLoading bg + white spinner + label ('Checking…'). One per screen. | (Final set, Jeun 2026-11-05) |
-| Button secondary | Text link, jellyDeep 600, → arrow after the label, underline on hover, 44px tap area. Banner actions use it. | (Final set, Jeun 2026-11-05) |
-| Button disabled | Real `<button disabled>`: pill 50h, white/55% fill, 1.5px ink/14% edge, inkMuted label at 75% opacity, 14px lock icon after it. | (Final set, Jeun 2026-11-05) |
-| Field + Button (DomainField) | Pill field 60h, white, 1px fieldBorder, shadow-field, padding 6 6 6 20, 18px globe icon, labeled input (15px), primary button inside on the right. Focused: 2px jellyDeep edge. Loading: button loading. Error: 2px brick edge + brick 13px error text below, tied with aria-describedby. When the field is narrower than 21rem (phones, small cards) the button drops below the input, full width, and the field radius becomes 28 so the domain stays readable. | (Final set, Jeun 2026-11-05) |
-| Aurora button | Pill 50h, white, 2px aurora ring, shadow-aurora, jellyDeep 16px spinner + jellyDeep label. Google sign-in only. | (Final set, Jeun 2026-11-05) |
-| Final CTA | Full-width ink band, paper text; amber button, ink text. | PAGE |
-| Card | White surface on the paper page, radius 24, shadow-card, no border, padding 24 (16 mobile). | (Final set, Jeun 2026-11-05) |
-| Badge | Pill 999px, caption size; success/error/warn/info fills. | ADOPTED |
-| Table | Header Public Sans 600 13px inkMuted; 1px ink/15% dividers; numbers right-aligned, tabular. Leaderboard: max 3 numbers per row; sample size under table. | PAGE + ADOPTED |
-| Chart | Lines and bars only. In-app business line jellyDeep 2px; rival average ink 40% dashed 4/3; reports use the business color. No donut/Sankey/gauge/heatmap. | PAGE + ADOPTED |
-| Freshness | 16px clock icon + caption inkMuted: 'Checked 14 h ago · 250 answers · API-measured, directional'. | PAGE + this pack; icon (Final set, Jeun 2026-11-05) |
-| Error banner | White, 1.5px brick edge, radius 28, shadow-banner-error, 64px worried Jelly, one brick 600 sentence + one fix action as a secondary text link on the right. | (Final set, Jeun 2026-11-05) |
-| Info banner | White, 1.5px jellyDeep edge, radius 28, shadow-field, 36px infoBg circle with an 18px jellyDeep 'i' icon, jellyDeep text. | (Final set, Jeun 2026-11-05) |
-| Empty | Card, 80px Jelly, centered body-large message, DomainField ('yoursite.com' / 'Add my business'). | (Final set, Jeun 2026-11-05) |
-| Loading + progress bar | Card, squishing 80px Jelly, 16px jellyDeep spinner + message, 12px track (white, 1px border, shadow-track) with a jellyDeep fill (shadow-fill), 'n of d answers' inkMuted left and the floored percent jellyDeep 600 right. The percent is computed. Reduced motion stops the spinner and the squish. | (Final set, Jeun 2026-11-05) |
-| Logo | Bar mark (public/logo-mark.svg, currentColor, ink) left of the wordmark 'Rank1' in Fraunces 600 18px ink, 8px gap. App icon: public/app-icon.svg. | Jeun 2026-11-05 |
-| Spacing | 4-pt: 4 8 12 16 24 32 48 64 96. Sections 96 / 64 mobile. Max width 1120. Gutters 20 mobile / 32 desktop. | ADOPTED |
-| Breakpoints | sm 640, md 768, lg 1024 (container cap 1120). Stack below md. Tap targets >= 44px. Sticky mobile CTA bar. | PAGE |
+| Component | Spec |
+|---|---|
+| Button primary | Accent fill (white in dark, D44), onAccent text (black), Inter 500 13px, 32h (40h in the landing hero, 36h in forms), radius 6, no shadow. Hover accentHover. Press translateY(1px). Focus 2px info-blue ring offset 2 (R2). Loading: same fill + 14px spinner + the loading label ('Checking…'). One per screen; the header CTA is the secondary style |
+| Button secondary (`alt`) | Raised fill, text colour, 1px controlEdge, same sizes. Hover overlay fill |
+| Text action | Link colour, Inter 500, trailing 12–14px drawn arrow that nudges 2px on hover. 44px tap area on touch |
+| Button disabled | A real `<button disabled>`: raised fill, muted label at 75% opacity, controlEdge at 60%, 14px lock icon (WCAG 1.4.3 exempts disabled controls) |
+| Aurora button | Google sign-in only: panel fill, 2px aurora ring, radius 6, accent spinner + label |
+| Field + Button (DomainField) | Input 40h (36h in forms), page fill, 1px controlEdge, radius 6, 16px globe icon, primary button inside on the right. Focused: accent edge + 3px accent ring at 25%. Error: error edge + 12px error text below (aria-describedby). Below 21rem the button drops under the input, full width |
+| Chip / filter | 26h, radius 6, 1px controlEdge, Inter 500 12px. On: raised fill, text colour, 6px accent dot. Off: muted text |
+| Segmented control | 2–3 options, radius 6, page fill with hairline. Selected: overlay fill + hairlineStrong ring. Arrow keys move the selection (radiogroup) |
+| Tabs (document / landing) | 30–40h, selected = raised fill + 2px accent underline (document tabs) or an overlay pill (landing tablist). Arrow keys |
+| Card / panel | Panel fill, 1px hairline, radius 8, padding 16 (14 dense, 12 mobile), no shadow |
+| Badge / tag | Radius 4, 20h, Inter 500 11px, state fill + text + 25% state-colour hairline. Delta badges ('+2 pts') use mono |
+| Table | Panel fill. Header row: Inter 500 12px muted, `position: sticky; top: 0`, panel background. 1px hairline row dividers. Row hover = 4–5% text tint. Numbers right-aligned in mono. You row on infoBg with the 'You' tag. **Leaderboard: at most 3 numbers per row** (rank, visibility %, change), sample size under the table. **Approved exception (D22):** the /team Competitors table view shows 4 per-engine numbers per row, with each engine's n under it. On phones the You row is pinned under the header |
+| Chart | Lines and bars only. Business line = accent 2–2.5px. Competitor average = text at 60%, dashed 4/3. Axis labels mono 10.5px muted. Direct endpoint label instead of an open tooltip. Tooltip on hover/focus: overlay fill, hairlineStrong edge, shadow-overlay. No donut/Sankey/gauge/heatmap |
+| Freshness | 14–16px clock icon + caption muted: 'Checked 14 h ago · 250 answers · API-measured, directional' |
+| Error banner | errorBg fill, 1px error hairline at 30%, radius 8, 48px worried Jelly, one error-colour sentence (Inter 500) + one fix action as a text action on the right |
+| Info banner | infoBg fill, 1px info hairline at 25%, radius 8, 28px info icon chip, info-colour text |
+| Empty | Panel, 48–64px Jelly, centred 15px message, DomainField ('yoursite.com' / 'Add my business') |
+| Loading + progress | Panel, squishing 64px Jelly, 14px accent spinner + message, 6px track (overlay) with an accent fill (scaleX transform), 'n of d answers' muted left, the floored percent in link colour right (both mono). Reduced motion stops the spinner and squish |
+| Nav rail | Rail colour, 220–232px (64 collapsed), icon 16px + label Inter 400 13px, 32h rows, radius 6. Groups separated by 1px hairlines; no group headings unless COPY.md has them. Active: raised fill + hairline ring + accent icon. Account at the bottom. Phones: a sideways-scrolling row with a fade at the right edge |
+| Top bar | 48h, page fill, bottom hairline. Breadcrumb 'Rank1 / [avatar] business / page' with drawn slash separators (D42). /app shows the business name only (one business). /team puts the client switcher in the breadcrumb (D20). Right side: Location select, the theme toggle (/app, /team), Account |
+| Context panel (/team) | Right side, toggled by "Context" (D21). Freshness + facts card, the item list, then the Prompt template composer (page fill, hairline, radius 8, accent focus ring) with "Copy context" (primary) and "Open in Claude" (text action). Nothing calls a model |
+| Logo | Bar mark (public/logo-mark.svg, currentColor) left of the wordmark 'Rank1' in Inter 600 15–16px, -0.02em, 8px gap. App icon unchanged |
+| Spacing | 4-pt: 4 8 12 16 20 24 32 48 64 96. Landing sections 96 / 64 mobile, max width 1160. App pages max 1200, padding 24 (16 mobile) |
+| Breakpoints | sm 640, md 768, lg 1024. Stack below md. Dense 26–32px controls are for pointer use at md+ (target ≥ 24px, WCAG 2.5.8). Below md every interactive target is ≥ 44px. Sticky mobile CTA bar on the landing |
+| Motion | One focal moment per page: the landing demo (type the question, fill the engine bars, count up, the You row climbs past a rival). App motion 120–260ms: view fade 200ms, menu 160ms from its trigger, Context panel 260ms. Ease cubic-bezier(.16,1,.3,1). Loops pause offscreen and when the tab is hidden. Reduced motion: no spatial movement or loops; opacity and colour feedback stay; the demo shows its final state |
+| Browser surfaces | `::selection` accent at 35%, caret and `accent-color` accent, thin scrollbar in hairlineStrong, `color-scheme` per theme |
 
 ## Jelly
 
 | Jelly | Rule |
 |---|---|
-| Asset | Interim /public/jelly.png from jelly-01-front.jpg; remove the #F5F5F5 background (build task, step 2). Swap to jelly.svg when a vector exists. |
-| Rules | One Jelly per screen. Never recolored. No mouth, limbs, props or text. Expressions are eyes only: neutral, happy, worried, looking, sleepy. |
-| Hero | 160-200px beside the sample card, eyes toward '34%'. |
-| Empty | 64-96px, eyes toward the button. |
-| Loading | Squish scaleY 0.95 -> 1.0, ~1.2 s loop with a blink; static under prefers-reduced-motion. |
-| Error | 64px worried, inside the errorBg banner (ADOPTED). |
-| Favicon | The bar app icon: ink #1E2320 rounded square, three paper #F7F4EE bars (src/app/icon.svg, drawn on a 32 grid so it stays sharp at 16 and 32; apple-icon.png 180). (changed by Jeun 2026-11-05) |
-| Footer credit | 12px flat Jelly + 'Powered by Rank1' (10px) ONLY on the free audit. Never on $99 plan reports. |
-| Alt | "Jelly, the Rank1 mascot: a glossy blue gummy blob with two oval eyes"; repeats alt="". |
+| Asset | /public/jelly.png (background removed). Swap to jelly.svg when a vector exists |
+| Rules | One Jelly per screen. Never recoloured. No mouth, limbs, props or text. Expressions are eyes only: neutral, happy, worried, looking, sleepy. **Small** (D41) |
+| Hero | 72px on the bottom-right corner of the demo window (60px below 1220px, hidden on phones), eyes toward the score; the eyes follow the You row as it climbs |
+| Final CTA | 96px, eyes up, hidden on mobile |
+| Empty | 48–64px, eyes toward the button |
+| Loading | 64px. Squish scaleY 0.95 → 1.0, ~1.2 s loop with a blink; static under prefers-reduced-motion |
+| Error | 48px worried, inside the error banner |
+| Favicon | The bar app icon: ink #1E2320 rounded square, three paper #F7F4EE bars (src/app/icon.svg on a 32 grid; apple-icon.png 180). Unchanged |
+| Footer credit | 12px flat Jelly + 'Powered by Rank1' (10px) ONLY on the free audit. Never on $99 plan reports |
+| Alt | "Jelly, the Rank1 mascot: a glossy blue gummy blob with two oval eyes"; repeats alt="" |
 
 # 4a. Landing page (rank1.us), exact copy
 
@@ -123,15 +156,15 @@ Contrast: ink/paper 14.53, white/jellyDeep 6.12, jellyDeep/paper 5.57, moss/pape
 
 | Section | Exact copy | Notes |
 |---|---|---|
-| 1 Hero | H1 "Be the brand AI names first." Sub "See how often ChatGPT, Gemini, Google AI Overview and Perplexity name your business, how you stack up against competitors, and what to fix next." Primary "Get my free audit" (-> #audit). Text link "See pricing". Micro "Same-day results as CSV + PNG. No card." Right: card "Example data: named in 34% of 160 answers, +6 pts" + Jelly. | 2 cols, stack < md |
+| 1 Hero | H1 "Be the brand AI names first." Sub "See how often ChatGPT, Gemini, Google AI Overview and Perplexity name your business, how you stack up against competitors, and what to fix next." Primary "Get my free audit" (-> #audit). Text link "See pricing". Micro "Same-day results as CSV + PNG. No card." Right: card "Example data: named in 34% of 160 answers, +6 pts" + Jelly. | v3 (D37): H1 + CTA left, sub right, then the live demo window (this card line inside it) with a 72px Jelly; stack < md |
 | 2 Social proof | "Built for businesses that want AI to name them." 4-5 [PLACEHOLDER LOGO] + 1 [PLACEHOLDER TESTIMONIAL - real, with permission]. Hidden: SHOW_SOCIAL_PROOF=false. | Hidden until real |
-| 3 Problem / how it works | H2 "Customers ask AI who to pick. Find out if it names you." Brick 'Before' card: "Pasting questions into 4 chatbots by hand and logging answers in a spreadsheet." Steps: 1 "Add your domain - Rank1 suggests questions. 5-minute setup." 2 "Rank1 checks 4 AI engines every week." 3 "You get a monthly report with GA4 traffic, competitor scores and what to fix next." CTA "Get my free audit". | DECIDED: monthly report, weekly checks (Proposals #6) |
+| 3 Problem / how it works | H2 "Customers ask AI who to pick. Find out if it names you." Error 'Before' card: "Pasting questions into 4 chatbots by hand and logging answers in a spreadsheet." Steps: 1 "Add your domain - Rank1 suggests questions. 5-minute setup." 2 "Rank1 checks 4 AI engines every week." 3 "You get a monthly report with GA4 traffic, competitor scores and what to fix next." CTA "Get my free audit". | DECIDED: monthly report, weekly checks (Proposals #6) |
 | 4 Features (3 cards) | "One dashboard": visibility % with sample size, change since last week's check, competitor leaderboard, every weekly check kept in History. "Reports that send themselves": monthly, white-label with your logo, GA4 traffic, competitor scores, what to fix next; no 'Powered by Rank1' on the $99 plan. "Set up in 5 minutes": auto-suggested questions. Small moss and amber icons. | DECIDED: monthly report, weekly checks |
-| 5 Screenshots | H2 "What you see on Monday." Tabs: Dashboard · Monthly report · Audit CSV; 1px ink border; label "Example data". CTA "Get my free audit". | Tablist, arrow keys |
+| 5 Screenshots | H2 "What you see on Monday." Tabs: Dashboard · Monthly report · Audit CSV; 1px hairline border; label "Example data". CTA "Get my free audit". | Tablist, arrow keys |
 | 6 Comparison | H2 "Built for one business, not 500 brands." Columns: Manual checks \| Enterprise AI trackers \| Rank1. Rows: Setup (hours \| sales call + onboarding \| 5 minutes); Competitor leaderboard (manual \| varies \| yes); White-label report (build it yourself \| varies \| yes); GA4 traffic in report (manual \| varies \| yes); Price for one business (your time \| enterprise pricing \| $99/mo self-serve). Footnote "Enterprise column is a general description, not a specific product." CTA "Start with a free audit". No competitor names. | Mobile: scroll, Rank1 column pinned |
 | 7 Pricing | H2 "One plan. One business." "$99/mo, self-serve, for 1 business." Includes: 4 AI engines; 25 questions checked every week; one dashboard; competitor leaderboard; white-label monthly report with GA4 link + what to fix next; no 'Powered by Rank1' credit. CTA "Start for $99/mo"; secondary "Get my free audit first". Under the card: "Agency? $99 per business, white-label included. Contact us." Second line: "Want us to do the work for you? Contact us." | '25 questions' + done-for-you line added from locked plan |
 | 8 FAQ | Which AI engines? (ChatGPT, Gemini, Google AI Overview, Perplexity) / What does visibility % mean? (the share of answers where AI names your business, always shown with the sample size) / How long is setup? (about 5 minutes) / Can I white-label? (yes; the $99 plan includes white-label reports with your own logo and no Rank1 credit) / Do I need GA4? (optional; adds traffic to the report) / What's in the free audit? (same-day CSV + PNG) / Why do results change week to week? (AI answers vary between runs, so we ask each question several times and show how many answers each number is based on) | details/summary; last Q added (Validator: directional) |
-| 9 Final CTA (#audit) | Ink band, paper text. H2 "Find out if AI names your business first." Sub "Free same-day audit as CSV and PNG (includes a small 'Powered by Rank1' credit)." Form: email + your domain; amber button, ink text "Get my free audit". Jelly right, eyes up (hidden on mobile). | Turnstile + honeypot |
+| 9 Final CTA (#audit) | Bordered panel with an accent glow (v3). H2 "Find out if AI names your business first." Sub "Free same-day audit as CSV and PNG (includes a small 'Powered by Rank1' credit)." Form: email + your domain; primary button "Get my free audit". Jelly 96px right, eyes up (hidden on mobile). | Turnstile + honeypot |
 | Footer / meta | Footer: Rank1, Pricing, FAQ, Contact us, Privacy, Terms. Meta title "Rank1 - Be the brand AI names first."; description = hero sub; OG image [PLACEHOLDER]. | Contact email shown as the form, not an address |
 
 - Mobile: hero and cards stack below md; comparison scrolls with the Rank1 column pinned; sticky bottom 'Get my free audit' bar after the hero; final-CTA Jelly hidden.
@@ -149,7 +182,7 @@ Copy in quotes is exact. Every number shows n + checked X ago. Results labeled A
 | Onboarding 2: Competitors | "No local {cuisine} places found near {city}. Add competitors by name." | Jelly loading 'Finding {cuisine} places in {city}…' | "Couldn't load nearby places. Add competitors by name." + manual form | < 3 found: list + manual add prompt | 5 pre-ticked rows: name, rating, domain | Rows as cards, checkbox 44px |
 | Onboarding 3: Questions + location | Never empty (template fills 25) | Skeleton rows | "Couldn't save question 7: it's empty." inline | Some edited: 'Edited' tag | 25 rows: short form, long form, track toggle, location level | One question per card; long form textarea |
 | Audit progress | n/a | Jelly squish "Checking 4 AI engines… 120 of 250 answers" + per-engine bars | "{Engine} isn't answering right now. We'll retry; your other results are saved." | Show finished engines; others 'still checking' | Auto-go to results | Bars stacked |
-| Audit results (paid + free) | n/a | Skeleton | Banner + 'Try again' | Engine row greyed: 'No answers from {Engine} yet' | Hero %, per-engine row, leaderboard, top sources, CSV + PNG buttons; free shows paywall card 'Start for $99/mo' | Hero number 48px; tables scroll |
+| Audit results (paid + free) | n/a | Skeleton | Banner + 'Try again' | Engine row greyed: 'No answers from {Engine} yet' | Hero %, per-engine row, leaderboard, top sources, CSV + PNG buttons; free shows paywall card 'Start for $99/mo' | Hero number 44px; tables scroll |
 | Dashboard | Jelly + "Nothing tracked yet. Add your domain and I'll find the questions." button 'Add my business' | Skeleton cards | Banner "We couldn't load your results. Try again." | 'Last run partial: 230 of 250 answers' warn badge; numbers use 230 | Hero visibility % + n + change; 8-week line; per-engine; leaderboard top 5; top 3 fixes; freshness | Cards stack; switcher in a sheet |
 | Competitors | "No competitors yet. Add 3-5 local places to compare." | Skeleton table | Banner + retry | Brand with < 10 answers: 'too few answers' instead of % | Leaderboard (You row with infoBg 'You' tag), share of voice + n, suggested competitors (Add / Not a competitor) | Table scrolls; You row pinned top |
 | Questions | "No questions yet." + 'Use the restaurant template' | Skeleton list | Banner + retry | Engine cells show '–' failed with tooltip | List: question, named on each engine (3 dots for 3 runs), location badge; drawer with answer text + sources | Drawer full screen |
@@ -165,8 +198,8 @@ Copy in quotes is exact. Every number shows n + checked X ago. Results labeled A
 
 | Business switcher | Spec |
 |---|---|
-| Where | App header, left of the account menu: 'Example Ramen House ▾'. Hidden when the workspace has 1 business (shows the name only) until an agency adds a 2nd. |
-| List | Each business: name, city, visibility % with n ('34% · 250 answers'), status dot (moss active, brick paused). Max height 360, search when > 8. |
+| Where | Top-bar breadcrumb (Rank1 / business / page), left of the account menu: 'Example Ramen House ▾' (v3, D42; in /team this is the client switcher, D20). Hidden when the workspace has 1 business (shows the name only) until an agency adds a 2nd. |
+| List | Each business: name, city, visibility % with n ('34% · 250 answers'), status dot (success active, error paused). Max height 360, search when > 8. |
 | Add | Last row: '+ Add a business ($99/mo)'. Dialog: "Add a business? Your plan goes from 1 x $99 to 2 x $99 = $198/mo. Prorated today." Primary 'Add business'. |
 | Remove | Business menu -> 'Remove business'. Dialog: "Remove {name}? Checks continue until {period end date}; then your plan drops to {n-1} x $99." Quantity -1 at period end; data kept read-only. |
 | Agency hint | Below list, caption: 'Need 10+ businesses or done-for-you? Contact us.' |

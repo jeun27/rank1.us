@@ -1,8 +1,12 @@
 "use client";
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import type { WorkspaceView } from "@/lib/queries/workspace";
-import { contextFor, type Section, type Selection } from "@/lib/workspace/context";
+import { Breadcrumb } from "@/components/app/AppShell";
+import { Icon } from "@/components/ui/Icon";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { contextFor, SECTION_LABEL, type Section, type Selection } from "@/lib/workspace/context";
 import { SPLIT_MAX, SPLIT_MIN, writePrefs } from "@/lib/workspace/prefs";
+import { ClientSwitcher } from "./ClientSwitcher";
 import { ContextPane } from "./ContextPane";
 import { DocPane, type DocSel, type Tab } from "./DocPane";
 import { Sidebar } from "./Sidebar";
@@ -41,7 +45,8 @@ export function Workspace({ view, team = null }: { view: WorkspaceView; team?: T
   const [mode, setMode] = useState<"workspace" | "analytics">("workspace");
   const [expanded, setExpanded] = useState(false);
   const [split, setSplit] = useState(false);
-  const [pane, setPane] = useState<Pane>("Context");
+  const [pane, setPane] = useState<Pane>("Document");
+  const [contextOpen, setContextOpen] = useState(true);
   const newTabs = useRef(0);
   const row = useRef<HTMLDivElement>(null);
 
@@ -89,30 +94,39 @@ export function Workspace({ view, team = null }: { view: WorkspaceView; team?: T
     setSplitPct(((e.clientX - r.left) / r.width) * 100);
   };
 
-  const showContext = !expanded && mode === "workspace";
-  // Phones: the context pane (main, with the H1) stays put; Nav and Document open as full sheets over it.
+  const openClients = () => {
+    openDoc({ kind: "clients" });
+    setPane("Document");
+  };
+  const showContext = contextOpen && !expanded && mode === "workspace";
+  // Phones: the document (main, with the H1) stays put under the top bar; Nav and Context open as sheets
+  // over it, with the breadcrumb still on screen.
   const sheet = (p: Pane) =>
-    `max-md:fixed max-md:inset-x-0 max-md:top-0 max-md:bottom-14 max-md:z-10 ${pane === p ? "" : "max-md:hidden"}`;
+    `max-md:fixed max-md:inset-x-0 max-md:top-12 max-md:bottom-14 max-md:z-10 ${pane === p ? "" : "max-md:hidden"}`;
   const motion = "transition-[width,flex-basis] duration-200 motion-reduce:transition-none";
+  // Expanded and Analytics hide the Context panel everywhere; the "Context" toggle hides it from md up
+  // (phones use the tab bar).
+  const contextShown =
+    expanded || mode !== "workspace" ? "hidden" : `flex ${contextOpen ? "" : "md:hidden"} ${sheet("Context")}`;
+  const label = SECTION_LABEL[section];
 
   return (
     <TeamProvider value={team}>
       <div className="flex h-dvh flex-col overflow-hidden bg-paper text-ink md:flex-row">
-        {/* Team nav is always dark (ENG_HANDOFF_OVERNIGHT §3); the dark tokens apply to this subtree. */}
+        {/* The rail is always dark (D14); the dark tokens apply to this subtree. */}
         <nav
           id="ws-nav"
           data-theme="dark"
           data-motion
-          className={`flex-col bg-paper text-ink md:shrink-0 md:border-r md:border-border ${motion} ${
+          className={`flex-col bg-rail text-ink md:shrink-0 md:border-r md:border-border ${motion} ${
             expanded ? "hidden" : `flex ${sheet("Nav")}`
           } ${prefs.collapsed ? "md:w-14" : "md:w-14 lg:w-60"}`}
         >
           <Sidebar
-            view={view}
             section={section}
             onNav={(s) => {
               select({ kind: "section", section: s });
-              setPane("Context");
+              setPane("Document");
             }}
             mode={mode}
             onMode={setMode}
@@ -122,80 +136,112 @@ export function Workspace({ view, team = null }: { view: WorkspaceView; team?: T
               else if (t.sel.kind !== "new") select(t.sel);
               setPane("Document");
             }}
-            theme={prefs.theme}
-            onTheme={() => writePrefs({ theme: prefs.theme === "dark" ? "light" : "dark" })}
             collapsed={prefs.collapsed}
             onCollapse={() => writePrefs({ collapsed: !prefs.collapsed })}
           />
         </nav>
-        <div ref={row} className="flex min-h-0 min-w-0 flex-1" style={{ ["--ws-split" as string]: `${prefs.split}%` }}>
-          <main
-            id="ws-context"
-            data-motion
-            className={`min-w-0 flex-col bg-white max-md:flex-1 md:shrink-0 md:grow-0 md:basis-(--ws-split) ${motion} ${
-              showContext ? "flex" : "hidden"
-            }`}
-          >
-            <ContextPane
-              view={view}
-              section={section}
-              selection={selection}
-              now={now}
-              onSelect={(sel) => {
-                select(sel);
-                setPane("Document");
-              }}
-              onClients={() => {
-                openDoc({ kind: "clients" });
-                setPane("Document");
-              }}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          {/* v3 D42 top bar: "Rank1 / client switcher / section" (D20), then the theme and Context toggles. */}
+          <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-border px-4">
+            <Breadcrumb
+              business={
+                team ? (
+                  <ClientSwitcher team={team} onClients={team.clients ? openClients : undefined} />
+                ) : (
+                  <span data-computed className="truncate">
+                    {view.business.name}
+                  </span>
+                )
+              }
+              page={<span aria-current="page">{label}</span>}
             />
-          </main>
-          <aside
-            id="ws-document"
-            data-motion
-            className={`relative min-w-0 flex-1 flex-col bg-white md:border-l md:border-border ${motion} ${expanded ? "flex max-md:fixed max-md:inset-x-0 max-md:top-0 max-md:bottom-14" : `flex ${sheet("Document")}`}`}
-          >
-            {showContext && (
-              <div
-                role="separator"
-                aria-orientation="vertical"
-                aria-label="Resize panes"
+            <div className="flex shrink-0 items-center gap-1">
+              <ThemeToggle />
+              <button
+                type="button"
+                aria-expanded={contextOpen}
                 aria-controls="ws-context"
-                aria-valuenow={prefs.split}
-                aria-valuemin={SPLIT_MIN}
-                aria-valuemax={SPLIT_MAX}
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  const step = { ArrowLeft: -5, ArrowRight: 5 }[e.key];
-                  if (step) setSplitPct(prefs.split + step);
-                  else if (e.key === "Home") setSplitPct(SPLIT_MIN);
-                  else if (e.key === "End") setSplitPct(SPLIT_MAX);
-                  else return;
-                  e.preventDefault();
-                }}
-                onPointerDown={(e) => e.currentTarget.setPointerCapture(e.pointerId)}
-                onPointerMove={onDrag}
-                className="group absolute inset-y-0 -left-1 z-10 w-2 cursor-col-resize touch-none focus-visible:outline-2 focus-visible:outline-jellyDeep max-md:hidden"
+                onClick={() => setContextOpen((o) => !o)}
+                className={`inline-flex h-8 items-center gap-2 rounded-control px-2 text-ui font-medium max-md:hidden ${
+                  contextOpen ? "bg-raised text-ink" : "text-text2 hover:bg-raised hover:text-ink"
+                } focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep`}
               >
-                <span className="absolute inset-y-0 left-1/2 w-px group-hover:bg-jellyDeep group-focus-visible:bg-jellyDeep" />
-              </div>
-            )}
-            <DocPane
-              view={view}
-              tabs={tabs}
-              active={active}
-              now={now}
-              split={split}
-              expanded={expanded}
-              onActivate={setActive}
-              onClose={closeTab}
-              onNew={() => openDoc({ kind: "new", n: ++newTabs.current })}
-              onPick={select}
-              onSplit={() => setSplit((x) => !x)}
-              onExpand={() => setExpanded((x) => !x)}
-            />
-          </aside>
+                <Icon name="panelLeft" className="size-4 -scale-x-100" />
+                Context
+              </button>
+            </div>
+          </header>
+          <div
+            ref={row}
+            className="flex min-h-0 min-w-0 flex-1"
+            style={{ ["--ws-split" as string]: `${prefs.split}%` }}
+          >
+            <main
+              id="ws-document"
+              data-motion
+              className={`flex min-w-0 flex-1 flex-col bg-white text-ui ${motion} ${
+                showContext ? "md:shrink-0 md:grow-0 md:basis-(--ws-split)" : ""
+              }`}
+            >
+              <DocPane
+                title={label}
+                view={view}
+                tabs={tabs}
+                active={active}
+                now={now}
+                split={split}
+                expanded={expanded}
+                onActivate={setActive}
+                onClose={closeTab}
+                onNew={() => openDoc({ kind: "new", n: ++newTabs.current })}
+                onPick={select}
+                onSplit={() => setSplit((x) => !x)}
+                onExpand={() => setExpanded((x) => !x)}
+              />
+            </main>
+            <aside
+              id="ws-context"
+              aria-label="Context"
+              data-motion
+              className={`relative min-w-0 flex-1 flex-col bg-white md:border-l md:border-border ${motion} ${contextShown}`}
+            >
+              {showContext && (
+                <div
+                  role="separator"
+                  aria-orientation="vertical"
+                  aria-label="Resize panes"
+                  aria-controls="ws-document"
+                  aria-valuenow={prefs.split}
+                  aria-valuemin={SPLIT_MIN}
+                  aria-valuemax={SPLIT_MAX}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    const step = { ArrowLeft: -5, ArrowRight: 5 }[e.key];
+                    if (step) setSplitPct(prefs.split + step);
+                    else if (e.key === "Home") setSplitPct(SPLIT_MIN);
+                    else if (e.key === "End") setSplitPct(SPLIT_MAX);
+                    else return;
+                    e.preventDefault();
+                  }}
+                  onPointerDown={(e) => e.currentTarget.setPointerCapture(e.pointerId)}
+                  onPointerMove={onDrag}
+                  className="group absolute inset-y-0 -left-1 z-10 w-2 cursor-col-resize touch-none focus-visible:outline-2 focus-visible:outline-jellyDeep max-md:hidden"
+                >
+                  <span className="absolute inset-y-0 left-1/2 w-px group-hover:bg-jellyDeep group-focus-visible:bg-jellyDeep" />
+                </div>
+              )}
+              <ContextPane
+                view={view}
+                section={section}
+                selection={selection}
+                now={now}
+                onSelect={(sel) => {
+                  select(sel);
+                  setPane("Document");
+                }}
+              />
+            </aside>
+          </div>
         </div>
         <footer className="border-t border-border bg-paper md:hidden">
           <div role="tablist" aria-label="Workspace" className="grid grid-cols-3">

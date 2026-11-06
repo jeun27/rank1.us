@@ -7,7 +7,6 @@ import { Placeholder } from "@/components/auth/Placeholder";
 import { NoClients } from "@/components/workspace/NoClients";
 import { Workspace } from "@/components/workspace/Workspace";
 import { buildWorkspace } from "@/lib/queries/workspace";
-import { themeScript } from "@/lib/workspace/prefs";
 import { loadTeam } from "./load";
 
 export const metadata: Metadata = { title: "Rank1", robots: { index: false } };
@@ -33,8 +32,6 @@ export async function TeamView({ client }: { client?: string }) {
     );
   return (
     <>
-      {/* Sets data-theme on <html> before first paint (root layout suppresses that one hydration diff). */}
-      <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       <Workspace view={buildWorkspace(data.rows)} team={data.extras} />
     </>
   );

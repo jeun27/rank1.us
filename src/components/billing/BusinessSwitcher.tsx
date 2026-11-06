@@ -58,7 +58,12 @@ export function BusinessSwitcher({
   useEffect(() => () => clearTimeout(timer.current), []);
 
   const current = businesses.find((b) => b.id === currentId) ?? businesses[0];
-  if (businesses.length < 2) return <span className="truncate text-ui font-semibold">{current?.name}</span>;
+  if (businesses.length < 2)
+    return (
+      <span data-crumb-name className="min-w-0 truncate text-ui font-semibold">
+        {current?.name}
+      </span>
+    );
 
   const close = () => {
     setOpen(false);
@@ -80,7 +85,8 @@ export function BusinessSwitcher({
 
   return (
     <div
-      className="relative"
+      // A shrinking column, so the trigger narrows with the breadcrumb and its name ends in an ellipsis (C5).
+      className="relative flex min-w-0 flex-col"
       onKeyDown={(e) => {
         if (e.key === "Escape" && open && !dialog) close();
       }}
@@ -90,9 +96,12 @@ export function BusinessSwitcher({
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex min-h-11 max-w-56 items-center gap-1 truncate rounded-full px-3 text-ui font-semibold hover:bg-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+        className="inline-flex min-h-11 max-w-56 min-w-0 items-center gap-1 rounded-control px-2 text-ui font-medium hover:bg-raised md:min-h-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
       >
-        {`${current.name} ▾`}
+        <span data-crumb-name className="min-w-0 truncate">
+          {current.name}
+        </span>{" "}
+        <span className="shrink-0">▾</span>
       </button>
       {adding && (
         <p role="status" className="mt-1 flex items-center gap-2 text-caption text-inkMuted">
@@ -101,7 +110,7 @@ export function BusinessSwitcher({
             <button
               type="button"
               onClick={() => poll(Date.now())}
-              className="min-h-11 px-1 text-jellyDeep underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-jellyDeep"
+              className="min-h-11 px-1 text-link underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-jellyDeep"
             >
               {c.retry}
             </button>
@@ -116,7 +125,7 @@ export function BusinessSwitcher({
       {open && (
         <div
           data-testid="switcher-panel"
-          className="z-20 flex flex-col gap-2 bg-paper p-2 shadow-card max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:rounded-t-surface md:absolute md:left-0 md:mt-1 md:w-80 md:rounded-surface"
+          className="z-20 flex flex-col gap-2 border border-border bg-overlay p-2 shadow-overlay max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:rounded-t-surface md:absolute md:left-0 md:mt-1 md:w-80 md:rounded-surface"
         >
           {businesses.length > SEARCH_OVER && (
             <label className="flex flex-col gap-1 px-2 pt-1 text-caption font-semibold">
@@ -188,7 +197,7 @@ export function BusinessSwitcher({
           <button
             type="button"
             onClick={() => setDialog({ kind: "add" })}
-            className={`${row} rounded-card text-ui font-semibold text-jellyDeep`}
+            className={`${row} rounded-card text-ui font-semibold text-link`}
           >
             {c.addRow}
           </button>
@@ -196,7 +205,7 @@ export function BusinessSwitcher({
             {c.agency}{" "}
             <Link
               href="/contact"
-              className="text-jellyDeep underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-jellyDeep"
+              className="text-link underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-jellyDeep"
             >
               {c.contact}
             </Link>

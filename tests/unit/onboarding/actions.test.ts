@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const user = { current: null as { id: string } | null };
 const landing = { current: "onboarding" as string | null };
@@ -27,7 +27,10 @@ vi.mock("@/lib/onboarding", () => ({
     error: "DataForSEO 40501: raw upstream text",
   })),
 }));
-vi.mock("@/lib/queries/onboarding", () => ({ createBusinessOnboarding: vi.fn(async () => "biz-1") }));
+vi.mock("@/lib/queries/onboarding", async (actual) => ({
+  ...(await actual<typeof import("@/lib/queries/onboarding")>()),
+  createBusinessOnboarding: vi.fn(async () => "biz-1"),
+}));
 vi.mock("next/navigation", () => ({
   redirect: (to: string) => {
     throw new Error(`REDIRECT ${to}`);
@@ -101,6 +104,42 @@ describe("onboarding server actions", () => {
     expect(createBusinessOnboarding).not.toHaveBeenCalled();
     await expect(finishAction(input)).rejects.toThrow("REDIRECT /app");
     expect(createBusinessOnboarding).toHaveBeenCalledWith(expect.anything(), input);
+  });
+
+  // C-b (lead OK 2026-11-06): with ENABLE_CONNECTIONS on, Finish goes to the connect step when the
+  // vertical has anything Recommended. Off, the vertical isn't sent (Q4: the select is behind the flag).
+  describe("finish with ENABLE_CONNECTIONS", () => {
+    afterEach(() => vi.unstubAllEnvs());
+    const withVertical = (vertical: "restaurant" | "saas" | "other") => ({
+      ...input,
+      business: { ...input.business, vertical },
+    });
+
+    it.each(["restaurant", "saas"] as const)("on, %s: goes to the connect step", async (v) => {
+      vi.stubEnv("ENABLE_CONNECTIONS", "true");
+      user.current = { id: "u1" };
+      await expect(finishAction(withVertical(v))).rejects.toThrow("REDIRECT /app/onboarding/connect");
+      expect(createBusinessOnboarding).toHaveBeenCalledWith(expect.anything(), withVertical(v));
+    });
+
+    it("on, nothing Recommended (other): straight to /app", async () => {
+      vi.stubEnv("ENABLE_CONNECTIONS", "true");
+      user.current = { id: "u1" };
+      await expect(finishAction(withVertical("other"))).rejects.toThrow(/^REDIRECT \/app$/);
+    });
+
+    it("on, no vertical sent: the restaurant default, so the connect step", async () => {
+      vi.stubEnv("ENABLE_CONNECTIONS", "true");
+      user.current = { id: "u1" };
+      await expect(finishAction(input)).rejects.toThrow("REDIRECT /app/onboarding/connect");
+    });
+
+    it("off: /app, and a vertical in the payload is dropped", async () => {
+      vi.stubEnv("ENABLE_CONNECTIONS", "false");
+      user.current = { id: "u1" };
+      await expect(finishAction(withVertical("saas"))).rejects.toThrow(/^REDIRECT \/app$/);
+      expect(createBusinessOnboarding).toHaveBeenCalledWith(expect.anything(), input);
+    });
   });
 
   it.each(["team", "dfy_client", "dashboard"])("a %s user gets the fallbacks: no fetch, no Maps call", async (l) => {

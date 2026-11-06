@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 
 // Lead, 2026-11-05: with the flag off a signed-in team user gets the placeholder (was a 404 before sign-in existed).
@@ -10,7 +10,14 @@ vi.mock("@/app/team/load", async () => {
   return { loadTeam: async () => ({ kind: "ok", rows: exampleWorkspaceRows(), extras: null }) };
 });
 
-afterEach(() => vi.unstubAllEnvs());
+// The placeholder's header carries the theme toggle (D40), which reads matchMedia; jsdom has none.
+beforeEach(() =>
+  vi.stubGlobal("matchMedia", () => ({ matches: false, addEventListener() {}, removeEventListener() {} })),
+);
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
+});
 
 describe("/team is behind ENABLE_TEAM_WORKSPACE", () => {
   it.each([undefined, "", "false", "1", "TRUE"])(

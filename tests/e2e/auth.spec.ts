@@ -129,7 +129,9 @@ test("a seeded team user lands on /team with no self-serve workspace", async ({ 
   await openMagicLink(page, user.email, "/app/billing");
   expect(new URL(page.url()).pathname).toBe("/team");
   await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toBeVisible();
-  await expect(page.locator("nav")).toBeAttached();
+  // v3 PR 2b: the team rail plus the breadcrumb nav.
+  await expect(page.locator("#ws-nav")).toBeAttached();
+  await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toBeAttached();
   expect(await workspacesOwnedBy(user.id)).toEqual([]);
 });
 
@@ -154,9 +156,8 @@ test("Start for $99/mo goes through sign-in to /app/billing, where it opens Chec
   await openMagicLink(page, user.email, "/app/billing");
   expect(new URL(page.url()).pathname).toBe("/app/billing");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Billing");
-  // Step 14 replaced the disabled stub ("Checkout isn't open yet."): the button now opens Checkout.
+  // Step 14 replaced the disabled paywall stub: the button now opens Checkout.
   await expect(page.getByRole("button", { name: "Start for $99/mo" })).toBeEnabled();
-  await expect(page.getByText(c.checkoutClosed)).toHaveCount(0);
   await expectNoSideScroll(page);
   await expectAxeClean(page);
 });
@@ -196,7 +197,8 @@ for (const [role, home] of [
     await page.goto("/team");
     // The role check streams inside Suspense, so the redirect lands just after the shell.
     await expect(page).toHaveURL(new RegExp(`${home}$`));
-    await expect(page.locator("nav")).toHaveCount(0);
+    // The team workspace never renders for them (v3: /app pages have their own App rail and breadcrumb).
+    await expect(page.locator("#ws-nav")).toHaveCount(0);
   });
 }
 

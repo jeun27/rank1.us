@@ -674,6 +674,25 @@ Changed
 - Cleanup: merged the doubled "## Step 12 (backend)" section (the second copy was fully contained in the first; no line lost).
 - src/types/db.ts got the 0018 columns and functions added by hand in the generator format.
 
+## Step 16 (backend): monthly reports, storage and report settings (branch feat/step16-reports-db, issue #75)
+- Step 16 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b; Build Pack not readable; reconcile later.
+- Step 15 (GA4) is skipped until the founder's Google OAuth client exists. The report's GA4 section is "not connected" (hidden + 'Connect GA4').
+- Lead decisions:
+  - Who: active/trialing workspaces or DFY businesses, one report per business per LA calendar month, for the previous month. Idempotent.
+  - When: /api/cron/monthly-report at "0 14,15 1 * *" UTC, gated to the 1st at 07:xx LA. The drain renders and sends at most 2 per tick.
+  - Content is stored data only. Brand color is used for accents with an AA fallback to ink. White-label: no Rank1 name, logo, Jelly or "Powered by" in the PDF or email. From = business name <REPORT_FROM_EMAIL>.
+  - Recipients ≤ 10 validated emails. Send test → own email only. No recipients → generated, not sent.
+  - Storage: private "reports" and "logos" buckets (logos PNG/JPEG ≤ 512 KB; SVG rejected).
+- Migration 20261105000019 (+ .down.sql), additive and re-runnable:
+  - Buckets created when storage.buckets exists. No storage.objects policies: the server checks access with the caller's client, then uploads or signs 60 s URLs with the service client.
+  - Businesses write gate (maintainer OK, lead 2026-11-05; reviewer fix): SELECT for members (+ team on DFY, 0015). RLS INSERT/UPDATE/DELETE for self-serve members only (never a dfy_client). The team changes a DFY business only through definer RPCs (set_report_settings, set_fix_list_visible), so it can never move (workspace_id) or delete one. id/workspace_id/service are service-role only (column grants). Before this, the Step 1 FOR ALL member policy let a dfy_client UPDATE its business.
+  - Report settings CHECKs (NOT VALID, for legacy rows): brand_color hex, report_recipients ≤ 10 lowercase emails, logo_path under the business id. logo_path is no longer member-writable.
+  - reports: attempts/locked_at/last_error, the status check, unique (business, period_start). The member policy is now SELECT only (+ team read on DFY).
+  - enqueue_monthly_reports / claim_reports / finish_report (service only). set_report_settings(business, color, recipients): a definer RPC for self-serve members or the team on DFY (trims, lowercases, dedupes; CHECKs reject bad input). public.can_write_business for server-side checks (logo upload).
+- CI: test-db now starts Supabase WITH storage-api (removed from its -x list) so the buckets and signed URLs are tested for real.
+- Queries: src/lib/queries/reports.ts.
+- src/types/db.ts got the 0019 objects added by hand in the generator format.
+
 ## Step 14 (data-pipeline): checkout, webhook and portal (branch feat/step14-billing)
 Step 14 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b; Build Pack not readable; reconcile later.
 Lead decisions (Step 14 brief):
@@ -723,9 +742,256 @@ Changed
 - Add: actions.add (quantity +1 with default proration, or Checkout when unpaid). Then it polls seats every 2 s until seats_quantity rises → /app/onboarding. After 30 s it keeps "Adding your business…" with "Try again" and no error (lead).
 - Lead copy in COPY.md "Billing (lead, 2026-11-05)".
 - Wiring:
-  - /app/billing reads getBillingState (#72); Checkout is offered only without a live subscription (null, canceled, incomplete_expired); incomplete, past_due and unpaid show the failed banner + 'Update card' (portal), paused shows the plan + 'Manage billing', and the server actions never start a second Checkout (lead, #74 review);
+  - /app/billing reads getBillingState (#72); Checkout only for null, canceled and incomplete_expired (terminal in Stripe; one shared NO_SUBSCRIPTION in src/components/billing/status.ts, lead #79); incomplete, past_due and unpaid show the failed banner + 'Update card' and the plan with the "Past due" warn badge + 'Manage billing' (portal); paused shows the plan with the "Paused" warn badge + 'Manage billing'; the server actions never start a second Checkout; authCopy.checkoutClosed and its COPY.md stub row are deleted (lead Q2);
   - the header switcher (HeaderSwitcher in the /app layout) reads listMyBusinesses (name, city) + each business's latest run summary;
   - the cookie rank1_business (httpOnly, path /app) is set by selectBusinessAction after checking listMyBusinesses, and getCurrentBusiness(db, cookie) honors it in loadShell and the competitor actions;
   - Add/Remove failures reuse "We couldn't save that. Try again."; "We couldn't open billing…" is only for the Checkout/portal redirects (lead);
   - "Active"/"Paused" as screen-reader text are approved.
 - Stripe calls: data-pipeline's #73 helpers (src/lib/stripe: startCheckout, openPortal, addBusinessSeat, removeBusinessAtPeriodEnd) with the caller's own client. Checkout success/cancel and the portal return to NEXT_PUBLIC_SITE_URL/app/billing. The interim stand-in module is gone.
+
+## Step 16 (data-pipeline): white-label PDF and monthly send (branch feat/step16-report-pdf)
+- Step 16 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b; Build Pack not readable; reconcile later.
+
+Lead decisions (2026-11-05)
+- Reports go to businesses whose workspace is active/trialing, or DFY: one per business per LA calendar month, for the previous month. Idempotent (enqueue_monthly_reports, 0019).
+- /api/cron/monthly-report at "0 14,15 1 * *" UTC, gated to the 1st at 07:xx America/Los_Angeles. It only enqueues. The per-minute run-jobs drain renders and sends at most 2 reports per tick, each only with ≥60 s of maxDuration left.
+- Content is stored data only (no LLM): logo or name + month, visibility with n and the change vs the previous month's last run, per engine, top 5 competitors, top 10 sources, open fixes (title + detail), the month's weekly checks, the "API-measured, directional" label + freshness. The brand color is used for accents only and falls back to ink when it fails 4.5:1 on white.
+- White-label: no product name, logo or "Powered by" in the PDF (text and metadata) or the email. From = the business name at REPORT_FROM_EMAIL (existing env name).
+- Copy: subject, body and headings exactly as COPY.md "Report (lead, 2026-11-05)".
+- No GA4 section in the PDF, not even a placeholder, until Step 15 exists.
+- Logos: PNG/JPEG only. SVG is rejected, not sanitized (data-pipeline's call, approved).
+
+Changed
+- `@react-pdf/renderer` (INTEGRATIONS.md) renders src/lib/reports/document.tsx (Helvetica, A4; title/author/creator/producer = the business name).
+- src/lib/reports: month.ts (window + month label), contrast.ts (WCAG accent fallback), copy.ts, data.ts (buildReportData picks stored fields by name; monthRuns picks the month's runs by LA date), email.ts (Resend payload with the PDF attached; Idempotency-Key = report id), process.ts (processReports drain hook, runMonthly), service.ts (service wiring + sendTestReport).
+- Errors leave a report 'rendering'. claim_reports retries it after 10 minutes and marks it failed after 3 attempts, so a Resend or Storage hiccup never loses a month and Resend's idempotency key prevents a double send. No recipients → status generated (stored, nothing sent).
+- sendTestReport (for 'Send test to me'): last month's report to the signed-in user's own email only, read with the caller's client (RLS), never stored. The idempotency key dedupes double clicks within a minute.
+- run-jobs drains reports after the fix checks. vercel.json gains the monthly cron, and tests/unit/vercel-config.test.ts pins all 3 crons.
+- Logs carry counts and PG codes only.
+- Review (#77): the drain reads with the service client, which bypasses the DFY fix_list_visible rule. So the report loader applies it: a DFY business with the fix list hidden gets no "What to fix next" section (no heading, no placeholder). DFY visible and self-serve always show it. Tested on the rendered PDF and the email.
+
+## Fix (data-pipeline): exact percent floors (branch fix/exact-percent-floors)
+- Bug (reviewer, Step 17): compute.ts floorPct did Math.floor(value × 100). Floating point makes 0.29 × 100 = 28.999…, so 29 of 100 showed as 28% in the leaderboard change, and progress bars were 1 low.
+- One shared helper: floorPct(metric) = Math.floor(numerator × 100 / denominator), null at denominator 0. formatPercent (UI and the report PDF), pointsChange, History and progressPercent all use it. A test fails if any other src file floors a ratio × 100.
+- Tests: 29/100, 57/100, 7/25, 58/200 give exact results in floorPct, formatPercent and progressPercent.
+
+## Step 17 (backend): experiments (branch feat/step17-experiments-db, issue #80)
+- Step 17 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b; Build Pack not readable; reconcile later.
+- Lead decisions (2026-11-05):
+  - Who: self-serve owners/members and the team on DFY. A dfy_client never sees or creates experiments (RLS refuses).
+  - Setup: test = the questions the change affects; control = the business's other active questions, or a picked subset. Both ≥ 1, a question in one group only. change_url http/https only. change_date defaults to LA today and can't be in the future. From a fix, the name defaults to the fix title.
+  - Math (no p-values, no significance language): ok answers of audit/weekly runs, on the LA date of runs.started_at. Before = [d-28, d), after = [d, d+28), cut at the LA date of ended_at (end day included). An answer's day is its run's started_at, not answers.checked_at (lead, 2026-11-06), so a run's answers stay in one window, as in History/listRunSummaries. n < 10 in any cell → "Too few answers to call yet." The label is always "Directional".
+  - Status: 'running' until 28 days after change_date, then 'done' (derived, no cron). The user can end early ('ended', sets ended_at) and delete.
+- Migration 20261105000020 (+ .down.sql), additive and re-runnable:
+  - experiments: ended_at, status default 'running' + check running|ended, change_url check (NOT VALID, for legacy rows).
+  - RLS: SELECT/INSERT/DELETE on private.can_write_business (0019) for both tables. No UPDATE, and no DELETE on experiment_questions (groups are fixed at creation; deleting a question cascades).
+  - Deferred constraint triggers check at commit: both groups have a question, questions and the fix belong to the business, change_date not in the future (23514).
+  - create_experiment(p jsonb) (invoker, 22023/42501), end_experiment(id) (definer, false when not running or not allowed), experiment_data(id) (invoker, counted like run_summaries).
+- Queries: src/lib/queries/experiments.ts. src/types/db.ts got the 0020 objects by hand in the generator format.
+- Window edges tested at d-29/d-28/d-1/d/d+27/d+28, the ended-early end day, and one minute before LA midnight on d (before) vs midnight (after), the 07:59Z/08:00Z case.
+- tests/db/helpers.ts makeWorkspace now inserts its experiment with both groups in one transaction.
+
+## Step 17 (data-pipeline): before/after vs control math (branch feat/step17-experiment-math)
+- Step 17 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b; Build Pack not readable; reconcile later.
+
+Lead decisions (2026-11-05)
+- Not for dfy_client (backend RLS + no UI). No p-values and no significance language. The label is always "Directional".
+- Before = ok answers of a group's questions in weekly/audit runs that started on LA dates D−28..D−1. After = D..D+27 (inclusive, 28 days each). D = change_date.
+- A run counts by its start date (the LA date of runs.started_at), not answers.checked_at, so a run's answers never split across windows. Same as History (lead, 2026-11-06).
+- Change = after% − before% in floored whole points, each with n. Difference = test change − control change.
+- Any of the 4 cells with n < 10 → tooFew: the UI shows "Too few answers to call yet. Next check Monday." instead of numbers.
+- Status: 'running' through D+27, 'done' from D+28. A user's early 'ended' wins.
+
+Changed
+- src/lib/metrics/experiment.ts (pure): computeExperiment(counts) → per group {before, after: Metric, change}, difference, tooFew, label. When tooFew, change and difference are null so no number can be shown by mistake. experimentWindows(D) and experimentStatus(e, now). The edge table went to backend for getExperimentData's db tests.
+
+- Percents use the shared floorPct (fixed in #83: exact integer floors).
+
+## Connections (backend): connections and change log (branch feat/connections-db, issue #84)
+- Built from the founder's Connections spec (2026-11-06) and the lead's brief (briefs/rank1-connections.md).
+- Lead decisions (2026-11-06):
+  - Industry: the brief's businesses.industry is the existing businesses.vertical (lead O1), not a new column. 0021 adds a validated 13-value check (restaurant, hvac, plumbing, roofing, pest_control, auto, beauty, gym, events, dental, saas, dtc, other) with no row rewrite, so the migration fails if a row is outside the list. Onboarding and create_dfy_client accept business.vertical (default restaurant). The contact-us industry maps onto it via VERTICAL_FOR_INDUSTRY.
+  - Apply edits: any self-serve member (can_write_business), or the team on DFY; never a dfy_client. This refines the brief's "owner (self-serve)" wording (lead Q1).
+  - Connect/revoke: the business's own members, incl. its dfy_client (the one place a dfy_client writes, via OAuth only); never the team.
+  - A Google grant is one business + one Google account (external_account_id = the Google sub, per data-pipeline). Its live gbp/search_console/ga4 connections share tokens, refreshes, needs_reauth and revoke. revoke_connection is grant-wide for Google, only itself otherwise. A null refresh token on save keeps the grant's stored one (Google omits it on re-consent).
+  - The unused google_tokens table stays (dropping a table is a stop condition, lead Q2).
+- Migration 20261105000021 (+ .down.sql):
+  - connections (provider gbp | search_console | ga4 | shopify), connection_tokens (ciphertext, RLS on, no policies, no user grants), connection_changes (append-only: a trigger refuses UPDATE and any DELETE but the cascade; actor required; gbp fields only description, regular_hours, special_hours, website_uri, primary_phone, attributes), connector_interest (12 connector keys, shared with recommend.ts).
+  - Reads: members (incl. the dfy_client) and the team on DFY. No user writes any of these tables directly.
+  - Route checks (invoker): can_connect_business, can_apply_edits. note_connector_interest (idempotent).
+  - Service RPCs: save_connection, get_connection_tokens (nothing once revoked), update_connection_tokens, set_connection_entities (≤ 100 {id, name}), set_connection_status (connected | needs_reauth), revoke_connection, record_connection_change.
+- Queries: src/lib/queries/connections.ts (CONNECTOR_KEYS, GBP_EDIT_FIELDS). VERTICALS and VERTICAL_FOR_INDUSTRY in src/lib/queries/onboarding.ts. src/types/db.ts got the 0021 objects by hand in the generator format. docs/SCHEMA.md updated.
+
+## Step 18 cleanup list
+- Unused google_tokens table: drop with founder OK (lead, 2026-11-06).
+- Capped free-audit lead UX: decide copy. When create_free_audit's own daily cap hits (P0429, a race past the route check), the lead already got the 202 "queued" answer; it stays stored with no run and gets no email (lead, 2026-11-06).
+- Make create_free_audit's p.daily_limit required once every deployed build passes it. Until then a missing one skips the DB cap, because prod and preview share the hosted DB and v0.5.0 doesn't pass it (lead, 2026-11-06).
+- Pages render nothing without JS (Suspense streaming keeps them in a hidden template): /app, /dev/app, /team, /dev/team (docs/QA.md known note; lead, 2026-11-06).
+- Google revoke in Rank1 drops that Google account for every Rank1 business using it (self-heals to needs_reauth): decide copy or per-business tokens (lead, 2026-11-06).
+
+## Connections (data-pipeline): Google OAuth, GBP and Search Console (branch feat/connections)
+- Built from the founder's Connections spec (2026-11-06) + the lead's decisions in briefs/rank1-connections.md. Behind ENABLE_CONNECTIONS.
+
+Lead decisions (2026-11-06)
+- One Google OAuth client with incremental scopes: GBP business.manage, Search Console webmasters.readonly, GA4 analytics.readonly. Each connector asks only for its own scope, plus openid for the Google sub that identifies the grant (no email or profile scope).
+- The redirect URI is exactly NEXT_PUBLIC_SITE_URL + /api/connections/google/callback, never the request host. The lead registers prod + one stable Preview alias in the Google client.
+- State + PKCE S256 in a cookie: httpOnly, Secure, SameSite=Lax, Path=/api/connections/google/callback, 10 minutes, cleared on every outcome.
+- The id_token is read only from the token response: iss is accounts.google.com, aud is our client id, and it isn't expired (else exchange_failed). The sub is never logged or shown. A grant = the same business AND the same sub, so two Google accounts on one business stay separate (backend scopes the RPCs; both test suites cover it).
+- Tokens are AES-256-GCM ("v1.iv.tag.ct", GOOGLE_TOKEN_ENCRYPTION_KEY) and only go through backend's service RPCs. Refresh happens within 60 s of expiry. invalid_grant, or a 401 after a refresh → needs_reauth, with no silent retries. Token saves, refresh and needs_reauth are grant-wide.
+- Revoke: Google's revoke first (the whole grant), then revoke_connection (every Google connection on that grant). COPY.md has the confirm string. If Google can't be reached, nothing changes in Rank1.
+- GBP edits: description, regular_hours, special_hours, website_uri, primary_phone and attributes only (the DB enforces the same list). Categories are out of v1, which is stricter than "team confirm" (approved). A preview diff → the team confirms → apply re-reads Google and refuses if the diff changed ("stale") → validateOnly → patch with an updateMask of exactly the changed fields → one change-log row per applied field.
+- Open-redirect guard (lead): `return` must be a relative path under /app, /client or /team (safeNext: "/", not "//" or "/\\", no scheme). Anything else returns to /app/settings.
+- NEXT_PUBLIC_SITE_URL unset or not https → start and callback answer 503 not_configured before Google. The request Host is never used (it's only set on prod for now).
+- Every route 404s and every service function returns "disabled" unless ENABLE_CONNECTIONS is exactly "true".
+- Fixtures only. A guard blocks any live call in the connections tests.
+
+Changed
+- src/lib/connections: recommend.ts (industry → connectors, the founder map, keyed by backend's CONNECTOR_KEYS; reads businesses.vertical), crypto.ts, oauth.ts, tokens.ts (withGoogleToken), google-api.ts, gbp.ts, search-console.ts, ga4.ts, service.ts (the entry points for routes and server actions: beginGoogleConnect, finishGoogleConnect, revokeGoogleConnection, listConnectionEntities, pickConnectionEntities, previewGbpEdit, applyGbpEdit).
+- Routes: GET /api/connections/google/start and /callback.
+- Picker picks are kept only if Google lists them for the grant (max 100).
+- 'other' (incl. med-spa) has nothing recommended. gbp, search_console and ga4 are Optional for it (lead Q2, 2026-11-06).
+- Tile helper text is a niche key. The strings are lead copy in COPY.md "Connections (lead, 2026-11-06)" (Q3).
+
+Blocked/open
+- R1 (founder): GBP API access needs Google's approval ("Application for Basic API Access", https://developers.google.com/my-business/content/prereqs). Quota is 0 QPM until then, so live GBP fails even on Preview. These are sensitive scopes, so external users also need Google OAuth verification.
+- Shopify and the other connectors are Coming soon tiles (Notify me = backend's note_connector_interest).
+
+## Step 16 (frontend): the report page (branch feat/step16-report-ui)
+
+- Step 16 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b. The Build Pack isn't readable, so reconcile later.
+- /app/report (nav "Reports", after "What to fix next") for the current business (switcher cookie):
+  - getReportSettings, listReports and getLogoUrl (#76), read through RLS;
+  - UI.md states: no reports → "Your first report sends on the 1st." + Preview; a failed latest report → "The report didn't send to {email}. Check the address." ({email} = the saved recipients, joined, because report rows carry a count only); plus loading and error.
+  - The GA4 partial state isn't built (no GA4 integration yet).
+- Preview: an iframe of the real PDF (data-pipeline's renderReportPdf). /dev/report-preview.pdf renders it on Example data for the gallery. The real GET /app/report/preview.pdf calls data-pipeline's renderReportPreview (#85) for the current business: application/pdf, inline, no-store; 404 when RLS hides it, 500 on a render error.
+- Settings:
+  - logo (PNG/JPEG ≤ 512 KB, checked in the browser and again by uploadLogo's magic bytes; SVG rejected);
+  - Brand color (a native color picker, so always #RRGGBB);
+  - Recipients (≤ 10 valid emails, one per line, lowercased and deduped).
+  Save goes through setReportSettings (the definer RPC). 'Send test to me' → sendTestReport (the user's own email only).
+- History: Month / Status / Download. Download is GET /app/report/{id}/download → a short-lived signed URL (302, no-store), and a 404 when RLS hides the row.
+- Lead copy in COPY.md "Report (lead, 2026-11-05)".
+
+## Step 16 QA fix (frontend): report GA4 partial state (branch fix/report-ga4-partial, issue #75, QA #89)
+
+- F1: UI.md 4b Report partial. GA4 isn't connected yet, so the GA4 section is always hidden in the report UI (the PDF doesn't change). 'Connect GA4' links to /app/settings/connections (the Connections hub) only when ENABLE_CONNECTIONS is "true" (connectionsEnabled), so prod never shows a dead link. /dev/app gains report-partial.
+- N1: the 404s of /app/report/preview.pdf and /app/report/{id}/download send Cache-Control: no-store too.
+
+## v3 PR 1 (frontend): tokens and themes (branch feat/v3-tokens)
+
+- Built from docs/design/v3.md and UI.md v3 (#90): D32-D36 and D40 (O2 for /app and /team, O1 for public pages).
+- Tokens (src/styles/tokens.ts ↔ globals.css; tests/unit/tokens.test.ts):
+  - the §7 dark values are the default @theme; [data-theme="light"] holds the O2 values; a later nested [data-theme="dark"] keeps the rail dark inside a light page (D14);
+  - the names are unchanged ("white" = the panel/surface token in both themes), plus accent/onAccent (button fill), text2, overlay and borderStrong;
+  - the §7 contrast pairs are asserted in both themes;
+  - radius: control 6, card/surface/banner 8; shadows are hairlines except overlay menus and the Google button.
+- Theme script (src/lib/theme.ts): one rule, themeFor(path, saved, prefersLight), used by tests and by the inline script in the root layout's <head>, which runs before first paint. Public pages are always dark. /app, /team, /client and /dev use the saved choice, else prefers-color-scheme, else dark. The server renders data-theme="dark", so public pages never change after paint. ThemeSync (a client effect in the root layout, inside Suspense) re-applies themeFor on every pathname change, so a saved light theme never carries onto a public page through a client-side link (#92 review). /app gets the "Dark theme" toggle (ThemeToggle, sharing /team's stored choice). The PDF report and the audit PNG keep the light palette.
+- Fonts: Inter + JetBrains Mono via next/font (self-hosted at build, OFL); Fraunces and Public Sans removed. Mono placement and the type scale follow in the shell and landing PRs.
+- Buttons (D35, lead O2): 6px radius; 32px from md (40px for size lg and the final CTA) and 44px below md, since UI.md keeps "44px below md". Press is translateY(1px) and the secondary arrow nudges on hover. The final CTA uses the accent (amber is no longer a button). A new `alt` variant. The Google button keeps its aurora ring on the 6px shape. The tap-target e2e checks run below md; dev-ui.spec checks 32/40px from md.
+- Chart colours (lead O1, supersedes Step 9 Q3 O1 "4 solid + 2 striped"): dedicated per-theme series1-3 tokens, 3 solids + 3 stripes in both themes. Reddit/YouTube/Review sites are solid on series1/2/3; Social and News and blogs are striped in series1/2, and Other in neutral inkMuted. Dark #3987E5 / #D95926 / #199E70; light keeps #1A5FBF / #D98E2B / #279EF2. The dataviz validator (all pairs) passes in both themes; its output is in the PR.
+- Docs: the old colour words in UI.md:159,200 and COPY.md:20,78,150,274 now use the v3 token names (visual notes only; quoted strings untouched).
+## Step 18 (backend): hardening (branch fix/step18-hardening)
+- Already done before this step (evidence in the PR): every cron route compares CRON_SECRET in constant time (cronAuthorized: SHA-256 digests + timingSafeEqual), and every cron/API 5xx body is a fixed label, never DB error text.
+- Migration 20261105000022 (+ .down.sql):
+  - bump_free_audit_notify_attempts(run) → the new count, one UPDATE (service only). bumpFreeAuditNotifyAttempts uses it instead of read-then-write (review #34).
+  - claim_jobs: free-audit jobs still go first but take at most half a claim (rounded up) while paid jobs wait; slots paid work doesn't use go back to free audits. Output shape and order unchanged.
+  - create_free_audit: p.daily_limit is a whole number (else 22023); the server passes auditDailyLimit(), so AUDIT_DAILY_LIMIT stays the one knob (lead Q1). Missing or null skips the DB cap so the live v0.5.0 build keeps working on the shared hosted DB (lead); the app-level check still runs. Under a transaction advisory lock it counts free audits since UTC midnight and raises P0429 at the cap. A lead that already has a run still gets it back. startFreeAudit already logs the code and returns no run (lead Q2: no new copy).
+- README "Releasing": apply missing migrations to the hosted DB, then `notify pgrst, 'reload schema'`, before the deploy.
+- Tests: the claim-order test now expects the half-and-half split (the rule changed, lead-approved). free-audit and e2e inputs pass daily_limit.
+
+## v3 PR 2a (frontend): the /app shell (branch feat/v3-shell)
+
+- Rail (D14): the App nav is the rail. It holds the logo, the pages in 4 groups with icons (Dashboard | Competitors, Questions, Sources | What to fix next, Reports, History | Billing) and Account at the foot. It's dark in both themes (rail token #0B0C0E, §7) and a sideways row on phones. During onboarding it keeps the logo and Account but no page links.
+- Top bar (D42): a breadcrumb, Rank1 / business / page (aria-label "Breadcrumb", lead copy). The business crumb is the Business switcher (a 6px trigger, overlay popover); the theme toggle is on the right. The "/" separators are CSS ::before content, so the <ol> holds only <li>s.
+- /dev/app renders every state inside the shell; the switcher states put the switcher in the breadcrumb.
+- Theme on navigation: ThemeSync (#92) re-applies themeFor on pathname changes. The e2e covers the rail logo, the breadcrumb Rank1 and the /client header logo (local stack).
+- Split (lead D1): 2a is /app; 2b is the /team shell (the client switcher listbox in the breadcrumb, the Context panel on the right, the document as main).
+
+## v3 PR 2b (frontend): the /team shell (branch feat/v3-team-shell)
+
+- Layout (lead OK on the 2b note): the dark rail #ws-nav (bg-rail, logo at the top, the theme toggle moved to the top bar) | a top bar with the breadcrumb Rank1 / client switcher / section and the "Context" toggle | main#ws-document (the one H1 = the section label, lead Q1, then the document tabs) and aside#ws-context on the right (D21). The resize separator sizes the document, as before (same split pref).
+- "Context" (aria-expanded, aria-controls ws-context) is open by default and not saved; it is md+ only. Phones keep the tab bar Nav / Context / Document and now start on Document; Nav and Context open as sheets under the top bar.
+- Client switcher (D20): one GET form in the breadcrumb. With JS it is a listbox (arrows, Home/End, Enter, Escape, the current client selected) driving the form; the last row "Clients" opens the invites tab (it moved out of the context pane). Without JS the form's "Client" select + "Show" submit it.
+- No-JS fallback (lead Q2): the head script adds .js to <html> before paint; globals.css hides .js-only without it and .nojs-only with it. The server renders both, so nothing swaps after load. Unit tests check the server markup against the real CSS rules with and without .js.
+- Finding: with JS fully off, Next keeps the streamed workspace in <div hidden id="S:0">, so /team (and /dev/team) is blank without JS. The no-JS e2e removes .js from a loaded page and submits the real form instead (flagged to the lead).
+
+## v3 PR 3 (frontend): the landing (branch feat/v3-landing)
+
+- Hero (D37): one H1 on two lines, "Be the brand" / "AI names first." (line 2 in the accent; the accessible name reads as one sentence, lead Q3). The CTA (40h) is on the left and the sub on the right, with the 4 engines as bordered tags with a blue dot. Stacked below md. A glow sits behind it.
+- Demo window (D26/D37): a 12px frame with shadow-window and a glow behind. It holds "Example data", the typed question in mono, 4 engine bars, the card line and a 4-row leaderboard where You climbs past one rival. Jelly is 72px on the corner (60 below 1220px, hidden on phones).
+- Demo fixture (lead Q1): src/components/site/demo-data.ts, 40 answers per engine (16/13/15/11 = 55/160 = 34%). The hero card numbers (heroThisWeek/heroLastWeek) are re-exported from it. The card line, the bars and the leaderboard all derive from it, and a unit test swaps the fixture to prove the component has no numbers of its own.
+- Motion: one run when scrolled into view (requestAnimationFrame, so a hidden tab pauses it). The server renders the final state, which is what no-JS and reduced motion show. With html.js and motion allowed, the moving parts stay hidden until the run starts, so the final numbers never flash first.
+- Jelly eye-tracking (UI.md hero row): not built; needs jelly.svg with an eye layer (lead Q2). The 72px Jelly is static.
+- Sections (D38): Features as a hairline bento; the steps as one bordered list; the comparison with a sticky header and the pinned Rank1 column on infoBg; the pricing card as a 12px frame with a top-edge glow (the /app/billing card is unchanged); the final CTA as a bordered panel with a corner glow and a 96px Jelly (was the ink band).
+- Tokens (D39): radius frame 12px, shadow window, and the accent glow (--glow, the `glow` utility). tokens.test now allows 3 gradients; the glow is landing-only (src/components/site) and shadow-window is HeroDemo-only.
+
+## v3 component drift (frontend, branch fix/v3-component-drift)
+
+Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/UI.md.
+- C5 (bug from #93): the /app breadcrumb wrapped onto 3 lines at 375. The header is one row now: Rank1 and the page crumb don't shrink, and the business crumb gives way and ends in an ellipsis (data-crumb-name). The switcher trigger shrinks with it (a min-w-0 column), and its list keeps the full names. The e2e covers one line and no overlap at 375.
+- C1: Badge is the UI.md tag (radius 4 = new radius token "tag", 20h, Inter 500 11px = new text token "tag", a 25% state hairline). ProgressBar is a 6px overlay track with the accent fill sized by scaleX; the labels are mono.
+- C2: the error banner is errorBg with a 1px error hairline at 30%, a 48px Jelly and an Inter 500 sentence. The info banner is infoBg with a 25% hairline and a 28px chip.
+- C3: UI.md has one type size at every breakpoint: text-ui 15/20 → 13/19, caption 13/18 → 12/16. R2 (lead O1): form fields stay 16px below md (one unlayered rule in globals.css), so iPhone Safari doesn't zoom on focus.
+- C4: the FixList Status select is a 6px control (44px below md, 32px from md); the read-only status label is a Badge.
+- The old v2 unit tests (pill badge, white banner with a 1.5px edge, ProgressBar width) now assert the v3 values above.
+
+## Step 17 (frontend): /app/experiments (branch feat/step17-experiments-ui)
+
+- Step 17 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b; Build Pack not readable; reconcile later.
+- One page of cards (lead Q2), no detail route. Each card: name, change date, status tag (Running / Done / Ended), then a table with rows Test questions and Control questions and columns Before / After / Change. Before and After read "34% · n=120"; on phones the n drops under the percent (groups stacked). Change and Difference are signed floored points ("+6 pts", "−4 pts", never a %), with the "Directional" tag. Any cell under 10 answers shows "Too few answers to call yet. Next check Monday." instead. No p-values or significance words.
+- 'Start a test' opens /app/experiments/new: Name, What changed, Link to the change (http/https only), Change date (default today in LA, no future), Test and Control questions. Control starts as every active question, and ticking a question in one group takes it out of the other. From a fix (?fix=<id>) the name defaults to the fix title and fix_id is set. The server action takes the business from the session's own selection, never the browser.
+- End test (running only) and Delete test (confirm "Delete this test? Its results go too."). All writes are hidden without canWrite.
+- Fix list: 'Start a before/after test' is on for canWrite only and links to the form for that fix.
+- Nav: "Experiments" (flask) after "What to fix next".
+- dfy_client gate (lead): the proxy 404s /app/experiments and /new for a dfy_client (my_landing), on top of backend's RLS; a DB e2e covers it in CI.
+- Lead copy (Q1) is in COPY.md "Experiments (lead, 2026-11-05)".
+
+## Connections C-a (frontend): Settings → Connections (branch feat/connections-hub)
+
+- Lead OK on the 3-PR split C-a → C-b → C-c, all behind ENABLE_CONNECTIONS (2026-11-06).
+- /app/settings/connections (self-serve) and /client/settings/connections (a DFY client authorizes its own business, OAuth only). /app/settings redirects there. The proxy 404s all three while the flag is off, before anything else, since the pages stream. The rail shows "Settings" and the /client header shows "Connections" only with the flag on.
+- Tiles come from recommend(businesses.vertical) (a thin getBusinessVertical query), in Recommended / Optional / Coming soon, each with its niche helper text. Only gbp, search_console and ga4 connect. Every other tile is "Coming soon" + "Notify me" (noteConnectorInterest, lead Q3), then "We'll let you know.". No fake connect buttons.
+- Connect / Reconnect open a consent sheet that states only what the code does (scope, the 6 GBP fields, review + log, how to revoke, no passwords), then "Continue to Google" → /api/connections/google/start with return=the hub. The callback's ?status= shows a banner.
+- Per connection: status (Connected / Needs reconnect / Disconnected), the chosen locations, "Choose locations / sites / properties" (listConnectionEntities → pickConnectionEntities), "Disconnect" with the existing one-grant warning, and the change log (field + date only; values stay in the team pane).
+- Without can_connect_business: statuses only, no buttons.
+- Copy: drafted, then signed off by the lead with 3 edits (2026-11-06): the first consent line names openid as well as the scope ("to know which Google account you used. We don't get your email or profile."), GBP edits happen "only after you or the Rank1 team confirm", and the statuses read "Needs reconnect" / "Disconnected" (the enums stay needs_reauth / revoked). In COPY.md "Connections (lead, 2026-11-06)".
+
+## Fix status history (backend): for the check-off Fix list (branch feat/fix-status-history)
+- Lead decisions (2026-11-06): additive only and compatible with live v0.5.0 on the shared DB. A team actor shows as is_team only (the UI says "Rank1 team"); a display name shows only for a non-team member of the same business; never the email.
+- Migration 20261105000023 (+ .down.sql): fixes.status_changed_at / status_changed_by (→ auth.users, on delete set null), null on existing rows (fixes has no updated_at to backfill from). A BEFORE INSERT OR UPDATE trigger forces them: null on insert (reviewer: never the caller's values), set on every status change (actor null for the service detector), kept on any other update, so neither can be written directly. set_fix_status and listFixes are unchanged.
+- done_fixes(business) (invoker, through the fixes RLS): done fixes, newest change first (nulls last), with changed_by from private.fix_status_actor (definer, re-checks the caller can see the fix). Query: listDoneFixes in src/lib/queries/fixes.ts.
+
+## G2 (backend): "Can AI see your site?" storage (branch feat/ai-access-db)
+- GAS brief (briefs/rank1-gas.md), lead decisions 2026-11-06. The check itself (robots.txt rules, visible words, the GPTBot-UA compare, the Cloudflare hint, the SSRF guard) is data-pipeline's. Behind ENABLE_AI_ACCESS_CHECK.
+- Migration 20261105000025 (+ .down.sql), additive (live v0.5.0 never touches it): ai_access_checks, one row per run (on delete cascade with the run). Read like the run: members incl. the dfy_client and the team on DFY; a free audit's check is service-only (served by token). No user writes.
+- record_ai_access_check(run, p) (service only): validates the outcome, the 6 crawler names (GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot, Google-Extended), the line length (≤ 500), counts and HTTP statuses (22023 otherwise), then upserts per run.
+- New fix rule R16 "Your site lets AI in, but Cloudflare may be blocking it." (p5 through 0024's mapping), enabled, with the lead's customer copy from REPORT.md. P5 fixes go through record_fix_results: R14 blocked crawlers, R10 JS-empty, R16 Cloudflare.
+- Queries: src/lib/queries/ai-access.ts (AI_CRAWLERS, getAiAccessCheck, getLatestAiAccessCheck, recordAiAccessCheck).
+
+
+## Portal look (frontend): template portal look (branch feat/portal-look)
+
+- Founder direction (2026-11-06 05:23-05:31 UTC), lead OK with R1-R3. Dark tokens only; light unchanged except the new link token.
+- Surfaces: page #000, panel #0A0A0A, raised #111214, overlay #18191B, rail #000, hairlines rgba(55,65,81,.55). Accent #FFFFFF with onAccent #000 (white primary buttons, hover #E5E5E5). Every AA pair is still asserted in tokens.test. The landing shares the dark tokens, so its primaries are white too; it keeps its hero glow.
+- Headings: h1/h2 in /app, /team and /client use the heading-gradient utility (white → 60% white, -0.04em), dark only. Forced colours fall back to plain text. tokens.test allows 4 gradients; heading-gradient never appears in src/components/site, and glow only does.
+- R1: links use a new link token (white in dark, #1A5FBF in light) and are always underlined.
+- R2: the blue info pair (infoBg + jellyDeep #79C0FA) stays for "You", info banners, the progress percent and focus rings.
+- R3: the visibility chart's business line uses the accent (white in dark). The competitor average and series1-3 are unchanged.
+- Left out of scope, flagged: the Competitors "Add" / "Not a competitor" buttons are still pills (pre-v3 drift).
+## G5 (backend): a pillar on every fix (branch feat/fix-pillars)
+- GAS brief (briefs/rank1-gas.md), lead decisions 2026-11-06: pillars P0 Know where you stand, P1 Prompts & keywords, P2 Content, P3 Brand mentions, P4 YouTube & video, P5 Technical access, P6 Measure & prove. The Fix list orders P5, P3, P2, P1, P4, P6, with P0 a baseline line.
+- Rule mapping (lead Q2): p5 = R10, R14, R16 (crawl/read access); p3 = R1–R9, R12, R13, R15 (listings, reviews, the web naming you; R15 hours is mostly GBP); p2 = R11 and H1 (H1 is housekeeping and keeps its tidy-up flag, so it never sorts as a P5 blocker); p1 = A1–A6; any new rule without one = p2.
+- Migration 20261105000024 (+ .down.sql), additive and compatible with live v0.5.0: fix_rules.pillar and fixes.pillar, NOT NULL, checked p0..p6, backfilled. A trigger gives new rules the mapping's pillar when none is sent (the seed, new rules), and another always gives a fix its rule's pillar on insert or a rule change, so v0.5.0's record_fix_results inserts get it.
+- listFixes items gain pillar (PILLARS / Pillar in src/lib/queries/fixes.ts); the item key test lists it.
+
+## Who/when on open fixes (backend): listFixes actors (branch feat/open-fix-actors)
+- Lead (2026-11-06): listFixes items carry status_changed_at and changed_by {is_team, name} | null, with the same safe mapping as done_fixes (team → is_team only, never an email), null on todo rows. Additive, and listFixes' signature is unchanged.
+- Migration 20261105000026 (+ .down.sql): open_fix_actors(business) (invoker, through the fixes RLS) returns the doing fixes' time and actor via 0023's private.fix_status_actor. listFixes merges it by fix id; the item key test lists the two new fields.
+
+
+
+## G6 (frontend): robots.txt + sitemap.xml (branch feat/robots-sitemap)
+
+- Lead OK 2026-11-06 (Q1, Q2). src/app/robots.ts: in production, one group for "*" plus GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot and Google-Extended, each "Allow: /" and disallowing /app /team /client /api /dev /admin /auth. /audit is left to its noindex. Sitemap: <origin>/sitemap.xml.
+- Previews and every non-production build (VERCEL_ENV !== "production"): "Disallow: /" for everyone.
+- src/app/sitemap.ts: the public pages only (/, /contact, /privacy, /terms). Origin = NEXT_PUBLIC_SITE_URL when it is https, else https://rank1.us (src/lib/site/origin.ts).

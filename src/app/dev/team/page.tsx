@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { themeScript } from "@/lib/workspace/prefs";
 import { Gallery } from "./Gallery";
 
 export const metadata: Metadata = { title: "Team workspace states", robots: { index: false } };
@@ -11,7 +10,6 @@ export default function DevTeamPage({ searchParams }: PageProps<"/dev/team">) {
   if (process.env.VERCEL_ENV === "production") notFound();
   return (
     <>
-      <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       <Suspense>
         <State searchParams={searchParams} />
       </Suspense>

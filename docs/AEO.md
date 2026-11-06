@@ -15,7 +15,7 @@ Only Validator TRUE or PARTLY items. Safe copy is the only wording allowed.
 | ChatGPT has hundreds of millions of weekly users | TRUE | Landing context only if needed | "Hundreds of millions of people use ChatGPT weekly (OpenAI, DevDay Oct 2025)." |
 | Diners use AI to pick restaurants | TRUE (DoorDash 2026 Restaurant Industry Trends via QSR, Mar 2026) | Landing / report context only | "22% of consumers have used an AI tool like ChatGPT or Google Gemini to help choose a restaurant (DoorDash, Mar 2026)." With source link; quote as part of the '1 in 5 to nearly half' range, never alone as the top figure. |
 | People use AI for local recommendations | TRUE (BrightLocal LCRS 2026, Mar 2026) | Landing / report context only | "45% of consumers used AI tools for local business recommendations, up from 6% last year (BrightLocal, Mar 2026)." With source link. |
-| Listings, reviews and menus feed restaurant AI answers | Vendor stats, NOT checked by Validator | Restaurant checks R1-R15 (section 5b) | No stat in copy. BrightLocal Aug 2026, Yext and SOCi figures live only in fix_rules.why_note. |
+| Listings, reviews and menus feed restaurant AI answers | Vendor stats, NOT checked by Validator | Restaurant checks R1-R18 (section 5b) | No stat in copy. BrightLocal Aug 2026, Yext and SOCi figures live only in fix_rules.why_note. |
 | Crowded tracker market (50+) | PARTLY (Graphite) | Positioning: one business, local, $99, fix list + control test | Internal only; no competitor names in copy |
 
 ## DO NOT USE (anywhere: copy, fixes, reports)

@@ -105,6 +105,12 @@ const paths = {
     </>
   ),
   moon: <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />,
+  card: (
+    <>
+      <rect x="2" y="5" width="20" height="14" rx="2" />
+      <path d="M2 10h20" />
+    </>
+  ),
   user: (
     <>
       <circle cx="12" cy="8" r="4" />

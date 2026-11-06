@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { Logo } from "@/components/ui/Logo";
 
 describe("Logo", () => {
-  it("is the bar mark (currentColor) left of the 'Rank1' wordmark in Fraunces 600, 18px, ink", () => {
+  it("is the bar mark (currentColor) left of the 'Rank1' wordmark in Inter 600, 18px, ink", () => {
     const { container } = render(<Logo />);
     const lockup = container.firstElementChild!;
     expect(lockup.className).toContain("text-ink");

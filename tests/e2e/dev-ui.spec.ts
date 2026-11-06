@@ -24,11 +24,12 @@ test("/dev/ui shows every component and state, accessibly", async ({ page }, inf
   await expect(page.getByText("Example data").first()).toBeVisible();
 
   const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-  expect(bg).toBe("rgb(247, 244, 238)");
+  // v3 light (O2) page #F6F7F9: /dev follows the system, light in Playwright by default.
+  expect(bg).toBe("rgb(246, 247, 249)");
   const h1Font = await page.getByRole("heading", { level: 1 }).evaluate((el) => getComputedStyle(el).fontFamily);
-  expect(h1Font).toMatch(/Fraunces/i);
+  expect(h1Font).toMatch(/Inter/i);
   const bodyFont = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
-  expect(bodyFont).toMatch(/Public Sans/i);
+  expect(bodyFont).toMatch(/Inter/i);
 
   const scrollW = await page.evaluate(() => document.documentElement.scrollWidth);
   expect(scrollW).toBeLessThanOrEqual(page.viewportSize()!.width);
@@ -40,6 +41,8 @@ test("/dev/ui shows every component and state, accessibly", async ({ page }, inf
 });
 
 test("tap targets are at least 44px tall", async ({ page }) => {
+  // v3 (lead, O2): 44px below md (UI.md); from md up the dense 32px controls apply (checked in dev-ui.spec).
+  test.skip(page.viewportSize()!.width >= 768, "44px tap targets apply below md");
   await page.goto("/dev/ui");
   const heights = await page
     .locator("main button, main a")
@@ -83,7 +86,7 @@ test("Final set: pill field focus ring, aurora ring, loading blue, progress fill
   expect(await aurora.evaluate((e) => getComputedStyle(e).borderTopWidth)).toBe("2px");
 
   const checking = set.getByRole("button", { name: "Checking…" });
-  expect(await checking.evaluate((e) => getComputedStyle(e).backgroundColor)).toBe("rgb(49, 111, 197)");
+  expect(await checking.evaluate((e) => getComputedStyle(e).backgroundColor)).toBe("rgb(24, 87, 159)");
 
   await expect(set.getByText("Add the ending, like ramenhouse.com")).toBeVisible();
   await expect(set.getByRole("button", { name: "Add business" })).toBeDisabled();
@@ -93,7 +96,8 @@ test("Final set: pill field focus ring, aurora ring, loading blue, progress fill
     e.getBoundingClientRect().width,
     e.firstElementChild!.getBoundingClientRect().width,
   ]);
-  expect(Math.abs(fill / (track - 2) - 0.48)).toBeLessThan(0.01);
+  // v3 (UI.md Loading + progress): no track border; the fill is the track's width scaled to the floored percent.
+  expect(Math.abs(fill / track - 0.48)).toBeLessThan(0.01);
   await expect(set.getByText("48%", { exact: true })).toBeVisible();
 });
 
@@ -117,4 +121,15 @@ test("Final set screenshot", async ({ page }, info) => {
   await page.goto("/dev/ui");
   const set = page.locator("section", { has: page.getByRole("heading", { level: 2, name: "Final set", exact: true }) });
   await set.screenshot({ path: `test-results/screenshots/final-set-${info.project.name}.png` });
+});
+
+// v3 (D35, lead O2): from md up, buttons are 32px tall and the final/hero size 40px.
+test("desktop: buttons are 32px, the final CTA 40px", async ({ page }) => {
+  test.skip(page.viewportSize()!.width < 768, "dense controls apply from md up");
+  await page.goto("/dev/ui");
+  const checking = page.getByRole("button", { name: "Checking…" }).first();
+  expect(Math.round((await checking.boundingBox())!.height)).toBe(32);
+  await page.goto("/dev/forms");
+  const final = page.getByRole("button", { name: "Get my free audit" });
+  expect(Math.round((await final.boundingBox())!.height)).toBe(40);
 });

@@ -23,7 +23,33 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "ai_traffic": {
+            "ai_access_checks": {
+                  Row: {
+                    "business_id": string | null,"checked_at": string,"cloudflare": boolean,"crawlers": Json,"domain": string | null,"error": string | null,"outcome": string,"pages_checked": number,"run_id": string,"status_gptbot": number | null,"status_normal": number | null,"visible_words": number | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "business_id"?: string | null,"checked_at"?: string,"cloudflare"?: boolean,"crawlers"?: Json,"domain"?: string | null,"error"?: string | null,"outcome": string,"pages_checked"?: number,"run_id": string,"status_gptbot"?: number | null,"status_normal"?: number | null,"visible_words"?: number | null
+                  }
+                  Update: {
+                    "business_id"?: string | null,"checked_at"?: string,"cloudflare"?: boolean,"crawlers"?: Json,"domain"?: string | null,"error"?: string | null,"outcome"?: string,"pages_checked"?: number,"run_id"?: string,"status_gptbot"?: number | null,"status_normal"?: number | null,"visible_words"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "ai_access_checks_business_id_fkey"
+      columns: ["business_id"]
+isOneToOne: false
+      referencedRelation: "businesses"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ai_access_checks_run_id_fkey"
+      columns: ["run_id"]
+isOneToOne: false
+      referencedRelation: "runs"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"ai_traffic": {
                   Row: {
                     "business_id": string,"date": string,"sessions": number,"source": string
                   }
@@ -78,14 +104,14 @@ isOneToOne: false
                   ]
                 },"businesses": {
                   Row: {
-                    "aliases": (string)[],"archive_at": string | null,"archived_at": string | null,"brand_color": string | null,"city": string,"country": string,"created_at": string,"cuisine": string | null,"domain": string | null,"fix_list_visible": boolean,"ga4_property_id": string | null,"id": string,"logo_path": string | null,"name": string,"report_recipients": (string)[],"service": string,"state": string,"vertical": string,"workspace_id": string
+                    "aliases": (string)[],"archive_at": string | null,"archived_at": string | null,"brand_color": string | null,"city": string,"country": string,"created_at": string,"cuisine": string | null,"domain": string | null,"fix_list_visible": boolean,"gas_ready_at": string | null,"gas_ready_dismissed_at": string | null,"ga4_property_id": string | null,"id": string,"logo_path": string | null,"narrative_avoid": (string)[],"narrative_want": (string)[],"name": string,"report_recipients": (string)[],"service": string,"state": string,"vertical": string,"workspace_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "aliases"?: (string)[],"archive_at"?: string | null,"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"name": string,"report_recipients"?: (string)[],"service"?: string,"state"?: string,"vertical"?: string,"workspace_id": string
+                    "aliases"?: (string)[],"archive_at"?: string | null,"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"gas_ready_at"?: string | null,"gas_ready_dismissed_at"?: string | null,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"narrative_avoid"?: (string)[],"narrative_want"?: (string)[],"name": string,"report_recipients"?: (string)[],"service"?: string,"state"?: string,"vertical"?: string,"workspace_id": string
                   }
                   Update: {
-                    "aliases"?: (string)[],"archive_at"?: string | null,"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"name"?: string,"report_recipients"?: (string)[],"service"?: string,"state"?: string,"vertical"?: string,"workspace_id"?: string
+                    "aliases"?: (string)[],"archive_at"?: string | null,"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"gas_ready_at"?: string | null,"gas_ready_dismissed_at"?: string | null,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"narrative_avoid"?: (string)[],"narrative_want"?: (string)[],"name"?: string,"report_recipients"?: (string)[],"service"?: string,"state"?: string,"vertical"?: string,"workspace_id"?: string
                   }
                   Relationships: [
                     {
@@ -130,6 +156,92 @@ isOneToOne: false
                   Relationships: [
                     {
       foreignKeyName: "competitors_business_id_fkey"
+      columns: ["business_id"]
+isOneToOne: false
+      referencedRelation: "businesses"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"connection_changes": {
+                  Row: {
+                    "actor": string,"after": Json | null,"before": Json | null,"business_id": string,"connection_id": string,"created_at": string,"field": string,"id": string,"provider_ref": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "actor": string,"after"?: Json | null,"before"?: Json | null,"business_id": string,"connection_id": string,"created_at"?: string,"field": string,"id"?: string,"provider_ref"?: string | null
+                  }
+                  Update: {
+                    "actor"?: string,"after"?: Json | null,"before"?: Json | null,"business_id"?: string,"connection_id"?: string,"created_at"?: string,"field"?: string,"id"?: string,"provider_ref"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "connection_changes_business_id_fkey"
+      columns: ["business_id"]
+isOneToOne: false
+      referencedRelation: "businesses"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "connection_changes_connection_id_fkey"
+      columns: ["connection_id"]
+isOneToOne: false
+      referencedRelation: "connections"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"connection_tokens": {
+                  Row: {
+                    "connection_id": string,"enc_access": string | null,"enc_refresh": string | null,"expires_at": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "connection_id": string,"enc_access"?: string | null,"enc_refresh"?: string | null,"expires_at"?: string | null
+                  }
+                  Update: {
+                    "connection_id"?: string,"enc_access"?: string | null,"enc_refresh"?: string | null,"expires_at"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "connection_tokens_connection_id_fkey"
+      columns: ["connection_id"]
+isOneToOne: false
+      referencedRelation: "connections"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"connections": {
+                  Row: {
+                    "business_id": string,"connected_at": string,"connected_by": string | null,"external_account_id": string | null,"id": string,"last_checked_at": string | null,"provider": string,"scopes": (string)[],"selected_entities": Json,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "business_id": string,"connected_at"?: string,"connected_by"?: string | null,"external_account_id"?: string | null,"id"?: string,"last_checked_at"?: string | null,"provider": string,"scopes"?: (string)[],"selected_entities"?: Json,"status"?: string
+                  }
+                  Update: {
+                    "business_id"?: string,"connected_at"?: string,"connected_by"?: string | null,"external_account_id"?: string | null,"id"?: string,"last_checked_at"?: string | null,"provider"?: string,"scopes"?: (string)[],"selected_entities"?: Json,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "connections_business_id_fkey"
+      columns: ["business_id"]
+isOneToOne: false
+      referencedRelation: "businesses"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"connector_interest": {
+                  Row: {
+                    "business_id": string,"created_at": string,"provider": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "business_id": string,"created_at"?: string,"provider": string,"user_id": string
+                  }
+                  Update: {
+                    "business_id"?: string,"created_at"?: string,"provider"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "connector_interest_business_id_fkey"
       columns: ["business_id"]
 isOneToOne: false
       referencedRelation: "businesses"
@@ -192,14 +304,14 @@ isOneToOne: false
                   ]
                 },"experiments": {
                   Row: {
-                    "business_id": string,"change_date": string | null,"change_note": string | null,"change_url": string | null,"fix_id": string | null,"id": string,"name": string,"status": string | null
+                    "business_id": string,"change_date": string | null,"change_note": string | null,"change_url": string | null,"ended_at": string | null,"fix_id": string | null,"id": string,"name": string,"status": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "business_id": string,"change_date"?: string | null,"change_note"?: string | null,"change_url"?: string | null,"fix_id"?: string | null,"id"?: string,"name": string,"status"?: string | null
+                    "business_id": string,"change_date"?: string | null,"change_note"?: string | null,"change_url"?: string | null,"ended_at"?: string | null,"fix_id"?: string | null,"id"?: string,"name": string,"status"?: string | null
                   }
                   Update: {
-                    "business_id"?: string,"change_date"?: string | null,"change_note"?: string | null,"change_url"?: string | null,"fix_id"?: string | null,"id"?: string,"name"?: string,"status"?: string | null
+                    "business_id"?: string,"change_date"?: string | null,"change_note"?: string | null,"change_url"?: string | null,"ended_at"?: string | null,"fix_id"?: string | null,"id"?: string,"name"?: string,"status"?: string | null
                   }
                   Relationships: [
                     {
@@ -250,28 +362,28 @@ isOneToOne: false
                   ]
                 },"fix_rules": {
                   Row: {
-                    "ai_lever": boolean,"cadence": string,"customer_copy": string,"data_source": string | null,"detection": string | null,"enabled": boolean,"grp": string,"key": string,"size": string,"threshold": Json | null,"title": string,"unverified": (string)[],"why_note": string | null
+                    "ai_lever": boolean,"cadence": string,"customer_copy": string,"data_source": string | null,"detection": string | null,"enabled": boolean,"grp": string,"key": string,"pillar": string,"size": string,"threshold": Json | null,"title": string,"unverified": (string)[],"why_note": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "ai_lever"?: boolean,"cadence": string,"customer_copy": string,"data_source"?: string | null,"detection"?: string | null,"enabled"?: boolean,"grp": string,"key": string,"size": string,"threshold"?: Json | null,"title": string,"unverified"?: (string)[],"why_note"?: string | null
+                    "ai_lever"?: boolean,"cadence": string,"customer_copy": string,"data_source"?: string | null,"detection"?: string | null,"enabled"?: boolean,"grp": string,"key": string,"pillar"?: string,"size": string,"threshold"?: Json | null,"title": string,"unverified"?: (string)[],"why_note"?: string | null
                   }
                   Update: {
-                    "ai_lever"?: boolean,"cadence"?: string,"customer_copy"?: string,"data_source"?: string | null,"detection"?: string | null,"enabled"?: boolean,"grp"?: string,"key"?: string,"size"?: string,"threshold"?: Json | null,"title"?: string,"unverified"?: (string)[],"why_note"?: string | null
+                    "ai_lever"?: boolean,"cadence"?: string,"customer_copy"?: string,"data_source"?: string | null,"detection"?: string | null,"enabled"?: boolean,"grp"?: string,"key"?: string,"pillar"?: string,"size"?: string,"threshold"?: Json | null,"title"?: string,"unverified"?: (string)[],"why_note"?: string | null
                   }
                   Relationships: [
                     
                   ]
                 },"fixes": {
                   Row: {
-                    "affected_answers": number | null,"business_id": string,"detail": string | null,"evidence": Json | null,"first_seen_run": string | null,"id": string,"last_seen_run": string | null,"rule_key": string,"size": string,"status": string,"title": string
+                    "affected_answers": number | null,"business_id": string,"detail": string | null,"evidence": Json | null,"first_seen_run": string | null,"id": string,"last_seen_run": string | null,"pillar": string,"rule_key": string,"size": string,"status": string,"status_changed_at": string | null,"status_changed_by": string | null,"title": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "affected_answers"?: number | null,"business_id": string,"detail"?: string | null,"evidence"?: Json | null,"first_seen_run"?: string | null,"id"?: string,"last_seen_run"?: string | null,"rule_key": string,"size": string,"status"?: string,"title": string
+                    "affected_answers"?: number | null,"business_id": string,"detail"?: string | null,"evidence"?: Json | null,"first_seen_run"?: string | null,"id"?: string,"last_seen_run"?: string | null,"pillar"?: string,"rule_key": string,"size": string,"status"?: string,"status_changed_at"?: string | null,"status_changed_by"?: string | null,"title": string
                   }
                   Update: {
-                    "affected_answers"?: number | null,"business_id"?: string,"detail"?: string | null,"evidence"?: Json | null,"first_seen_run"?: string | null,"id"?: string,"last_seen_run"?: string | null,"rule_key"?: string,"size"?: string,"status"?: string,"title"?: string
+                    "affected_answers"?: number | null,"business_id"?: string,"detail"?: string | null,"evidence"?: Json | null,"first_seen_run"?: string | null,"id"?: string,"last_seen_run"?: string | null,"pillar"?: string,"rule_key"?: string,"size"?: string,"status"?: string,"status_changed_at"?: string | null,"status_changed_by"?: string | null,"title"?: string
                   }
                   Relationships: [
                     {
@@ -434,6 +546,26 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"mention_target_decisions": {
+                  Row: {
+                    "business_id": string,"decided_at": string,"decided_by": string | null,"status": string,"url": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "business_id": string,"decided_at"?: string,"decided_by"?: string | null,"status": string,"url": string
+                  }
+                  Update: {
+                    "business_id"?: string,"decided_at"?: string,"decided_by"?: string | null,"status"?: string,"url"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "mention_target_decisions_business_id_fkey"
+      columns: ["business_id"]
+isOneToOne: false
+      referencedRelation: "businesses"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"questions": {
                   Row: {
                     "active": boolean,"active_form": string,"business_id": string,"city": string | null,"country": string | null,"dfs_location_code": number | null,"id": string,"location_level": string,"long_text": string | null,"short_text": string,"state": string | null,"template_key": string | null
@@ -470,14 +602,14 @@ isOneToOne: false
                   ]
                 },"reports": {
                   Row: {
-                    "business_id": string,"id": string,"pdf_path": string | null,"period_end": string,"period_start": string,"sent_at": string | null,"sent_to": (string)[],"status": string | null
+                    "attempts": number,"business_id": string,"id": string,"last_error": string | null,"locked_at": string | null,"pdf_path": string | null,"period_end": string,"period_start": string,"sent_at": string | null,"sent_to": (string)[],"status": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "business_id": string,"id"?: string,"pdf_path"?: string | null,"period_end": string,"period_start": string,"sent_at"?: string | null,"sent_to"?: (string)[],"status"?: string | null
+                    "attempts"?: number,"business_id": string,"id"?: string,"last_error"?: string | null,"locked_at"?: string | null,"pdf_path"?: string | null,"period_end": string,"period_start": string,"sent_at"?: string | null,"sent_to"?: (string)[],"status"?: string | null
                   }
                   Update: {
-                    "business_id"?: string,"id"?: string,"pdf_path"?: string | null,"period_end"?: string,"period_start"?: string,"sent_at"?: string | null,"sent_to"?: (string)[],"status"?: string | null
+                    "attempts"?: number,"business_id"?: string,"id"?: string,"last_error"?: string | null,"locked_at"?: string | null,"pdf_path"?: string | null,"period_end"?: string,"period_start"?: string,"sent_at"?: string | null,"sent_to"?: (string)[],"status"?: string | null
                   }
                   Relationships: [
                     {
@@ -631,10 +763,25 @@ isOneToOne: false
 "archive_scheduled_businesses":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
+"bump_free_audit_notify_attempts":
+{ Args: { "p_run_id": string }; Returns: number
+                           },
+"can_apply_edits":
+{ Args: { "p_business_id": string }; Returns: boolean
+                           },
+"can_connect_business":
+{ Args: { "p_business_id": string }; Returns: boolean
+                           },
+"can_write_business":
+{ Args: { "p_business_id": string }; Returns: boolean
+                           },
 "cancel_business_removal":
 { Args: { "p_business_id": string }; Returns: undefined
                            },
 "claim_jobs":
+{ Args: { "p_limit": number }; Returns: Json[]
+                           },
+"claim_reports":
 { Args: { "p_limit": number }; Returns: Json[]
                            },
 "client_invite_status":
@@ -646,6 +793,9 @@ isOneToOne: false
 "create_dfy_client":
 { Args: { "p": Json }; Returns: Json
                            },
+"create_experiment":
+{ Args: { "p": Json }; Returns: string
+                           },
 "create_free_audit":
 { Args: { "p": Json }; Returns: string
                            },
@@ -655,14 +805,38 @@ isOneToOne: false
 "dismiss_competitor":
 { Args: { "p": Json,"p_business_id": string }; Returns: string
                            },
+"dismiss_gas_ready":
+{ Args: { "p_business_id": string }; Returns: undefined
+                           },
+"done_fixes":
+{ Args: { "p_business_id": string }; Returns: { "changed_by": Json,"detail": string | null,"id": string,"pillar": string,"rule_key": string,"status_changed_at": string | null,"title": string }[]
+                           },
+"end_experiment":
+{ Args: { "p_experiment_id": string }; Returns: boolean
+                           },
+"enqueue_monthly_reports":
+{ Args: { "p_month": string }; Returns: Json
+                           },
 "enqueue_weekly_runs":
 { Args: { "p_week_start": string }; Returns: Json
+                           },
+"experiment_data":
+{ Args: { "p_experiment_id": string }; Returns: { "ends": string,"grp": string,"n": number,"named": number,"period": string,"starts": string }[]
                            },
 "ensure_self_serve_workspace":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
 "finish_job":
 { Args: { "p_answer": Json,"p_citations": Json,"p_job_id": string }; Returns: undefined
+                           },
+"finish_report":
+{ Args: { "p_error": string | null,"p_pdf_path": string | null,"p_report_id": string,"p_sent_to": string[] | null,"p_status": string }; Returns: boolean
+                           },
+"gas_ready":
+{ Args: { "p_business_id": string }; Returns: { "ready_at": string | null,"show_notice": boolean }[]
+                           },
+"get_connection_tokens":
+{ Args: { "p_connection_id": string }; Returns: { "enc_access": string | null,"enc_refresh": string | null,"expires_at": string | null,"external_account_id": string | null,"status": string }[]
                            },
 "grant_dfy_client":
 { Args: { "p_business_id": string,"p_user_id": string }; Returns: string
@@ -676,8 +850,20 @@ isOneToOne: false
 "my_landing":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
+"note_connector_interest":
+{ Args: { "p_business_id": string,"p_provider": string }; Returns: undefined
+                           },
+"open_fix_actors":
+{ Args: { "p_business_id": string }; Returns: { "changed_by": Json,"id": string,"status_changed_at": string | null }[]
+                           },
 "prune_ephemeral":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"record_ai_access_check":
+{ Args: { "p": Json,"p_run_id": string }; Returns: undefined
+                           },
+"record_connection_change":
+{ Args: { "p_actor": string,"p_after": Json,"p_before": Json,"p_connection_id": string,"p_field": string,"p_provider_ref": string }; Returns: string
                            },
 "record_stripe_event":
 { Args: { "p_event_id": string,"p_type": string }; Returns: boolean
@@ -685,17 +871,35 @@ isOneToOne: false
 "record_fix_results":
 { Args: { "p_business_id": string,"p_results": Json,"p_run_id": string }; Returns: undefined
                            },
+"refresh_gas_ready":
+{ Args: { "p_business_id": string,"p_recommended": string[] }; Returns: Json
+                           },
 "revoke_dfy_client":
 { Args: { "p_business_id": string,"p_user_id": string }; Returns: boolean
+                           },
+"revoke_connection":
+{ Args: { "p_connection_id": string }; Returns: string[]
                            },
 "run_summaries":
 { Args: { "p_business_id": string,"p_limit"?: number,"p_statuses"?: string[] }; Returns: { "finished_at": string | null,"jobs_failed": number,"jobs_ok": number,"jobs_total": number,"kind": string,"n": number,"named": number,"per_engine": Json,"run_id": string,"started_at": string | null,"status": string }[]
                            },
+"runs_needing_ai_access_check":
+{ Args: { "p_limit": number }; Returns: { "domain": string,"run_id": string }[]
+                           },
 "runs_needing_fix_checks":
 { Args: { "p_limit"?: number }; Returns: { "business_id": string,"domain": string | null,"run_id": string }[]
                            },
+"save_connection":
+{ Args: { "p_business_id": string,"p_connected_by": string,"p_enc_access": string,"p_enc_refresh": string,"p_expires_at": string,"p_external_account_id": string,"p_provider": string,"p_scopes": string[] }; Returns: string
+                           },
 "schedule_business_removal":
 { Args: { "p_at": string,"p_business_id": string }; Returns: undefined
+                           },
+"set_connection_entities":
+{ Args: { "p_connection_id": string,"p_entities": Json }; Returns: undefined
+                           },
+"set_connection_status":
+{ Args: { "p_connection_id": string,"p_status": string }; Returns: undefined
                            },
 "set_fix_list_visible":
 { Args: { "p_business_id": string,"p_visible": boolean }; Returns: undefined
@@ -703,8 +907,23 @@ isOneToOne: false
 "set_fix_status":
 { Args: { "p_fix_id": string,"p_status": string }; Returns: undefined
                            },
+"set_mention_target":
+{ Args: { "p_business_id": string,"p_status": string,"p_url": string }; Returns: undefined
+                           },
+"set_narrative_words":
+{ Args: { "p_avoid": string[],"p_business_id": string,"p_want": string[] }; Returns: undefined
+                           },
+"set_report_settings":
+{ Args: { "p_brand_color": string | null,"p_business_id": string,"p_report_recipients": string[] }; Returns: undefined
+                           },
 "take_rate_token":
 { Args: { "p_kind": string }; Returns: boolean
+                           },
+"update_connection_tokens":
+{ Args: { "p_connection_id": string,"p_enc_access": string,"p_enc_refresh"?: string,"p_expires_at": string }; Returns: undefined
+                           },
+"upsert_mention_fix":
+{ Args: { "p_business_id": string,"p_detail": string }; Returns: string
                            }
           }
           Enums: {

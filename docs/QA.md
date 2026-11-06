@@ -1,46 +1,274 @@
 # QA
 
-## Step 14: Stripe: $99 per business, quantity, switcher
+## v0.7.0: portal look, check-off Fix list with pillar groups, robots.txt/sitemap.xml
 
-Checked 2026-11-05 on main at c1e4048:
-- #72 (6d352e9): stripe subscription state
-- #73 (a77e4b5): checkout, webhook and portal
-- #74 (c1e4048): billing page and business switcher
+Checked 2026-11-06 on main at b9f12ca:
+- #104: template portal look (D44 in docs/design/v3.md)
+- #107 + #115: check-off Fix list and pillar groups (G5)
+- #110: robots.txt and sitemap.xml (G6)
+- #109: the /client theme toggle (re-checked in #119)
 
-The sandbox Docker disk is full, so there was no local Supabase. test-db and e2e come from CI on main's push of c1e4048 (run 42130265763). Unit, typecheck, lint, format and build ran locally in the sandbox. Preview checks ran from the Mac on #74's preview at c775c8a, whose tree is identical to c1e4048. Stripe is in TEST mode; no real card was used.
-Preview: https://rank1-4qy6g8ccz-bryan-flowhighlevels-projects.vercel.app (sha c775c8a, READY).
-Sources: Jeun's ENG_HANDOFF_OVERNIGHT §6 Step 14, the lead's brief (rank1-step14.md), docs/UI.md "Billing + switcher" row and "Business switcher" table.
+Main doesn't auto-deploy, so the UI checks ran against #115's final head preview 9b1ae2d. It differs from b9f12ca only by backend #114 (mention decisions), docs and the e2e Connections flag probe (#118), with no UI change. The e2e suite ran from a b9f12ca worktree on the Mac. Unit, typecheck, lint, format and build ran in the sandbox. test-db is from CI on main. Example data only. Per the lead, the live production GETs of /robots.txt and /sitemap.xml ran after v0.7.0 deployed (see the P3 live row).
+Preview: https://rank1-sd643fjzq-bryan-flowhighlevels-projects.vercel.app (sha 9b1ae2d, READY).
+Sources: docs/design/v3.md D44, UI.md, COPY.md "Fix list (lead, 2026-11-06)" and the pillar rows, briefs/rank1-gas.md (G5, G6).
 
-Result: FAIL. 1 open item: the live test-mode Checkout with Stripe's test card 4242 4242 4242 4242 on the preview wasn't run. /app/billing needs a signed-in owner of a workspace with a business on the hosted preview, and QA has no way to sign in there (no mailbox for a magic link, no hosted admin key). Every code, unit, db and UI check passes.
+Result: PASS. No blocking problems. P3 live was checked after v0.7.0 deployed (tag at bb0ac29, deployment dpl_5UwCnKiheK8Xq2ohrG6cmCQwwdYQ): PASS.
 
 ### Commands
 
 | Command | Result |
 |---|---|
-| `pnpm test` (sandbox, c1e4048) | PASS. 88 files, 1051 tests passed |
+| `pnpm test` (sandbox, b9f12ca) | PASS. 126 files, 1424 tests passed |
 | `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build` (sandbox) | PASS |
-| CI on main push c1e4048 | PASS. test-db 19 files / 363 tests; e2e 350 passed, 2 skipped; test, typecheck, lint, format green |
-| `E2E_BASE_URL=<preview> pnpm e2e` (c1e4048 tests) | PASS. 289 passed, 63 skipped (local-stack tests), 0 failed |
+| CI on main push b9f12ca (run 42182246214) | test, typecheck, lint, format green. test-db 30 files / 501 tests (fixes.test 11, fix-history.test 11, migrations.test 3). e2e was cancelled when main moved on: see the next row |
+| CI on main bb0ac29 (b9f12ca + backend #120 and #116 + docs #121; src changes only in src/lib/queries/ai-access.ts and src/types/db.ts; run 42183787185) | PASS. All checks green. e2e 647 passed, 13 skipped. test-db 510 tests. a996003's e2e was also cancelled by the next push |
+| `E2E_BASE_URL=<preview> pnpm exec playwright test` (Mac, b9f12ca worktree) | PASS. 577 passed, 83 skipped, 0 failed. The connections.spec:87 preview failure from the v3 re-check is gone (#118 probes the flag on the target) |
+| `.next/static` scan for service role, Resend, Stripe, webhook, CRON and Google client secrets | PASS. No matches |
+
+### Checks
+
+The sweep covered 20 pages at 375 and 1280, with a saved dark and a saved light choice (80 loads):
+- public: / and /signin;
+- /dev/app: dashboard, competitors, questions, sources, history, report, billing, experiments, and all 6 fixes states;
+- /dev/team and /dev/client.
+
+| Check | Result | Evidence |
+|---|---|---|
+| P1 D44 surfaces | PASS | The dark body background is rgb(0, 0, 0) on every page. Light is #F6F7F9. tests/unit/tokens.test.ts "dark (default) has the portal values", "light (O2) has the exact §7 values" |
+| P1 white accent | PASS | tokens.test "the white accent is the fill and the chart line: ≥ 4.5 on page, panel and raised". e2e portal.spec "white primary with black text", "R3: the business line on the visibility chart is the white accent" |
+| P1 R1 links: white and always underlined (light #1A5FBF) | PASS | Every visible text link (no fill, no border) in main is underlined on all 80 loads. Dark text links are rgb(255, 255, 255). Light ones are rgb(26, 95, 191). Section headings that are links ("What to fix next" on the Dashboard) inherit the heading: in dark the gradient is clipped to the text (computed colour transparent), and a screenshot confirms the underline is drawn and visible. In light they use the ink heading colour, also underlined. e2e "R1: links are white and underlined" |
+| P1 R2 info blue only for You/info/focus | PASS | e2e "R2: the You row keeps the blue info fill" |
+| P1 heading gradient on app h1/h2, dark only | PASS | App h1 has a gradient clipped to the text in dark on every /dev page, and plain in light (as designed: "light keeps plain headings"). Forced colours fall back to CanvasText (globals.css). e2e "gradient H1 with tight tracking", "light /app keeps plain headings" |
+| P1 no glows in the app | PASS | No element with a radial-gradient background on any /dev/app, /dev/team or /dev/client page in either theme. The landing keeps its 4 hero glow elements (D44 bans glows in the app only). e2e "no glows in /app or /team; the landing keeps its hero glow" |
+| P1 AA in both themes | PASS | axe (incl. color-contrast) 0 violations on all 80 loads. tokens.test "every text pair passes AA (4.5)", "control edges pass 3:1" |
+| P1 no theme flash | PASS | `data-theme` captured at `<body>` insertion (the corrected method from the v3 re-check) and after: the expected theme from the first frame on all 80 loads (public pages dark) |
+| P1 44px targets below md, no side scroll | PASS | At 375: no link, button, input, select, tab or checkbox under 44px (inline links inside paragraphs excepted). scrollWidth = viewport on every page |
+| P2 checkbox semantics | PASS | The fixes-success circles are `role=checkbox`, named by the fix title, aria-checked false / mixed (In progress) / true. aria-keyshortcuts "x", tooltip "Mark done (x)". Unit checkoff.test "named by the fix title; unchecked for To do, mixed for In progress, checked for Done", "the shortcut is in its tooltip and aria-keyshortcuts" |
+| P2 x / s keys and Undo | PASS | Preview: focus + x shows "Marked “robots.txt allows AI search crawlers” done" with Undo, and the row leaves Open. Undo brings it back unchecked in place. s on a To do fix sets it to mixed (In progress). Unit "keyboard: x marks the focused fix done, s starts it", "click = done … Undo puts it back", "Undo after finishing an in-progress fix returns it to In progress", "the toast goes away by itself" |
+| P2 who/when: "Rank1 team" or a name, never an email | PASS | Preview: "Rank1 team" appears on the team-actor row, and no email-shaped text is in main on any page. Unit "who/when: 'Rank1 team' for a team actor, the member's name otherwise, never an email; none when null". CI db "team actors show as is_team only, to the dfy_client and to the team" |
+| P2 dfy_client / read-only | PASS | Preview fixes-readonly at 375 and 1280: no `role=checkbox` controls, no Start or Undo buttons (status circles only). Unit "without canWrite: the circles are status only, no Start or Undo, done rows still listed". CI db "a dfy_client still can't change a status (42501)", "a dfy_client reads only when fix_list_visible is on, and never writes" |
+| P2 pillar order P5→P3→P2→P1→P4→P6, then P0 | PASS | FixList.tsx `PILLAR_ORDER = ["p5","p3","p2","p1","p4","p6","p0"]`; empty groups are hidden. The preview gallery has fixes in P5 and P2 only and renders P5 then P2. Unit pillars.test "in the fixed order P5, P3, P2, P1 (P4 and P6 have no fixes, so they're hidden), with the brief's labels" |
+| P2 per-group counts | PASS | Preview: "P5 Technical access 0/1" (1 open row), "P2 Content 1/4" (3 open rows + 1 done). Unit "each group counts '{done}/{total}' (open + done with that pillar); a done fix with no pillar counts nowhere" |
+| P2 P0 baseline line | PASS | Preview: "Your baseline: 33% visibility, named in 80 of 240 answers." at the bottom (COPY.md string, with n). Unit "P0 is one baseline line at the bottom, linking to the dashboard; none without a run" |
+| P2 every Fix list state, both themes and widths | PASS | fixes-success, -partial, -readonly, -empty, -loading and -error: axe 0, no flash, no side scroll, no small targets. e2e "fixes: each check-off circle is keyboard reachable; read-only has none" and checkoff.spec |
+| P3 robots.txt / sitemap.xml, production logic | PASS (unit + e2e) | src/app/robots.ts: production allows / for * and for GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot and Google-Extended by name, disallows /app /team /client /api /dev /admin /auth, and points the sitemap at the site origin. Unit robots-sitemap.test "allows / for everyone and for each named AI crawler, disallowing exactly the private areas", "/audit is not listed (its noindex covers it); the sitemap line uses the site origin", "falls back to https://rank1.us for %s", "lists the public pages only, as absolute URLs on the site origin". e2e "robots.txt and sitemap.xml are served; every sitemap URL's path answers 200" |
+| P3 preview robots | PASS | Preview /robots.txt: 200 text/plain, exactly "User-Agent: * / Disallow: /". Unit "VERCEL_ENV=preview/development/undefined: Disallow / for everyone" |
+| P3 sitemap content | PASS | Preview /sitemap.xml: 200 application/xml, `<loc>` https://rank1.us/, /contact, /privacy, /terms only. No private path, no /audit |
+| P3 live production GETs (v0.7.0, after deploy) | PASS | One read-only GET each, 2026-11-06 ~08:05 UTC. https://rank1.us/robots.txt: 200, text/plain; charset=utf-8. One block each for `*`, GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot and Google-Extended, each `Allow: /` plus `Disallow:` /app, /team, /client, /api, /dev, /admin, /auth. Ends with `Sitemap: https://rank1.us/sitemap.xml`. https://rank1.us/sitemap.xml: 200, application/xml, `<loc>` https://rank1.us/, /contact, /privacy, /terms only (no private path, no /audit) |
+| P4 /client toggle on the new look | PASS | /dev/client in dark and light at both widths: correct theme from the first frame, axe 0. Full re-check in the v3 section (#109) |
+
+### Blocking problems
+
+None.
+
+### Non-blocking notes
+
+- N1: after Undo in the toast, keyboard focus falls to `<body>` instead of returning to the restored row's checkbox. A keyboard user loses their place in the list. Suggest moving focus back to the restored checkbox.
+- N2: the signed-in live items (Step 14 portal open, Step 16 history download, Step 17 create/end/delete) still wait for the founder's session.
+
+## v3 restyle: Supabase-style dark (Design v3)
+
+Checked 2026-11-06 on main at 3258a85:
+- #92 (f3ff6c3): v3 tokens and themes
+- #93 (7519529): v3 app shell for /app
+- #95 (9eff317): ThemeSync sets the theme before paint
+- #96 (ed487ec): v3 /team shell
+- #97 (e4ea88e): v3 landing
+- #98 (0c0b45b): v3 component drift
+
+The UI checks and full e2e ran from the Mac against #99's final head preview at 1aa6078, whose tree is identical to 3258a85. Unit, typecheck, lint, format and build ran in the sandbox. test-db and the local-stack e2e come from CI on main's push of 3258a85 (run 42169754045). Example data only. This is the state v0.6.0 ships. The later "template portal" look is not part of this check.
+Preview: https://rank1-nhq6n2w6i-bryan-flowhighlevels-projects.vercel.app (sha 1aa6078, READY).
+Sources: docs/design/v3.md (approved 2026-11-06), UI.md v3, COPY.md.
+
+Result: PASS after the re-check on 2026-11-06. V1b (no theme toggle on /client) failed the first run under a lead waiver for v0.6.0 and is FIXED by #109 (81b24e7). The first run's no-flash evidence was vacuous and is replaced below (re-measured on #109's preview, still no flash).
+
+### Commands
+
+| Command | Result |
+|---|---|
+| `pnpm test` (sandbox, 3258a85) | PASS. 118 files, 1348 tests passed |
+| `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build` (sandbox) | PASS |
+| CI on main push 3258a85 | PASS. test-db 24 files / 444 tests; e2e 573 passed, 13 skipped; test, typecheck, lint, format green |
+| `E2E_BASE_URL=<preview> pnpm exec playwright test` (Mac, 1aa6078) | 503 passed, 81 skipped, 2 failed. Both failures are flaky (N1): a re-run of those two with `--repeat-each=3` gave 11 of 12 passing |
+| `.next/static` scan for service role, Resend, Stripe, webhook and CRON secrets | PASS. No matches |
+
+### Checks
+
+The sweep covered 5 public pages (/, /signin, /privacy, /terms, /contact) and 14 themed pages (/dev/app dashboard, competitors, fixes, report, billing, switcher and all 6 experiments states, plus /dev/team and /dev/client). Each ran at 375 and 1280 with a saved "dark" and a saved "light" choice: 76 page loads.
+
+| Check | Result | Evidence |
+|---|---|---|
+| Dark by default | PASS | Root layout server-renders `data-theme="dark"`. src/lib/theme.ts `themeFor`: public → dark; themed paths → saved, else prefers-color-scheme, else dark. e2e theme.spec "first visit with prefers-color-scheme: light → light /app pages; dark → dark" |
+| V1: light toggle on /app and /team, never on public pages | PASS | The "Dark theme" toggle is present on every /dev/app state and /dev/team, and absent on all 5 public pages and /dev/client, at both widths and in both themes. Rendered only by src/app/app/layout.tsx and Workspace.tsx (plus the /dev gallery) |
+| V1b: light toggle on /client (UI.md:8: "/app, /client and /team add a light theme, toggled by 'Dark theme'"; D40 = O2) | FAIL on the first run (waived for v0.6.0), FIXED by #109 | First run: /dev/client had no "Dark theme" toggle. My first run also wrongly counted that as correct: design/v3.md's approval line names /app and /team only, but UI.md:8 includes /client. Re-check table below |
+| Public pages forced dark | PASS | With a saved "light" choice, all 5 public pages render `data-theme=dark` at 375 and 1280. e2e "public pages are always dark, even with a light system and a saved light choice" |
+| Rail stays dark in light | PASS | AppShell.tsx:55 and Workspace.tsx:119 set `data-theme="dark"` on the rail subtree. globals.css re-declares the dark tokens for that scope (D14) |
+| No theme flash on load | PASS (re-measured) | **The first run's evidence was vacuous.** Its init script attached a MutationObserver to `document.documentElement` before that element existed, so the observer threw and recorded nothing. "Only the expected value seen" was true of an empty list, so it proved nothing. Re-measured on #109's previews (4dc0384 and af282cb) with an observer on `document`, recording `data-theme` at the moment `<body>` is first inserted (before first paint) and every later value: /, /signin, /dev/client, /dev/app (dashboard-success, experiments-success) and /dev/team, at 375 and 1280, with saved light, dark and none, and system light and dark = 72 loads per preview. Every load had the expected theme at `<body>` (public pages dark) and never changed (`atBody` is set on every load, so this time the check is not empty). The theme script is inline in the server `<head>` (e2e "the theme script is in the server HTML head, before the body") |
+| No flash on client navigation | PASS | ThemeSync applies `themeFor` in a layout effect on every path change. e2e "a saved light theme never leaks onto public pages through client-side links", "light on /app → … → the landing is dark → back to /app is light" and the /client variant all passed on the preview |
+| AA contrast, both themes | PASS | axe (including color-contrast) found 0 violations on all 76 loads. e2e runs axe on every gallery state in dark and light |
+| 44px targets below md | PASS | Sweep at 375 of every visible link, button, input, select, tab, option and summary: none under 44px on any themed page, the landing, /signin or /contact. Only exception: the inline "Contact us" text link inside the /privacy and /terms prose is 20px tall (N3, inline-text exception). e2e "tap targets are at least 44px on every page" |
+| Breadcrumb one line at 375 | PASS | `nav[aria-label="Breadcrumb"]` is 44px tall (one row) on every /dev/app state and /dev/team at 375, with no side scroll (scrollWidth = 375). At 1280 it is 19px (32px with the switcher). e2e v3-drift "C5 … the /app breadcrumb is one line, the business crumb ellipsizes" and "a long business name ends in an ellipsis at 375" |
+| No-JS client form | PASS (known limit, N2) | With JS off, the /team client switcher is in the server HTML as `<form method="get" action=/dev/team>` with `<select name="b">` and a "Show" submit (`.nojs-only`, shown when `html` lacks `.js`). As in Step 11, the streamed page sits in React's hidden streaming container until JS runs. The landing audit form is visible with JS off (email, domain, website; submit visible). Not submitted (no real lead) |
+| No copy changes | PASS | `git diff ae49509 3258a85` on every src copy.ts: additions only, all Step 17 strings. COPY.md: 4 rows changed, all visual-term wording only ("Disabled pill" → "Disabled button", "brick"/"moss" → "error"/"success"). Every string is the same. Removed JSX strings ("Get my free audit", "Example data") were moved, not dropped |
+| Landing demo n caption | PASS | Final state (reduced motion), live: "named in 34% of 160 answers, +6 pts". n is shown with the %. landing.spec "the landing renders and the demo is in its final state" (JS off) |
+| Fonts and tokens | PASS | Body font is Inter on every page. JetBrains Mono for numbers (e2e "v3 fonts"). No Fraunces, Public Sans, #F7F4EE or beige in src. Light theme = #F6F7F9 cool grey |
+
+### Blocking problems
+
+None.
+
+| Item | Result | Evidence |
+|---|---|---|
+| V1b: no theme toggle on /client | FAIL on the first run, waived by the lead for v0.6.0 (already live, cosmetic). FIXED by #109 (81b24e7) | Re-check table below |
+
+### Re-check: #109 (fix(client): theme toggle in the /client header), 2026-11-06
+
+Previews of #109: 4dc0384 (https://rank1-r0l7h6ryl-bryan-flowhighlevels-projects.vercel.app) and, after main's portal look (#104), af282cb (https://rank1-iwoeuap1z-bryan-flowhighlevels-projects.vercel.app). Both READY, with the same results. Later heads only merged main or moved the progress note, and #109's own diff stayed the same 7 src/test files. CI on the final head 3ec170c: all 9 checks green. Merged as 81b24e7.
+
+| Check | Result | Evidence |
+|---|---|---|
+| V1b: "Dark theme" toggle in the /client header at 375 and 1280 | PASS | One button in the banner, 44x44, at both widths (src/components/auth/AppHeader.tsx renders ThemeToggle; used by src/app/client/layout.tsx and /dev/client) |
+| aria-pressed and toggling | PASS | aria-pressed true on dark, false on light, and it flips on click. dark→light (system dark) and light→dark (system light) |
+| Saved and shared with /app and /team | PASS | Toggling writes `rank1.workspace` `{theme}`. Afterwards /dev/client, /dev/app and /dev/team all load in the chosen theme, and the landing stays dark |
+| No flash | PASS | See the re-measured "No theme flash on load" row above (72 loads, including /dev/client) |
+| axe, both themes | PASS | 0 violations on /dev/client before and after toggling, at 375 and 1280. No side scroll |
+| Tests | PASS | e2e client-theme.spec.ts "the /client header toggles the theme, saves it, and the saved choice wins before paint"; unit app-header-theme.test.tsx |
+| N1: the two flaky specs | FIXED by #109 | experiments.spec.ts:40 waits for the first cell. landing.spec.ts:369 holds the IntersectionObserver and uses the page clock. `--repeat-each=5` on the preview (client-theme, experiments:40, landing:369, mobile + desktop): 30 of 30 passed |
+| Full preview e2e (4dc0384) | 548 passed, 81 skipped, 2 failed (not from #109) | Both failures are connections.spec.ts:87 "ENABLE_CONNECTIONS off: … a real 404" (mobile + desktop). It skips on the runner's `ENABLE_CONNECTIONS`, but the Preview deployment has the flag on. A preview-aware skip is filed with frontend (from #100, non-blocking) |
+
+### Non-blocking notes
+
+- N1 (FIXED by #109, see the re-check): two preview e2e tests were flaky. tests/e2e/experiments.spec.ts:40 reads `card.getByRole("cell").allTextContents()` without waiting for the streamed card (got 0 cells, 1 failure in 4 preview runs). tests/e2e/landing.spec.ts:369 can see the demo already "final" before it asserts "running" (1 failure in 4). Both pass in CI. A fix for the first: wait for the first cell (`await expect(card.getByRole("cell").first()).toBeVisible()`) before reading.
+- N2: with JS off, streamed pages (/dev/app, /dev/team, and the signed-in /app and /team) stay hidden until JS runs. This is the existing Step 11 note, not new in v3. The no-JS switcher form is present in the HTML.
+- N3: the inline "Contact us" link in the /privacy and /terms body text is 20px tall at 375. Inline links in a sentence are exempt from the target-size rule.
+
+## Step 17: Before/after test vs control (experiments)
+
+Checked 2026-11-06 on main at 3258a85:
+- #82 (12983e6): experiments db (migration 0020)
+- #81 (ee17282): before/after vs control metrics
+- #99 (3258a85): /app/experiments
+
+The hosted DB has 0020 and 0022 (lead). The UI checks and full e2e ran from the Mac against #99's final head preview at 1aa6078, whose tree is identical to 3258a85. test-db (tests/db/experiments.test.ts) and the local-stack e2e (the dfy_client 404) come from CI on main's push of 3258a85 (run 42169754045). Example data only. QA has no signed-in preview session (the Step 16 N2 blocker), so the live create, end and delete flow comes from CI.
+Preview: https://rank1-nhq6n2w6i-bryan-flowhighlevels-projects.vercel.app (sha 1aa6078, READY).
+Sources: the lead's brief (rank1-step17.md), UI.md 4b "Experiments", COPY.md "Experiments (lead, 2026-11-05)".
+
+Result: PASS. No blocking problems.
+
+### Commands
+
+| Command | Result |
+|---|---|
+| `pnpm test` (sandbox, 3258a85) | PASS. 118 files, 1348 tests passed |
+| `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build` (sandbox) | PASS |
+| CI on main push 3258a85 | PASS. test-db 444 tests (tests/db/experiments.test.ts: 26); e2e 573 passed, 13 skipped |
+| Preview e2e (Mac, 1aa6078) | 503 passed, 2 flaky failures (v3 section N1), including experiments.spec.ts:40, which passed 5 of 6 re-runs |
 
 ### Checks
 
 | Check | Result | Evidence |
 |---|---|---|
-| 'Start for $99/mo' → Stripe Checkout at $99 × quantity | PASS (unit) / NOT RUN (live) | src/lib/stripe/billing.ts createCheckoutSession: mode subscription, line_items [{price: STRIPE_PRICE_ID_BUSINESS, quantity: max(1, active self-serve businesses)}], client_reference_id = workspace id, the stored customer reused. Unit "createCheckoutSession: subscription mode, the $99 price × quantity (min 1), workspace as client_reference_id, stored customer reused", "without a price env fails before calling Stripe". The live redirect + test card isn't verified (see Result) |
-| No 2nd Checkout for any live status | PASS | billing/actions.ts: Checkout only for null / canceled / incomplete_expired; every other status goes to the portal or adds a seat. Unit "no live subscription (%s): Checkout" and the active / trialing / past_due / unpaid / incomplete / paused cases. UI: paid, past due, failed and paused states show no "Start for $99/mo" |
-| Portal opens | PASS (unit) / NOT RUN (live) | createPortalSession returns the portal URL (unit); openPortal needs a stored customer ("no customer yet" refused, unit); "Manage billing" / "Update card" call the portal action |
-| Add / Remove dialogs use the exact UI.md strings; Remove scheduled at period end | PASS | src/components/billing/copy.ts: "+ Add a business ($99/mo)"; "Add a business? Your plan goes from {n} x $99 to {n+1} x $99 = ${(n+1)×99}/mo. Prorated today." (1 → 2 gives the UI.md text exactly); "Add business"; "Remove business"; "Remove {name}? Checks continue until {period end date}; then your plan drops to {n-1} x $99."; the agency hint. scheduleRemoval keeps the current phase until period end, sets the next phase to quantity − 1 and never below 1. schedule_business_removal archives at period end (db "archives at the period end, before lowering seats, and never earlier"). Unit switcher "Add: the exact dialog…", "Remove: … the exact dialog …" |
-| Live keys refused (assertTestMode) | PASS | client.ts refuses sk_live_ / rk_live_ (and blank) before any call; unit "refuses the live key", webhook route "refuses to run with a live key (500, fixed label)", service "refuses a live key before any Stripe call" |
-| Webhook: signature, retrieve-current-state, not_found → 500, duplicate/stale no-op | PASS | webhook.ts verifies the raw body with STRIPE_WEBHOOK_SECRET (missing, wrong secret, tampered body or stale timestamp → 400), re-reads the subscription from Stripe for every subscription event and for checkout.session.completed, not_found → 500 not_linked (retried), duplicate / stale → 200, unknown → 200 ignored, RPC error → 500 with no DB text, logs carry type + id + outcome only. db: duplicate id no-op even with a different payload, older event ignored, not_found records nothing so the retry applies. Preview: GET 405; POST → 500 `{"error":"not_configured"}` (STRIPE_WEBHOOK_SECRET is Production only, as planned) |
-| Ownership checks before Stripe calls; DFY never billed | PASS | src/lib/stripe/service.ts resolves the workspace from the caller's RLS client and checks listMyBusinesses before any Stripe call. Unit "refuses a business outside the caller's workspace before any Stripe call or DB write (cross-tenant)", "refuses a caller without a workspace for every action". activeCount and removal only count `service = 'self_serve'` (migration 0018, queries/billing.ts); db "DFY businesses are never scheduled or archived by Stripe events"; members can't write billing columns (42501) |
-| Billing states at 375 + 1280 with axe | PASS | preview /dev/app billing-{unpaid, paid, past-due, failed, paused, error} and switcher-{one, many}: 0 axe violations, scrollWidth = viewport. unpaid "Start for $99/mo"; paid "3 businesses x $99 = $297/mo" + "Manage billing"; past due and failed "Your last payment failed. Weekly checks are paused." + "Update card"; "Past due" badge only on past due; one business → name only; several → "Example Ramen House ▾". Preview e2e billing.spec passed on both viewports |
+| Role gate: dfy_client gets a 404, and RLS refuses | PASS | src/lib/supabase/middleware.ts `experimentsTarget` (normalized path, /app/experiments and /new only) → `my_landing() = 'dfy_client'` → 404. A dfy_client never reaches the /app shell or its nav (AreaGate sends them to /client). db "a dfy_client never sees, creates, ends or deletes experiments", "an outsider, and the team on a self-serve business, are refused", "nobody updates experiments or experiment_questions directly". e2e (CI) "a dfy_client gets a real 404 on /app/experiments and /app/experiments/new", "a self-serve user is not 404'd" |
+| Who may write | PASS | db "self-serve members create, list, end and delete experiments", "the team creates, reads, ends and deletes on a DFY business" |
+| Group rules | PASS | db refuses (22023): no test questions, an empty control group, a question in both groups, a test or control question from another business, a future change date, a non-http link (`javascript:`), a fix from another business, a blank name with no fix. "an experiment without both groups is refused at commit (23514)", "a question from another business can't join an experiment (23514)". UI "a question is in one group only: ticking it in Test unticks it in Control, and back" |
+| Defaults | PASS | db "control defaults to the other active questions; date to LA today; name to the fix title", "refuses when there is no other active question for the default control". UI "the change date defaults to today (LA); control starts as every question", "from a fix: the name defaults to the fix title and fix_id is sent" |
+| 28-day windows | PASS | `experiment_data` (0020): before = [d−28, d), after = [d, min(d+28, ended day+1)), keyed on the run's LA start date. Only ok answers in audit and weekly runs of the business count. experiment.ts `experimentWindows` = D−28..D−1 and D..D+27. db "counts ok answers of audit/weekly runs in [d-28, d) and [d, d+28)", "puts a run one minute before LA midnight on d in before, and midnight in after", "an ended test's after window stops at the end day (included)", "a deleted question drops out of its group and the counts" |
+| Floored points and the difference | PASS | `computeExperiment`: change = floorPct(after) − floorPct(before), difference = test change − control change. Unit "floors each percent before subtracting, so the change matches the two shown percents", "each group gets before/after Metrics with n, the change in whole points, and the difference". UI "Change and Difference are signed floored points", "a negative change uses a minus sign; zero has no sign" |
+| tooFew when n < 10 | PASS | `TOO_FEW = 10`. Any of the 4 cells under 10 → tooFew, change and difference null. UI "too few answers (any cell n < 10): the partial copy instead of numbers". Preview experiments-partial shows "Too few answers to call yet. Next check Monday." |
+| No p-values or significance language | PASS | `grep -rniE "p-value|significan|confidence|statistically" src` finds only the code comment "No p-values here or anywhere". None in rendered text on any experiments state at 375 or 1280 in either theme. The e2e success test asserts the body has no p-value, signific or confiden. "Directional" is always the label (`EXPERIMENT_LABEL`) |
+| Status | PASS | `experimentStatus`: running through D+27 (LA), done from D+28, and 'ended' always wins. db "status is done once LA today is 28 days after the change date". UI "status tags: Running / Done / Ended", "End test shows only while running and ends it", "Delete test asks first ('Delete this test? Its results go too.')" |
+| Fix list button | PASS | FixList.tsx: "Start a before/after test" → `/app/experiments/new?fix=<id>`, shown only with canWrite. UI "each fix links to the form with its id, only with canWrite". e2e "Fix list: 'Start a before/after test' links to the form for that fix" (preview, passed) |
+| UI.md 4b states | PASS | Preview, 375 and 1280, dark and light: experiments-empty, -loading, -error, -partial, -success and -form all have axe 0, one H1, no side scroll, every target ≥ 44px at 375, and the one-line breadcrumb. e2e "/dev/app experiments-{state} ({theme}): one H1, axe clean, no side scroll" (all states, both themes), "success: each card has Before / After as '% · n=', signed points, a Difference and 'Directional'" (phones: percent over n, stacked), "form by keyboard: the rules show inline errors, one group per question" |
+| COPY.md strings | PASS | src/components/experiments/copy.ts matches COPY.md "Experiments (lead, 2026-11-05)" and the UI.md 4b row. Unit "COPY.md has 'Experiments (lead, 2026-11-05)' with the brief's and the approved strings". Nav "Experiments" |
+| Migration rollback | PASS | CI test-db tests/db/migrations.test.ts (3 tests) passed on 3258a85, including "rollbacks undo everything in reverse order, and the migrations re-apply after" (rollbacks/…0020_experiments.down.sql) |
 
-Not blocking:
-- The Remove dialog falls back to "the end of this period" when no period end is stored (src/components/billing/copy.ts:33). That phrase isn't in COPY.md or UI.md. A paid workspace gets the period end from the webhook with its subscription, so it should be rare. Add it to COPY.md, or hide Remove until the date is known.
+### Blocking problems
 
-### Open item
+None.
 
-1. Live test-mode Checkout on the preview (Start for $99/mo → Stripe Checkout at $99 × quantity → test card 4242 4242 4242 4242 → the success return to /app/billing) and the portal opening weren't run. They need a signed-in owner on the hosted preview. To finish: give QA a preview owner session, or sign in once on the Mac's browser, then I run the test-card flow. State sync after Checkout is covered by the webhook unit and db tests above.
+### Non-blocking notes
+
+- N1: tests/e2e/experiments.spec.ts:40 is flaky on the preview (reads the cells without waiting). See the v3 section N1.
+- N2: the live signed-in create, end and delete on the hosted DB is still open. It needs a signed-in owner, so it joins the morning run with #78 and Step 16 N2.
+
+## Step 16: White-label monthly report
+
+Checked 2026-11-06 on main at 386f89f:
+- #76 (87809bf): monthly reports, storage and report settings (migration 0019)
+- #77 (b115f1f): white-label PDF and monthly send
+- #85 (3ad1a3b): report preview export
+- #86 (386f89f): /app/report page with settings, preview and history
+
+The lead applied 0019–0021 to the hosted DB before this run. The sandbox Docker disk is full, so test-db and the local-stack e2e (report-db.spec.ts) come from CI on main's push of 386f89f (run 42145033429). Unit, typecheck, lint, format and build ran locally in the sandbox. The UI checks and full e2e ran from the Mac against #86's preview at bd79ddf, whose tree is identical to 386f89f. Example data only. Per the lead, "Send test to me" was NOT clicked live: the QA account's example.test address can't receive mail. The send path is verified by unit tests.
+Preview: https://rank1-dspeuazo1-bryan-flowhighlevels-projects.vercel.app (sha bd79ddf, READY).
+Sources: the lead's brief (rank1-step16.md), UI.md 4b "Report", COPY.md "Report (lead, 2026-11-05)".
+
+Result: PASS after the re-check on 2026-11-06 (main 9361dda, #91). The first run failed on F1 (GA4 partial state missing). #91 fixed F1 and N1. N2 stays open with #78 for the morning signed-in run.
+
+### Re-check: #91 (fix(app): report GA4 partial state), main 9361dda
+
+#91's preview at 7046a0a (tree identical to 9361dda): https://rank1-2zjzmz9xi-bryan-flowhighlevels-projects.vercel.app (READY).
+
+| Check | Result | Evidence |
+|---|---|---|
+| CI on main push 9361dda | PASS | test, typecheck, lint, format, test-db, e2e green |
+| Report unit tests (sandbox, 9361dda) | PASS | `vitest run tests/unit/report tests/unit/reports`: 7 files, 67 tests passed. ga4-link.test: "is /app/settings/connections when ENABLE_CONNECTIONS is 'true'"; null for unset, "", "false", "1", "TRUE" |
+| F1: 'Connect GA4' only when ENABLE_CONNECTIONS="true", to /app/settings/connections; GA4 section hidden | PASS | src/app/app/report/ga4.ts `ga4ConnectHref` uses `connectionsEnabled()` (`=== "true"`). /app/report passes it to ReportView, which renders the link only when it's set. No GA4 section anywhere. Preview /dev/app?state=report-partial at 375 and 1280: one "Connect GA4" link, href /app/settings/connections, 44 px tall, axe 0, no side scroll, no GA4 heading. report-success and report-empty: no link. e2e "report-partial: 'Connect GA4' links to the Connections hub" plus the 4b state loop. COPY.md row "GA4 not connected (partial)" added |
+| F1: prod shows no link | PASS | `vercel env ls`: ENABLE_CONNECTIONS is set for Preview only, not Production, so `ga4ConnectHref()` is null in prod |
+| N1: 404s carry no-store | PASS | preview.pdf (no business, no PDF) and download 404s now send `Cache-Control: no-store`. report-db e2e (local stack, CI) asserts the download 404's `cache-control` contains no-store |
+
+
+### Commands
+
+| Command | Result |
+|---|---|
+| `pnpm install --frozen-lockfile`, `pnpm test` (sandbox, 386f89f) | PASS. 107 files, 1263 tests passed |
+| `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build` (sandbox) | PASS |
+| CI on main push 386f89f | PASS. test-db 24 files / 438 tests (tests/db/reports.test.ts 16 tests); e2e 366 passed, 2 skipped; test, typecheck, lint, format green |
+| `E2E_BASE_URL=<preview> pnpm exec playwright test` (Mac, bd79ddf) | PASS. 303 passed, 65 skipped (local-stack specs), 0 failed |
+| `.next/static` scan for service role, Resend, Stripe, CRON_SECRET | PASS. No matches |
+
+### Checks
+
+| Check | Result | Evidence |
+|---|---|---|
+| White-label PDF: no "Rank1", "Powered by", Jelly or product logo | PASS | Unit "the rendered PDF has the business and the lead's headings, and no product name or credit" (text extracted from the rendered PDF, with a control check that the business name is found) and "the PDF code and copy have no product name either". Live: the preview's /dev/report-preview.pdf (real renderer, Example data) is 200 application/pdf, `%PDF-`, no-store. The extracted text has "Example Ramen House", all six COPY.md headings and "API-measured, directional", and no rank1/rank 1/powered by/jelly |
+| White-label email: From = business name at REPORT_FROM_EMAIL; COPY.md subject and body | PASS | src/lib/reports/email.ts. Unit "the email: From = the business name at REPORT_FROM_EMAIL, the lead's subject and body, the PDF attached, no product name"; "a business name can't break the From header" (strips < > " and line breaks). No send while REPORT_FROM_EMAIL is unset |
+| Send test to me: the signed-in user only | PASS (unit) | src/lib/reports/service.ts `sendTestReport`: `to = [auth.user.email]` from `db.auth.getUser()`; the action takes no address input. Unit "sends last month's report to the signed-in user's own email only, never the recipients"; signed out or an RLS-hidden business → not_allowed, nothing sent; a Resend error or missing REPORT_FROM_EMAIL → failed. Not clicked live (lead's A10 change) |
+| Idempotency: monthly send key = report id | PASS | process.ts passes `report.report_id`; email.ts sets `idempotency-key`. Unit "renders, stores, sends with the report id as the idempotency key"; "a failed send is not marked sent; it retries (Resend dedupes by the report id)". Test sends use a per-user, per-minute key |
+| Recipients: ≤ 10 valid emails; none → stored, nothing sent | PASS | Action validates, trims, lowercases, dedupes; DB `set_report_settings` enforces it again (db "rejects a bad color, more than 10 recipients, or an invalid email (23514)"). Unit "no recipients → generated and stored, nothing sent"; UI test "more than 10 or a bad email is refused" |
+| Storage: private buckets, signed URLs, no-store | PASS | db "reports and logos are private, with size and type limits"; "signed-in users and anon cannot read or write either bucket directly"; "members list reports and get a signed download URL; strangers get nothing". 60 s signed URLs. Download route 302 with `Cache-Control: no-store`, 404 when RLS hides the row; preview.pdf `no-store`. Signed out on the preview: /app/report, /app/report/preview.pdf and /app/report/{id}/download → 307 /signin |
+| Logo: PNG/JPEG ≤ 512 KB, SVG rejected | PASS | src/lib/queries/reports.ts `uploadLogo` checks magic bytes (PNG, JPEG), size, and `can_write_business`. db "refuses SVG and other types, files over 512 KB, and callers who can't change the business"; "logo_path is server-only and must stay under the business id" |
+| Brand color: accent only, falls back to ink below AA | PASS | contrast.ts `accentColor` (4.5:1 on white, else ink). Unit "keeps a brand color with AA contrast on white, else falls back to ink" |
+| Stored data only, counts-only logs | PASS | Unit "stored data only: n on every %…", "a month with no run: no numbers invented", "forbidden fields never reach the data", "logs carry counts and codes only: no business name, email, id or error text" |
+| DFY fix list | PASS | Unit fix-visibility: hidden → no fixes heading or text in the PDF or email; visible → shown; self-serve always shown. db "the team reads DFY reports but not self-serve ones; a dfy_client reads its own"; "a dfy_client can't change report settings" |
+| DB: enqueue eligibility, idempotency, claims, finish, service-only | PASS | db "queues last month's report for paid, trialing and DFY businesses only; idempotent", "rejects any month but the previous LA month (22023), and non-service callers (42501)", "claims are exclusive under parallel calls", "re-claims a stale report and fails it after 3 attempts", "finishes generated, sent and failed reports once…", "members can't insert, update or delete reports" |
+| Migrations 0019–0021 roll back and re-apply | PASS | CI test-db "rollbacks undo everything in reverse order, and the migrations re-apply" (rollbacks/*0019, 0020, 0021 .down.sql) |
+| Cron schedule, LA window, 401 | PASS | vercel.json /api/cron/monthly-report "0 14,15 1 * *" (pinned by vercel-config.test). month.ts `isMonthlyWindow` = LA day 1, hour 7. Unit "exactly one of the two fires (14:00, 15:00 UTC on the 1st) matches, every month of 2026"; route: wrong/missing/lowercase bearer → 401; "the other UTC fire (06:05 PST) is a no-op without touching the DB". Preview: no header → 401 `{"error":"unauthorized"}` |
+| Drain: ≤ 2 per tick; 500 bodies carry no DB text | PASS | process.ts REPORTS_PER_TICK = 2, one claim at a time, ≥ 60 s left. Unit "at most 2 per tick, claimed one at a time", "never claims with under 60 s left". Monthly route "enqueue fails → 500 with a fixed label and no DB error text" (`{"error":"enqueue_failed"}`) |
+| UI.md 4b empty | PASS | Preview /dev/app?state=report-empty, 375 and 1280: "Your first report sends on the 1st." + "Report preview" iframe; axe 0; one H1; no side scroll |
+| UI.md 4b loading | PASS | report-loading: skeleton, axe 0, one H1, no side scroll |
+| UI.md 4b error | PASS | report-failed: "The report didn't send to {email}. Check the address." and status "Failed"; axe 0 |
+| UI.md 4b success | PASS | report-success: Logo, Upload logo, Brand color, Recipients (hint), Save, Send test to me, History with Month / Status / Download, statuses Sent / Ready; axe 0. e2e "keyboard reaches the settings, the test send and every download" |
+| UI.md 4b partial: GA4 not connected → section hidden + 'Connect GA4' link to /app/settings | FAIL (F1) on the first run, FIXED by #91 | No "Connect GA4" link in any report state at 375 or 1280 (`getByRole("link", { name: /connect ga4/i })` = 0). No GA4 reference in src/components/report, src/lib/reports or src/app/app/report, no gallery state, no test |
+| UI.md 4b mobile: preview scales to width | PASS | Preview iframe 335 px wide at 375, 1056 px at 1280, aspect 1:1.414; scrollWidth = viewport. e2e "the preview scales to the width" (both projects) |
+| History downloads | PASS (CI) | Local-stack e2e report-db.spec "owner saves recipients and a color, they persist; a history download redirects to a signed URL" passed in CI. Not live: no stored report exists on the hosted DB until the 1st, and QA has no signed-in preview session (same blocker as Step 14) |
+| Nav "Reports" and COPY.md strings | PASS | AppNav.tsx `{ href: "/app/report", label: "Reports" }`. src/components/report/copy.ts matches COPY.md "/app/report (Step 16 frontend)"; UI test "COPY.md has the lead's Report strings". The brief's suggested "Download PDF" / "Report history" became "Download" / "History" in the lead's COPY.md, which is the source of truth |
+
+### Blocking problems
+
+None.
+
+First-run blockers (386f89f):
+
+| Blocker | Result | Evidence |
+|---|---|---|
+| F1: UI.md 4b partial not built: no GA4 "not connected" state or 'Connect GA4' link on /app/report (brief lines 11 and 17) | FIXED by #91 (9361dda) | re-check table above. Lead decision 2026-11-06: the link shows only when ENABLE_CONNECTIONS="true" and goes to /app/settings/connections; prod (flag off) shows no link and no GA4 section |
+| N1 (non-blocking): 404s from /app/report/preview.pdf and /app/report/{id}/download had no `Cache-Control: no-store` | FIXED by #91 (9361dda) | re-check table above |
+
+### Non-blocking notes
+
+- N2: a live signed-in Preview and history download on the hosted DB is still open. It needs a signed-in owner (founder's morning session) and a stored report.
 
 ## Step 13: Weekly cron
 

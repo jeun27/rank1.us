@@ -11,7 +11,9 @@ const NOW = new Date("2026-11-05T12:00:00Z");
 const view = buildWorkspace(exampleWorkspaceRows());
 const dashboardBrief = buildBrief(contextFor(view, { kind: "section", section: "dashboard" }), NOW);
 const THEMES = ["light", "dark"] as const;
-const BG = { light: "rgb(247, 244, 238)", dark: "rgb(11, 11, 12)" };
+// Page colours: light #F6F7F9, dark #000 (portal look); the rail is #000 in both.
+const BG = { light: "rgb(246, 247, 249)", dark: "rgb(0, 0, 0)" };
+const RAIL = "rgb(0, 0, 0)";
 
 const isMobile = (page: Page) => page.viewportSize()!.width < 768;
 const MODEL_HOSTS = ["api.anthropic.com", "api.openai.com", "generativelanguage.googleapis.com", "api.perplexity.ai"];
@@ -30,7 +32,8 @@ async function show(page: Page, pane: "Nav" | "Context" | "Document") {
 
 // The first match is the section nav; Recents can repeat a name below it.
 const navTo = (page: Page, name: string) =>
-  page.locator("nav").getByRole("button", { name, exact: true }).first().click();
+  page.locator("#ws-nav").getByRole("button", { name, exact: true }).first().click();
+const trigger = (page: Page) => page.getByRole("button", { name: `Client ${view.business.name}` });
 
 const axeClean = async (page: Page) => {
   // Let the 150ms pane fade finish so contrast is measured at full opacity.
@@ -40,24 +43,34 @@ const axeClean = async (page: Page) => {
 };
 
 for (const theme of THEMES) {
-  test(`/dev/team ${theme}: 3 landmarks, one H1, Example data, axe clean`, async ({ page }, info) => {
+  test(`/dev/team ${theme}: rail, breadcrumb, document main with the H1, Context aside, axe clean`, async ({
+    page,
+  }, info) => {
     await open(page, theme);
     expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe(BG[theme]);
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-    await expect(page.locator("nav")).toHaveCount(1);
+    await expect(page.locator("main").getByRole("heading", { level: 1 })).toHaveText("Dashboard");
+    await expect(page.locator("#ws-nav")).toHaveCount(1);
+    await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toBeVisible();
+    await expect(page.locator("nav")).toHaveCount(2);
     await expect(page.locator("main")).toHaveCount(1);
+    await expect(page.locator("main")).toHaveAttribute("id", "ws-document");
     await expect(page.locator("aside")).toHaveCount(1);
+    await expect(page.locator("aside")).toHaveAttribute("id", "ws-context");
     await expect(page.getByText("Example data").first()).toBeAttached();
 
     if (isMobile(page)) {
       await expect(page.getByRole("tablist", { name: "Workspace" })).toBeVisible();
+      // v3: phones open on the document (was Context).
+      await expect(page.getByRole("tab", { name: "Document", exact: true })).toHaveAttribute("aria-selected", "true");
+      await expect(page.locator("main")).toBeVisible();
       for (const pane of ["Nav", "Context", "Document"] as const) {
         await show(page, pane);
         await axeClean(page);
       }
-      await show(page, "Context");
+      await show(page, "Document");
     } else {
-      await expect(page.locator("nav")).toBeVisible();
+      await expect(page.locator("#ws-nav")).toBeVisible();
       await expect(page.locator("main")).toBeVisible();
       await expect(page.locator("aside")).toBeVisible();
       await axeClean(page);
@@ -71,7 +84,7 @@ for (const theme of THEMES) {
     await show(page, "Nav");
     await navTo(page, "Questions");
     await show(page, "Context");
-    await page.locator("main").getByRole("button", { name: view.questions[0].text }).click();
+    await page.locator("aside").getByRole("button", { name: view.questions[0].text }).click();
     await show(page, "Document");
     await expect(page.getByRole("tabpanel").getByRole("heading", { name: view.questions[0].text })).toBeVisible();
     await axeClean(page);
@@ -85,10 +98,10 @@ test("/app is not the team workspace (reserved for owners); the team nav is dark
   for (const theme of THEMES) {
     await open(page, theme);
     await show(page, "Nav");
-    const nav = page.locator("nav");
+    const nav = page.locator("#ws-nav");
     await expect(nav).toHaveAttribute("data-theme", "dark");
-    expect(await nav.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(BG.dark);
-    expect(await nav.evaluate((el) => getComputedStyle(el).color)).toBe("rgb(242, 239, 233)");
+    expect(await nav.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(RAIL);
+    expect(await nav.evaluate((el) => getComputedStyle(el).color)).toBe("rgb(237, 238, 240)");
   }
 });
 
@@ -182,11 +195,13 @@ test("document tabs: roving focus, Home/End, Delete closes, +, expand and split,
   const expand = page.getByRole("button", { name: "Expand" });
   await expand.click();
   await expect(expand).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator("nav")).toBeHidden();
-  await expect(page.locator("main")).toBeHidden();
+  // Expanded: the document alone; the rail and the Context panel are hidden.
+  await expect(page.locator("#ws-nav")).toBeHidden();
+  await expect(page.locator("aside")).toBeHidden();
+  await expect(page.locator("main")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(expand).toHaveAttribute("aria-pressed", "false");
-  if (!isMobile(page)) await expect(page.locator("main")).toBeVisible();
+  if (!isMobile(page)) await expect(page.locator("aside")).toBeVisible();
 });
 
 test("theme toggle, split ratio and sidebar collapse persist across reloads", async ({ page }) => {
@@ -216,7 +231,7 @@ test("theme toggle, split ratio and sidebar collapse persist across reloads", as
   const collapse = page.getByRole("button", { name: "Collapse sidebar" });
   await collapse.click();
   await expect(collapse).toHaveAttribute("aria-expanded", "false");
-  await expect.poll(async () => (await page.locator("nav").boundingBox())!.width).toBeLessThanOrEqual(64);
+  await expect.poll(async () => (await page.locator("#ws-nav").boundingBox())!.width).toBeLessThanOrEqual(64);
 
   await page.emulateMedia({ colorScheme: "light" });
   await page.reload();
@@ -227,6 +242,8 @@ test("theme toggle, split ratio and sidebar collapse persist across reloads", as
 });
 
 test("tap targets are at least 44px", async ({ page }) => {
+  // v3 (lead, O2): 44px below md (UI.md); from md up the dense 32px controls apply (checked in dev-ui.spec).
+  test.skip(page.viewportSize()!.width >= 768, "44px tap targets apply below md");
   await open(page, "light");
   for (const pane of ["Nav", "Context", "Document"] as const) {
     await show(page, pane);
@@ -289,6 +306,9 @@ test("every visible string, aria-label and title is in docs/COPY.md (data exclud
   }
   await page.getByRole("button", { name: "New tab" }).click();
   await collect();
+  await trigger(page).click();
+  await collect();
+  await page.keyboard.press("Escape");
   expect(seen.size).toBeGreaterThan(30);
   // Whole words or phrases only, so a short label can't pass by sitting inside a longer word.
   const inCopy = (v: string) =>
@@ -304,24 +324,24 @@ test("no DFY clients: one H1 and the empty state, axe clean", async ({ page }) =
   await axeClean(page);
 });
 
-test("the gallery's Fix list is the shared FixList with a Status select per fix", async ({ page }) => {
+test("the gallery's Fix list is the shared FixList with a check-off circle per fix", async ({ page }) => {
   await open(page, "light");
   await show(page, "Nav");
   await navTo(page, "Fix list");
   await show(page, "Document");
   const panel = page.getByRole("tabpanel");
   await expect(panel.getByRole("region", { name: "Tidy-ups" })).toBeVisible();
-  await expect(panel.getByLabel("Status").first()).toBeVisible();
-  await expect(page.locator("nav").getByRole("button", { name: "Experiments", exact: true })).toHaveCount(0);
+  await expect(panel.getByRole("checkbox").first()).toBeVisible();
+  await expect(page.locator("#ws-nav").getByRole("button", { name: "Experiments", exact: true })).toHaveCount(0);
   await axeClean(page);
 });
 
 for (const theme of THEMES)
-  test(`Clients tab ${theme}: opens from the context pane, axe clean, the invite form works by keyboard`, async ({
+  test(`Clients tab ${theme}: opens from the switcher's last row, axe clean, the invite form works by keyboard`, async ({
     page,
   }) => {
     await open(page, theme);
-    await show(page, "Context");
+    await trigger(page).click();
     await page.getByRole("button", { name: "Clients", exact: true }).click();
     await show(page, "Document");
     const panel = page.getByRole("tabpanel");
@@ -331,4 +351,72 @@ for (const theme of THEMES)
     await page.keyboard.press("Enter");
     await expect(panel.getByRole("status")).toHaveText("Invite sent to new@exampleramen.test.");
     await axeClean(page);
+  });
+
+// v3 D20 (lead, PR 2b): the client switcher is a listbox in the breadcrumb. The GET form is in the same
+// server HTML and shows only without JS (the head script adds .js to <html> before paint).
+for (const theme of THEMES)
+  test(`client switcher ${theme}: a breadcrumb listbox by keyboard; Enter loads ?b=; the form stays hidden`, async ({
+    page,
+  }, info) => {
+    await open(page, theme);
+    await expect(page.locator("html")).toHaveClass(/(^|\s)js(\s|$)/);
+    const t = trigger(page);
+    await expect(t).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toContainText(view.business.name);
+    await expect(page.locator('select[name="b"]')).toBeHidden();
+    await expect(page.getByRole("button", { name: "Show", exact: true })).toBeHidden();
+    await t.focus();
+    await page.keyboard.press("Enter");
+    await expect(t).toHaveAttribute("aria-expanded", "true");
+    const list = page.getByRole("listbox", { name: "Client" });
+    await expect(list).toBeFocused();
+    await expect(list.getByRole("option")).toHaveText([view.business.name, "Example Taco Stand"]);
+    await expect(page.getByRole("button", { name: "Clients", exact: true })).toBeVisible();
+    await axeClean(page);
+    await page.screenshot({ path: `test-results/screenshots/team-${theme}-switcher-${info.project.name}.png` });
+    await page.keyboard.press("Escape");
+    await expect(list).toHaveCount(0);
+    await expect(t).toBeFocused();
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/\/dev\/team\?b=example-client-2$/);
+  });
+
+// With JavaScript fully off the streamed workspace never reveals (Next keeps it in <div hidden id="S:0">),
+// so this runs the no-JS CSS path: <html> without .js shows the form, which then submits natively.
+test.describe("without the js class", () => {
+  test("the client switcher is the GET form: pick a client, Show loads ?b=", async ({ page }) => {
+    await page.goto("/dev/team");
+    await expect(trigger(page)).toBeVisible();
+    await page.evaluate(() => document.documentElement.classList.remove("js"));
+    await expect(trigger(page)).toBeHidden();
+    const select = page.getByLabel("Client", { exact: true });
+    await expect(select).toBeVisible();
+    await expect(select).toHaveValue(view.business.id);
+    await select.selectOption("example-client-2");
+    await page.getByRole("button", { name: "Show", exact: true }).click();
+    await expect(page).toHaveURL(/\/dev\/team\?b=example-client-2$/);
+  });
+});
+
+for (const theme of THEMES)
+  test(`Context ${theme}: the top-bar toggle collapses the panel and the document takes the width`, async ({
+    page,
+  }, info) => {
+    test.skip(isMobile(page), "phones use the tab bar (Nav, Context, Document)");
+    await open(page, theme);
+    const toggle = page.getByRole("banner").getByRole("button", { name: "Context", exact: true });
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+    await expect(toggle).toHaveAttribute("aria-controls", "ws-context");
+    const before = (await page.locator("main").boundingBox())!.width;
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await expect(page.locator("aside")).toBeHidden();
+    await expect.poll(async () => (await page.locator("main").boundingBox())!.width).toBeGreaterThan(before * 1.5);
+    await axeClean(page);
+    await page.screenshot({ path: `test-results/screenshots/team-${theme}-context-closed-${info.project.name}.png` });
+    await toggle.click();
+    await expect(page.locator("aside")).toBeVisible();
   });

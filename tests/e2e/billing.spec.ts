@@ -16,12 +16,14 @@ const STATES = [
 ] as const;
 
 for (const state of STATES)
-  test(`/dev/app ${state}: one H1, axe clean, no side scroll`, async ({ page }) => {
-    await page.goto(`/dev/app?state=${state}`);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-    await expectNoSideScroll(page);
-    await expectAxeClean(page);
-  });
+  for (const theme of ["dark", "light"] as const)
+    test(`/dev/app ${state} (${theme}): one H1, axe clean, no side scroll`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: theme });
+      await page.goto(`/dev/app?state=${state}`);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+      await expectNoSideScroll(page);
+      await expectAxeClean(page);
+    });
 
 test("switcher: keyboard opens it, axe clean open, Esc closes and focus returns", async ({ page }) => {
   await page.goto("/dev/app?state=switcher-many");

@@ -1,45 +1,59 @@
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Jelly } from "@/components/ui/Jelly";
-import { formatPercent } from "@/components/ui/StatNumber";
-import { heroLastWeek, heroThisWeek, pointsChange } from "./example-data";
+import { HeroDemo } from "./HeroDemo";
+import { demoEngines } from "./demo-data";
 import { container } from "./Section";
 
+// An engine name inside the sub sentence: a bordered tag with a blue dot (D37).
+function EngineTag({ name }: { name: string }) {
+  return (
+    <span
+      data-engine-tag
+      className="inline-flex items-center gap-1.5 rounded-[4px] border border-border px-1.5 align-baseline text-ink"
+    >
+      <span aria-hidden className="size-1.5 rounded-full bg-accent" />
+      {name}
+    </span>
+  );
+}
+
+// v3 (D37): the H1 and CTA on the left, the sub on the right (stacked below md), then the live demo window
+// with a soft accent glow behind it (D39, decorative).
 export function Hero() {
+  const [chatgpt, gemini, aio, perplexity] = demoEngines.map((e) => <EngineTag key={e.engine} name={e.engine} />);
   return (
     <section
       id="hero"
       aria-labelledby="hero-title"
-      className={`${container} grid items-center gap-12 py-16 md:grid-cols-2 md:py-24`}
+      className={`${container} relative isolate overflow-x-clip py-16 md:py-24`}
     >
-      <div>
-        <h1 id="hero-title" className="font-display text-display font-semibold md:text-display-md">
-          Be the brand AI names first.
-        </h1>
-        <p className="mt-6 text-body-lg">
-          See how often ChatGPT, Gemini, Google AI Overview and Perplexity name your business, how you stack up against
+      <div
+        aria-hidden="true"
+        data-glow
+        className="glow pointer-events-none absolute -top-16 left-1/2 -z-10 h-80 w-full max-w-3xl -translate-x-1/2"
+      />
+      <div className="grid gap-8 md:grid-cols-2 md:items-end md:gap-12">
+        <div>
+          <h1 id="hero-title" className="font-display text-display font-semibold md:text-display-md">
+            <span className="block">Be the brand</span> <span className="block text-accent">AI names first.</span>
+          </h1>
+          <div className="mt-8 flex flex-wrap items-center gap-4">
+            <Button size="lg" href="#audit">
+              Get my free audit
+            </Button>
+            <Button variant="secondary" href="#pricing">
+              See pricing
+            </Button>
+          </div>
+          <p className="mt-4 text-caption text-inkMuted">Same-day results as CSV + PNG. No card.</p>
+        </div>
+        <p data-hero-sub className="text-body-lg leading-8 text-text2">
+          See how often {chatgpt}, {gemini}, {aio} and {perplexity} name your business, how you stack up against
           competitors, and what to fix next.
         </p>
-        <div className="mt-8 flex flex-wrap items-center gap-4">
-          <Button href="#audit">Get my free audit</Button>
-          <Button variant="secondary" href="#pricing">
-            See pricing
-          </Button>
-        </div>
-        <p className="mt-4 text-caption text-inkMuted">Same-day results as CSV + PNG. No card.</p>
       </div>
-      <div className="flex items-center justify-center gap-6">
-        <div className="rounded-surface bg-white p-6 shadow-card" data-hero-card>
-          <Badge tone="info">Example data</Badge>
-          {/* Reads "named in 34% of 160 answers, +6 pts"; the numbers come from the example fixture. */}
-          <p className="mt-3 max-w-56 text-body" data-hero-text>
-            named in{" "}
-            <span className="font-display text-hero font-semibold tabular-nums">{formatPercent(heroThisWeek)}</span> of{" "}
-            <span className="tabular-nums">{heroThisWeek.denominator}</span> answers,{" "}
-            <span className="font-semibold text-moss tabular-nums">{pointsChange(heroThisWeek, heroLastWeek)}</span>
-          </p>
-        </div>
-        <Jelly size={180} className="h-auto w-40 shrink-0 md:w-48" />
+      <div className="relative isolate mt-12 md:mt-16">
+        <div aria-hidden="true" data-glow className="glow pointer-events-none absolute -inset-8 -z-10" />
+        <HeroDemo />
       </div>
     </section>
   );

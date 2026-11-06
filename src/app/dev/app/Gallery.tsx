@@ -5,10 +5,20 @@ import { HistoryView } from "@/components/app/HistoryView";
 import { QuestionsView } from "@/components/app/QuestionsView";
 import { SourcesView } from "@/components/app/SourcesView";
 import { latestMeasured, Measured, Page } from "@/components/app/Page";
+import { AppShell } from "@/components/app/AppShell";
 import { BillingView } from "@/components/billing/BillingView";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { BusinessSwitcher, type SwitcherBusiness } from "@/components/billing/BusinessSwitcher";
+import { ExperimentForm } from "@/components/experiments/ExperimentForm";
+import { ExperimentList } from "@/components/experiments/ExperimentList";
+import { exampleExperiments, exampleTestQuestions, exampleTooFew } from "@/components/experiments/example-data";
+import { ConnectionsHub } from "@/components/connections/ConnectionsHub";
+import { ConnectCard } from "@/components/connections/ConnectCard";
+import { exampleCards, exampleConnected, exampleHub } from "@/components/connections/example-data";
 import { FixList } from "@/components/fixes/FixList";
-import { exampleFixes as fixes, exampleTidyUps, exampleUnchecked } from "@/components/fixes/example-data";
+import { ReportView } from "@/components/report/ReportView";
+import type { ReportRow } from "@/lib/queries/reports";
+import { exampleDone, exampleFixes as fixes, exampleTidyUps, exampleUnchecked } from "@/components/fixes/example-data";
 import { ErrorState, Skeleton } from "@/components/app/states";
 import {
   exampleBusiness,
@@ -28,6 +38,12 @@ const series = seriesFromSummaries(exampleRuns);
 const none = { points: [], visible: false };
 const noop = async () => undefined;
 const actions = { add: noop, dismiss: noop };
+const experiment = { end: noop, remove: noop };
+// G5: the example fixes with their pillars (robots.txt is P5 Technical access; the menu, dish pages and the
+// schema tidy-up are P2 Content), and the P0 baseline from the example run.
+const pillarFixes = fixes.map((f) => ({ ...f, pillar: f.rule_key === "R14" ? ("p5" as const) : ("p2" as const) }));
+const pillarTidyUps = exampleTidyUps.map((f) => ({ ...f, pillar: "p2" as const }));
+const pillarDone = exampleDone.map((f) => ({ ...f, pillar: "p2" as const }));
 const results = "We couldn't load your results. Try again.";
 const fresh = { checkedAt: exampleQuestions.run!.finished_at, answers: 38, now: NOW };
 // Success = everything answered; partial = the 4b partial state of the same page.
@@ -59,6 +75,24 @@ export const STATES: Record<string, () => React.ReactNode> = {
   "dashboard-success": () => (
     <Dashboard business={exampleBusiness} latest={exampleLatest} series={series} fixes={exampleFixes} now={NOW} />
   ),
+  // C-b: the connect card on the dashboard (ENABLE_CONNECTIONS), and the onboarding connect step.
+  ...Object.fromEntries(
+    (["connect", "reauth", "readonly", "ready"] as const).map((k) => [
+      `dashboard-${k === "ready" ? "all-set" : `card-${k}`}`,
+      () => (
+        <Dashboard
+          business={exampleBusiness}
+          latest={exampleLatest}
+          series={series}
+          fixes={exampleFixes}
+          now={NOW}
+          notice={<ConnectCard {...exampleCards[k]} />}
+        />
+      ),
+    ]),
+  ),
+  "onboarding-connect": () => <ConnectStep card={exampleCards.connect} />,
+  "onboarding-connect-done": () => <ConnectStep card={{ ...exampleCards.ready, fixesHref: null }} />,
   "dashboard-partial": () => (
     <Dashboard
       business={exampleBusiness}
@@ -119,7 +153,17 @@ export const STATES: Record<string, () => React.ReactNode> = {
   "fixes-success": () => (
     <Page title="What to fix next">
       <Measured {...latestMeasured(exampleLatest)} now={NOW} />
-      <FixList ranked={fixes} tidyUps={exampleTidyUps} unchecked={[]} noDomain={false} canWrite onStatus={noop} />
+      <FixList
+        ranked={pillarFixes}
+        tidyUps={pillarTidyUps}
+        done={pillarDone}
+        baseline={exampleLatest.metrics.visibility}
+        baselineHref="/app"
+        unchecked={[]}
+        noDomain={false}
+        canWrite
+        onStatus={noop}
+      />
     </Page>
   ),
   "fixes-partial": () => (
@@ -131,7 +175,16 @@ export const STATES: Record<string, () => React.ReactNode> = {
   "fixes-readonly": () => (
     <Page title="What to fix next">
       <Measured {...latestMeasured(exampleLatest)} now={NOW} />
-      <FixList ranked={fixes} tidyUps={exampleTidyUps} unchecked={[]} noDomain={false} canWrite={false} />
+      <FixList
+        ranked={pillarFixes}
+        tidyUps={pillarTidyUps}
+        done={pillarDone}
+        baseline={exampleLatest.metrics.visibility}
+        baselineHref="/app"
+        unchecked={[]}
+        noDomain={false}
+        canWrite={false}
+      />
     </Page>
   ),
   "fixes-empty": () => (
@@ -156,8 +209,71 @@ export const STATES: Record<string, () => React.ReactNode> = {
   "billing-paused": () => <BillingView billing={{ ...paidPlan, status: "paused" }} actions={billing} />,
   "billing-loading": () => <Skeleton title="Billing" />,
   "billing-error": () => <ErrorState title="Billing" message={results} reset={() => {}} />,
-  "switcher-one": () => <WithSwitcher businesses={switcherBusinesses.slice(0, 1)} />,
-  "switcher-many": () => <WithSwitcher businesses={switcherBusinesses} />,
+  "report-empty": () => <ReportView {...reportProps} reports={[]} />,
+  "report-success": () => <ReportView {...reportProps} />,
+  "report-partial": () => <ReportView {...reportProps} connectGa4Href="/app/settings/connections" />,
+  "report-failed": () => (
+    <ReportView
+      {...reportProps}
+      reports={[{ ...reportProps.reports[0], status: "failed" }, ...reportProps.reports.slice(1)]}
+    />
+  ),
+  "report-loading": () => <Skeleton title="Reports" />,
+  "report-error": () => <ErrorState title="Reports" message={results} reset={() => {}} />,
+  "experiments-empty": () => (
+    <Page title="Experiments">
+      <ExperimentList experiments={[]} canWrite actions={experiment} />
+    </Page>
+  ),
+  "experiments-success": () => (
+    <Page title="Experiments">
+      <ExperimentList experiments={exampleExperiments} canWrite actions={experiment} />
+    </Page>
+  ),
+  "experiments-partial": () => (
+    <Page title="Experiments">
+      <ExperimentList experiments={exampleTooFew} canWrite actions={experiment} />
+    </Page>
+  ),
+  "experiments-loading": () => <Skeleton title="Experiments" />,
+  "experiments-error": () => <ErrorState title="Experiments" message={results} reset={() => {}} />,
+  "experiments-form": () => (
+    <Page title="Start a test">
+      <ExperimentForm questions={exampleTestQuestions} today="2026-11-05" onCreate={noop} />
+    </Page>
+  ),
+  "connections-restaurant": () => <Hub />,
+  "connections-saas": () => <Hub industry="saas" />,
+  "connections-connected": () => <Hub {...exampleConnected} />,
+  "connections-outcome-connected": () => <Hub outcome={{ connector: "gbp", status: "connected" }} />,
+  "connections-outcome-denied": () => <Hub outcome={{ connector: "gbp", status: "denied" }} />,
+  "connections-outcome-error": () => <Hub outcome={{ connector: "gbp", status: "error" }} />,
+  "connections-readonly": () => <Hub {...exampleConnected} canConnect={false} />,
+  "connections-loading": () => <Skeleton title="Connections" />,
+  "connections-error": () => <ErrorState title="Connections" message={results} reset={() => {}} />,
+  "switcher-one": () => <WithSwitcher />,
+  "switcher-many": () => <WithSwitcher />,
+};
+
+// Example data: invented reports and settings; the preview is the real PDF on Example data.
+const reportRow = (id: string, month: string, status: ReportRow["status"], has_pdf = true): ReportRow => ({
+  id,
+  period_start: `2026-${month}-01`,
+  period_end: `2026-${month}-28`,
+  status,
+  sent_at: status === "sent" ? `2026-${month}-01T15:05:00Z` : null,
+  recipients: 1,
+  has_pdf,
+});
+const reportProps = {
+  settings: { brand_color: "#1D5FC5", report_recipients: ["owner@exampleramen.test"], logoUrl: null },
+  reports: [reportRow("r3", "10", "sent"), reportRow("r2", "09", "sent"), reportRow("r1", "08", "generated")],
+  previewSrc: "/dev/report-preview.pdf",
+  actions: {
+    save: noop,
+    uploadLogo: noop,
+    sendTest: async () => ({ status: "sent" as const, email: "owner@exampleramen.test" }),
+  },
 };
 
 // Example data: invented businesses and a paid plan. The switcher writes nothing here.
@@ -168,26 +284,73 @@ const switcherBusinesses: SwitcherBusiness[] = [
   { id: "b2", name: "Example Taco Stand", city: "Tustin", visibility: exampleRuns[1].visibility, active: true },
   { id: "b3", name: "Example Pho Spot", city: "Costa Mesa", visibility: null, active: false },
 ];
-function WithSwitcher({ businesses }: { businesses: SwitcherBusiness[] }) {
+// The switcher sits in the shell's breadcrumb (D42), as in the real /app layout.
+const switcher = (businesses: SwitcherBusiness[]) => (
+  <BusinessSwitcher
+    businesses={businesses}
+    currentId="b1"
+    seats={businesses.length}
+    periodEnd="2026-12-01T00:00:00Z"
+    actions={{ select: noop, add: noop, remove: noop, seats: async () => businesses.length }}
+  />
+);
+// Settings → Connections on Example data (shown here whatever ENABLE_CONNECTIONS says).
+// The /app/onboarding/connect layout, on Example data.
+function ConnectStep({ card }: { card: React.ComponentProps<typeof ConnectCard> }) {
   return (
-    <div className="flex w-full flex-col">
-      <header className="flex items-center gap-3 px-5 py-3 md:px-8">
-        <BusinessSwitcher
-          businesses={businesses}
-          currentId="b1"
-          seats={businesses.length}
-          periodEnd="2026-12-01T00:00:00Z"
-          actions={{ select: noop, add: noop, remove: noop, seats: async () => businesses.length }}
-        />
-      </header>
-      <Page title="Dashboard">
-        <p className="text-ui">{"Example data."}</p>
-      </Page>
-    </div>
+    <main className="mx-auto flex max-w-2xl flex-col gap-6 px-5 py-10 md:px-8 md:py-16">
+      <h1 className="font-display text-display font-semibold">Add your business</h1>
+      <ConnectCard {...card} returnTo="/app/onboarding/connect" skipHref="/app" />
+    </main>
+  );
+}
+function Hub(over: Partial<React.ComponentProps<typeof ConnectionsHub>>) {
+  return (
+    <Page title="Connections">
+      <ConnectionsHub {...exampleHub(over)} />
+    </Page>
+  );
+}
+function WithSwitcher() {
+  return (
+    <Page title="Dashboard">
+      <p className="text-ui">{"Example data."}</p>
+    </Page>
+  );
+}
+const CRUMB: Record<string, string> = {
+  dashboard: "Dashboard",
+  competitors: "Competitors",
+  questions: "Questions",
+  sources: "Sources",
+  fixes: "What to fix next",
+  history: "History",
+  billing: "Billing",
+  report: "Reports",
+  experiments: "Experiments",
+  connections: "Settings",
+  switcher: "Dashboard",
+};
+
+// Every state inside the v3 shell (rail + breadcrumb), Example data only.
+export function Gallery({ state = "dashboard-success", location }: { state?: string; location?: string }) {
+  const business = state.startsWith("switcher-")
+    ? switcher(state === "switcher-one" ? switcherBusinesses.slice(0, 1) : switcherBusinesses)
+    : exampleBusiness.name;
+  return (
+    <AppShell
+      business={business}
+      actions={<ThemeToggle />}
+      page={state === "experiments-form" ? "Start a test" : (CRUMB[state.split("-")[0]] ?? "Dashboard")}
+    >
+      <div className="mx-auto flex w-full max-w-page">
+        <State state={state} location={location} />
+      </div>
+    </AppShell>
   );
 }
 
-export function Gallery({ state = "dashboard-success", location: picked }: { state?: string; location?: string }) {
+function State({ state, location: picked }: { state: string; location?: string }) {
   // The location form round trip (QA #49): the form submits back here with ?location=.
   if (state === "sources-form") {
     const location = picked || undefined;

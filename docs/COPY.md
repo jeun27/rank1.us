@@ -7,7 +7,7 @@ Every customer-facing string Rank1 may use, copied verbatim from build pack sect
 | Component | Spec | Source |
 |---|---|---|
 | Freshness | Caption inkMuted: 'Checked 14 h ago · 250 answers · API-measured, directional'. | PAGE + this pack |
-| Error banner | White, 1.5px brick edge, 64px worried Jelly, one brick sentence + one fix action as a text link. | (Final set, Jeun 2026-11-05) |
+| Error banner | errorBg fill, 1px error hairline, radius 8, 48px worried Jelly, one error-colour sentence + one fix action as a text link. | (Design v3, Jeun 2026-11-06) |
 
 ### Final set strings (Final set, Jeun 2026-11-05)
 
@@ -17,7 +17,7 @@ Every customer-facing string Rank1 may use, copied verbatim from build pack sect
 | Field + Button placeholder (empty state) | "yoursite.com" |
 | Field + Button loading label | "Checking…" |
 | Field + Button error (no ending) | "Add the ending, like ramenhouse.com" |
-| Disabled pill | "Add business" (disabled) |
+| Disabled button | "Add business" (disabled) |
 | Field + Button input label (screen readers only; from the final CTA form field "your domain") | "Your domain" |
 
 Progress percentages ("48%") are computed from n of d, so they are not copy.
@@ -33,6 +33,8 @@ Progress percentages ("48%") are computed from n of d, so they are not copy.
 | Audit form labels | "Email", "Your domain" (no email placeholder) |
 | Audit domain placeholder | "yourbusiness.com" |
 | Audit success | "Got it. We'll email your audit to {email}." |
+| Audit button helper (lead, founder-approved 2026-11-06), until the email and domain are valid | "Enter your email and website to continue" |
+| Audit button helper, once Turnstile shows and until its token arrives | "Check the box to continue" |
 | Email error (both forms) | "Add a valid email, like you@ramenhouse.com" |
 | Contact name error | "Add your name" |
 | Contact message error | "Add a message" |
@@ -60,7 +62,6 @@ Progress percentages ("48%") are computed from n of d, so they are not copy.
 | Sign-in not configured (/signin?error=config) | "Sign-in isn't available right now. Try again in a few minutes." |
 | Account menu label and item | "Account", "Sign out" |
 | Landing header link to /signin | "Log in" |
-| /app/billing paywall stub: Pricing card copy, "Start for $99/mo" disabled, caption | "Checkout isn't open yet." |
 | Placeholder H1s | /app/onboarding "Add your business", /app "Dashboard", /client "Dashboard", /app/billing "Billing" |
 
 | Jelly | Rule |
@@ -74,15 +75,15 @@ Progress percentages ("48%") are computed from n of d, so they are not copy.
 
 | Section | Exact copy | Notes |
 |---|---|---|
-| 1 Hero | H1 "Be the brand AI names first." Sub "See how often ChatGPT, Gemini, Google AI Overview and Perplexity name your business, how you stack up against competitors, and what to fix next." Primary "Get my free audit" (-> #audit). Text link "See pricing". Micro "Same-day results as CSV + PNG. No card." Right: card "Example data: named in 34% of 160 answers, +6 pts" + Jelly. | 2 cols, stack < md |
+| 1 Hero | H1 "Be the brand AI names first." Sub "See how often ChatGPT, Gemini, Google AI Overview and Perplexity name your business, how you stack up against competitors, and what to fix next." Primary "Get my free audit" (-> #audit). Text link "See pricing". Micro "Same-day results as CSV + PNG. No card." Right: card "Example data: named in 34% of 160 answers, +6 pts" + Jelly. | v3 (D37): H1 + CTA left, sub right, then the live demo window (this card line inside it) with a 72px Jelly; stack < md |
 | 2 Social proof | "Built for businesses that want AI to name them." 4-5 [PLACEHOLDER LOGO] + 1 [PLACEHOLDER TESTIMONIAL - real, with permission]. Hidden: SHOW_SOCIAL_PROOF=false. | Hidden until real |
-| 3 Problem / how it works | H2 "Customers ask AI who to pick. Find out if it names you." Brick 'Before' card: "Pasting questions into 4 chatbots by hand and logging answers in a spreadsheet." Steps: 1 "Add your domain - Rank1 suggests questions. 5-minute setup." 2 "Rank1 checks 4 AI engines every week." 3 "You get a monthly report with GA4 traffic, competitor scores and what to fix next." CTA "Get my free audit". | DECIDED: monthly report, weekly checks (Proposals #6) |
+| 3 Problem / how it works | H2 "Customers ask AI who to pick. Find out if it names you." Error 'Before' card: "Pasting questions into 4 chatbots by hand and logging answers in a spreadsheet." Steps: 1 "Add your domain - Rank1 suggests questions. 5-minute setup." 2 "Rank1 checks 4 AI engines every week." 3 "You get a monthly report with GA4 traffic, competitor scores and what to fix next." CTA "Get my free audit". | DECIDED: monthly report, weekly checks (Proposals #6) |
 | 4 Features (3 cards) | "One dashboard": visibility % with sample size, change since last week's check, competitor leaderboard, every weekly check kept in History. "Reports that send themselves": monthly, white-label with your logo, GA4 traffic, competitor scores, what to fix next; no 'Powered by Rank1' on the $99 plan. "Set up in 5 minutes": auto-suggested questions. Small moss and amber icons. | DECIDED: monthly report, weekly checks |
-| 5 Screenshots | H2 "What you see on Monday." Tabs: Dashboard · Monthly report · Audit CSV; 1px ink border; label "Example data". CTA "Get my free audit". | Tablist, arrow keys |
+| 5 Screenshots | H2 "What you see on Monday." Tabs: Dashboard · Monthly report · Audit CSV; 1px hairline border; label "Example data". CTA "Get my free audit". | Tablist, arrow keys |
 | 6 Comparison | H2 "Built for one business, not 500 brands." Columns: Manual checks \| Enterprise AI trackers \| Rank1. Rows: Setup (hours \| sales call + onboarding \| 5 minutes); Competitor leaderboard (manual \| varies \| yes); White-label report (build it yourself \| varies \| yes); GA4 traffic in report (manual \| varies \| yes); Price for one business (your time \| enterprise pricing \| $99/mo self-serve). Footnote "Enterprise column is a general description, not a specific product." CTA "Start with a free audit". No competitor names. | Mobile: scroll, Rank1 column pinned |
 | 7 Pricing | H2 "One plan. One business." "$99/mo, self-serve, for 1 business." Includes: 4 AI engines; 25 questions checked every week; one dashboard; competitor leaderboard; white-label monthly report with GA4 link + what to fix next; no 'Powered by Rank1' credit. CTA "Start for $99/mo"; secondary "Get my free audit first". Under the card: "Agency? $99 per business, white-label included. Contact us." Second line: "Want us to do the work for you? Contact us." | '25 questions' + done-for-you line added from locked plan |
 | 8 FAQ | Which AI engines? (ChatGPT, Gemini, Google AI Overview, Perplexity) / What does visibility % mean? (the share of answers where AI names your business, always shown with the sample size) / How long is setup? (about 5 minutes) / Can I white-label? (yes; the $99 plan includes white-label reports with your own logo and no Rank1 credit) / Do I need GA4? (optional; adds traffic to the report) / What's in the free audit? (same-day CSV + PNG) / Why do results change week to week? (AI answers vary between runs, so we ask each question several times and show how many answers each number is based on) | details/summary; last Q added (Validator: directional) |
-| 9 Final CTA (#audit) | Ink band, paper text. H2 "Find out if AI names your business first." Sub "Free same-day audit as CSV and PNG (includes a small 'Powered by Rank1' credit)." Form: email + your domain; amber button, ink text "Get my free audit". Jelly right, eyes up (hidden on mobile). | Turnstile + honeypot |
+| 9 Final CTA (#audit) | Bordered panel with an accent glow (v3). H2 "Find out if AI names your business first." Sub "Free same-day audit as CSV and PNG (includes a small 'Powered by Rank1' credit)." Form: email + your domain; primary button "Get my free audit". Jelly 96px right, eyes up (hidden on mobile). | Turnstile + honeypot |
 | Footer / meta | Footer: Rank1, Pricing, FAQ, Contact us, Privacy, Terms. Meta title "Rank1 - Be the brand AI names first."; description = hero sub; OG image [PLACEHOLDER]. | Contact email shown as the form, not an address |
 
 - Mobile: hero and cards stack below md; comparison scrolls with the Rank1 column pinned; sticky bottom 'Get my free audit' bar after the hero; final-CTA Jelly hidden.
@@ -148,8 +149,10 @@ Step 14. /app/billing and the header Business switcher. The UI.md 4b "Billing + 
 | Dialogs (Add, Remove) | "Cancel" |
 | Switcher row menu (label) | "More for {name}" |
 | Switcher search (more than 8 businesses) | "Search businesses" |
-| Switcher status dot (screen readers) | "Active", "Paused" (UI.md: moss active, brick paused) |
-| Billing, past due | "Past due" (warn badge) |
+| Switcher status dot (screen readers) | "Active", "Paused" (UI.md: success active, error paused) |
+| Billing, past due / unpaid / incomplete | "Past due" (warn badge) |
+| Remove dialog, no period end known | "the end of this period" (fallback for {period end date}) |
+| Billing, paused | "Paused" (warn badge; the plan stays, with 'Manage billing') |
 | Billing, paid | "Plan", "{n} businesses x $99 = ${n x 99}/mo" ("1 business" in the singular), "Next invoice {date}" |
 | While an added business waits for its seat | "Adding your business…" (after 30 s it stays, with "Try again"; no error) |
 | Checkout or portal redirect failed | "We couldn't open billing. Try again in a minute." |
@@ -220,6 +223,15 @@ Strings for the self-serve /app shell (Step 8): the nav and the Dashboard, Compe
 | Questions drawer | "Close" |
 | History status | "Complete", "Failed" |
 
+## App shell (lead, 2026-11-06)
+
+v3 shell (PR 2a): the dark rail and the breadcrumb top bar.
+
+| Where | String |
+|---|---|
+| Top bar breadcrumb (aria-label) | "Breadcrumb" |
+| Breadcrumb first crumb (links home) | "Rank1" |
+
 ## Sources (lead, 2026-11-05)
 
 Strings for /app/sources (Step 9). State messages are the 4b Sources strings; the location badge uses "Exact" / "Country fallback" and the engine location tooltip.
@@ -269,12 +281,140 @@ Copy in quotes is exact. Every number shows n + checked X ago. Results labeled A
 
 | Business switcher | Spec |
 |---|---|
-| Where | App header, left of the account menu: 'Example Ramen House ▾'. Hidden when the workspace has 1 business (shows the name only) until an agency adds a 2nd. |
-| List | Each business: name, city, visibility % with n ('34% · 250 answers'), status dot (moss active, brick paused). Max height 360, search when > 8. |
+| Where | Top-bar breadcrumb (Rank1 / business / page), left of the account menu: 'Example Ramen House ▾' (v3, D42; in /team this is the client switcher, D20). Hidden when the workspace has 1 business (shows the name only) until an agency adds a 2nd. |
+| List | Each business: name, city, visibility % with n ('34% · 250 answers'), status dot (success active, error paused). Max height 360, search when > 8. |
 | Add | Last row: '+ Add a business ($99/mo)'. Dialog: "Add a business? Your plan goes from 1 x $99 to 2 x $99 = $198/mo. Prorated today." Primary 'Add business'. |
 | Remove | Business menu -> 'Remove business'. Dialog: "Remove {name}? Checks continue until {period end date}; then your plan drops to {n-1} x $99." Quantity -1 at period end; data kept read-only. |
 | Agency hint | Below list, caption: 'Need 10+ businesses or done-for-you? Contact us.' |
 | Mobile | Opens as a bottom sheet; rows 56px. |
+
+## Fix list (lead, 2026-11-06)
+
+The check-off Fix list (portal b). Statuses stay "To do" / "Doing" / "Done" in the DB and for read-only viewers.
+
+| Where | String |
+|---|---|
+| Row actions | "Start" (To do only), "Undo" (done rows and the toast) |
+| In progress | "In progress" · {who} · {date}, who = "Rank1 team" for the team, else the member's name (never an email) |
+| Done rows | "Done {date}" · {who} (no who when the weekly check closed it) |
+| Toast | "Marked “{title}” done" with "Undo" |
+| Progress | "{done} of {total} done" |
+| Filter (segmented) | "Open", "Done", "All" |
+| Tooltips (with aria-keyshortcuts) | "Mark done (x)", "Start (s)" |
+| Pillar groups (G5, briefs/rank1-gas.md) | "P5" tag + label, then "{done}/{total}": "Know where you stand" (P0), "Prompts & keywords" (P1), "Content" (P2), "Brand mentions" (P3), "YouTube & video" (P4), "Technical access" (P5), "Measure & prove" (P6). Order P5, P3, P2, P1, P4, P6; empty groups hidden |
+| P0 baseline line (G5, REPORT.md) | "Your baseline: {pct} visibility, named in {n} of {d} answers." |
+
+## Experiments (lead, 2026-11-05)
+
+Step 17 before/after test vs control (/app/experiments). The empty, partial and 'Start a test' copy is in the UI.md 4b row above. No p-values or significance words anywhere.
+
+| Where | String |
+|---|---|
+| Nav (App) | "Experiments" |
+| Form labels | "Name", "What changed", "Link to the change", "Change date", "Test questions", "Control questions" |
+| Card actions | "End test", "Delete test" |
+| Results | "Before", "After", "Change", "Difference"; cells "{pct}% · n={n}"; points "+{n} pts" / "−{n} pts" (floored, never %); tag "Directional" |
+| Status tags (lead, 2026-11-06) | "Running", "Done", "Ended" |
+| Form errors (lead, 2026-11-06) | "Pick at least 1 test question.", "Pick at least 1 control question.", "Use a link that starts with http:// or https://." |
+| Delete confirm (lead, 2026-11-06) | "Delete this test? Its results go too." with "Delete test" and "Cancel" |
+| Fix list button (Step 17) | "Start a before/after test" (opens the form for that fix) |
+
+## Report (lead, 2026-11-05)
+
+Strings for the white-label monthly report PDF and email (Step 16). No product name or "Powered by" anywhere. The email From name is the business name. `{Business}` = businesses.name, `{Month YYYY}` = the report month ("October 2026"), `{n}` = the AI answers counted.
+
+| Where | String |
+|---|---|
+| Email subject | "{Business} AI visibility report, {Month YYYY}" |
+| Email body | "Your {Month YYYY} AI visibility report is attached." then a blank line, then "API-measured, directional. Based on {n} AI answers." |
+| PDF section headings | "AI visibility", "By engine", "Competitors", "Top sources", "What to fix next", "Weekly checks" |
+| PDF footer label | "API-measured, directional" |
+
+/app/report (Step 16 frontend):
+
+| Where | String |
+|---|---|
+| Page H1 and nav | "Reports" |
+| Preview (iframe title) | "Report preview" |
+| Settings | "Logo", "Upload logo", "Brand color", "Recipients" (hint "Up to 10 emails, one per line."), "Save" |
+| After saving | "Saved." (a failed save reuses "We couldn't save that. Try again.") |
+| Logo errors | "Use a PNG or JPEG.", "Logos can be up to 512 KB." |
+| Recipients error | "Add up to 10 valid emails, one per line." |
+| Test send | "Send test to me" → "Test sent to {email}." / reuses "That didn't send. Try again in a minute." |
+| History | "History"; columns "Month", "Status", "Download"; statuses "Queued", "Building", "Ready", "Sent", "Failed" |
+| GA4 not connected (partial) | "Connect GA4" (link to /app/settings/connections, only while ENABLE_CONNECTIONS is on; the GA4 section stays hidden) |
+
+## Connections (lead, 2026-11-06)
+
+Strings for Connections. One Google grant covers Business Profile, Search Console and Analytics, so disconnecting one disconnects all three.
+
+| Where | String |
+|---|---|
+| Revoke confirm (any Google connection) | "This also disconnects Search Console and Analytics" |
+
+Tile helper text (the niche key in src/lib/connections/recommend.ts):
+
+| Niche key | String |
+|---|---|
+| local | "For businesses people find on a map." |
+| restaurant_booking | "For restaurants that take reservations." |
+| site | "For businesses with their own website." |
+| dtc_store | "For brands that sell online." |
+| dtc_amazon | "For brands that sell on Amazon." |
+| saas_reviews | "For software with review listings." |
+| ai_referrals | "Shows visits that came from AI answers." |
+
+**C-a, signed off by the lead (2026-11-06).** The hub, Settings → Connections. Every consent line states only what the code does (the scope and openid, the GBP fields after a confirm, review + log, revoke, no passwords).
+
+| Where | String |
+|---|---|
+| Page title | "Connections" |
+| Tier headings | "Recommended", "Optional", "Coming soon" |
+| Tile names | "Google Business Profile", "Google Search Console", "Google Analytics", "Website / CMS", "Shopify", "G2 / Capterra", "OpenTable", "Resy", "Apple Business Connect", "Bing Places", "Yelp", "Amazon" |
+| Status tags | "Connected", "Needs reconnect", "Disconnected"; a tile without a working flow: "Coming soon" |
+| Buttons | "Connect", "Reconnect", "Disconnect", "Notify me", "Continue to Google", "Cancel", "Save" |
+| Notify me, after | "We'll let you know." |
+| Picker | "Choose locations", "Choose sites", "Choose properties" (Business Profile / Search Console / Analytics) |
+| Change log | "Changes"; fields "Description", "Hours", "Special hours", "Website", "Primary phone", "Attributes" with the date |
+| Callback banners | "{connector} is connected." / "Nothing was connected: Google access wasn't allowed." / "We couldn't connect that. Try again." |
+| Any failed action | "We couldn't do that. Try again." |
+| Consent, Google Business Profile | "Rank1 asks Google to manage your Business Profile (business.manage) and to know which Google account you used. We don't get your email or profile.", "We only change these fields, and only after you or the Rank1 team confirm: description, hours, special hours, website, primary phone and attributes.", "Every change is shown before it's applied, and logged with who made it, when, and what changed.", "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.", "We never ask for your password." |
+| Consent, Search Console | "Rank1 asks Google for read-only access to Search Console (webmasters.readonly) and to know which Google account you used. We don't get your email or profile.", "We can only read. We never change anything in Search Console.", "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.", "We never ask for your password." |
+| Consent, Google Analytics | "Rank1 asks Google for read-only access to Google Analytics (analytics.readonly) and to know which Google account you used. We don't get your email or profile.", "We can only read. We never change anything in Google Analytics.", "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.", "We never ask for your password." |
+
+**C-b, signed off by the lead (2026-11-06).** The onboarding connect step and the dashboard card, plus the G3 client "You're all set" state. "{names}" joins the connector names with "and"; one name reads "is connected".
+
+| Where | String |
+|---|---|
+| Card title | "Connect your accounts" |
+| Card intro | "One click each, with Google's own sign-in. We never see your password, and you can disconnect any time." |
+| Card count | "{n} of {m} connected" |
+| Onboarding step | "Skip for now", "Go to your dashboard" |
+| All set, title | "You're all set. We'll take it from here." |
+| All set, self-serve (review: nothing reads connections yet) | "{names} are connected." |
+| All set, DFY client (lead Q1: no timing; review: the hub's "Changes" label) | "{names} are connected. The Rank1 team takes it from here, and every change shows under Changes." |
+| Onboarding step 1, behind ENABLE_CONNECTIONS | "What kind of business?" |
+| Business types | "Restaurant", "HVAC", "Plumbing", "Roofing", "Pest control", "Auto repair", "Beauty & salons", "Gyms & fitness", "Events & venues", "Dental", "Software (SaaS)", "Online store", "Other" |
+
+## GAS (lead, 2026-11-06)
+
+Strings from the GAS prototype report (share/gas-proto/REPORT.md, lead copy). Fix rule R16 (pillar p5, SCHEMA.md 5b):
+
+| Where | String |
+|---|---|
+| R16 title | "Your site lets AI in, but Cloudflare may be blocking it." |
+| R16 customer copy | "Your site runs on Cloudflare. Its AI bot blocking is on by default for many new sites, and robots.txt can't show it. Check Security, then Bots, in your Cloudflare dashboard." |
+| R17 title (G7, the grouped fix) | "Get on these lists" |
+| R17 customer copy | "{n} lists AI cites name {rivals} but not you." |
+| R18 title (G2, JS-empty homepage) | "Your homepage needs JavaScript to show its text" |
+| R18 customer copy (lead, every vertical) | "Your homepage shows almost no text without JavaScript, so ChatGPT can't read what you offer." |
+| G2 edge hint (the GPTBot-UA request got a different answer: a soft hint, never "blocked") | "Your site may be blocking AI crawlers at the edge (for example a Cloudflare bot setting). Check your bot settings." |
+
+## Landing (lead, 2026-11-06)
+
+| Where | String |
+|---|---|
+| Hero demo, under the leaderboard | "From {n} answers" (the sample size, n = the demo fixture's answers; the demo shows "From 160 answers") |
 
 ## Engine location tooltip
 

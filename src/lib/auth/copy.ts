@@ -14,5 +14,4 @@ export const authCopy = {
   account: "Account",
   signOut: "Sign out",
   logIn: "Log in",
-  checkoutClosed: "Checkout isn't open yet.",
 };

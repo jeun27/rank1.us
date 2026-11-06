@@ -6,6 +6,8 @@ import { Banner } from "@/components/ui/Banner";
 import { Button } from "@/components/ui/Button";
 import { DomainField } from "@/components/ui/DomainField";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { connectionsCopy } from "@/components/connections/copy";
+import { VERTICALS, type Vertical } from "@/lib/queries/onboarding";
 import { buildQuestions, type Picks } from "@/lib/questions/templates";
 import { normalizeDomain } from "@/lib/spam/validate";
 import type { CompetitorSearch, LocalPlace, OnboardingActions, OnboardingInput } from "./contract";
@@ -18,7 +20,16 @@ const MAX_PLACES = 3;
 const LEVELS = ["country", "state", "city"] as const;
 type Level = (typeof LEVELS)[number];
 
-export type Business = { domain: string; name: string; cuisine: string; city: string; state: string; sells: string[] };
+export type Business = {
+  domain: string;
+  name: string;
+  cuisine: string;
+  city: string;
+  state: string;
+  sells: string[];
+  // C-b: only with ENABLE_CONNECTIONS (the page passes verticals); Restaurant until picked.
+  vertical?: Vertical;
+};
 export type Competitor = {
   name: string;
   domain: string | null;
@@ -60,7 +71,7 @@ export const emptyDraft: Draft = {
 const ghost =
   "inline-flex min-h-11 items-center justify-center rounded-full border border-fieldBorder bg-white px-5 text-ui font-semibold text-ink hover:bg-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
 const select =
-  "h-12 w-full rounded-full border bg-white px-5 text-ui text-ink shadow-field focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep";
+  "h-11 w-full rounded-control border bg-paper px-3 text-ui text-ink focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep md:h-9";
 const chip =
   "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-fieldBorder bg-white px-4 text-ui has-checked:border-jellyDeep has-checked:bg-infoBg has-disabled:cursor-not-allowed has-disabled:opacity-60 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-jellyDeep";
 
@@ -73,12 +84,14 @@ export function Onboarding({
   actions,
   initial = emptyDraft,
   syncUrl = true,
+  verticals = false,
 }: {
   places: LocalPlace[];
   cuisines: readonly string[];
   actions: OnboardingActions;
   initial?: Draft;
   syncUrl?: boolean;
+  verticals?: boolean;
 }) {
   const [d, setD] = useState<Draft>(initial);
   const reached = useRef(initial.step);
@@ -108,10 +121,18 @@ export function Onboarding({
         <h2 className="font-display text-h2 font-semibold md:text-h2-md">{copy.titles[d.step - 1]}</h2>
       </div>
       {d.step === 1 && (
-        <BusinessStep d={d} set={set} places={places} cuisines={cuisines} actions={actions} onNext={() => go(2)} />
+        <BusinessStep
+          d={d}
+          set={set}
+          places={places}
+          cuisines={cuisines}
+          actions={actions}
+          verticals={verticals}
+          onNext={() => go(2)}
+        />
       )}
       {d.step === 2 && <CompetitorsStep d={d} set={set} actions={actions} onBack={() => go(1)} onNext={() => go(3)} />}
-      {d.step === 3 && <QuestionsStep d={d} set={set} actions={actions} onBack={() => go(2)} />}
+      {d.step === 3 && <QuestionsStep d={d} set={set} actions={actions} verticals={verticals} onBack={() => go(2)} />}
     </div>
   );
 }
@@ -178,10 +199,18 @@ function BusinessStep({
   places,
   cuisines,
   actions,
+  verticals,
   onNext,
-}: StepProps & { places: LocalPlace[]; cuisines: readonly string[]; actions: OnboardingActions; onNext: () => void }) {
+}: StepProps & {
+  places: LocalPlace[];
+  cuisines: readonly string[];
+  actions: OnboardingActions;
+  verticals: boolean;
+  onNext: () => void;
+}) {
   const [domainError, setDomainError] = useState(false);
   const cuisineId = useId();
+  const verticalId = useId();
   const sellsId = useId();
   const b = d.business;
   const setB = (patch: Partial<Business>) => set({ business: { ...b, ...patch } });
@@ -226,7 +255,7 @@ function BusinessStep({
           <div role="status" className="flex flex-col gap-3">
             <p className="text-caption text-inkMuted">{copy.readingSite}</p>
             {[0, 1, 2].map((i) => (
-              <div key={i} className="h-12 animate-pulse rounded-full bg-white motion-reduce:animate-none" />
+              <div key={i} className="h-11 animate-pulse rounded-control bg-white motion-reduce:animate-none md:h-9" />
             ))}
           </div>
         )}
@@ -260,10 +289,29 @@ function BusinessStep({
               aria-labelledby={sellsId}
               value={v}
               onChange={(e) => setB({ sells: b.sells.map((x, j) => (j === i ? e.target.value : x)) })}
-              className="h-12 rounded-full border border-fieldBorder bg-white px-5 text-ui shadow-field focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep"
+              className="h-11 rounded-control border border-fieldBorder bg-paper px-3 text-ui focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep md:h-9"
             />
           ))}
         </fieldset>
+      )}
+      {verticals && (
+        <div>
+          <label htmlFor={verticalId} className="mb-1.5 block text-caption font-semibold">
+            {connectionsCopy.card.industry}
+          </label>
+          <select
+            id={verticalId}
+            value={b.vertical ?? "restaurant"}
+            onChange={(e) => setB({ vertical: e.target.value as Vertical })}
+            className={`${select} border-fieldBorder`}
+          >
+            {VERTICALS.map((v) => (
+              <option key={v} value={v}>
+                {connectionsCopy.card.verticals[v]}
+              </option>
+            ))}
+          </select>
+        </div>
       )}
       <PillField label={copy.name} name="name" value={b.name} onChange={(e) => setB({ name: e.target.value })} />
       <div>
@@ -468,7 +516,7 @@ function CompetitorRow({ c, onToggle, onRemove }: { c: Competitor; onToggle: () 
         <button
           type="button"
           onClick={onRemove}
-          className="min-h-11 px-2 text-caption font-semibold text-jellyDeep hover:underline"
+          className="min-h-11 px-2 text-caption font-semibold text-link underline underline-offset-4"
         >
           {copy.remove}
         </button>
@@ -477,7 +525,13 @@ function CompetitorRow({ c, onToggle, onRemove }: { c: Competitor; onToggle: () 
   );
 }
 
-function QuestionsStep({ d, set, actions, onBack }: StepProps & { actions: OnboardingActions; onBack: () => void }) {
+function QuestionsStep({
+  d,
+  set,
+  actions,
+  verticals,
+  onBack,
+}: StepProps & { actions: OnboardingActions; verticals: boolean; onBack: () => void }) {
   const b = d.business;
   const key = questionKey(b, d.picks);
   const [empty, setEmpty] = useState<number | null>(null);
@@ -515,6 +569,7 @@ function QuestionsStep({ d, set, actions, onBack }: StepProps & { actions: Onboa
         state: b.state.trim(),
         country: "US",
         aliases: [],
+        ...(verticals && { vertical: b.vertical ?? "restaurant" }),
       },
       competitors: [
         ...d.competitors.map((c) => ({ c, source: "maps" as const })),

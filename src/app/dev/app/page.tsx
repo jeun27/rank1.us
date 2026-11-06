@@ -10,9 +10,7 @@ export default function DevAppPage({ searchParams }: PageProps<"/dev/app">) {
   if (process.env.VERCEL_ENV === "production") notFound();
   return (
     <Suspense>
-      <div className="mx-auto flex max-w-page flex-col md:flex-row">
-        <Params searchParams={searchParams} />
-      </div>
+      <Params searchParams={searchParams} />
     </Suspense>
   );
 }

@@ -7,13 +7,16 @@ test.beforeEach(async ({ page }) => stubTurnstile(page));
 const submit = (page: import("@playwright/test").Page) =>
   page.getByRole("button", { name: "Get my free audit" }).click();
 
-test("idle: labeled fields, amber final button, 44px targets, axe clean", async ({ page }, info) => {
+test("idle: labeled fields, accent final button, 44px targets on phones, axe clean", async ({ page }, info) => {
   await page.goto("/dev/forms");
   const button = page.getByRole("button", { name: "Get my free audit" });
-  expect(await button.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(217, 142, 43)");
-  for (const el of [page.getByLabel("Email"), page.getByLabel("Your domain"), button]) {
-    expect((await el.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-  }
+  // v3 (D34): the final CTA uses the accent (light theme on /dev: jellyDeep #1A5FBF).
+  expect(await button.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(26, 95, 191)");
+  // v3 (lead, O2): 44px below md.
+  if (page.viewportSize()!.width < 768)
+    for (const el of [page.getByLabel("Email"), page.getByLabel("Your domain"), button]) {
+      expect((await el.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    }
   await expect(page.getByLabel("Your domain")).toHaveAttribute("placeholder", "yourbusiness.com");
   await expectNoSideScroll(page);
   await expectAxeClean(page);
@@ -28,7 +31,8 @@ test("error: domain without an ending shows the Final set string, readable on in
   await page.goto("/dev/forms");
   await page.getByLabel("Email").fill("owner@example.test");
   await page.getByLabel("Your domain").fill("ramenhouse");
-  await submit(page);
+  // The button is aria-disabled while a field is invalid (Turnstile reveal), so submit with Enter.
+  await page.getByLabel("Your domain").press("Enter");
   await expect(page.getByText("Add the ending, like ramenhouse.com")).toBeVisible();
   await expect(page.getByLabel("Your domain")).toBeFocused();
   expect(bodies).toHaveLength(0);
