@@ -59,13 +59,14 @@ const pane = (t: TeamExtras | null) =>
 afterEach(() => vi.restoreAllMocks());
 
 describe("team workspace on real data (Step 11)", () => {
-  it("nav lists only pages with real data: no Experiments, Reports or Settings", () => {
+  // X16: the /app rail's order and its page name, "What to fix next", on /team too.
+  it("nav lists only pages with real data, in the /app order: no Experiments, Reports or Settings", () => {
     expect(NAV_SECTIONS.map((s) => SECTION_LABEL[s])).toEqual([
       "Dashboard",
-      "Questions",
       "Competitors",
+      "Questions",
       "Sources",
-      "Fix list",
+      "What to fix next",
       "History",
     ]);
   });

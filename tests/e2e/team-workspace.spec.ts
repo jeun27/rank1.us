@@ -25,9 +25,12 @@ async function open(page: Page, theme: (typeof THEMES)[number]) {
   await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
 }
 
-// Bottom tab bar on phones; every pane is on screen on desktop.
+// Bottom tab bar on phones. On desktop Nav and Document are on screen, and Context starts closed (X16), so
+// showing it presses the top-bar toggle.
 async function show(page: Page, pane: "Nav" | "Context" | "Document") {
-  if (isMobile(page)) await page.getByRole("tab", { name: pane, exact: true }).click();
+  if (isMobile(page)) return page.getByRole("tab", { name: pane, exact: true }).click();
+  const toggle = page.getByRole("banner").getByRole("button", { name: "Context", exact: true });
+  if (pane === "Context" && (await toggle.getAttribute("aria-expanded")) === "false") await toggle.click();
 }
 
 // The first match is the section nav; Recents can repeat a name below it.
@@ -72,6 +75,9 @@ for (const theme of THEMES) {
     } else {
       await expect(page.locator("#ws-nav")).toBeVisible();
       await expect(page.locator("main")).toBeVisible();
+      // X16: Context starts closed; the top-bar toggle opens it.
+      await expect(page.locator("aside")).toBeHidden();
+      await show(page, "Context");
       await expect(page.locator("aside")).toBeVisible();
       await axeClean(page);
     }
@@ -192,6 +198,8 @@ test("document tabs: roving focus, Home/End, Delete closes, +, expand and split,
     await split.click();
     await expect(page.getByRole("tabpanel")).toHaveCount(1);
   }
+  // Open Context first, so Escape is seen restoring all three panes.
+  if (!isMobile(page)) await show(page, "Context");
   const expand = page.getByRole("button", { name: "Expand" });
   await expand.click();
   await expect(expand).toHaveAttribute("aria-pressed", "true");
@@ -210,6 +218,8 @@ test("theme toggle, split ratio and sidebar collapse persist across reloads", as
   await page.getByRole("button", { name: "Dark theme" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 
+  // The divider shows with the Context panel, which starts closed on every load (X16).
+  await show(page, "Context");
   const sep = page.getByRole("separator", { name: "Resize panes" });
   await expect(sep).toHaveAttribute("aria-valuenow", "50");
   await expect(sep).toHaveAttribute("aria-valuemin", "30");
@@ -236,6 +246,7 @@ test("theme toggle, split ratio and sidebar collapse persist across reloads", as
   await page.emulateMedia({ colorScheme: "light" });
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await show(page, "Context");
   await expect(page.getByRole("separator", { name: "Resize panes" })).toHaveAttribute("aria-valuenow", "65");
   await expect(page.getByRole("button", { name: "Collapse sidebar" })).toHaveAttribute("aria-expanded", "false");
   await axeClean(page);
@@ -297,7 +308,7 @@ test("every visible string, aria-label and title is in docs/COPY.md (data exclud
     found.forEach((t) => seen.add(norm(t)));
   };
   // Every nav section (Experiments, Reports and Settings are hidden until Steps 15–17).
-  for (const name of ["Dashboard", "Questions", "Competitors", "Sources", "Fix list", "History"]) {
+  for (const name of ["Dashboard", "Competitors", "Questions", "Sources", "What to fix next", "History"]) {
     await show(page, "Nav");
     await navTo(page, name);
     await collect();
@@ -327,7 +338,7 @@ test("no DFY clients: one H1 and the empty state, axe clean", async ({ page }) =
 test("the gallery's Fix list is the shared FixList with a check-off circle per fix", async ({ page }) => {
   await open(page, "light");
   await show(page, "Nav");
-  await navTo(page, "Fix list");
+  await navTo(page, "What to fix next");
   await show(page, "Document");
   const panel = page.getByRole("tabpanel");
   await expect(panel.getByRole("region", { name: "Tidy-ups" })).toBeVisible();
@@ -402,21 +413,33 @@ test.describe("without the js class", () => {
 });
 
 for (const theme of THEMES)
-  test(`Context ${theme}: the top-bar toggle collapses the panel and the document takes the width`, async ({
+  test(`Context ${theme}: closed by default; the top-bar toggle opens it beside the document and closes it`, async ({
     page,
   }, info) => {
     test.skip(isMobile(page), "phones use the tab bar (Nav, Context, Document)");
     await open(page, theme);
     const toggle = page.getByRole("banner").getByRole("button", { name: "Context", exact: true });
-    await expect(toggle).toHaveAttribute("aria-expanded", "true");
-    await expect(toggle).toHaveAttribute("aria-controls", "ws-context");
-    const before = (await page.locator("main").boundingBox())!.width;
-    await toggle.click();
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await expect(toggle).toHaveAttribute("aria-controls", "ws-context");
     await expect(page.locator("aside")).toBeHidden();
-    await expect.poll(async () => (await page.locator("main").boundingBox())!.width).toBeGreaterThan(before * 1.5);
+    const closed = (await page.locator("main").boundingBox())!.width;
     await axeClean(page);
     await page.screenshot({ path: `test-results/screenshots/team-${theme}-context-closed-${info.project.name}.png` });
     await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
     await expect(page.locator("aside")).toBeVisible();
+    await expect.poll(async () => (await page.locator("main").boundingBox())!.width * 1.5).toBeLessThan(closed);
+    await toggle.click();
+    await expect(page.locator("aside")).toBeHidden();
   });
+
+// X16: the /app page name fits the /team rail at 1280 (no ellipsis).
+test("the rail's 'What to fix next' isn't truncated", async ({ page }) => {
+  test.skip(isMobile(page), "the full-width rail is desktop");
+  await open(page, "light");
+  const item = page.locator("#ws-nav").getByRole("button", { name: "What to fix next", exact: true }).first();
+  const fits = await item.evaluate((b) =>
+    [b, ...b.querySelectorAll("*")].every((e) => e.scrollWidth <= e.clientWidth || e.clientWidth === 0),
+  );
+  expect(fits).toBe(true);
+});

@@ -64,7 +64,7 @@ test("team sees a DFY client on real data, writes its fix status, and never a se
 
   // Fix list: the shared FixList; Done saves through set_fix_status.
   await show(page, "Nav");
-  await page.locator("nav").getByRole("button", { name: "Fix list", exact: true }).first().click();
+  await page.locator("nav").getByRole("button", { name: "What to fix next", exact: true }).first().click();
   await show(page, "Document");
   const card = page.getByRole("tabpanel").getByRole("listitem").filter({ hasText: "robots.txt allows" });
   await expect(card).toBeVisible();
