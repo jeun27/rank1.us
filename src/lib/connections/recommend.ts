@@ -1,24 +1,12 @@
 import type { ConnectorKey } from "@/lib/queries/connections";
+import { VERTICALS, type Vertical } from "@/lib/queries/onboarding";
 
-// Industry → connector recommendations (founder map, 2026-11-06). Keys match backend's connector list (0021). ONE table: the hub, the onboarding step and
-// the dashboard card all read it. Tiers: recommended, optional, later ("Optional later" → Coming soon).
+// Industry → connector recommendations (founder map, 2026-11-06), keyed by backend's connector list (0021).
+// ONE table: the hub, the onboarding step and the dashboard card all read it. Tiers: recommended, optional, later ("Optional later" → Coming soon).
 // Industries not listed for a connector don't see its tile.
-export const INDUSTRIES = [
-  "restaurant",
-  "hvac",
-  "plumbing",
-  "roofing",
-  "pest_control",
-  "auto",
-  "beauty",
-  "gym",
-  "events",
-  "dental",
-  "saas",
-  "dtc",
-  "other",
-] as const;
-export type Industry = (typeof INDUSTRIES)[number];
+// The industry is businesses.vertical (backend's VERTICALS, one list).
+export const INDUSTRIES = VERTICALS;
+export type Industry = Vertical;
 
 // Copy keys for the niche helper text on each tile (strings live in COPY.md, not here).
 export type Niche =
