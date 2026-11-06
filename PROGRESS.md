@@ -951,3 +951,15 @@ Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/
 - Migration 20261105000023 (+ .down.sql): fixes.status_changed_at / status_changed_by (→ auth.users, on delete set null), null on existing rows (fixes has no updated_at to backfill from). A BEFORE INSERT OR UPDATE trigger forces them: null on insert (reviewer: never the caller's values), set on every status change (actor null for the service detector), kept on any other update, so neither can be written directly. set_fix_status and listFixes are unchanged.
 - done_fixes(business) (invoker, through the fixes RLS): done fixes, newest change first (nulls last), with changed_by from private.fix_status_actor (definer, re-checks the caller can see the fix). Query: listDoneFixes in src/lib/queries/fixes.ts.
 
+
+## Portal (b) (frontend): check-off Fix list (branch feat/fixlist-checkoff)
+
+- Lead OK 2026-11-06 (mockup fixes-mock.html). Stacked on backend #101 (fix status history: status_changed_at / status_changed_by, listDoneFixes with changed_by {is_team, name}); merges after it.
+- The Status select is gone. Each fix has a circle that is a real checkbox (role checkbox, named by the fix title, aria-checked false / mixed / true, aria-keyshortcuts x, tooltip "Mark done (x)"). Click or x = done, with a toast "Marked “{title}” done" + Undo (back to the previous status). "Start" (To do only, s, "Start (s)") sets doing: a half circle + "In progress" + who · date. Done rows are struck through with "Done {date}" · who + Undo (reopens to To do). The DB keeps todo / doing / done via set_fix_status.
+- Who: "Rank1 team" for a team actor, the member's name otherwise, never an email; none when the weekly check closed it (changed_by null).
+- "{done} of {total} done" bar and an Open / Done / All filter. The filter is a segmented control (radiogroup, arrow keys), not tabs, because the team workspace already wraps the list in a document tabpanel.
+- Groups: today's sections (the ranked list, Tidy-ups with its count). The pillar tag slot is empty until G5 (#102).
+- No legend line (lead): the shortcuts live in the tooltips and aria-keyshortcuts.
+- dfy_client: the circles are status images (role img, "{title}: {status}"), no Start or Undo.
+- /app/fixes, /client and /team load listDoneFixes next to listFixes.
+- Open with the lead (Q3): open fixes don't carry who/when in #101 yet, so an in-progress row shows only "In progress" until backend adds status_changed_at + changed_by to listFixes items.
