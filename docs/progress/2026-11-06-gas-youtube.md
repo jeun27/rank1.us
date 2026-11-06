@@ -13,7 +13,7 @@ Built from briefs/rank1-gas.md (G1) + the lead's OK on the design note (2026-11-
 - src/lib/metrics/youtube-checks.ts: parseDuration (ISO 8601); hasChapters (YouTube's rules: the first at 0:00, ≥3 ascending, each ≥10 s); checkVideo (keyword in the title and in the first 2 description lines, with G4's word rule via the new hasWord export).
 - OAuth: OAUTH_SCOPES = the hub's GOOGLE_SCOPES + youtube (youtube.readonly). It's kept apart from GoogleConnector so frontend's hub/consent copy maps don't change until their YouTube tile ships. The start route accepts youtube.
 - The picker lists the owner's channels. loadYoutubeChecklist(ctx, connectionId) serves the checklist page (members incl. the dfy_client, and the team on DFY). youtubeChecklistForBusiness serves the fix pass.
-- Fix pass: R19/R20/R21 (backend 0035, p4) are one grouped fix per rule, evidence = the failing videos, plural copy from the row and the one-video forms from COPY.md. They're unchecked without a YouTube connection (not_connected), or for R19/R20 without a keyword.
+- Fix pass: R19/R20/R21 (backend 0035, p4) are one grouped fix per rule. Evidence = the failing videos {id, title, url}, plural copy comes from the row and the one-video forms from COPY.md (backend's spec). ok when every relevant video passes (short videos never count for R21). unchecked without a YouTube connection (not_connected), with no videos (no_videos), or for R19/R20 without a keyword (no_keyword).
 - Test change, with reason: rules.test.ts finds a migration row by its last "('R19', " (0035 inserts several rows in one statement, and the pillar mapping mentions the keys first).
 
 ## Open

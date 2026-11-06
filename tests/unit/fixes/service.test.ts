@@ -135,7 +135,7 @@ describe("checkFixesWith with YouTube (G1 R19–R21, ENABLE_CONNECTIONS)", () =>
     yt.youtubeChecklistForBusiness.mockResolvedValue({
       keyword: "ramen",
       channel: { id: "UC1", title: "Example Ramen House" },
-      videos: [{ id: "v1", title: "Our story", checks: checks("fail") }],
+      videos: [{ id: "v1", title: "Our story", url: "https://www.youtube.com/watch?v=v1", checks: checks("fail") }],
     });
     await checkFixesWith(d.client, () => 200_000, { ENABLE_CONNECTIONS: "true" });
     expect(d.calls.at(-1)).toEqual(["in", "key", ["R10", "R11", "R14", "H1", "R19", "R20", "R21"]]);

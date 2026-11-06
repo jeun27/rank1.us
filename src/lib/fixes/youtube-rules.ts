@@ -1,7 +1,8 @@
 import type { VideoChecks } from "@/lib/metrics/youtube-checks";
 import type { RuleKey, FixResult } from "./types";
 
-// G1's grouped YouTube fixes (p4, migration 0035): one per rule, evidence = the videos that fail it.
+// G1's grouped YouTube fixes (p4, migration 0035): one per rule, evidence = the videos that fail it
+// ({id, title, url}). No videos = unchecked; short videos (chapters not_needed) never count for R21.
 // Plural copy is the fix_rules row's; the one-video forms are data-pipeline's (COPY.md GAS).
 export const YOUTUBE_RULES = ["R19", "R20", "R21"] as const satisfies readonly RuleKey[];
 export const YOUTUBE_COPY = {
@@ -19,7 +20,7 @@ const FIELD = { R19: "title", R20: "description", R21: "chapters" } as const;
 
 export type Checklist = {
   keyword: string | null;
-  videos: { id: string; title: string; checks: VideoChecks }[];
+  videos: { id: string; title: string; url: string; checks: VideoChecks }[];
 };
 
 // list: the business's checklist, null without a YouTube connection, or the connection's failure reason.
@@ -27,10 +28,13 @@ export function youtubeFixes(rules: RuleKey[], list: Checklist | null | string):
   return YOUTUBE_RULES.filter((k) => rules.includes(k)).map((rule_key): FixResult => {
     if (list === null) return { rule_key, result: "unchecked", evidence: { reason: "not_connected" }, detail: null };
     if (typeof list === "string") return { rule_key, result: "unchecked", evidence: { reason: list }, detail: null };
+    if (!list.videos.length) return { rule_key, result: "unchecked", evidence: { reason: "no_videos" }, detail: null };
     const field = FIELD[rule_key];
     if (field !== "chapters" && !list.keyword)
       return { rule_key, result: "unchecked", evidence: { reason: "no_keyword" }, detail: null };
-    const failing = list.videos.filter((v) => v.checks[field] === "fail").map((v) => ({ id: v.id, title: v.title }));
+    const failing = list.videos
+      .filter((v) => v.checks[field] === "fail")
+      .map((v) => ({ id: v.id, title: v.title, url: v.url }));
     if (!failing.length) return { rule_key, result: "ok", evidence: { videos: [] }, detail: null };
     const c = YOUTUBE_COPY[rule_key];
     return {

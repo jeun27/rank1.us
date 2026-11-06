@@ -30,8 +30,8 @@ describe("youtubeFixes (R19 title, R20 first two lines, R21 chapters)", () => {
         result: "fix",
         evidence: {
           videos: [
-            { id: "v1", title: "Example video v1" },
-            { id: "v2", title: "Example video v2" },
+            { id: "v1", title: "Example video v1", url: "https://www.youtube.com/watch?v=v1" },
+            { id: "v2", title: "Example video v2", url: "https://www.youtube.com/watch?v=v2" },
           ],
         },
         detail: "2 videos need your keyword in the title.",
@@ -40,7 +40,7 @@ describe("youtubeFixes (R19 title, R20 first two lines, R21 chapters)", () => {
       {
         rule_key: "R21",
         result: "fix",
-        evidence: { videos: [{ id: "v1", title: "Example video v1" }] },
+        evidence: { videos: [{ id: "v1", title: "Example video v1", url: "https://www.youtube.com/watch?v=v1" }] },
         detail: "1 video 5 minutes or longer has no chapters.",
       },
     ]);
@@ -64,6 +64,16 @@ describe("youtubeFixes (R19 title, R20 first two lines, R21 chapters)", () => {
 
   it("'not needed' chapters (short videos) are never a fix", () => {
     expect(youtubeFixes(["R21"], list([video("v1", { chapters: "not_needed" })]))[0].result).toBe("ok");
+  });
+
+  it("a channel with no videos → unchecked (no_videos), never ok", () => {
+    expect(youtubeFixes([...ALL], list([])).map((x) => [x.result, (x.evidence as { reason?: string }).reason])).toEqual(
+      [
+        ["unchecked", "no_videos"],
+        ["unchecked", "no_videos"],
+        ["unchecked", "no_videos"],
+      ],
+    );
   });
 
   it("no YouTube connection, or one needing reauth → unchecked with the reason", () => {
