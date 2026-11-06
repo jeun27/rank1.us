@@ -25,14 +25,14 @@ export type Database = {
           Tables: {
             "ai_access_checks": {
                   Row: {
-                    "business_id": string | null,"checked_at": string,"cloudflare": boolean,"crawlers": Json,"domain": string,"outcome": string,"pages_checked": number,"run_id": string,"status_gptbot": number | null,"status_normal": number | null,"visible_words": number | null
+                    "business_id": string | null,"checked_at": string,"cloudflare": boolean,"crawlers": Json,"domain": string | null,"error": string | null,"outcome": string,"pages_checked": number,"run_id": string,"status_gptbot": number | null,"status_normal": number | null,"visible_words": number | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "business_id"?: string | null,"checked_at"?: string,"cloudflare"?: boolean,"crawlers"?: Json,"domain": string,"outcome": string,"pages_checked"?: number,"run_id": string,"status_gptbot"?: number | null,"status_normal"?: number | null,"visible_words"?: number | null
+                    "business_id"?: string | null,"checked_at"?: string,"cloudflare"?: boolean,"crawlers"?: Json,"domain"?: string | null,"error"?: string | null,"outcome": string,"pages_checked"?: number,"run_id": string,"status_gptbot"?: number | null,"status_normal"?: number | null,"visible_words"?: number | null
                   }
                   Update: {
-                    "business_id"?: string | null,"checked_at"?: string,"cloudflare"?: boolean,"crawlers"?: Json,"domain"?: string,"outcome"?: string,"pages_checked"?: number,"run_id"?: string,"status_gptbot"?: number | null,"status_normal"?: number | null,"visible_words"?: number | null
+                    "business_id"?: string | null,"checked_at"?: string,"cloudflare"?: boolean,"crawlers"?: Json,"domain"?: string | null,"error"?: string | null,"outcome"?: string,"pages_checked"?: number,"run_id"?: string,"status_gptbot"?: number | null,"status_normal"?: number | null,"visible_words"?: number | null
                   }
                   Relationships: [
                     {
@@ -882,6 +882,9 @@ isOneToOne: false
                            },
 "run_summaries":
 { Args: { "p_business_id": string,"p_limit"?: number,"p_statuses"?: string[] }; Returns: { "finished_at": string | null,"jobs_failed": number,"jobs_ok": number,"jobs_total": number,"kind": string,"n": number,"named": number,"per_engine": Json,"run_id": string,"started_at": string | null,"status": string }[]
+                           },
+"runs_needing_ai_access_check":
+{ Args: { "p_limit": number }; Returns: { "domain": string,"run_id": string }[]
                            },
 "runs_needing_fix_checks":
 { Args: { "p_limit"?: number }; Returns: { "business_id": string,"domain": string | null,"run_id": string }[]
