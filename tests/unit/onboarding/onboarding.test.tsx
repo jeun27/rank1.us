@@ -114,10 +114,10 @@ describe("Onboarding 1: Business", () => {
     await stepOne(user);
     const cuisine = await screen.findByLabelText("Cuisine");
     expect(cuisine).toHaveAttribute("data-attention");
-    expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Next" })).toHaveAttribute("aria-disabled", "true");
     await user.selectOptions(cuisine, "ramen");
     expect(cuisine).not.toHaveAttribute("data-attention");
-    expect(screen.getByRole("button", { name: "Next" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Next" })).not.toHaveAttribute("aria-disabled");
   });
 });
 
@@ -125,37 +125,49 @@ describe("Onboarding 1: Business", () => {
 describe("Onboarding: reason lines next to Next (X24)", () => {
   const next = () => screen.getByRole("button", { name: "Next" });
 
+  // Founder rule (lead, #175): never a silent disabled button. Next stays focusable (aria-disabled, not
+  // disabled), points at the reason, and pressing it early keeps focus and announces the reason.
   it("step 1 names the first missing field: name, cuisine, city, state", async () => {
     const { user } = setup({ site: { status: "ok" } });
     await stepOne(user);
     await screen.findByLabelText("Business name");
-    expect(next()).toBeDisabled();
+    expect(next()).toHaveAttribute("aria-disabled", "true");
+    expect(next()).not.toBeDisabled();
     expect(next()).toHaveAccessibleDescription("Add your business name first.");
+    await user.click(next());
+    expect(next()).toHaveFocus();
+    expect(screen.getByText("Step 1 of 3")).toBeInTheDocument();
+    expect(await screen.findByRole("status")).toHaveTextContent("Add your business name first.");
     await user.type(screen.getByLabelText("Business name"), "Example Ramen House");
     expect(next()).toHaveAccessibleDescription("Pick a cuisine first.");
     await user.selectOptions(screen.getByLabelText("Cuisine"), "ramen");
-    expect(next()).toBeEnabled();
+    expect(next()).not.toHaveAttribute("aria-disabled");
     expect(next()).not.toHaveAccessibleDescription();
     await user.clear(screen.getByLabelText("City"));
     expect(next()).toHaveAccessibleDescription("Add your city first.");
     await user.type(screen.getByLabelText("City"), "Irvine");
     await user.clear(screen.getByLabelText("State"));
-    expect(next()).toBeDisabled();
+    expect(next()).toHaveAttribute("aria-disabled", "true");
     expect(next()).toHaveAccessibleDescription("Add your state first.");
     expect(screen.getByText("Add your state first.")).toBeVisible();
   });
 
-  it("step 2: 'Finding places near you…' beside the disabled Next until the search is back", async () => {
+  it("step 2: 'Finding places near you…' beside Next until the search is back; an early press stays put", async () => {
     let done: (r: CompetitorSearch) => void = () => {};
     const s = setup();
     vi.mocked(s.actions.findCompetitors).mockReturnValue(new Promise((r) => (done = r)));
     await toStepTwo(s);
     await screen.findByText("Step 2 of 3");
-    expect(next()).toBeDisabled();
+    expect(next()).toHaveAttribute("aria-disabled", "true");
     expect(next()).toHaveAccessibleDescription("Finding places near you…");
+    await s.user.click(next());
+    expect(screen.getByText("Step 2 of 3")).toBeInTheDocument();
+    expect(next()).toHaveFocus();
+    // The loading state is a status region too: look for the one saying the reason.
+    expect(await screen.findByText("Finding places near you…", { selector: "[role=status]" })).toBeInTheDocument();
     done({ status: "ok", items: five });
     await screen.findAllByRole("checkbox", { name: /Example/ });
-    expect(next()).toBeEnabled();
+    expect(next()).not.toHaveAttribute("aria-disabled");
     expect(next()).not.toHaveAccessibleDescription();
   });
 
