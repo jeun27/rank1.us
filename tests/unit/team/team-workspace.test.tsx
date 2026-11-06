@@ -112,7 +112,7 @@ describe("team workspace on real data (Step 11)", () => {
     expect(screen.getByText("Example data")).toBeInTheDocument();
   });
 
-  it("Fix list: the shared FixList with a Status select that writes for the selected client", async () => {
+  it("Fix list: the shared FixList with a check-off circle that writes for the selected client", async () => {
     const t = team();
     render(
       <TeamProvider value={t}>
@@ -121,7 +121,7 @@ describe("team workspace on real data (Step 11)", () => {
     );
     expect(screen.getByRole("heading", { name: exampleFixes[0].title })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Tidy-ups" })).toBeInTheDocument();
-    await userEvent.selectOptions(screen.getAllByLabelText("Status")[0], "done");
+    await userEvent.click(screen.getAllByRole("checkbox")[0]);
     expect(t.actions.status).toHaveBeenCalledWith("b1", exampleFixes[0].id, "done");
   });
 

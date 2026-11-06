@@ -369,15 +369,41 @@ test.describe("without JavaScript", () => {
 test("motion on: the demo runs once when it scrolls into view, then ends on the final state", async ({
   page,
 }, info) => {
+  // QA N1: deterministic. The IntersectionObserver is held until the test fires it, and the run's
+  // requestAnimationFrame clock is the page clock, so the start and mid-run frames are exact.
+  await page.clock.install();
+  await page.addInitScript(() => {
+    const held: Array<() => void> = [];
+    (window as unknown as { __showDemo: () => void }).__showDemo = () => held.splice(0).forEach((f) => f());
+    window.IntersectionObserver = class {
+      constructor(private cb: IntersectionObserverCallback) {}
+      observe(el: Element) {
+        held.push(() => this.cb([{ isIntersecting: true, target: el } as IntersectionObserverEntry], this as never));
+      }
+      disconnect() {}
+      unobserve() {}
+      takeRecords() {
+        return [];
+      }
+      root = null;
+      rootMargin = "";
+      thresholds = [];
+    } as unknown as typeof IntersectionObserver;
+  });
   await page.goto("/");
   const d = demo(page);
-  // Above the fold on desktop; on phones it starts when scrolled to.
   await d.scrollIntoViewIfNeeded();
+  // Not in view yet (held): the server's final state, with its moving parts hidden until the run starts.
+  await expect(d).toHaveAttribute("data-demo-state", "final");
+  await expect(d).not.toHaveAttribute("data-demo-ran", "");
+  await page.evaluate(() => (window as unknown as { __showDemo: () => void }).__showDemo());
   await expect(d).toHaveAttribute("data-demo-state", "running");
-  // Mid-run: the question is part typed.
+  // 400 ms in: the question is part typed (6 of 20 characters) and no bar has started.
+  await page.clock.runFor(400);
   await expect.poll(async () => (await d.locator("[data-demo-question]").textContent())!.length).toBeGreaterThan(3);
   expect((await d.locator("[data-demo-question]").textContent())!.length).toBeLessThan("best ramen in Irvine".length);
   await d.screenshot({ path: `test-results/screenshots/landing-demo-mid-${info.project.name}.png` });
+  await page.clock.runFor(4000);
   await expect(d).toHaveAttribute("data-demo-state", "final", { timeout: 8000 });
   await expectFinal(page);
   const ran = await d.innerText();
