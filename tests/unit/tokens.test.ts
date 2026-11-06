@@ -101,7 +101,8 @@ describe("Tailwind theme matches the v3 tokens", () => {
   });
 
   it("has the v3 radius and shadow tokens, and no other shadows", () => {
-    expect(radius).toEqual({ control: 6, card: 8, surface: 8, banner: 8 });
+    // UI.md radius tag: badges and tags (lead C1).
+    expect(radius).toEqual({ control: 6, card: 8, surface: 8, banner: 8, tag: 4 });
     for (const [name, px] of Object.entries(radius)) expect(css).toContain(`--radius-${name}: ${px}px;`);
     expect(Object.keys(shadows).sort()).toEqual([
       "aurora",
@@ -117,6 +118,24 @@ describe("Tailwind theme matches the v3 tokens", () => {
     const declared = [...css.matchAll(/--shadow-([\w-]+):/g)].map((m) => m[1]);
     expect(declared.sort()).toEqual(Object.keys(shadows).sort());
     expect(css).not.toMatch(/box-shadow/);
+  });
+
+  // v3 (UI.md type table, lead C3): one size at every breakpoint. UI body 13/19, caption 12/16, tag 11/1.
+  it("has the UI.md app type scale: ui 13/19, caption 12/16, tag 11/1", () => {
+    for (const d of [
+      "--text-ui: 13px;",
+      "--text-ui--line-height: 19px;",
+      "--text-caption: 12px;",
+      "--text-caption--line-height: 16px;",
+      "--text-tag: 11px;",
+      "--text-tag--line-height: 1;",
+    ])
+      expect(css).toContain(d);
+  });
+
+  // R2 (lead): fields stay 16px below md, so iPhone Safari doesn't zoom on focus. Unlayered, so it wins.
+  it("keeps form fields at 16px below md", () => {
+    expect(css).toMatch(/@media \(width < 48rem\) \{\s*input,\s*select,\s*textarea \{ font-size: 16px; \}\s*\}/);
   });
 
   // The theme comes from data-theme (set before paint by the theme script), never a CSS media query.
