@@ -146,7 +146,18 @@ describe("Competitors (UI.md 4b, SoV only here)", () => {
     expect(screen.getByText("25% (80 of 320)")).toBeInTheDocument();
     expect(screen.getAllByText("too few answers").length).toBeGreaterThan(0);
     const suggested = screen.getByRole("region", { name: "Suggested competitors" });
-    await userEvent.click(within(suggested).getAllByRole("button", { name: "Add" })[0]);
+    // F2 (lead-approved): each suggestion's Add names its competitor, so screen readers can tell them
+    // apart (and from the add form's "Add"). The visible text stays "Add".
+    const adds = within(suggested).getAllByRole("button", { name: /^Add / });
+    expect(adds.map((b) => b.getAttribute("aria-label"))).toEqual(exampleSuggestions.map((x) => `Add ${x.name}`));
+    expect(adds.every((b) => b.textContent === "Add")).toBe(true);
+    expect(within(suggested).queryByRole("button", { name: "Add" })).toBeNull();
+    // Unique across the page, the add form's "Add" included.
+    const names = screen
+      .getAllByRole("button", { name: /^Add\b/ })
+      .map((b) => b.getAttribute("aria-label") ?? b.textContent);
+    expect(new Set(names).size).toBe(names.length);
+    await userEvent.click(within(suggested).getByRole("button", { name: "Add Example Tonkotsu Co." }));
     expect(actions.add).toHaveBeenCalledWith({
       name: "Example Tonkotsu Co.",
       domain: "exampletonkotsu.test",
