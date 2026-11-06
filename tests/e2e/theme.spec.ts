@@ -55,3 +55,18 @@ test("a saved light theme never leaks onto public pages through client-side link
   await page.waitForURL("**/dev/team");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
 });
+
+// #92 review, the logo path: a saved light theme on /app → the rail logo → the landing is dark → back is light.
+test("light on /app → the rail logo → the landing is dark → back to /app is light", async ({ page }) => {
+  test.skip(page.viewportSize()!.width < 768, "the rail logo shows from md up");
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.addInitScript(() => localStorage.setItem("rank1.workspace", JSON.stringify({ theme: "light" })));
+  await page.goto("/dev/app?state=dashboard-success");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await page.getByRole("navigation", { name: "App" }).getByRole("link", { name: "Rank1" }).click();
+  await page.waitForURL((u) => u.pathname === "/");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.goBack();
+  await page.waitForURL("**/dev/app**");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+});
