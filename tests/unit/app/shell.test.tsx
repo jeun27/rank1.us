@@ -88,8 +88,11 @@ describe("Dashboard (UI.md 4b)", () => {
       <Dashboard business={exampleBusiness} latest={exampleLatest} series={series} fixes={exampleFixes} now={now} />,
     );
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Dashboard");
-    // The hero, and the same latest point in the line's table.
-    expect(screen.getAllByText("named in 80 of 240 answers")).toHaveLength(2);
+    // The hero, and the same latest point in the line's table; the You row in the leaderboard has it too.
+    const board = screen.getByRole("table", { name: "Competitors" });
+    const named = screen.getAllByText("named in 80 of 240 answers");
+    expect(named.filter((e) => !board.contains(e))).toHaveLength(2);
+    expect(within(board).getAllByText("named in 80 of 240 answers")).toHaveLength(1);
     expect(screen.getByText(/API-measured, directional/)).toBeInTheDocument();
     expect(screen.getByRole("table", { name: "Competitors" })).toBeInTheDocument();
     expect(screen.queryByText("Share of voice")).not.toBeInTheDocument();
@@ -162,8 +165,14 @@ describe("Competitors (UI.md 4b, SoV only here)", () => {
     );
     expect(screen.queryByRole("list", { name: "Competitors" })).not.toBeInTheDocument();
     const table = screen.getByRole("table", { name: "Competitors" });
-    expect(within(table).getByText("33% (named in 80 of 240 answers)")).toBeInTheDocument();
-    expect(within(table).getByText("100% (named in 240 of 240 answers)")).toBeInTheDocument();
+    // DQ4: the % and its n are two lines (mono % over a caption), so neither wraps mid-phrase at 375.
+    for (const [pct, n] of [
+      ["33%", "named in 80 of 240 answers"],
+      ["100%", "named in 240 of 240 answers"],
+    ]) {
+      expect(within(table).getByText(pct).className).toMatch(/font-mono/);
+      expect(within(table).getByText(n).className).toMatch(/whitespace-nowrap/);
+    }
     expect(
       screen.getByText(/^Checked \d+ (min|h|d) ago · 240 answers · API-measured, directional$/),
     ).toBeInTheDocument();

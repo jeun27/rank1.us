@@ -41,10 +41,12 @@ describe("AuditView: Audit results (UI.md 4b)", () => {
   it("complete (paid): H1, hero % with n and freshness, per-engine, leaderboard, sources, downloads, no credit", () => {
     view("complete");
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Audit results");
-    expect(screen.getByText("33%")).toBeInTheDocument();
-    expect(screen.getByText("named in 80 of 240 answers")).toBeInTheDocument();
-    expect(screen.getByText(/Checked 2 h ago · 240 answers · API-measured, directional/)).toBeInTheDocument();
     const board = screen.getByRole("table", { name: "Competitors" });
+    // The hero outside the leaderboard (the You row repeats the same % and n inside it).
+    const outside = (t: string) => screen.getAllByText(t).filter((e) => !board.contains(e));
+    expect(outside("33%")).toHaveLength(1);
+    expect(outside("named in 80 of 240 answers")).toHaveLength(1);
+    expect(screen.getByText(/Checked 2 h ago · 240 answers · API-measured, directional/)).toBeInTheDocument();
     expect(within(board).getByText("You")).toBeInTheDocument();
     expect(within(board).getByText("too few answers")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Download CSV" })).toHaveAttribute(

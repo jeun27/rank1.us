@@ -74,3 +74,16 @@ describe("Table stack roles", () => {
     expect(container.querySelector("table")).not.toHaveAttribute("role");
   });
 });
+
+// DQ4 (design-quality audit): "33% (named in 80 of 240 answers)" in one cell wrapped mid-phrase at 375.
+describe("VisibilityCell", () => {
+  it("puts the % (mono) over its n (caption, no wrap), and reads as one phrase", async () => {
+    const { VisibilityCell } = await import("@/components/ui/StatNumber");
+    const { container } = render(<VisibilityCell metric={{ value: 1 / 3, numerator: 80, denominator: 240 }} />);
+    expect(screen.getByText("33%").className).toMatch(/font-mono/);
+    const n = screen.getByText("named in 80 of 240 answers");
+    expect(n.className).toMatch(/text-caption/);
+    expect(n.className).toMatch(/whitespace-nowrap/);
+    expect(container.textContent).toBe("33% named in 80 of 240 answers");
+  });
+});
