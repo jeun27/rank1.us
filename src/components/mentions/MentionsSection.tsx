@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 import { ENGINE_LABEL, type Engine } from "@/components/audit/contract";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { linkTarget } from "@/components/ui/link";
 import type { MentionTarget, MentionTargets } from "@/lib/metrics/mentions";
 import { mentionsCopy as c } from "./copy";
 
@@ -34,8 +35,11 @@ function PageLink({ t }: { t: MentionTarget }) {
       </span>
     );
   return (
-    <a href={href} target="_blank" rel="noopener noreferrer" className={`font-medium ${text}`}>
-      <span data-computed>{t.title ?? t.domain}</span> <span className="sr-only">{c.newTab}</span>
+    <a href={href} target="_blank" rel="noopener noreferrer" className={`${linkTarget} font-medium ${text}`}>
+      {/* One flex item, so the space before the screen-reader suffix stays in the name. */}
+      <span>
+        <span data-computed>{t.title ?? t.domain}</span> <span className="sr-only">{c.newTab}</span>
+      </span>
     </a>
   );
 }
@@ -206,7 +210,7 @@ export function MentionsEvidence({ added }: { added: MentionTarget[] }) {
         ))}
       </ul>
       {added.length > 3 && (
-        <Link href="/app/sources" className={`self-start ${text}`}>
+        <Link href="/app/sources" className={`${linkTarget} self-start ${text}`}>
           {c.more(added.length - 3)}
         </Link>
       )}

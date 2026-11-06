@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 import { appCopy } from "@/components/app/copy";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { linkTarget } from "@/components/ui/link";
 import type { CardState } from "@/lib/connections/connect-card";
 import type { GoogleConnector } from "@/lib/connections/oauth";
 import { Consent, startUrl } from "./Consent";
@@ -23,7 +24,7 @@ export type ConnectCardProps = {
   skipHref?: string;
 };
 
-const link = "text-ui text-link underline underline-offset-4";
+const link = `${linkTarget} text-ui text-link underline underline-offset-4`;
 
 // C-b: "Connect your accounts" until every Recommended connection is connected (connectCardState), then
 // "You're all set" (G3). Not dismissible (the brief's "persistent" card). Connect opens the hub's consent sheet.

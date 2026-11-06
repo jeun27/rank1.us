@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { safeHref } from "@/components/mentions/MentionsSection";
 import { Button } from "@/components/ui/Button";
+import { linkTarget } from "@/components/ui/link";
 import { youtubeCopy as c } from "./copy";
 
 type Rule = "R19" | "R20" | "R21";
@@ -51,9 +52,12 @@ function Item({ rule, v, keyword, business }: { rule: Rule; v: FixVideo; keyword
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-ui font-medium text-link underline underline-offset-4"
+          className={`${linkTarget} self-start text-ui font-medium text-link underline underline-offset-4`}
         >
-          {v.title} <span className="sr-only">{c.newTab}</span>
+          {/* One flex item, so the space before the screen-reader suffix stays in the name. */}
+          <span>
+            {v.title} <span className="sr-only">{c.newTab}</span>
+          </span>
         </a>
       ) : (
         <span className="text-ui font-medium">{v.title}</span>
