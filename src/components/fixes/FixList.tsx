@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from "react";
 import { rovingIndex } from "@/components/workspace/hooks";
 import { Banner } from "@/components/ui/Banner";
 import { Card } from "@/components/ui/Card";
@@ -126,6 +126,7 @@ function FixRow({
         <button
           type="button"
           role="checkbox"
+          data-fix-check={row.id}
           data-computed
           aria-checked={done ? "true" : state === "doing" ? "mixed" : "false"}
           aria-label={row.title}
@@ -284,6 +285,7 @@ export function FixList({
   baselineHref?: string;
 }) {
   const [statuses, setStatuses] = useState<Record<string, FixStatus>>({});
+  const root = useRef<HTMLDivElement>(null);
   const [doneAt, setDoneAt] = useState<Record<string, string>>({});
   const [failed, setFailed] = useState(false);
   const [filter, setFilter] = useState<Filter>("open");
@@ -339,8 +341,25 @@ export function FixList({
     }
     return true;
   };
+  // QA N1: a done fix leaves the Open list, so focus moves to the next fix's check-off (else the one
+  // before, else the toast's Undo). Undo puts it back on the restored fix. Never on the page body.
+  const focusAfterRender = (id: string | null) =>
+    requestAnimationFrame(() => {
+      const list = root.current;
+      if (!list) return;
+      const el = id && list.querySelector<HTMLElement>(`[data-fix-check="${CSS.escape(id)}"]`);
+      (el || list.querySelector<HTMLElement>("[data-toast-undo]"))?.focus();
+    });
   const markDone = async (id: string, title: string, prev: FixStatus) => {
-    if (await set(id, "done", prev)) setToast({ id, title, prev });
+    const boxes = [...(root.current?.querySelectorAll<HTMLElement>("[data-fix-check]") ?? [])].map(
+      (b) => b.dataset.fixCheck!,
+    );
+    const i = boxes.indexOf(id);
+    const next = boxes[i + 1] ?? boxes[i - 1] ?? null;
+    const ok = await set(id, "done", prev);
+    if (ok) setToast({ id, title, prev });
+    // In "All" the done row stays, so focus stays on it.
+    focusAfterRender(filter === "all" || !ok ? id : next);
   };
 
   const openRows = (list: FixView[]) => list.filter((f) => stateOf(f.id, f.status) !== "done");
@@ -423,7 +442,7 @@ export function FixList({
   const counts: Record<Filter, number | null> = { open: openCount, done: doneRows.length, all: null };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div ref={root} className="flex flex-col gap-6">
       {failed && <Banner tone="error">{c.saveFailed}</Banner>}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -594,7 +613,9 @@ export function FixList({
               const t = toast;
               setToast(null);
               await set(t.id, t.prev, "done");
+              focusAfterRender(t.id);
             }}
+            data-toast-undo
             className={`text-ui font-medium text-ink underline underline-offset-4 ${focus}`}
           >
             {c.undo}
