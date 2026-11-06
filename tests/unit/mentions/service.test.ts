@@ -12,7 +12,8 @@ vi.mock("@/lib/queries/mentions", async (real) => ({ ...(await real<object>()), 
 vi.mock("@/lib/queries/shell", async (real) => ({ ...(await real<object>()), listRunSummaries: q.listRunSummaries }));
 vi.mock("@/lib/queries/results", async (real) => ({ ...(await real<object>()), getRunResults: q.getRunResults }));
 
-const { decideMention, loadMentions, R17_MANY, R17_ONE } = await import("@/lib/mentions/service");
+const { decideMention, loadMentions, R17_MANY, R17_MANY_NO_NAMES, R17_ONE, R17_ONE_NO_NAMES } =
+  await import("@/lib/mentions/service");
 
 const userDb = {} as never;
 const ON = { ENABLE_MENTIONS: "true" };
@@ -41,7 +42,7 @@ const RESULTS = {
 beforeEach(() => {
   for (const f of Object.values(q)) f.mockReset();
   q.listRunSummaries.mockResolvedValue([{ id: "run-1" }]);
-  q.getRunResults.mockResolvedValue(RESULTS);
+  q.getRunResults.mockImplementation(async (_db: unknown, id: string) => (id === "run-1" ? RESULTS : null));
   q.listMentionDecisions.mockResolvedValue([]);
   q.upsertMentionFix.mockResolvedValue("fix-1");
 });
@@ -82,6 +83,43 @@ describe("decideMention", () => {
     expect(q.setMentionTarget).toHaveBeenLastCalledWith(userDb, "biz-1", LIST, null);
   });
 
+  it("an added list no longer in the latest run keeps its last known rivals (from an earlier run)", async () => {
+    const OLD = "https://old-list.test/best";
+    const older = {
+      ...RESULTS,
+      brands: [...RESULTS.brands, { name: "Example Pho Spot", kind: "competitor", domain: null }],
+      answers: [
+        {
+          ...RESULTS.answers[0],
+          id: "b1",
+          brands: [
+            { name: "Example Ramen House", kind: "business", mentioned: false, position: null },
+            { name: "Example Pho Spot", kind: "competitor", mentioned: true, position: 1 },
+          ],
+        },
+      ],
+      citations: [{ answer_id: "b1", url: OLD, domain: "old-list.test", title: null, category: "news_blog" }],
+    };
+    q.listRunSummaries.mockResolvedValue([{ id: "run-1" }, { id: "run-0" }]);
+    q.getRunResults.mockImplementation(async (_db: unknown, id: string) => (id === "run-1" ? RESULTS : older));
+    q.listMentionDecisions.mockResolvedValue([{ url: OLD, status: "added", decided_at: "x" }]);
+    await decideMention(userDb, "biz-1", OLD, "added", ON);
+    expect(q.listRunSummaries).toHaveBeenCalledWith(userDb, "biz-1", 8, ["complete", "partial"]);
+    expect(q.upsertMentionFix.mock.calls[0][2]).toBe("1 list AI cites names Example Pho Spot but not you.");
+  });
+
+  it("no known rivals for any added list → the copy without names, never the competitor list", async () => {
+    q.listMentionDecisions.mockResolvedValue([{ url: "https://never-seen.test/x", status: "added", decided_at: "x" }]);
+    await decideMention(userDb, "biz-1", "https://never-seen.test/x", "added", ON);
+    expect(q.upsertMentionFix.mock.calls[0][2]).toBe("1 list AI cites doesn't name you.");
+    q.listMentionDecisions.mockResolvedValue([
+      { url: "https://never-seen.test/x", status: "added", decided_at: "x" },
+      { url: "https://never-seen.test/y", status: "added", decided_at: "y" },
+    ]);
+    await decideMention(userDb, "biz-1", "https://never-seen.test/y", "added", ON);
+    expect(q.upsertMentionFix.mock.calls[1][2]).toBe("2 lists AI cite don't name you.");
+  });
+
   it("n counts every added list; rivals come from the lists still cited", async () => {
     q.listMentionDecisions.mockResolvedValue([
       { url: LIST, status: "added", decided_at: "x" },
@@ -100,9 +138,15 @@ describe("decideMention", () => {
     expect(q.setMentionTarget).not.toHaveBeenCalled();
   });
 
-  it("a bad URL (22023) → bad_url", async () => {
-    q.setMentionTarget.mockRejectedValue(Object.assign(new Error("x"), { code: "22023" }));
+  it("errors map to their real cause: a bad URL (set) vs the R17 rule or detail (upsert)", async () => {
+    q.setMentionTarget.mockRejectedValueOnce(Object.assign(new Error("x"), { code: "22023" }));
     expect(await decideMention(userDb, "biz-1", "nope", "added", ON)).toBe("bad_url");
+    q.upsertMentionFix.mockRejectedValueOnce(Object.assign(new Error("mention_rule_unavailable"), { code: "22023" }));
+    expect(await decideMention(userDb, "biz-1", LIST, "added", ON)).toBe("rule_unavailable");
+    q.upsertMentionFix.mockRejectedValueOnce(
+      Object.assign(new Error("The fix needs detail text of at most 2000 characters"), { code: "22023" }),
+    );
+    expect(await decideMention(userDb, "biz-1", LIST, "added", ON)).toBe("bad_detail");
   });
 });
 
@@ -114,7 +158,8 @@ describe("R17 copy", () => {
     const copy = readFileSync(`${process.cwd()}/docs/COPY.md`, "utf8");
     expect(R17_ONE).toBe("1 list AI cites names {rivals} but not you.");
     expect(R17_MANY).toBe("{n} lists AI cite name {rivals} but not you.");
-    expect(copy).toContain(`"${R17_ONE}"`);
-    expect(copy).toContain(`"${R17_MANY}"`);
+    expect(R17_ONE_NO_NAMES).toBe("1 list AI cites doesn't name you.");
+    expect(R17_MANY_NO_NAMES).toBe("{n} lists AI cite don't name you.");
+    for (const c of [R17_ONE, R17_MANY, R17_ONE_NO_NAMES, R17_MANY_NO_NAMES]) expect(copy).toContain(`"${c}"`);
   });
 });
