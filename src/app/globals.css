@@ -230,6 +230,11 @@ th {
   input, select, textarea { font-size: 16px; }
 }
 
+/* Browser autofill fills fields without input events. A no-op 1ms animation on autofilled inputs fires
+   animationstart, so forms that track validity (the audit form, #129 S1) can re-read their fields. */
+@keyframes autofill-start { from { opacity: 1; } to { opacity: 1; } }
+input:-webkit-autofill { animation: autofill-start 1ms; }
+
 /* Portal look: h1/h2 in /app, /team and /client fade from white to 60% white with tight tracking. Dark
    only (a nested dark subtree such as the rail counts too); light keeps plain headings. */
 @utility heading-gradient {

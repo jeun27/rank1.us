@@ -159,7 +159,8 @@ for (const where of ["/contact", "modal"] as const) {
       "Other",
     ]);
     await expect(scope).not.toContainText("$");
-    expect((await industry.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    // The v3 field (UI.md, lead 2026-11-06): 44px below md, 36px from md.
+    expect(Math.round((await industry.boundingBox())!.height)).toBe(page.viewportSize()!.width < 768 ? 44 : 36);
 
     await scope.getByLabel("Name").fill("Ana Example");
     await scope.getByLabel("Email").fill("visitor@example.test");
