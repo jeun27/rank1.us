@@ -8,7 +8,7 @@ import type { Loaded } from "@/components/audit/load";
 export function Page({ title, children }: { title: string; children: ReactNode }) {
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-8 px-5 py-8 md:px-8 md:py-10">
-      <h1 className="heading-gradient font-display text-h2 font-semibold md:text-h2-md">{title}</h1>
+      <h1 className="heading-gradient font-display text-title font-semibold tracking-[-0.02em]">{title}</h1>
       {children}
     </main>
   );
