@@ -77,13 +77,16 @@ describe("Tailwind theme matches the v3 tokens", () => {
     expect(Object.keys(colors).sort()).toEqual(Object.keys(darkColors).sort());
   });
 
-  it("declares dark in @theme and light in [data-theme=light], and nothing else", () => {
+  it("declares dark in @theme, light in [data-theme=light], and dark again for nested dark subtrees", () => {
     for (const [name, value] of Object.entries(darkColors)) expect(theme).toContain(`--color-${name}: ${value};`);
     for (const [name, value] of Object.entries(colors)) expect(light).toContain(`--color-${name}: ${value};`);
     expect(theme).toContain("--color-*: initial;");
     const declared = [...theme.matchAll(/--color-([\w]+):/g)].map((m) => m[1]);
     expect(declared.sort()).toEqual(Object.keys(darkColors).sort());
-    expect(css).not.toContain('[data-theme="dark"] {');
+    // The rail stays dark inside a light page (D14): a nested [data-theme=dark] restores the dark values.
+    const dark = block('[data-theme="dark"] {');
+    for (const [name, value] of Object.entries(darkColors)) expect(dark).toContain(`--color-${name}: ${value};`);
+    expect(css.indexOf('[data-theme="dark"] {')).toBeGreaterThan(css.indexOf('[data-theme="light"] {'));
   });
 
   it("has the v3 radius and shadow tokens, and no other shadows", () => {
