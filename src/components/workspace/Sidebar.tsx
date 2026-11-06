@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AccountMenu } from "@/components/auth/AppHeader";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { Logo } from "@/components/ui/Logo";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { authCopy } from "@/lib/auth/copy";
 import { SECTIONS, SECTION_LABEL, type Section } from "@/lib/workspace/context";
 import type { Tab } from "./DocPane";
@@ -111,6 +112,7 @@ export function Sidebar(props: {
           }
           summaryClassName={`${row} cursor-pointer list-none text-inkMuted hover:bg-raised hover:text-ink`}
           popupClassName="bottom-full left-0 mb-1"
+          extra={<ThemeToggle labelled />}
         />
       </div>
       <div className={`flex items-center justify-between gap-1 ${collapsed ? "md:flex-col" : "md:max-lg:flex-col"}`}>

@@ -17,7 +17,10 @@ test("unpaid owner: 'Start for $99/mo'; no switcher with one business", async ({
   await page.goto("/app/billing");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Billing");
   await expect(page.getByRole("button", { name: "Start for $99/mo" })).toBeEnabled();
-  await expect(page.getByRole("banner").getByText("Example Ramen House")).toBeVisible();
+  // X9a: one business is a plain name, so phones show the page crumb only.
+  const name = page.getByRole("banner").getByText("Example Ramen House");
+  if (page.viewportSize()!.width < 768) await expect(name).toBeHidden();
+  else await expect(name).toBeVisible();
   await expect(page.getByRole("button", { name: "Example Ramen House ▾" })).toHaveCount(0);
 });
 

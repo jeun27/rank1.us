@@ -21,7 +21,6 @@ import { SourcesView } from "@/components/app/SourcesView";
 import { latestMeasured, Measured, Page } from "@/components/app/Page";
 import { AppShell } from "@/components/app/AppShell";
 import { BillingView } from "@/components/billing/BillingView";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { BusinessSwitcher, type SwitcherBusiness } from "@/components/billing/BusinessSwitcher";
 import { ExperimentForm } from "@/components/experiments/ExperimentForm";
 import { ExperimentList } from "@/components/experiments/ExperimentList";
@@ -515,7 +514,6 @@ export function Gallery({ state = "dashboard-success", location }: { state?: str
   return (
     <AppShell
       business={business}
-      actions={<ThemeToggle />}
       page={state === "experiments-form" ? "Start a test" : (CRUMB[state.split("-")[0]] ?? "Dashboard")}
     >
       <div className="mx-auto flex w-full max-w-page">
