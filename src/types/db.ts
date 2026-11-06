@@ -921,6 +921,9 @@ isOneToOne: false
                            },
 "update_connection_tokens":
 { Args: { "p_connection_id": string,"p_enc_access": string,"p_enc_refresh"?: string,"p_expires_at": string }; Returns: undefined
+                           },
+"upsert_mention_fix":
+{ Args: { "p_business_id": string,"p_detail": string }; Returns: string
                            }
           }
           Enums: {
