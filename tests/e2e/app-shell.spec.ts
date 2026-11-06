@@ -257,3 +257,12 @@ test("/dev/app dashboard: the H1 is 22/28 -0.02em and the hero number is 44px", 
   await expect(h1).toHaveCSS("letter-spacing", "-0.44px");
   await expect(page.locator("main p.text-hero").first()).toHaveCSS("font-size", "44px");
 });
+
+// X1 (UX plan L1): the next fix is on the first screen at 375 and 1280, and its one link opens that fix.
+test("/dev/app dashboard: the next-fix card is in the first viewport", async ({ page }) => {
+  await page.goto("/dev/app?state=dashboard-success");
+  const card = page.getByRole("region", { name: "What to fix next" });
+  const box = (await card.boundingBox())!;
+  expect(box.y + box.height).toBeLessThanOrEqual(page.viewportSize()!.height);
+  await expect(card.getByRole("link", { name: "What to fix next" })).toHaveAttribute("href", "/app/fixes#fix-f1");
+});

@@ -15,7 +15,7 @@ export default async function DashboardPage() {
   const ai = process.env.ENABLE_AI_ACCESS_CHECK === "true";
   const [fixes, card, access] = business
     ? await Promise.all([
-        getTopFixes(db, business.id, 3),
+        getTopFixes(db, business.id, 1),
         loadConnectCard(db, business.id, now),
         ai ? getLatestAiAccessCheck(db, business.id) : null,
       ])
