@@ -967,4 +967,9 @@ Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/
 - record_ai_access_check(run, p) (service only): validates the outcome, the 6 crawler names (GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot, Google-Extended), the line length (≤ 500), counts and HTTP statuses (22023 otherwise), then upserts per run.
 - New fix rule R16 "Your site lets AI in, but Cloudflare may be blocking it." (p5 through 0024's mapping), enabled, with the lead's customer copy from REPORT.md. P5 fixes go through record_fix_results: R14 blocked crawlers, R10 JS-empty, R16 Cloudflare.
 - Queries: src/lib/queries/ai-access.ts (AI_CRAWLERS, getAiAccessCheck, getLatestAiAccessCheck, recordAiAccessCheck).
+## G5 (backend): a pillar on every fix (branch feat/fix-pillars)
+- GAS brief (briefs/rank1-gas.md), lead decisions 2026-11-06: pillars P0 Know where you stand, P1 Prompts & keywords, P2 Content, P3 Brand mentions, P4 YouTube & video, P5 Technical access, P6 Measure & prove. The Fix list orders P5, P3, P2, P1, P4, P6, with P0 a baseline line.
+- Rule mapping (lead Q2): p5 = R10, R14, R16 (crawl/read access); p3 = R1–R9, R12, R13, R15 (listings, reviews, the web naming you; R15 hours is mostly GBP); p2 = R11 and H1 (H1 is housekeeping and keeps its tidy-up flag, so it never sorts as a P5 blocker); p1 = A1–A6; any new rule without one = p2.
+- Migration 20261105000024 (+ .down.sql), additive and compatible with live v0.5.0: fix_rules.pillar and fixes.pillar, NOT NULL, checked p0..p6, backfilled. A trigger gives new rules the mapping's pillar when none is sent (the seed, new rules), and another always gives a fix its rule's pillar on insert or a rule change, so v0.5.0's record_fix_results inserts get it.
+- listFixes items gain pillar (PILLARS / Pillar in src/lib/queries/fixes.ts); the item key test lists it.
 
