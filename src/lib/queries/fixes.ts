@@ -178,3 +178,11 @@ export async function listRunsNeedingFixChecks(serviceDb: DbClient, limit = 1): 
   if (error) throw error;
   return (data ?? []).map((r) => ({ runId: r.run_id, businessId: r.business_id, domain: r.domain }));
 }
+
+// Service client only. Deletes the business's unstarted (todo) YouTube fixes for these keys (R19-R21
+// only; doing and done are kept) when it isn't youtubeReady. Returns the count. 22023 / 42501.
+export async function withdrawFixes(serviceDb: DbClient, businessId: string, ruleKeys: string[]): Promise<number> {
+  const { data, error } = await serviceDb.rpc("withdraw_fixes", { p_business_id: businessId, p_rule_keys: ruleKeys });
+  if (error) throw error;
+  return data;
+}
