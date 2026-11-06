@@ -42,6 +42,8 @@ test("success: each card has Before / After as '% · n=', signed points, a Diffe
 }) => {
   await page.goto("/dev/app?state=experiments-success");
   const card = page.getByRole("article").first();
+  // QA N1: the page streams in, so wait for the first cell before reading them all.
+  await expect(card.getByRole("cell").first()).toBeVisible();
   // The header row's empty corner is a cell too; the 6 data cells are 2 groups x Before / After / Change.
   const cells = (await card.getByRole("cell").allTextContents()).filter(Boolean);
   expect(cells).toHaveLength(6);

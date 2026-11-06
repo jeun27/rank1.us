@@ -1,0 +1,1 @@
+- 2026-11-06, backend -> frontend: listDoneFixes items now carry `pillar` (p0..p6) on feat/done-fix-pillar, for the per-group done counts. Status: open.
