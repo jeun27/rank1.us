@@ -182,3 +182,8 @@
   border: 2px solid transparent;
   background: linear-gradient(var(--color-white), var(--color-white)) padding-box, var(--aurora) border-box;
 }
+
+/* No-JS fallbacks (lead, v3 PR 2b): the head script adds .js to <html> before paint. Unlayered, so these
+   win over display utilities. */
+html:not(.js) .js-only { display: none; }
+.js .nojs-only { display: none; }

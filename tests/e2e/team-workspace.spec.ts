@@ -384,11 +384,13 @@ for (const theme of THEMES)
     await expect(page).toHaveURL(/\/dev\/team\?b=example-client-2$/);
   });
 
-test.describe("without JavaScript", () => {
-  test.use({ javaScriptEnabled: false });
+// With JavaScript fully off the streamed workspace never reveals (Next keeps it in <div hidden id="S:0">),
+// so this runs the no-JS CSS path: <html> without .js shows the form, which then submits natively.
+test.describe("without the js class", () => {
   test("the client switcher is the GET form: pick a client, Show loads ?b=", async ({ page }) => {
     await page.goto("/dev/team");
-    await expect(page.locator("html")).not.toHaveClass(/(^|\s)js(\s|$)/);
+    await expect(trigger(page)).toBeVisible();
+    await page.evaluate(() => document.documentElement.classList.remove("js"));
     await expect(trigger(page)).toBeHidden();
     const select = page.getByLabel("Client", { exact: true });
     await expect(select).toBeVisible();

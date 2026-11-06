@@ -144,14 +144,15 @@ describe("listbox (JS)", () => {
     expect(Object.fromEntries(new FormData(form))).toEqual({ view: "x", b: "b2" });
   });
 
+  // Scoped to the listbox: the no-JS <select> (hidden by CSS in the browser) has the same options.
   it("clicking an option submits it; the current client does nothing", async () => {
     const { user, trigger, submit } = setup();
     await user.click(trigger);
-    await user.click(screen.getByRole("option", { name: "Example Ramen House" }));
+    await user.click(within(screen.getByRole("listbox")).getByRole("option", { name: "Example Ramen House" }));
     expect(submit).not.toHaveBeenCalled();
     expect(screen.queryByRole("listbox")).toBeNull();
     await user.click(trigger);
-    await user.click(screen.getByRole("option", { name: "Example Pho Spot" }));
+    await user.click(within(screen.getByRole("listbox")).getByRole("option", { name: "Example Pho Spot" }));
     expect(Object.fromEntries(new FormData(submit.mock.contexts[0] as HTMLFormElement)).b).toBe("b3");
   });
 
