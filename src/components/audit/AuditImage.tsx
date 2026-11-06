@@ -19,13 +19,13 @@ export function AuditImage({ results, metrics, free }: { results: RunResults; me
         background: colors.paper,
         color: colors.ink,
         padding: 56,
-        fontFamily: "sans-serif",
+        fontFamily: "Inter",
       }}
     >
       <div style={{ display: "flex", fontSize: 28, color: colors.inkMuted }}>{results.label}</div>
       <div style={{ display: "flex", gap: 64, marginTop: 24, flex: 1 }}>
         <div style={{ display: "flex", flexDirection: "column", width: 380 }}>
-          <div style={{ display: "flex", fontSize: 120, fontWeight: 700, lineHeight: 1 }}>
+          <div style={{ display: "flex", fontSize: 120, fontWeight: 600, lineHeight: 1 }}>
             {formatPercent(metrics.visibility)}
           </div>
           <div style={{ display: "flex", fontSize: 26, marginTop: 12 }}>{named(metrics.visibility)}</div>
@@ -42,7 +42,7 @@ export function AuditImage({ results, metrics, free }: { results: RunResults; me
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-          <div style={{ display: "flex", fontSize: 26, fontWeight: 700, marginBottom: 8 }}>{c.competitors}</div>
+          <div style={{ display: "flex", fontSize: 26, fontWeight: 600, marginBottom: 8 }}>{c.competitors}</div>
           {metrics.leaderboard.slice(0, 5).map((b) => (
             <div key={b.name} style={{ ...row, borderBottom: `1px solid ${colors.border}` }}>
               <span>{b.kind === "business" ? `${b.name} (${c.you})` : b.name}</span>

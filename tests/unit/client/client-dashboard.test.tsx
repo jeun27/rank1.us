@@ -16,8 +16,9 @@ describe("ClientDashboard (/client)", () => {
     expect(screen.getByText("Example Ramen House", { selector: "p" })).toBeInTheDocument();
     expect(screen.getAllByText(/API-measured, directional/).length).toBeGreaterThan(0);
     expect(screen.getByRole("table", { name: "History" })).toBeInTheDocument();
+    // X3: the last 4 checks (founder OK: History cut to the last 4 weeks on /client).
     expect(within(screen.getByRole("table", { name: "History" })).getAllByRole("row")).toHaveLength(
-      exampleRuns.length + 1,
+      Math.min(exampleRuns.length, 4) + 1,
     );
     expect(screen.queryByRole("heading", { name: "What to fix next" })).toBeNull();
     expect(screen.queryByText(/share of voice/i)).toBeNull();
@@ -39,14 +40,15 @@ describe("ClientDashboard (/client)", () => {
 
   it("no run yet but the fix list is shown: the note and the fix list", () => {
     render(<ClientDashboard business={business} latest={null} runs={[]} fixes={fixes} now={NOW} />);
-    expect(screen.getByText("No weekly checks yet. Your first one runs Monday.")).toBeInTheDocument();
+    // X25: the client's wording, with no action (the team runs the checks).
+    expect(screen.getByText("The team's first check runs Monday.")).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 2, name: "What to fix next" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Status")).toBeNull();
   });
 
   it("no run yet: the first-check note", () => {
     render(<ClientDashboard business={business} latest={null} runs={[]} fixes={null} now={NOW} />);
-    expect(screen.getByText("No weekly checks yet. Your first one runs Monday.")).toBeInTheDocument();
+    expect(screen.getByText("The team's first check runs Monday.")).toBeInTheDocument();
   });
 
   it("access removed: 'Nothing tracked yet.' and no button", () => {

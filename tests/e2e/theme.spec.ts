@@ -63,6 +63,8 @@ for (const [where, link] of [
 ] as const)
   test(`light on /app → ${where} → the landing is dark → back to /app is light`, async ({ page }) => {
     test.skip(where === "the rail logo" && page.viewportSize()!.width < 768, "the rail logo shows from md up");
+    // X9a: phones show the page crumb only, so the Rank1 crumb is md+ too.
+    test.skip(where === "the breadcrumb Rank1" && page.viewportSize()!.width < 768, "the Rank1 crumb shows from md up");
     await page.emulateMedia({ colorScheme: "dark" });
     await page.addInitScript(() => localStorage.setItem("rank1.workspace", JSON.stringify({ theme: "light" })));
     await page.goto("/dev/app?state=dashboard-success");

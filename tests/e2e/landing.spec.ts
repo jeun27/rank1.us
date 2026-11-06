@@ -266,7 +266,10 @@ test("#audit holds the real audit form on the ink band; a mocked 202 shows succe
 
 test("Contact us in the header, pricing and footer opens the Contact us dialog", async ({ page }) => {
   await page.goto("/");
-  for (const where of ["header", "#pricing", "footer"]) {
+  // X20: phones keep the header to Pricing, FAQ and Log in; Contact us stays in pricing and the footer.
+  const header = page.locator("header").getByRole("link", { name: "Contact us" });
+  if (isMobile(page)) await expect(header).toBeHidden();
+  for (const where of isMobile(page) ? ["#pricing", "footer"] : ["header", "#pricing", "footer"]) {
     await page.locator(where).getByRole("link", { name: "Contact us" }).first().click();
     const dialog = page.getByRole("dialog", { name: "Contact us" });
     await expect(dialog).toBeVisible();

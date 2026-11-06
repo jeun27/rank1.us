@@ -21,6 +21,7 @@ export const fixCopy = {
   markDoneTip: "Mark done (x)",
   inProgress: "In progress",
   undo: "Undo",
+  close: "Close",
   open: "Open",
   doneTab: "Done",
   all: "All",

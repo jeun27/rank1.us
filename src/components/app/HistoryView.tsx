@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { formatPercent } from "@/components/ui/StatNumber";
 import { Table } from "@/components/ui/Table";
 import { floorPct } from "@/lib/metrics/compute";
 import type { RunSummary } from "@/lib/queries/shell";
 import { appCopy as c } from "./copy";
 import { Measured, Page } from "./Page";
+import { signedPts } from "@/lib/metrics/delta";
 
 const day = (iso: string | null) =>
   iso
@@ -25,7 +27,7 @@ export function HistoryTable({ runs, linked = true }: { runs: RunSummary[]; link
     const before = runs.slice(i + 1).find((r) => r.status !== "failed" && r.visibility.denominator);
     if (now === null || !before) return "–";
     const d = now - pct(before.visibility)!;
-    return `${d > 0 ? "+" : ""}${d} pts`;
+    return signedPts(d);
   };
   return (
     <Table
@@ -82,7 +84,8 @@ export function HistoryView({ runs }: { runs: RunSummary[] }) {
     return (
       <Page title={c.history}>
         <Card>
-          <p className="text-body-lg">{c.noChecks}</p>
+          {/* X25: History lists every run status, so empty means none is queued yet. */}
+          <EmptyState message={c.noChecks} action={{ label: c.reviewQuestions, href: "/app/questions" }} />
         </Card>
       </Page>
     );

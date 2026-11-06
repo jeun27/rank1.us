@@ -1,6 +1,7 @@
 // Example data: invented Irvine restaurants for the component gallery. Not real results.
 import { formatPercent } from "@/components/ui/StatNumber";
 import type { Metric } from "@/types/metrics";
+import { signedPts } from "@/lib/metrics/delta";
 
 const metric = (numerator: number, denominator: number): Metric => ({
   value: denominator > 0 ? numerator / denominator : null,
@@ -30,7 +31,7 @@ export const exampleProgress = { answersDone: 120, answersTotal: 250 };
 
 export function pointsChange(now: Metric, before: Metric) {
   const pts = parseInt(formatPercent(now)) - parseInt(formatPercent(before));
-  return pts === 0 ? "0 pts" : `${pts > 0 ? "+" : "−"}${Math.abs(pts)} pts`;
+  return signedPts(pts);
 }
 
 export const partialRunLabel = ({ jobsOk, jobsTotal }: typeof examplePartialRun) =>

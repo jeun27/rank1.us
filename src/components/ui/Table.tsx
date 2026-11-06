@@ -20,6 +20,8 @@ export function Table({
   stack?: boolean;
   pin?: (index: number) => boolean;
 }) {
+  // Safari can drop table semantics once CSS changes display on tr/tbody (reviewer S1), so say them.
+  const role = (r: string) => (stack ? r : undefined);
   const resultKey = (columns.find((c) => c.numeric) ?? columns.at(-1))?.key;
   const cellStack = (c: Column, i: number) =>
     !stack
@@ -32,12 +34,13 @@ export function Table({
   return (
     <div>
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
+        <table role={role("table")} className="w-full border-collapse">
           <caption className="sr-only">{caption}</caption>
-          <thead className={stack ? "max-md:sr-only" : undefined}>
-            <tr>
+          <thead role={role("rowgroup")} className={stack ? "max-md:sr-only" : undefined}>
+            <tr role={role("row")}>
               {columns.map((c) => (
                 <th
+                  role={role("columnheader")}
                   key={c.key}
                   scope="col"
                   className={`sticky top-0 border-b border-border bg-white px-3 py-2 text-caption font-semibold text-inkMuted ${c.numeric ? "text-right" : "text-left"}`}
@@ -47,9 +50,10 @@ export function Table({
               ))}
             </tr>
           </thead>
-          <tbody className={stack && pin ? "max-md:flex max-md:flex-col" : undefined}>
+          <tbody role={role("rowgroup")} className={stack && pin ? "max-md:flex max-md:flex-col" : undefined}>
             {rows.map((row, i) => (
               <tr
+                role={role("row")}
                 key={i}
                 className={[
                   stack &&
@@ -61,6 +65,7 @@ export function Table({
               >
                 {columns.map((c, ci) => (
                   <td
+                    role={role("cell")}
                     key={c.key}
                     className={`border-b border-border px-3 py-3 ${c.numeric ? "text-right tabular-nums" : ""} ${cellStack(c, ci)}`}
                   >

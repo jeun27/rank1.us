@@ -39,7 +39,8 @@ describe("exact percent floors", () => {
 
   it('"+N pts" is the difference of the two shown percents', () => {
     expect(pointsChange(metric(57, 100), metric(29, 100))).toBe("+28 pts");
-    expect(pointsChange(metric(58, 200), metric(57, 100))).toBe("-28 pts");
+    // One formatter everywhere (signedPts): a real minus sign.
+    expect(pointsChange(metric(58, 200), metric(57, 100))).toBe("−28 pts");
   });
 
   it("one shared helper: no other code floors a ratio times 100", () => {

@@ -465,6 +465,13 @@ Strings from the GAS prototype report (share/gas-proto/REPORT.md, lead copy). Fi
 | Save failed (inline) | "We couldn't save that. Try again." |
 | Inline errors | "Up to 8 words.", "2 to 40 characters.", "That word is in the other list." |
 
+
+G3 team tags on the /team client queue (X5, planner 11:13; lead-approved prototype copy):
+
+| Where | String |
+|---|---|
+| Queue status tags | "Needs attention" (error) · "Ready for GAS" (success) · "Waiting on client" (warn) · "In progress" (neutral) |
+
 ## G7 mentions (lead, 2026-11-06)
 
 G7 "Lists that name your rivals but not you" (/app/sources, and the R17 fix's evidence), signed off by the lead (2026-11-06).
@@ -510,7 +517,10 @@ Strings the lead approved for the UX plan (share/ux-plan §C; founder OK 2026-11
 | Where | String |
 |---|---|
 | The fixes page, everywhere (X16) | "What to fix next": the /app and /team rail item and the page and document title (/team said "Fix list") |
+| Questions dot legend, above the list (X18) | "Named" · "Not named", each beside the real filled / hollow dot |
 | Free audit CTA panel, after the leaderboard (X4) | "Rank1 checks these 4 AI engines every week and shows you what to fix next." with the existing "Start for $99/mo" |
+| First-check empty states (X25), chosen from run state | A first check queued or running: "Your first check is running." (no action). None queued: Fix list and Dashboard "Your first check runs Monday." + "Review your questions" (→ /app/questions); /client "The team's first check runs Monday."; History keeps "No weekly checks yet. Your first one runs Monday." + "Review your questions" |
+| /client slot 2 section title (X3) | "What the team did" |
 
 ## Engine location tooltip
 

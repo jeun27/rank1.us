@@ -16,6 +16,7 @@ import { getGasReady } from "@/lib/queries/gas-ready";
 import { toTeamChanges } from "@/components/workspace/team-connections-data";
 import { getWorkspaceRows, type WorkspaceRows } from "@/lib/queries/workspace";
 import { createClient } from "@/lib/supabase/server";
+import { loadQueue } from "./queue";
 import {
   addTeamCompetitor,
   dismissTeamReady,
@@ -38,13 +39,14 @@ export async function loadTeam(picked: string | undefined): Promise<TeamData> {
   if (!businesses.length) return { kind: "no-clients" };
   const business = picked ? businesses.find((b) => b.id === picked) : businesses[0];
   if (!business) return { kind: "missing" };
-  const [rows, summaries, questions, fixes, clientUsers, done] = await Promise.all([
+  const [rows, summaries, questions, fixes, clientUsers, done, queue] = await Promise.all([
     getWorkspaceRows(db, business.id),
     listRunSummaries(db, business.id, 8, ["complete", "partial"]),
     getQuestionsWithLatestAnswers(db, business.id),
     listFixes(db, business.id),
     listClientUsers(db, business.id),
     listDoneFixes(db, business.id),
+    loadQueue(db, businesses),
   ]);
   if (!rows) return { kind: "missing" };
   // C-c: the client's Connections document, only with ENABLE_CONNECTIONS (stored data, no provider calls).
@@ -74,6 +76,8 @@ export async function loadTeam(picked: string | undefined): Promise<TeamData> {
       },
       fixes: { ...fixes, done, noDomain: !business.domain },
       loadSuggestions: teamSuggestions,
+      queue,
+      openQueue: !picked,
       // Emails reach the team UI only; never logged.
       clients: {
         users: clientUsers.map(({ user_id, email }) => ({ user_id, email })),

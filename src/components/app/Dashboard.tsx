@@ -7,7 +7,8 @@ import { Card } from "@/components/ui/Card";
 import { Mark } from "@/components/fixes/FixList";
 import { fixCopy as f } from "@/components/fixes/copy";
 import { Icon } from "@/components/ui/Icon";
-import { Jelly } from "@/components/ui/Jelly";
+import { EmptyState, type FirstCheck } from "@/components/ui/EmptyState";
+import { FirstCheckEmpty } from "./FirstCheckEmpty";
 import type { SeriesPoint } from "@/lib/metrics";
 import { deltaTone, signedPts } from "@/lib/metrics/delta";
 import type { TopFix } from "@/lib/queries/shell";
@@ -25,6 +26,7 @@ export function Dashboard({
   notice,
   reassure,
   narrative,
+  firstCheck = "monday",
 }: {
   business: { name: string; paid: boolean } | null;
   latest: Loaded | null;
@@ -37,16 +39,17 @@ export function Dashboard({
   reassure?: ReactNode;
   // G4: the clash card or the quiet no-words line, after the C-b card and before the chart (ENABLE_NARRATIVE).
   narrative?: ReactNode;
+  // X25: whether a first check is queued or running (loadShell), for the no-run screen.
+  firstCheck?: FirstCheck;
 }) {
   if (!business)
     return (
       <Page title={c.dashboard}>
         <Card>
-          <div className="flex flex-col items-center gap-5 py-5 text-center">
-            <Jelly size={80} />
-            <p className="max-w-prose text-body-lg">{c.dashboardEmpty}</p>
-            <Button href="/app/onboarding">{c.addBusiness}</Button>
-          </div>
+          <EmptyState
+            message={c.dashboardEmpty}
+            action={{ label: c.addBusiness, href: "/app/onboarding", primary: true }}
+          />
         </Card>
       </Page>
     );
@@ -55,11 +58,7 @@ export function Dashboard({
       <Page title={c.dashboard}>
         {notice}
         <Card>
-          {business.paid ? (
-            <p className="text-body-lg">{c.noChecks}</p>
-          ) : (
-            <Button href="/app/billing">{c.startPaid}</Button>
-          )}
+          {business.paid ? <FirstCheckEmpty state={firstCheck} /> : <Button href="/app/billing">{c.startPaid}</Button>}
         </Card>
       </Page>
     );

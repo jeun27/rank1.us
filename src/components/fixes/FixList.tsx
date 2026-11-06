@@ -1,8 +1,10 @@
 "use client";
-import { useEffect, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from "react";
 import { rovingIndex } from "@/components/workspace/hooks";
 import { Banner } from "@/components/ui/Banner";
+import { FirstCheckEmpty } from "@/components/app/FirstCheckEmpty";
 import { Card } from "@/components/ui/Card";
+import type { FirstCheck } from "@/components/ui/EmptyState";
 import { Icon } from "@/components/ui/Icon";
 import { PILLAR_ORDER, type FixItem, type FixStatus, type Pillar } from "@/lib/queries/fixes";
 import type { Metric } from "@/types/metrics";
@@ -52,6 +54,11 @@ const day = (iso: string) =>
   );
 const who = (a: Actor | null) => (!a ? null : a.is_team ? c.rankTeam : a.name);
 const joined = (...parts: (string | null)[]) => parts.filter(Boolean).join(" · ");
+// "In progress · Rank1 team · Nov 5" / "Done Nov 4 · Ana": who moved a fix and when (/client, X3).
+export const statusLine = (state: "doing" | "done", at: string | null, by: Actor | null) =>
+  state === "doing"
+    ? joined(c.inProgress, who(by), at ? day(at) : null)
+    : joined(at ? c.doneOn(day(at)) : c.doneTab, who(by));
 const focus = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
 const control = `inline-flex h-11 shrink-0 items-center rounded-control border border-fieldBorder bg-raised px-3 text-ui font-medium text-ink hover:bg-overlay md:h-8 ${focus}`;
 
@@ -126,6 +133,7 @@ function FixRow({
         <button
           type="button"
           role="checkbox"
+          data-fix-check={row.id}
           data-computed
           aria-checked={done ? "true" : state === "doing" ? "mixed" : "false"}
           aria-label={row.title}
@@ -205,18 +213,23 @@ function FixRow({
                 {c.undo}
               </button>
             )}
-            {canWrite && !done && (
-              <a
-                href={`/app/experiments/new?fix=${encodeURIComponent(row.id)}`}
-                className="inline-flex min-h-11 items-center text-ui text-link underline underline-offset-4 md:min-h-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
-              >
-                {c.startTest}
-              </a>
-            )}
+            {canWrite && done && <TestLink id={row.id} />}
           </div>
         </div>
       </div>
     </li>
+  );
+}
+
+// X27: a before/after test needs a change to test, so it's offered once a fix is done (toast, done rows).
+function TestLink({ id }: { id: string }) {
+  return (
+    <a
+      href={`/app/experiments/new?fix=${encodeURIComponent(id)}`}
+      className="inline-flex min-h-11 items-center text-ui text-link underline underline-offset-4 md:min-h-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+    >
+      {c.startTest}
+    </a>
   );
 }
 
@@ -269,6 +282,7 @@ export function FixList({
   level = 2,
   baseline = null,
   baselineHref,
+  firstCheck,
 }: {
   ranked: FixView[];
   tidyUps: FixView[];
@@ -282,12 +296,17 @@ export function FixList({
   // G5 P0: the latest visibility, shown as one baseline line at the bottom (none without a run).
   baseline?: Metric | null;
   baselineHref?: string;
+  // X25: set when there's no run yet (queued/running or not), so the empty list says what happens next.
+  firstCheck?: FirstCheck;
 }) {
   const [statuses, setStatuses] = useState<Record<string, FixStatus>>({});
+  const root = useRef<HTMLDivElement>(null);
   const [doneAt, setDoneAt] = useState<Record<string, string>>({});
   const [failed, setFailed] = useState(false);
   const [filter, setFilter] = useState<Filter>("open");
   const [toast, setToast] = useState<{ id: string; title: string; prev: FixStatus } | null>(null);
+  // WCAG 2.2.1: focus or hover on the toast pauses its timer; leaving restarts the full 8 s.
+  const [held, setHeld] = useState({ focus: false, hover: false });
   // Open by default: the first open fix and the #fix-{id} target. A click flips a row from its default.
   const first = firstOpen(ranked, tidyUps);
   const target = useSyncExternalStore(onHash, hashFix, () => "");
@@ -311,16 +330,14 @@ export function FixList({
   }, [target]);
 
   useEffect(() => {
-    if (!toast) return;
+    if (!toast || held.focus || held.hover) return;
     const t = setTimeout(() => setToast(null), TOAST_MS);
     return () => clearTimeout(t);
-  }, [toast]);
+  }, [toast, held.focus, held.hover]);
 
   if (!ranked.length && !tidyUps.length && !unchecked.length && !done.length)
     return (
-      <Card>
-        <p className="text-body-lg">{c.empty}</p>
-      </Card>
+      <Card>{firstCheck ? <FirstCheckEmpty state={firstCheck} /> : <p className="text-body-lg">{c.empty}</p>}</Card>
     );
 
   const stateOf = (id: string, base: FixStatus) => statuses[id] ?? base;
@@ -339,8 +356,32 @@ export function FixList({
     }
     return true;
   };
+  // QA N1: a done fix leaves the Open list, so focus moves to the next fix's check-off (else the one
+  // before, else the toast's Undo). Undo puts it back on the restored fix. Never on the page body.
+  const focusAfterRender = (id: string | null) =>
+    requestAnimationFrame(() => {
+      const list = root.current;
+      if (!list) return;
+      const el = id && list.querySelector<HTMLElement>(`[data-fix-check="${CSS.escape(id)}"]`);
+      (
+        el ||
+        list.querySelector<HTMLElement>("[data-toast-undo]") ||
+        list.querySelector<HTMLElement>("[data-fix-check]")
+      )?.focus();
+    });
   const markDone = async (id: string, title: string, prev: FixStatus) => {
-    if (await set(id, "done", prev)) setToast({ id, title, prev });
+    const boxes = [...(root.current?.querySelectorAll<HTMLElement>("[data-fix-check]") ?? [])].map(
+      (b) => b.dataset.fixCheck!,
+    );
+    const i = boxes.indexOf(id);
+    const next = boxes[i + 1] ?? boxes[i - 1] ?? null;
+    const ok = await set(id, "done", prev);
+    if (ok) {
+      setHeld({ focus: false, hover: false });
+      setToast({ id, title, prev });
+    }
+    // In "All" the done row stays, so focus stays on it.
+    focusAfterRender(filter === "all" || !ok ? id : next);
   };
 
   const openRows = (list: FixView[]) => list.filter((f) => stateOf(f.id, f.status) !== "done");
@@ -423,7 +464,7 @@ export function FixList({
   const counts: Record<Filter, number | null> = { open: openCount, done: doneRows.length, all: null };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div ref={root} className="flex flex-col gap-6">
       {failed && <Banner tone="error">{c.saveFailed}</Banner>}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -585,19 +626,43 @@ export function FixList({
       {toast && (
         <div
           role="status"
-          className="fixed right-4 bottom-4 z-30 flex max-w-[calc(100vw-2rem)] items-center gap-4 rounded-card border border-border bg-overlay px-4 py-3 text-ui shadow-overlay"
+          onMouseEnter={() => setHeld((h) => ({ ...h, hover: true }))}
+          onMouseLeave={() => setHeld((h) => ({ ...h, hover: false }))}
+          onFocus={() => setHeld((h) => ({ ...h, focus: true }))}
+          onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget)) setHeld((h) => ({ ...h, focus: false }));
+          }}
+          className="fixed right-4 bottom-4 z-30 flex max-w-[calc(100vw-2rem)] flex-wrap items-center gap-x-4 gap-y-1 rounded-card border border-border bg-overlay px-4 py-3 text-ui shadow-overlay"
         >
-          <span data-computed>{c.marked(toast.title)}</span>
+          <span data-computed className="max-md:basis-full">
+            {c.marked(toast.title)}
+          </span>
+          <TestLink id={toast.id} />
           <button
             type="button"
             onClick={async () => {
               const t = toast;
               setToast(null);
+              setHeld({ focus: false, hover: false });
               await set(t.id, t.prev, "done");
+              focusAfterRender(t.id);
             }}
+            data-toast-undo
             className={`text-ui font-medium text-ink underline underline-offset-4 ${focus}`}
           >
             {c.undo}
+          </button>
+          <button
+            type="button"
+            aria-label={c.close}
+            onClick={() => {
+              setToast(null);
+              setHeld({ focus: false, hover: false });
+              focusAfterRender(null);
+            }}
+            className={`-m-2 grid size-11 shrink-0 place-items-center rounded-control text-inkMuted hover:text-ink md:size-8 ${focus}`}
+          >
+            <Icon name="x" className="size-4" />
           </button>
         </div>
       )}

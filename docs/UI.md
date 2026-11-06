@@ -124,7 +124,7 @@ Inter (variable, optical size 14–32; SIL OFL) for all text. JetBrains Mono (SI
 | Freshness | 14–16px clock icon + caption muted: 'Checked 14 h ago · 250 answers · API-measured, directional' |
 | Error banner | errorBg fill, 1px error hairline at 30%, radius 8, 48px worried Jelly, one error-colour sentence (Inter 500) + one fix action as a text action on the right |
 | Info banner | infoBg fill, 1px info hairline at 25%, radius 8, 28px info icon chip, info-colour text |
-| Empty | Panel, 48–64px Jelly, centred 15px message, DomainField ('yoursite.com' / 'Add my business') |
+| Empty | Panel, 56px Jelly, centred message, and one next step: a DomainField ('yoursite.com' / 'Add my business'), one action, or none while a first check is running (X25: the sentence follows run state) |
 | Loading + progress | Panel, squishing 64px Jelly, 14px accent spinner + message, 6px track (overlay) with an accent fill (scaleX transform), 'n of d answers' muted left, the floored percent in link colour right (both mono). Reduced motion stops the spinner and squish |
 | Nav rail | Rail colour, 220–232px (64 collapsed), icon 16px + label Inter 400 13px, 32h rows, radius 6. Groups separated by 1px hairlines; no group headings unless COPY.md has them. Active: raised fill + hairline ring + accent icon. Account at the bottom. Phones: a sideways-scrolling row with a fade at the right edge |
 | Top bar | 48h, page fill, bottom hairline. Breadcrumb 'Rank1 / [avatar] business / page' with drawn slash separators (D42). /app shows the business name only (one business). /team puts the client switcher in the breadcrumb (D20). Right side: Location select, the theme toggle (/app, /team), Account |
@@ -167,7 +167,8 @@ Inter (variable, optical size 14–32; SIL OFL) for all text. JetBrains Mono (SI
 | 9 Final CTA (#audit) | Bordered panel with an accent glow (v3). H2 "Find out if AI names your business first." Sub "Free same-day audit as CSV and PNG (includes a small 'Powered by Rank1' credit)." Form: email + your domain; primary button "Get my free audit". Jelly 96px right, eyes up (hidden on mobile). | Turnstile + honeypot |
 | Footer / meta | Footer: Rank1, Pricing, FAQ, Contact us, Privacy, Terms. Meta title "Rank1 - Be the brand AI names first."; description = hero sub; OG image [PLACEHOLDER]. | Contact email shown as the form, not an address |
 
-- Mobile: hero and cards stack below md; comparison scrolls with the Rank1 column pinned; sticky bottom 'Get my free audit' bar after the hero; final-CTA Jelly hidden.
+- Mobile: hero and cards stack below md; comparison scrolls with the Rank1 column pinned; sticky bottom 'Get my free audit' bar after the hero; final-CTA Jelly hidden; the header hides Contact us below md (pricing and the footer keep it, X20).
+- Hero sub: the engine names are plain ink text, not bordered chips (X20, founder OK 2026-11-06; replaces that part of D37).
 - Accessibility: landmarks, one H1, ordered headings, AA contrast, visible focus, tablist with arrow keys, labeled inputs with error text, prefers-reduced-motion.
 - Never echo rank1.so's tagline. No competitor names. No stats on the landing page beyond Example data.
 

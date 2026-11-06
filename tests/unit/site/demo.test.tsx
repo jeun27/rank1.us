@@ -99,15 +99,20 @@ describe("Hero", () => {
     expect(within(h1).getByText("AI names first.")).toHaveClass("text-accent");
   });
 
-  it("the sub names the 4 engines as tags, inside the exact sentence", () => {
+  // X20: plain names (ink on the text2 sentence), no bordered chip or dot that looks like a button.
+  it("the sub names the 4 engines as plain text, inside the exact sentence", () => {
     const { container } = render(<Hero />);
     const sub = container.querySelector("[data-hero-sub]")!;
     expect(sub.textContent).toBe(
       "See how often ChatGPT, Gemini, Google AI Overview and Perplexity name your business, how you stack up against competitors, and what to fix next.",
     );
-    expect([...sub.querySelectorAll("[data-engine-tag]")].map((t) => t.textContent)).toEqual(
-      demoEngines.map((e) => e.engine),
-    );
+    const tags = [...sub.querySelectorAll("[data-engine-tag]")];
+    expect(tags.map((t) => t.textContent)).toEqual(demoEngines.map((e) => e.engine));
+    for (const t of tags) {
+      expect(t.className).not.toMatch(/\bborder\b|rounded/);
+      expect(t.children).toHaveLength(0);
+      expect(t).toHaveClass("text-ink");
+    }
   });
 
   it("the demo renders the final state from the fixture: question, bars, card line, leaderboard", () => {

@@ -18,6 +18,10 @@ export const appCopy = {
   dashboardEmpty: "Nothing tracked yet. Add your domain and I'll find the questions.",
   addBusiness: "Add my business",
   noChecks: "No weekly checks yet. Your first one runs Monday.",
+  // COPY.md "UX (lead, 2026-11-06)" X25: chosen from run state, never from the copy.
+  firstRunning: "Your first check is running.",
+  firstMonday: "Your first check runs Monday.",
+  reviewQuestions: "Review your questions",
   startPaid: "Start for $99/mo",
   lastPartial: (ok: number, total: number) => `Last run partial: ${ok} of ${total} answers`,
   noCompetitors: "No competitors yet. Add 3-5 local places to compare.",

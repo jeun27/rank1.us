@@ -72,7 +72,9 @@ describe("Dashboard (UI.md 4b)", () => {
     const { unmount } = render(
       <Dashboard business={exampleBusiness} latest={null} series={series} fixes={[]} now={now} />,
     );
-    expect(screen.getByText("No weekly checks yet. Your first one runs Monday.")).toBeInTheDocument();
+    // X25: none queued yet (the default) → it runs Monday, with the one next step.
+    expect(screen.getByText("Your first check runs Monday.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Review your questions" })).toHaveAttribute("href", "/app/questions");
     unmount();
     render(
       <Dashboard business={{ ...exampleBusiness, paid: false }} latest={null} series={series} fixes={[]} now={now} />,

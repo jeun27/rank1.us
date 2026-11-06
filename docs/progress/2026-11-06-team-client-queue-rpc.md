@@ -1,0 +1,4 @@
+# /team client queue in one call (backend) (branch feat/team-client-queue-rpc)
+- Lead (2026-11-06, blocks v0.8.0): #161's loadQueue made 5 PostgREST calls per DFY client in one Promise.all; at ~120 clients Kong ran out of worker connections and /team returned 500.
+- Migration 20261105000038 (+ .down.sql): team_client_queue() (definer, Rank1 team only, 42501 otherwise), one row per active DFY business by name: named/n of the newest complete/partial run among the latest 3 audit/weekly runs (counted like run_summaries), delta (floored % difference to the next one), open_fixes (todo + doing), started (a non-tidy-up doing fix or any done fix), gas_ready, needs_reauth, last_run_failed. No emails, no why_note. Uses the existing runs/answers/fixes/connections indexes.
+- Query: listTeamClientQueue(db) → TeamQueueRow[] in src/lib/queries/team.ts.

@@ -42,7 +42,12 @@ export function Workspace({ view, team = null }: { view: WorkspaceView; team?: T
             ? "Connections"
             : contextFor(view, sel).title,
   });
-  const first = tabOf({ kind: "section", section: "dashboard" });
+  // X5: with a client queue, /team opens on it (the Clients document).
+  const first = tabOf(
+    team?.openQueue && team.queue?.length && team.clients
+      ? { kind: "clients" }
+      : { kind: "section", section: "dashboard" },
+  );
 
   const [section, setSection] = useState<Section>("dashboard");
   const [selection, setSelection] = useState<Selection>({ kind: "section", section: "dashboard" });
@@ -164,7 +169,7 @@ export function Workspace({ view, team = null }: { view: WorkspaceView; team?: T
                     onConnections={team.connections ? openConnections : undefined}
                   />
                 ) : (
-                  <span data-computed className="truncate">
+                  <span data-computed data-crumb-static className="truncate">
                     {view.business.name}
                   </span>
                 )
@@ -172,7 +177,9 @@ export function Workspace({ view, team = null }: { view: WorkspaceView; team?: T
               page={<span aria-current="page">{label}</span>}
             />
             <div className="flex shrink-0 items-center gap-1">
-              <ThemeToggle />
+              <span className="max-md:hidden">
+                <ThemeToggle />
+              </span>
               <button
                 type="button"
                 aria-expanded={contextOpen}

@@ -12,7 +12,7 @@ import { getTopFixes } from "@/lib/queries/shell";
 export const metadata: Metadata = { title: "Dashboard - Rank1", robots: { index: false } };
 
 export default async function DashboardPage() {
-  const { db, business, latest, series } = await loadShell();
+  const { db, business, latest, series, firstCheck } = await loadShell();
   const now = new Date();
   const ai = process.env.ENABLE_AI_ACCESS_CHECK === "true";
   const [fixes, card, access, narrative] = business
@@ -30,6 +30,7 @@ export default async function DashboardPage() {
       series={series ?? { points: [], visible: false }}
       fixes={fixes}
       now={now}
+      firstCheck={firstCheck}
       reassure={access && <AiReassure check={access} now={now} />}
       narrative={narrative && <NarrativeDashboard view={narrative} />}
       notice={
