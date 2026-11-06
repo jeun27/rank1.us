@@ -1,5 +1,34 @@
 import type { Tables } from "@/types/db";
 import type { DbClient } from "./client";
+import type { Industry } from "./contactRequests";
+
+// businesses.vertical, the Connections brief's "industry". One list, checked by the DB (0021).
+export const VERTICALS = [
+  "restaurant",
+  "hvac",
+  "plumbing",
+  "roofing",
+  "pest_control",
+  "auto",
+  "beauty",
+  "gym",
+  "events",
+  "dental",
+  "saas",
+  "dtc",
+  "other",
+] as const;
+export type Vertical = (typeof VERTICALS)[number];
+
+// The contact-us industry of a team-created DFY client, as a vertical.
+export const VERTICAL_FOR_INDUSTRY: Record<Industry, Vertical> = {
+  Restaurant: "restaurant",
+  HVAC: "hvac",
+  Plumbing: "plumbing",
+  Roofing: "roofing",
+  "Pest control": "pest_control",
+  Other: "other",
+};
 
 type Business = Tables<"businesses">;
 type Competitor = Tables<"competitors">;
@@ -7,7 +36,10 @@ type Question = Tables<"questions">;
 
 // Shape of create_business_onboarding's jsonb argument. Only these fields are read.
 export type OnboardingInput = {
-  business: Pick<Business, "name" | "domain" | "cuisine" | "city" | "state" | "country" | "aliases">;
+  // vertical defaults to "restaurant"; anything outside VERTICALS is refused (22023).
+  business: Pick<Business, "name" | "domain" | "cuisine" | "city" | "state" | "country" | "aliases"> & {
+    vertical?: Vertical;
+  };
   competitors: (Pick<Competitor, "name"> &
     Partial<Pick<Competitor, "domain" | "rating" | "maps_cid">> & { source: "maps" | "manual" })[];
   questions: (Pick<Question, "short_text" | "long_text" | "active" | "template_key"> & {
