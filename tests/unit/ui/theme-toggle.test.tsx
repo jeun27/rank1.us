@@ -23,3 +23,18 @@ describe("ThemeToggle", () => {
     expect(b).toHaveAttribute("aria-pressed", "false");
   });
 });
+
+// #145 review: in the Account menu the toggle reads as active and shows its state: a switch with
+// aria-checked, ink text (not muted), a visible track, and a 44px row.
+describe("ThemeToggle in the Account menu (labelled)", () => {
+  it("is a switch whose aria-checked flips on click", async () => {
+    render(<ThemeToggle labelled />);
+    const sw = screen.getByRole("switch", { name: "Dark theme" });
+    expect(sw).toHaveClass("text-ink", "h-11");
+    expect(sw).not.toHaveClass("text-inkMuted");
+    expect(sw.querySelector("[data-switch-track]")).not.toBeNull();
+    const before = sw.getAttribute("aria-checked");
+    await userEvent.click(sw);
+    expect(screen.getByRole("switch", { name: "Dark theme" }).getAttribute("aria-checked")).not.toBe(before);
+  });
+});
