@@ -136,6 +136,92 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"connection_changes": {
+                  Row: {
+                    "actor": string,"after": Json | null,"before": Json | null,"business_id": string,"connection_id": string,"created_at": string,"field": string,"id": string,"provider_ref": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "actor": string,"after"?: Json | null,"before"?: Json | null,"business_id": string,"connection_id": string,"created_at"?: string,"field": string,"id"?: string,"provider_ref"?: string | null
+                  }
+                  Update: {
+                    "actor"?: string,"after"?: Json | null,"before"?: Json | null,"business_id"?: string,"connection_id"?: string,"created_at"?: string,"field"?: string,"id"?: string,"provider_ref"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "connection_changes_business_id_fkey"
+      columns: ["business_id"]
+isOneToOne: false
+      referencedRelation: "businesses"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "connection_changes_connection_id_fkey"
+      columns: ["connection_id"]
+isOneToOne: false
+      referencedRelation: "connections"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"connection_tokens": {
+                  Row: {
+                    "connection_id": string,"enc_access": string | null,"enc_refresh": string | null,"expires_at": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "connection_id": string,"enc_access"?: string | null,"enc_refresh"?: string | null,"expires_at"?: string | null
+                  }
+                  Update: {
+                    "connection_id"?: string,"enc_access"?: string | null,"enc_refresh"?: string | null,"expires_at"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "connection_tokens_connection_id_fkey"
+      columns: ["connection_id"]
+isOneToOne: false
+      referencedRelation: "connections"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"connections": {
+                  Row: {
+                    "business_id": string,"connected_at": string,"connected_by": string | null,"external_account_id": string | null,"id": string,"last_checked_at": string | null,"provider": string,"scopes": (string)[],"selected_entities": Json,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "business_id": string,"connected_at"?: string,"connected_by"?: string | null,"external_account_id"?: string | null,"id"?: string,"last_checked_at"?: string | null,"provider": string,"scopes"?: (string)[],"selected_entities"?: Json,"status"?: string
+                  }
+                  Update: {
+                    "business_id"?: string,"connected_at"?: string,"connected_by"?: string | null,"external_account_id"?: string | null,"id"?: string,"last_checked_at"?: string | null,"provider"?: string,"scopes"?: (string)[],"selected_entities"?: Json,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "connections_business_id_fkey"
+      columns: ["business_id"]
+isOneToOne: false
+      referencedRelation: "businesses"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"connector_interest": {
+                  Row: {
+                    "business_id": string,"created_at": string,"provider": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "business_id": string,"created_at"?: string,"provider": string,"user_id": string
+                  }
+                  Update: {
+                    "business_id"?: string,"created_at"?: string,"provider"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "connector_interest_business_id_fkey"
+      columns: ["business_id"]
+isOneToOne: false
+      referencedRelation: "businesses"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"contact_requests": {
                   Row: {
                     "company": string | null,"created_at": string,"email": string,"emailed": boolean,"id": string,"industry": string,"industry_other": string | null,"ip_hash": string | null,"message": string | null,"name": string,"tier": string | null,"user_agent": string | null
@@ -631,6 +717,12 @@ isOneToOne: false
 "archive_scheduled_businesses":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
+"can_apply_edits":
+{ Args: { "p_business_id": string }; Returns: boolean
+                           },
+"can_connect_business":
+{ Args: { "p_business_id": string }; Returns: boolean
+                           },
 "can_write_business":
 { Args: { "p_business_id": string }; Returns: boolean
                            },
@@ -685,6 +777,9 @@ isOneToOne: false
 "finish_report":
 { Args: { "p_error": string | null,"p_pdf_path": string | null,"p_report_id": string,"p_sent_to": string[] | null,"p_status": string }; Returns: boolean
                            },
+"get_connection_tokens":
+{ Args: { "p_connection_id": string }; Returns: { "enc_access": string | null,"enc_refresh": string | null,"expires_at": string | null,"status": string }[]
+                           },
 "grant_dfy_client":
 { Args: { "p_business_id": string,"p_user_id": string }; Returns: string
                            },
@@ -697,8 +792,14 @@ isOneToOne: false
 "my_landing":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
+"note_connector_interest":
+{ Args: { "p_business_id": string,"p_provider": string }; Returns: undefined
+                           },
 "prune_ephemeral":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"record_connection_change":
+{ Args: { "p_actor": string,"p_after": Json,"p_before": Json,"p_connection_id": string,"p_field": string,"p_provider_ref": string }; Returns: string
                            },
 "record_stripe_event":
 { Args: { "p_event_id": string,"p_type": string }; Returns: boolean
@@ -709,14 +810,26 @@ isOneToOne: false
 "revoke_dfy_client":
 { Args: { "p_business_id": string,"p_user_id": string }; Returns: boolean
                            },
+"revoke_google_grant":
+{ Args: { "p_business_id": string }; Returns: string[]
+                           },
 "run_summaries":
 { Args: { "p_business_id": string,"p_limit"?: number,"p_statuses"?: string[] }; Returns: { "finished_at": string | null,"jobs_failed": number,"jobs_ok": number,"jobs_total": number,"kind": string,"n": number,"named": number,"per_engine": Json,"run_id": string,"started_at": string | null,"status": string }[]
                            },
 "runs_needing_fix_checks":
 { Args: { "p_limit"?: number }; Returns: { "business_id": string,"domain": string | null,"run_id": string }[]
                            },
+"save_connection":
+{ Args: { "p_business_id": string,"p_connected_by": string,"p_enc_access": string,"p_enc_refresh": string,"p_expires_at": string,"p_external_account_id": string,"p_provider": string,"p_scopes": string[] }; Returns: string
+                           },
 "schedule_business_removal":
 { Args: { "p_at": string,"p_business_id": string }; Returns: undefined
+                           },
+"set_connection_entities":
+{ Args: { "p_connection_id": string,"p_entities": Json }; Returns: undefined
+                           },
+"set_connection_status":
+{ Args: { "p_connection_id": string,"p_status": string }; Returns: undefined
                            },
 "set_fix_list_visible":
 { Args: { "p_business_id": string,"p_visible": boolean }; Returns: undefined
@@ -729,6 +842,9 @@ isOneToOne: false
                            },
 "take_rate_token":
 { Args: { "p_kind": string }; Returns: boolean
+                           },
+"update_connection_tokens":
+{ Args: { "p_connection_id": string,"p_enc_access": string,"p_enc_refresh"?: string,"p_expires_at": string }; Returns: undefined
                            }
           }
           Enums: {
