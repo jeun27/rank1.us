@@ -9,6 +9,7 @@ import { PillField } from "@/components/forms/PillField";
 import { postForm } from "@/components/forms/postForm";
 import { Turnstile } from "@/components/forms/Turnstile";
 import { INDUSTRIES, INDUSTRY_OTHER_MAX, TIERS, validateContact, type ContactField } from "@/lib/spam/validate";
+import { Select } from "@/components/ui/Select";
 
 type State =
   { kind: "idle" | "submitting" } | { kind: "error"; fields: ContactField[]; banner?: string } | { kind: "success" };
@@ -161,7 +162,8 @@ function SelectField({ label, name, placeholder, options, error, value, onChange
       <label htmlFor={id} className="mb-1.5 block text-caption font-semibold">
         {label}
       </label>
-      <select
+      <Select
+        wrap="w-full"
         id={id}
         name={name}
         required
@@ -178,7 +180,7 @@ function SelectField({ label, name, placeholder, options, error, value, onChange
             {o}
           </option>
         ))}
-      </select>
+      </Select>
       {error && (
         <p id={`${id}-error`} className="mt-1.5 text-caption text-brick">
           {error}

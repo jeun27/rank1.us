@@ -32,7 +32,7 @@ const TONE: Record<ReportStatus, "info" | "success" | "warn" | "error"> = {
   failed: "error",
 };
 const field =
-  "rounded-card border border-fieldBorder bg-white px-4 py-3 text-ui focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep";
+  "rounded-control border border-fieldBorder bg-white px-4 py-3 text-ui focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep";
 
 // Blank lines dropped, lowercased, de-duplicated. null when any line isn't an email or there are too many.
 function parseRecipients(text: string): string[] | null {
@@ -224,7 +224,7 @@ export function ReportView({
                         : setError(c.saveFailed);
                   setStatus(c.saved);
                 }}
-                className="text-ui file:mr-3 file:min-h-11 file:rounded-full file:border file:border-fieldBorder file:bg-white file:px-4 file:font-semibold"
+                className="text-ui file:mr-3 file:min-h-11 file:rounded-control file:border file:border-fieldBorder file:bg-white file:px-4 file:font-semibold"
               />
               {logoError && <p className="text-caption text-brick">{logoError}</p>}
             </div>
@@ -235,7 +235,7 @@ export function ReportView({
                 type="color"
                 value={color}
                 onChange={(e) => setColor(e.target.value)}
-                className="size-11 cursor-pointer rounded-card border border-fieldBorder bg-white p-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+                className="size-11 cursor-pointer rounded-control border border-fieldBorder bg-white p-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
               />
               <label htmlFor={ids.color} className="text-ui">
                 {c.brandColor}
@@ -280,7 +280,7 @@ export function ReportView({
                     if (r.status === "sent") setStatus(c.testSent(r.email));
                     else setError(c.sendFailed);
                   }}
-                  className="inline-flex min-h-11 items-center rounded-full border border-fieldBorder bg-white px-5 text-ui font-semibold hover:bg-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+                  className="inline-flex min-h-11 items-center rounded-control border border-fieldBorder bg-white px-5 text-ui font-semibold hover:bg-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
                 >
                   {c.sendTest}
                 </button>

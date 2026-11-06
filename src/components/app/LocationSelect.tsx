@@ -1,6 +1,7 @@
 import { useId } from "react";
 import type { SourceLocation } from "@/lib/metrics";
 import { sourcesCopy as c } from "./sources-copy";
+import { Select } from "@/components/ui/Select";
 
 // A plain GET form, so it works without JavaScript (QA #49). The server filters on ?location=.
 // The Show button submits; changing the select alone doesn't, so arrow keys never reload the page.
@@ -26,11 +27,12 @@ export function LocationSelect({
         {Object.entries(hidden).map(([k, v]) => (
           <input key={k} type="hidden" name={k} value={v} />
         ))}
-        <select
+        <Select
+          wrap="max-w-xs"
           id={id}
           name="location"
           defaultValue={value ?? ""}
-          className="h-11 max-w-xs min-w-0 rounded-control border border-fieldBorder bg-white px-3 text-ui md:h-8 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep"
+          className="h-11 min-w-0 rounded-control border border-fieldBorder bg-white px-3 text-ui md:h-8 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep"
         >
           <option value="">{c.allLocations}</option>
           {locations.map((l) => (
@@ -38,7 +40,7 @@ export function LocationSelect({
               {l.label}
             </option>
           ))}
-        </select>
+        </Select>
         <button
           type="submit"
           className="inline-flex h-11 items-center rounded-control border border-fieldBorder bg-raised px-3 text-ui font-medium text-ink hover:bg-overlay md:h-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"

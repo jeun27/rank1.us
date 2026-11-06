@@ -3,6 +3,7 @@ import { useId, useState } from "react";
 import { connectionsCopy as hub } from "@/components/connections/copy";
 import { Button } from "@/components/ui/Button";
 import { gbpEditCopy as c } from "./gbp-edit-copy";
+import { Select } from "@/components/ui/Select";
 
 // v1 allowlist (lead Q3): the three text fields only. Nothing else renders.
 const FIELDS = [
@@ -55,7 +56,8 @@ export function GbpEditor({ locations, preview, apply }: GbpEditorProps) {
         <label htmlFor={`${id}-loc`} className="mb-1 block text-caption font-semibold">
           {c.location}
         </label>
-        <select
+        <Select
+          wrap="w-full"
           id={`${id}-loc`}
           value={location}
           onChange={(e) => {
@@ -69,7 +71,7 @@ export function GbpEditor({ locations, preview, apply }: GbpEditorProps) {
               {l.name}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
       {FIELDS.map(([key, label]) => (
         <div key={key}>

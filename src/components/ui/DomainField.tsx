@@ -21,8 +21,10 @@ export type DomainFieldProps = {
 const focusEdge = "outline-2 -outline-offset-2 outline-jellyDeep";
 const focusWithinEdge = "focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-jellyDeep";
 
-// Field + Button: pill field with a globe icon and the primary button inside it. When the field is
-// narrower than 21rem (phones, small cards) the button drops below the input so the domain stays readable.
+// Field + Button: a field with a globe icon and the primary button inside it. Founder fix: the field hugs
+// the button with the same 6px inset (p-1.5) and nests its radius around it (rounded-nested), so the corners
+// are concentric. When the field is narrower than 21rem (phones, small cards) the button drops below the
+// input so the domain stays readable.
 export function DomainField({
   label,
   placeholder,
@@ -53,7 +55,7 @@ export function DomainField({
     >
       <div
         data-field
-        className={`flex flex-col gap-1.5 rounded-banner bg-white p-1.5 shadow-field @min-[21rem]:h-15 @min-[21rem]:flex-row @min-[21rem]:items-center @min-[21rem]:gap-2.5 @min-[21rem]:rounded-full @min-[21rem]:pl-5 ${edge} ${focused ? focusEdge : focusWithinEdge}`}
+        className={`flex flex-col gap-1.5 rounded-nested bg-white p-1.5 shadow-field @min-[21rem]:flex-row @min-[21rem]:items-center @min-[21rem]:gap-2.5 @min-[21rem]:pl-5 ${edge} ${focused ? focusEdge : focusWithinEdge}`}
       >
         <div className="flex h-12 items-center gap-2.5 px-3.5 @min-[21rem]:contents">
           <Icon name="globe" className="size-4.5 text-inkMuted" />

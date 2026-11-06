@@ -12,6 +12,7 @@ import { MAX_ACTIVE_QUESTIONS, buildQuestions, type Picks } from "@/lib/question
 import { normalizeDomain } from "@/lib/spam/validate";
 import type { CompetitorSearch, LocalPlace, OnboardingActions, OnboardingInput } from "./contract";
 import { copy } from "./copy";
+import { Select } from "@/components/ui/Select";
 
 // docs/UI.md Question templates: {dietary} and {occasion} lists; landmarks and areas max 3 each.
 export const DIETARY = ["vegan", "vegetarian", "gluten-free", "halal", "kosher"];
@@ -345,7 +346,8 @@ function BusinessStep({
           <label htmlFor={verticalId} className="mb-1.5 block text-caption font-semibold">
             {connectionsCopy.card.industry}
           </label>
-          <select
+          <Select
+            wrap="w-full"
             id={verticalId}
             value={b.vertical ?? "restaurant"}
             onChange={(e) => setB({ vertical: e.target.value as Vertical })}
@@ -356,7 +358,7 @@ function BusinessStep({
                 {connectionsCopy.card.verticals[v]}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       )}
       <PillField label={copy.name} name="name" value={b.name} onChange={(e) => setB({ name: e.target.value })} />
@@ -364,7 +366,8 @@ function BusinessStep({
         <label htmlFor={cuisineId} className="mb-1.5 block text-caption font-semibold">
           {copy.cuisine}
         </label>
-        <select
+        <Select
+          wrap="w-full"
           id={cuisineId}
           value={b.cuisine}
           data-attention={attention || undefined}
@@ -377,7 +380,7 @@ function BusinessStep({
               {c}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
       <div className="grid grid-cols-[2fr_1fr] gap-3">
         <PillField label={copy.city} name="city" value={b.city} onChange={(e) => setB({ city: e.target.value })} />
@@ -776,7 +779,8 @@ function QuestionRow({
                 <label htmlFor={`${id}-level`} className="mb-1 block text-caption font-semibold">
                   {copy.level}
                 </label>
-                <select
+                <Select
+                  wrap="w-full"
                   id={`${id}-level`}
                   value={q.level}
                   onChange={(e) => onChange({ level: e.target.value as Level })}
@@ -787,7 +791,7 @@ function QuestionRow({
                       {copy.levels[l]}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
               {q.level !== "country" && (
                 <ul className="flex flex-col gap-1 text-caption text-inkMuted md:pt-6">

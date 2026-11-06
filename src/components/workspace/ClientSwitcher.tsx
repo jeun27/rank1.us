@@ -3,6 +3,7 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { narrativeCopy } from "@/components/narrative/copy";
 import { Icon } from "@/components/ui/Icon";
 import type { TeamExtras } from "./team";
+import { Select } from "@/components/ui/Select";
 
 const focus = "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep";
 const row = "flex min-h-11 w-full items-center gap-2 rounded-control px-2 text-left text-ui md:min-h-8";
@@ -80,19 +81,20 @@ export function ClientSwitcher({
       <label htmlFor={`${id}-select`} className="nojs-only text-caption font-semibold">
         Client
       </label>
-      <select
+      <Select
+        wrap="nojs-only"
         ref={select}
         id={`${id}-select`}
         name="b"
         defaultValue={team.businessId}
-        className={`nojs-only h-11 min-w-0 rounded-control border border-fieldBorder bg-white px-2 text-ui md:h-8 ${focus}`}
+        className={`h-11 min-w-0 rounded-control border border-fieldBorder bg-white px-2 text-ui md:h-8 ${focus}`}
       >
         {businesses.map((b) => (
           <option key={b.id} value={b.id}>
             {b.name}
           </option>
         ))}
-      </select>
+      </Select>
       <button
         type="submit"
         className={`nojs-only inline-flex h-11 items-center rounded-control border border-fieldBorder bg-raised px-3 text-ui font-medium hover:bg-overlay md:h-8 ${focus}`}
