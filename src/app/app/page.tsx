@@ -11,7 +11,7 @@ export default async function DashboardPage() {
   const { db, business, latest, series } = await loadShell();
   const now = new Date();
   const [fixes, card] = business
-    ? await Promise.all([getTopFixes(db, business.id, 3), loadConnectCard(db, business.id, now)])
+    ? await Promise.all([getTopFixes(db, business.id, 1), loadConnectCard(db, business.id, now)])
     : [[], null];
   return (
     <Dashboard
