@@ -96,7 +96,8 @@ test("Final set: pill field focus ring, aurora ring, loading blue, progress fill
     e.getBoundingClientRect().width,
     e.firstElementChild!.getBoundingClientRect().width,
   ]);
-  expect(Math.abs(fill / (track - 2) - 0.48)).toBeLessThan(0.01);
+  // v3 (UI.md Loading + progress): no track border; the fill is the track's width scaled to the floored percent.
+  expect(Math.abs(fill / track - 0.48)).toBeLessThan(0.01);
   await expect(set.getByText("48%", { exact: true })).toBeVisible();
 });
 

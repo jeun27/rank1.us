@@ -58,7 +58,12 @@ export function BusinessSwitcher({
   useEffect(() => () => clearTimeout(timer.current), []);
 
   const current = businesses.find((b) => b.id === currentId) ?? businesses[0];
-  if (businesses.length < 2) return <span className="truncate text-ui font-semibold">{current?.name}</span>;
+  if (businesses.length < 2)
+    return (
+      <span data-crumb-name className="min-w-0 truncate text-ui font-semibold">
+        {current?.name}
+      </span>
+    );
 
   const close = () => {
     setOpen(false);
@@ -80,7 +85,8 @@ export function BusinessSwitcher({
 
   return (
     <div
-      className="relative"
+      // A shrinking column, so the trigger narrows with the breadcrumb and its name ends in an ellipsis (C5).
+      className="relative flex min-w-0 flex-col"
       onKeyDown={(e) => {
         if (e.key === "Escape" && open && !dialog) close();
       }}
@@ -90,9 +96,12 @@ export function BusinessSwitcher({
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex min-h-11 max-w-56 items-center gap-1 truncate rounded-control px-2 text-ui font-medium hover:bg-raised md:min-h-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+        className="inline-flex min-h-11 max-w-56 min-w-0 items-center gap-1 rounded-control px-2 text-ui font-medium hover:bg-raised md:min-h-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
       >
-        {`${current.name} ▾`}
+        <span data-crumb-name className="min-w-0 truncate">
+          {current.name}
+        </span>{" "}
+        <span className="shrink-0">▾</span>
       </button>
       {adding && (
         <p role="status" className="mt-1 flex items-center gap-2 text-caption text-inkMuted">
