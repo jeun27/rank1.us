@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import "./no-live";
 import { describe, expect, it, vi } from "vitest";
 import {
   CALLBACK_PATH,
