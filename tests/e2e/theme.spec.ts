@@ -40,3 +40,18 @@ test("v3 fonts: Inter for text, JetBrains Mono available for data", async ({ pag
   const mono = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--font-mono"));
   expect(mono).toMatch(/JetBrains/);
 });
+
+// #92 review: data-theme follows client-side navigation too, with the same rule as the head script.
+test("a saved light theme never leaks onto public pages through client-side links", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.addInitScript(() => localStorage.setItem("rank1.workspace", JSON.stringify({ theme: "light" })));
+  await page.goto("/dev/team");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  if (page.viewportSize()!.width < 768) await page.getByRole("tab", { name: "Nav", exact: true }).click();
+  await page.getByRole("link", { name: "Help" }).click();
+  await page.waitForURL("**/contact");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.goBack();
+  await page.waitForURL("**/dev/team");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+});
