@@ -288,6 +288,14 @@ Strings for the white-label monthly report PDF and email (Step 16). No product n
 | PDF section headings | "AI visibility", "By engine", "Competitors", "Top sources", "What to fix next", "Weekly checks" |
 | PDF footer label | "API-measured, directional" |
 
+## Connections (lead, 2026-11-06)
+
+Strings for the Connections revoke flow. One Google grant covers Business Profile, Search Console and Analytics, so disconnecting one disconnects all three.
+
+| Where | String |
+|---|---|
+| Revoke confirm (any Google connection) | "This also disconnects Search Console and Analytics" |
+
 ## Engine location tooltip
 
 Greyed tooltip copy: "{Engine} can't target a city yet, so we check it for the whole country."

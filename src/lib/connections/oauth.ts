@@ -201,3 +201,12 @@ export async function revokeGrant(token: string, deps: { fetch?: typeof fetch } 
     return false;
   }
 }
+
+// Where the browser goes after start/callback: the same-origin return path on NEXT_PUBLIC_SITE_URL, with the
+// outcome in the query (never a code, token or account detail).
+export function returnUrl(returnTo: string, params: Record<string, string | null>, base: string) {
+  const site = (process.env.NEXT_PUBLIC_SITE_URL || base).replace(/\/+$/, "");
+  const u = new URL(`${site}${safeNext(returnTo) ?? "/app"}`);
+  for (const [k, v] of Object.entries(params)) if (v) u.searchParams.set(k, v);
+  return u.toString();
+}

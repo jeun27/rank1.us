@@ -824,3 +824,28 @@ Changed
 
 ## Step 18 cleanup list
 - Unused google_tokens table: drop with founder OK (lead, 2026-11-06).
+
+## Connections (data-pipeline): Google OAuth, GBP and Search Console (branch feat/connections)
+- Built from the founder's Connections spec (2026-11-06) + the lead's decisions in briefs/rank1-connections.md. Behind ENABLE_CONNECTIONS.
+
+Lead decisions (2026-11-06)
+- One Google OAuth client with incremental scopes: GBP business.manage, Search Console webmasters.readonly, GA4 analytics.readonly. Each connector asks only for its own scope, plus openid for the Google sub that identifies the grant (no email or profile scope).
+- The redirect URI is exactly NEXT_PUBLIC_SITE_URL + /api/connections/google/callback, never the request host. The lead registers prod + one stable Preview alias in the Google client.
+- State + PKCE S256 in a cookie: httpOnly, Secure, SameSite=Lax, Path=/api/connections/google/callback, 10 minutes, cleared on every outcome.
+- Tokens are AES-256-GCM ("v1.iv.tag.ct", GOOGLE_TOKEN_ENCRYPTION_KEY) and only go through backend's service RPCs. Refresh happens within 60 s of expiry. invalid_grant, or a 401 after a refresh → needs_reauth, with no silent retries. Token saves, refresh and needs_reauth are grant-wide.
+- Revoke: Google's revoke first (the whole grant), then revoke_connection (every Google connection on that grant). COPY.md has the confirm string. If Google can't be reached, nothing changes in Rank1.
+- GBP edits: description, regular_hours, special_hours, website_uri, primary_phone and attributes only (the DB enforces the same list). Categories are out of v1, which is stricter than "team confirm" (approved). A preview diff → the team confirms → apply re-reads Google and refuses if the diff changed ("stale") → validateOnly → patch with an updateMask of exactly the changed fields → one change-log row per applied field.
+- Every route 404s and every service function returns "disabled" unless ENABLE_CONNECTIONS is exactly "true".
+- Fixtures only. A guard blocks any live call in the connections tests.
+
+Changed
+- src/lib/connections: recommend.ts (industry → connectors, the founder map, keyed by backend's CONNECTOR_KEYS; reads businesses.vertical), crypto.ts, oauth.ts, tokens.ts (withGoogleToken), google-api.ts, gbp.ts, search-console.ts, ga4.ts, service.ts (the entry points for routes and server actions: beginGoogleConnect, finishGoogleConnect, revokeGoogleConnection, listConnectionEntities, pickConnectionEntities, previewGbpEdit, applyGbpEdit).
+- Routes: GET /api/connections/google/start and /callback.
+- Picker picks are kept only if Google lists them for the grant (max 100).
+- 'other' (incl. med-spa) has nothing recommended. The live Google connectors are optional for it (Q to lead: the founder map doesn't list 'other').
+- Tile helper text is a niche key (local, restaurant_booking, site, dtc_store, dtc_amazon, saas_reviews, ai_referrals). The strings come from the lead in COPY.md.
+
+Blocked/open
+- R1 (founder): GBP API access needs Google's approval ("Application for Basic API Access", https://developers.google.com/my-business/content/prereqs). Quota is 0 QPM until then, so live GBP fails even on Preview. These are sensitive scopes, so external users also need Google OAuth verification.
+- Shopify and the other connectors are Coming soon tiles (Notify me = backend's note_connector_interest).
+

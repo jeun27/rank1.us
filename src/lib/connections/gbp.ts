@@ -90,7 +90,7 @@ export async function readLocation(token: string, location: string, deps: Deps =
 }
 
 // Stable JSON (sorted keys) so key order never fakes a change.
-const stable = (v: unknown): string =>
+export const stable = (v: unknown): string =>
   v && typeof v === "object"
     ? Array.isArray(v)
       ? `[${v.map(stable).join(",")}]`
