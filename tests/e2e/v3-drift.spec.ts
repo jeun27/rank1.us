@@ -137,11 +137,12 @@ test("C2: the error banner is errorBg with a 1px 30% error hairline and a 48px J
   expect(await info.evaluate((e) => getComputedStyle(e).backgroundColor)).toBe("rgb(20, 38, 59)");
 });
 
-test("C4: the FixList Status select is a 6px control (44px below md, 32px from md)", async ({ page }) => {
+// Portal (b): the Status select became the check-off circle; Start is the 6px control.
+test("C4: the Fix list's Start is a 6px control (44px below md, 32px from md)", async ({ page }) => {
   await page.goto("/dev/app?state=fixes-success");
-  const select = page.getByLabel("Status").first();
+  const start = page.getByRole("button", { name: "Start", exact: true }).first();
   expect(
-    await select.evaluate((e) => [
+    await start.evaluate((e) => [
       getComputedStyle(e).borderTopLeftRadius,
       Math.round(e.getBoundingClientRect().height),
     ]),
@@ -157,7 +158,7 @@ for (const theme of THEMES)
     await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toBeVisible();
     await page.screenshot({ path: shot("breadcrumb") });
     await open(page, "/dev/app?state=fixes-success", theme);
-    await expect(page.getByLabel("Status").first()).toBeVisible();
+    await expect(page.getByRole("checkbox").first()).toBeVisible();
     await page.screenshot({ path: shot("fixes") });
     await open(page, "/dev/app?state=dashboard-error", theme);
     await expect(page.getByRole("alert").first()).toBeVisible();

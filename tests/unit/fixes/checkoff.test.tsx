@@ -49,7 +49,7 @@ describe("the circle is a real checkbox", () => {
     const { user } = setup();
     expect(circle(exampleFixes[0].title)).toHaveAttribute("aria-checked", "false");
     expect(circle(exampleFixes[2].title)).toHaveAttribute("aria-checked", "mixed");
-    await user.click(screen.getByRole("tab", { name: /Done/ }));
+    await user.click(screen.getByRole("radio", { name: /Done/ }));
     expect(circle(done[0].title)).toHaveAttribute("aria-checked", "true");
   });
 
@@ -145,9 +145,9 @@ describe("progress, tabs and the done list", () => {
     const bar = screen.getByRole("progressbar", { name: c.progress(1, 5) });
     expect(bar).toHaveAttribute("aria-valuenow", "1");
     expect(bar).toHaveAttribute("aria-valuemax", "5");
-    const tabs = within(screen.getByRole("tablist")).getAllByRole("tab");
+    const tabs = within(screen.getByRole("radiogroup")).getAllByRole("radio");
     expect(tabs.map((t) => t.textContent)).toEqual([`${c.open}4`, `${c.doneTab}1`, c.all]);
-    expect(tabs[0]).toHaveAttribute("aria-selected", "true");
+    expect(tabs[0]).toHaveAttribute("aria-checked", "true");
     expect(screen.queryByRole("checkbox", { name: done[0].title })).toBeNull();
     await user.click(tabs[2]);
     expect(circle(done[0].title)).toBeInTheDocument();
@@ -156,7 +156,7 @@ describe("progress, tabs and the done list", () => {
 
   it("done rows are struck through with 'Done {date}' and the actor, and Undo reopens them", async () => {
     const { onStatus, user } = setup();
-    await user.click(screen.getByRole("tab", { name: /Done/ }));
+    await user.click(screen.getByRole("radio", { name: /Done/ }));
     const r = row(done[0].title);
     expect(within(r).getByText(done[0].title)).toHaveClass("line-through");
     expect(within(r).getByText(`${c.doneOn("Nov 4")} · Ana`)).toBeInTheDocument();
@@ -166,16 +166,17 @@ describe("progress, tabs and the done list", () => {
 
   it("a fix closed by the weekly check (changed_by null) shows only the date", async () => {
     const { user } = setup({ done: [{ ...done[0], changed_by: null }] });
-    await user.click(screen.getByRole("tab", { name: /Done/ }));
+    await user.click(screen.getByRole("radio", { name: /Done/ }));
     expect(within(row(done[0].title)).getByText(c.doneOn("Nov 4"))).toBeInTheDocument();
   });
 
-  it("tabs move with the arrow keys", async () => {
+  // A segmented control (UI.md), not tabs: the team workspace already wraps it in a document tabpanel.
+  it("the Open / Done / All filter moves with the arrow keys", async () => {
     const { user } = setup();
-    screen.getByRole("tab", { name: /Open/ }).focus();
+    screen.getByRole("radio", { name: /Open/ }).focus();
     await user.keyboard("{ArrowRight}");
-    expect(screen.getByRole("tab", { name: /Done/ })).toHaveFocus();
-    expect(screen.getByRole("tab", { name: /Done/ })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("radio", { name: /Done/ })).toHaveFocus();
+    expect(screen.getByRole("radio", { name: /Done/ })).toHaveAttribute("aria-checked", "true");
   });
 
   it("each group keeps its heading and shows its count; the pillar slot is empty until G5", () => {
@@ -203,7 +204,7 @@ describe("read-only (a DFY client) and failures", () => {
     expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
     expect(screen.getByRole("img", { name: `${exampleFixes[0].title}: ${c.statuses.todo}` })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: c.start })).toBeNull();
-    await user.click(screen.getByRole("tab", { name: /Done/ }));
+    await user.click(screen.getByRole("radio", { name: /Done/ }));
     expect(screen.getByText(done[0].title)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: c.undo })).toBeNull();
   });
