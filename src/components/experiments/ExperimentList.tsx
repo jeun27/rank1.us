@@ -48,7 +48,7 @@ function Row({ label, g }: { label: string; g: GroupResult }) {
       <td data-computed className={cell}>
         <Share m={g.after} />
       </td>
-      <td data-computed className={`${cell} font-mono tabular-nums`}>
+      <td data-computed className={`${cell} font-mono whitespace-nowrap tabular-nums`}>
         {signedPts(g.change ?? 0)}
       </td>
     </tr>
