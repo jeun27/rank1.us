@@ -90,7 +90,7 @@ export function DocPane(props: {
                   activate(tabs[j].id);
                   focusTab(tabs[j].id);
                 }}
-                className={`group flex h-11 min-w-11 max-w-48 shrink-0 items-center gap-2 rounded-card border pl-3 pr-1 text-caption font-semibold focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep ${
+                className={`group flex h-11 min-w-11 max-w-48 shrink-0 items-center gap-2 rounded-control border pl-3 pr-1 text-caption font-semibold focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep ${
                   on ? "border-border bg-raised text-ink" : "border-transparent text-inkMuted hover:text-ink"
                 }`}
               >

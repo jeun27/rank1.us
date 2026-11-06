@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/Button";
 import { Banner } from "@/components/ui/Banner";
 import { adminCopy as c, missingKeysText } from "@/lib/admin/copy";
 import type { EngineTestResult } from "@/app/admin/test/actions";
+import { Select } from "@/components/ui/Select";
 
 const field =
-  "block w-full rounded-banner border border-fieldBorder bg-white px-4 py-2.5 text-ui text-ink focus-visible:outline-2 focus-visible:outline-jellyDeep";
+  "block w-full rounded-control border border-fieldBorder bg-white px-4 py-2.5 text-ui text-ink focus-visible:outline-2 focus-visible:outline-jellyDeep";
 
 type Props = {
   missing: readonly string[];
@@ -33,13 +34,13 @@ export function EngineTestForm({ missing, action }: Props) {
           <label htmlFor={`${id}-engine`} className="mb-1.5 block text-caption font-semibold">
             {c.engineLabel}
           </label>
-          <select id={`${id}-engine`} name="engine" className={field} defaultValue="chatgpt">
+          <Select wrap="w-full" id={`${id}-engine`} name="engine" className={field} defaultValue="chatgpt">
             {Object.entries(c.engines).map(([value, label]) => (
               <option key={value} value={value}>
                 {label}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
         <div>
           <label htmlFor={`${id}-question`} className="mb-1.5 block text-caption font-semibold">
@@ -51,13 +52,13 @@ export function EngineTestForm({ missing, action }: Props) {
           <label htmlFor={`${id}-level`} className="mb-1.5 block text-caption font-semibold">
             {c.levelLabel}
           </label>
-          <select id={`${id}-level`} name="level" className={field} defaultValue="city">
+          <Select wrap="w-full" id={`${id}-level`} name="level" className={field} defaultValue="city">
             {Object.entries(c.levels).map(([value, label]) => (
               <option key={value} value={value}>
                 {label}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
         <Button type="submit" loading={pending} disabled={missing.length > 0} className="self-start">
           {pending ? c.running : c.run}

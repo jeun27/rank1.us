@@ -25,8 +25,8 @@ const LATER = new Set<Section>(["experiments", "reports", "settings"]);
 export const NAV_SECTIONS = SECTIONS.filter((s) => !LATER.has(s));
 
 const focus = "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep";
-const row = `flex min-h-11 w-full items-center gap-3 rounded-card px-3 text-left text-caption font-semibold ${focus}`;
-const iconButton = `grid size-11 place-items-center rounded-card text-inkMuted hover:bg-raised hover:text-ink ${focus}`;
+const row = `flex min-h-11 w-full items-center gap-3 rounded-control px-3 text-left text-caption font-semibold ${focus}`;
+const iconButton = `grid size-11 place-items-center rounded-control text-inkMuted hover:bg-raised hover:text-ink ${focus}`;
 
 export function Sidebar(props: {
   section: Section;
