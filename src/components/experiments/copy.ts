@@ -11,6 +11,10 @@ export const experimentCopy = {
   changeDate: "Change date",
   testQuestions: "Test questions",
   controlQuestions: "Control questions",
+  // COPY.md "UX (lead, 2026-11-06)" X22.
+  controlLine: (n: number) => (n === 1 ? "Control: the other question" : `Control: the other ${n} questions`),
+  edit: "Edit",
+  startReason: "Pick at least one test question and a name.",
   end: "End test",
   remove: "Delete test",
   before: "Before",

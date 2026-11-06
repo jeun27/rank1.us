@@ -163,17 +163,27 @@ const questions = [
   { id: "q3", text: "late night ramen in Irvine" },
 ];
 
+// X22 (UX plan PR 12): step 1 is the test questions; control is "the other n questions" (Edit opens the
+// list, which never holds a test question); Start lights up at 1+ test question and a name, with a reason.
 describe("'Start a test' form", () => {
   const setup = (over: Partial<Parameters<typeof ExperimentForm>[0]> = {}) => {
     const onCreate = vi.fn(async () => undefined);
     render(<ExperimentForm questions={questions} today="2026-11-06" onCreate={onCreate} {...over} />);
     const test = screen.getByRole("group", { name: c.testQuestions });
-    const control = screen.getByRole("group", { name: c.controlQuestions });
-    return { onCreate, test, control, user: userEvent.setup() };
+    const start = screen.getByRole("button", { name: "Start a test" });
+    const control = () => screen.getByRole("group", { name: c.controlQuestions });
+    const edit = () => screen.getByRole("button", { name: "Edit" });
+    return { onCreate, test, start, control, edit, user: userEvent.setup() };
   };
+  const tick = (group: HTMLElement, text: string) =>
+    userEvent.click(within(group).getByRole("checkbox", { name: text }));
 
-  it("has the lead fields; the change date defaults to today (LA); control starts as every question", () => {
-    const { test, control } = setup();
+  it("test questions come first, then the control line, then the fields; the date defaults to today (LA)", () => {
+    const { test } = setup();
+    const line = screen.getByText("Control: the other 3 questions");
+    const name = screen.getByLabelText(c.name);
+    expect(test.compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(line.compareDocumentPosition(name) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     for (const label of [c.name, c.whatChanged, c.link, c.changeDate])
       expect(screen.getByLabelText(label)).toBeInTheDocument();
     expect(screen.getByLabelText(c.changeDate)).toHaveValue("2026-11-06");
@@ -183,42 +193,81 @@ describe("'Start a test' form", () => {
         .getAllByRole("checkbox")
         .every((b) => !(b as HTMLInputElement).checked),
     ).toBe(true);
-    expect(
-      within(control)
-        .getAllByRole("checkbox")
-        .every((b) => (b as HTMLInputElement).checked),
-    ).toBe(true);
+    // The control list stays folded until Edit.
+    expect(screen.queryByRole("group", { name: c.controlQuestions })).toBeNull();
   });
 
-  it("a question is in one group only: ticking it in Test unticks it in Control, and back", async () => {
-    const { test, control, user } = setup();
-    await user.click(within(test).getByRole("checkbox", { name: questions[0].text }));
-    expect(within(control).getByRole("checkbox", { name: questions[0].text })).not.toBeChecked();
-    await user.click(within(control).getByRole("checkbox", { name: questions[0].text }));
-    expect(within(test).getByRole("checkbox", { name: questions[0].text })).not.toBeChecked();
+  it("control is every question that isn't a test question: the count follows, n=1 reads 'the other question'", async () => {
+    const { test } = setup();
+    await tick(test, questions[0].text);
+    expect(screen.getByText("Control: the other 2 questions")).toBeInTheDocument();
+    await tick(test, questions[1].text);
+    expect(screen.getByText("Control: the other question")).toBeInTheDocument();
+    await tick(test, questions[1].text);
+    expect(screen.getByText("Control: the other 2 questions")).toBeInTheDocument();
   });
 
-  it("blocks submit without a test question, without a control question, or with a non-http link", async () => {
-    const { test, control, onCreate, user } = setup();
+  it("Edit opens the control list without the test questions (no overlap); unticking one there drops it", async () => {
+    const { test, control, edit, user } = setup();
+    await tick(test, questions[0].text);
+    expect(edit()).toHaveAttribute("aria-expanded", "false");
+    await user.click(edit());
+    expect(edit()).toHaveAttribute("aria-expanded", "true");
+    const boxes = within(control()).getAllByRole("checkbox");
+    expect(boxes.map((b) => b.closest("label")?.textContent)).toEqual([questions[1].text, questions[2].text]);
+    expect(boxes.every((b) => (b as HTMLInputElement).checked)).toBe(true);
+    await tick(control(), questions[2].text);
+    expect(screen.getByText("Control: the other question")).toBeInTheDocument();
+    // Unticked as a test question, q1 goes back to control; q3 stays out.
+    await tick(test, questions[0].text);
+    expect(screen.getByText("Control: the other 2 questions")).toBeInTheDocument();
+    expect(within(control()).getByRole("checkbox", { name: questions[2].text })).not.toBeChecked();
+  });
+
+  // Founder rule (lead, #174): never a silent disabled button. Start stays focusable (aria-disabled, not
+  // disabled), points at the reason, and pressing it early keeps focus and announces the reason.
+  it("Start stays off with a reason until 1+ test question and a name, focusable (aria-disabled)", async () => {
+    const { test, start, onCreate, user } = setup();
+    const reason = "Pick at least one test question and a name.";
+    expect(start).toHaveAttribute("aria-disabled", "true");
+    expect(start).not.toBeDisabled();
+    expect(start).toHaveAccessibleDescription(reason);
+    await user.click(start);
+    expect(onCreate).not.toHaveBeenCalled();
+    expect(start).toHaveFocus();
+    expect(await screen.findByRole("status")).toHaveTextContent(reason);
+    await tick(test, questions[0].text);
+    expect(start).toHaveAttribute("aria-disabled", "true");
+    await user.type(screen.getByLabelText(c.name), "   ");
+    expect(start).toHaveAttribute("aria-disabled", "true");
+    // Enter in a field doesn't sneak past it either.
+    await user.type(screen.getByLabelText(c.name), "{Enter}");
+    expect(onCreate).not.toHaveBeenCalled();
     await user.type(screen.getByLabelText(c.name), "New menu page");
-    await user.click(screen.getByRole("button", { name: "Start a test" }));
-    expect(screen.getByText("Pick at least 1 test question.")).toBeInTheDocument();
-    for (const q of questions) await user.click(within(test).getByRole("checkbox", { name: q.text }));
-    await user.click(screen.getByRole("button", { name: "Start a test" }));
+    expect(start).not.toHaveAttribute("aria-disabled");
+    expect(start).not.toHaveAccessibleDescription(reason);
+    expect(screen.queryByText(reason)).toBeNull();
+  });
+
+  it("still blocks with no control question left, or a non-http link", async () => {
+    const { test, start, onCreate, user } = setup();
+    await user.type(screen.getByLabelText(c.name), "New menu page");
+    for (const q of questions) await tick(test, q.text);
+    await user.click(start);
     expect(screen.getByText("Pick at least 1 control question.")).toBeInTheDocument();
-    await user.click(within(control).getByRole("checkbox", { name: questions[2].text }));
+    await tick(test, questions[2].text);
     await user.type(screen.getByLabelText(c.link), "ftp://example.test/menu");
-    await user.click(screen.getByRole("button", { name: "Start a test" }));
+    await user.click(start);
     expect(screen.getByText("Use a link that starts with http:// or https://.")).toBeInTheDocument();
     expect(onCreate).not.toHaveBeenCalled();
   });
 
   it("submits the groups and fields; an empty link is left out", async () => {
-    const { test, onCreate, user } = setup();
+    const { test, start, onCreate, user } = setup();
     await user.type(screen.getByLabelText(c.name), "New menu page");
     await user.type(screen.getByLabelText(c.whatChanged), "Added an HTML menu");
-    await user.click(within(test).getByRole("checkbox", { name: questions[0].text }));
-    await user.click(screen.getByRole("button", { name: "Start a test" }));
+    await tick(test, questions[0].text);
+    await user.click(start);
     expect(onCreate).toHaveBeenCalledWith({
       name: "New menu page",
       changeNote: "Added an HTML menu",
@@ -230,20 +279,24 @@ describe("'Start a test' form", () => {
     });
   });
 
-  it("from a fix: the name defaults to the fix title and fix_id is sent", async () => {
-    const { test, onCreate, user } = setup({ fix: { id: "f9", title: "Crawlable HTML menu on your own site" } });
+  it("from a fix: the name defaults to the fix title, so one test question is enough; fix_id is sent", async () => {
+    const { test, start, onCreate, user } = setup({ fix: { id: "f9", title: "Crawlable HTML menu on your own site" } });
     expect(screen.getByLabelText(c.name)).toHaveValue("Crawlable HTML menu on your own site");
-    await user.click(within(test).getByRole("checkbox", { name: questions[1].text }));
-    await user.click(screen.getByRole("button", { name: "Start a test" }));
-    expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({ fixId: "f9", test: ["q2"] }));
+    expect(start).toHaveAttribute("aria-disabled", "true");
+    await tick(test, questions[1].text);
+    expect(start).not.toHaveAttribute("aria-disabled");
+    await user.click(start);
+    expect(onCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ fixId: "f9", test: ["q2"], control: ["q1", "q3"] }),
+    );
   });
 
   it("a refused save shows the matching message", async () => {
     const onCreate = vi.fn(async () => ({ error: "failed" as const }));
-    const { test, user } = setup({ onCreate });
+    const { test, start, user } = setup({ onCreate });
     await user.type(screen.getByLabelText(c.name), "x");
-    await user.click(within(test).getByRole("checkbox", { name: questions[0].text }));
-    await user.click(screen.getByRole("button", { name: "Start a test" }));
+    await tick(test, questions[0].text);
+    await user.click(start);
     expect(await screen.findByRole("alert")).toHaveTextContent(c.saveFailed);
   });
 });
@@ -318,5 +371,14 @@ describe("copy", () => {
       c.confirmDelete,
     ])
       expect(section, s).toContain(`"${s}"`);
+    // X22 (§C, approved): the control line, its Edit action and the reason line.
+    const ux = copy.slice(copy.lastIndexOf("## UX (lead, 2026-11-06)"));
+    for (const s of [
+      "Control: the other {n} questions",
+      "Control: the other question",
+      "Edit",
+      "Pick at least one test question and a name.",
+    ])
+      expect(ux, s).toContain(`"${s}"`);
   });
 });

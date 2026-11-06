@@ -538,6 +538,8 @@ Strings the lead approved for the UX plan (share/ux-plan §C; founder OK 2026-11
 | Competitors add form, submit (X26; lead 2026-11-06) | "Add" (the disclosure above it keeps "Add competitor") |
 | Reports status line, first on the page (X10; §C, lead edit b) | "Next report {date} to 1 recipient." · "Next report {date} to {n} recipients." · no saved recipients: "Next report {date}. Add a recipient to send it." ({date} as "Dec 1") |
 | Reports, the folded settings (X10) | "Branding" (logo, brand color, recipients, Save). The preview fold reuses "Report preview" |
+| Experiments "Start a test", under the test questions (X22; §C) | "Control: the other {n} questions" (n=1: "Control: the other question") + text action "Edit" (opens the control list) |
+| Experiments "Start a test", under a disabled Start (X22; §C) | "Pick at least one test question and a name." (tied with aria-describedby, gone once both are there) |
 
 ## Engine location tooltip
 
