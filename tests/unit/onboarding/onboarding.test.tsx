@@ -5,7 +5,7 @@ import { Onboarding } from "@/app/app/onboarding/Onboarding";
 import type { CompetitorSearch, OnboardingActions, OnboardingInput, SiteRead } from "@/app/app/onboarding/contract";
 import { connectionsCopy as c } from "@/components/connections/copy";
 import { VERTICALS } from "@/lib/queries/onboarding";
-import { buildQuestions } from "@/lib/questions/templates";
+import { MAX_ACTIVE_QUESTIONS, buildQuestions } from "@/lib/questions/templates";
 
 const places = [
   { name: "Diamond Jamboree", kind: "landmark" as const },
@@ -236,6 +236,8 @@ describe("Onboarding 2: Competitors", () => {
   });
 });
 
+// X23 (UX plan PR 26b): 25 one-line rows (Track, short form, location tag); tapping a row opens its editor
+// (short, long, location), one at a time; a sticky "{n} of {total} questions tracked" bar holds Finish.
 describe("Onboarding 3: Questions + location", () => {
   const expected = buildQuestions(
     { cuisine: "ramen", city: "Irvine", state: "CA" },
@@ -246,45 +248,88 @@ describe("Onboarding 3: Questions + location", () => {
       occasion: ["date night"],
     },
   );
+  const rows = () => screen.getAllByRole("group", { name: /^\d+$/ });
+  const toggle = (i: number) =>
+    within(rows()[i])
+      .getAllByRole("button")
+      .find((b) => b.hasAttribute("aria-expanded"))!;
+  const openRow = async (s: ReturnType<typeof setup>, i: number) => {
+    if (toggle(i).getAttribute("aria-expanded") !== "true") await s.user.click(toggle(i));
+  };
 
-  it("lists the template questions (25 max), tracked, city level, both forms editable", async () => {
+  it("25 one-line rows: short form, Track (on), the City tag; no editor until a row is tapped", async () => {
     const s = setup();
     await toStepThree(s);
     expect(expected).toHaveLength(25);
-    const shorts = screen.getAllByLabelText("Short form");
-    expect(shorts.map((i) => (i as HTMLInputElement).value)).toEqual(expected.map((q) => q.short_text));
-    expect(screen.getAllByLabelText("Long form")).toHaveLength(25);
+    expect(rows()).toHaveLength(25);
+    expect(rows().map((_, i) => toggle(i).textContent)).toEqual(expected.map((q) => q.short_text));
     screen.getAllByRole("checkbox", { name: "Track" }).forEach((b) => expect(b).toBeChecked());
-    screen.getAllByLabelText("Location level").forEach((l) => expect(l).toHaveValue("city"));
+    rows().forEach((r) => expect(within(r).getByText("City", { selector: ":not(option)" })).toBeInTheDocument());
+    expect(screen.queryAllByLabelText("Short form")).toHaveLength(0);
+    expect(screen.queryAllByLabelText("Long form")).toHaveLength(0);
   });
 
-  it("an edited question gets the 'Edited' tag", async () => {
+  it("tapping a row opens its editor with focus in Short form; one row open at a time", async () => {
+    const s = setup();
+    await toStepThree(s);
+    await s.user.click(toggle(2));
+    expect(toggle(2)).toHaveAttribute("aria-expanded", "true");
+    expect(within(rows()[2]).getByLabelText("Short form")).toHaveFocus();
+    expect(within(rows()[2]).getByLabelText("Long form")).toHaveValue(expected[2].long_text);
+    expect(within(rows()[2]).getByLabelText("Location level")).toHaveValue("city");
+    await s.user.click(toggle(5));
+    expect(toggle(2)).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getAllByLabelText("Short form")).toHaveLength(1);
+    await s.user.click(toggle(5));
+    expect(screen.queryAllByLabelText("Short form")).toHaveLength(0);
+  });
+
+  it("the sticky bar counts tracked questions against the plan limit", async () => {
+    const s = setup();
+    await toStepThree(s);
+    expect(screen.getByText(`25 of ${MAX_ACTIVE_QUESTIONS} questions tracked`)).toBeInTheDocument();
+    await s.user.click(screen.getAllByRole("checkbox", { name: "Track" })[3]);
+    expect(screen.getByText(`24 of ${MAX_ACTIVE_QUESTIONS} questions tracked`)).toBeInTheDocument();
+  });
+
+  it("an edited question gets the 'Edited' tag on its line", async () => {
     const s = setup();
     await toStepThree(s);
     expect(screen.queryByText("Edited")).not.toBeInTheDocument();
-    await s.user.type(screen.getAllByLabelText("Short form")[0], " tonight");
-    expect(screen.getAllByText("Edited")).toHaveLength(1);
+    await openRow(s, 0);
+    await s.user.type(screen.getByLabelText("Short form"), " tonight");
+    expect(within(rows()[0]).getByText("Edited")).toBeInTheDocument();
+    expect(toggle(0)).toHaveTextContent(`${expected[0].short_text} tonight`);
   });
 
-  it("city and state levels grey ChatGPT and Gemini with the tooltip copy; country doesn't", async () => {
+  it("city and state levels grey ChatGPT and Gemini with the tooltip copy; country doesn't, and the tag follows", async () => {
     const s = setup();
     await toStepThree(s);
-    const row = screen.getAllByRole("group", { name: /^\d+$/ })[0];
-    const note = within(row).getByText("ChatGPT can't target a city yet, so we check it for the whole country.");
-    expect(note).toBeInTheDocument();
+    await openRow(s, 0);
+    const row = rows()[0];
+    expect(
+      within(row).getByText("ChatGPT can't target a city yet, so we check it for the whole country."),
+    ).toBeInTheDocument();
     expect(
       within(row).getByText("Gemini can't target a city yet, so we check it for the whole country."),
     ).toBeInTheDocument();
     await s.user.selectOptions(within(row).getByLabelText("Location level"), "country");
     expect(within(row).queryByText(/can't target a city yet/)).not.toBeInTheDocument();
+    // The line's tag (not the select's option) follows the level.
+    expect(within(row).getByText("Country", { selector: ":not(option)" })).toBeInTheDocument();
   });
 
-  it("an empty tracked question blocks Finish setup with its number", async () => {
+  it("an empty tracked question blocks Finish setup with its number, and opens that row", async () => {
     const s = setup();
     await toStepThree(s);
-    await s.user.clear(screen.getAllByLabelText("Short form")[6]);
+    await openRow(s, 6);
+    await s.user.clear(screen.getByLabelText("Short form"));
+    await openRow(s, 0);
     await s.user.click(screen.getByRole("button", { name: "Finish setup" }));
     expect(screen.getByText("Couldn't save question 7: it's empty.")).toBeInTheDocument();
+    expect(toggle(6)).toHaveAttribute("aria-expanded", "true");
+    // An emptied line still names itself (axe button-name): the muted "Short form" label.
+    expect(toggle(6)).toHaveAccessibleName("Short form");
     expect(s.actions.finish).not.toHaveBeenCalled();
   });
 
@@ -296,7 +341,8 @@ describe("Onboarding 3: Questions + location", () => {
     await s.user.click(screen.getByRole("button", { name: "Next" }));
     await screen.findByText("Step 3 of 3");
     await s.user.click(screen.getAllByRole("checkbox", { name: "Track" })[1]);
-    await s.user.selectOptions(screen.getAllByLabelText("Location level")[0], "state");
+    await openRow(s, 0);
+    await s.user.selectOptions(screen.getByLabelText("Location level"), "state");
     await s.user.click(screen.getByRole("button", { name: "Finish setup" }));
     const input = vi.mocked(s.actions.finish).mock.calls[0][0] as OnboardingInput;
     expect(input.business).toEqual({
@@ -333,7 +379,7 @@ describe("Onboarding 3: Questions + location", () => {
     await toStepThree(s);
     await s.user.click(screen.getByRole("button", { name: "Finish setup" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("We couldn't save your business. Try again.");
-    expect(screen.getAllByLabelText("Short form")).toHaveLength(25);
+    expect(rows()).toHaveLength(25);
   });
 
   it("Back returns to the previous step with its answers", async () => {

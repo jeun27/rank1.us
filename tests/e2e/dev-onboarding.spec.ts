@@ -37,10 +37,13 @@ test("/dev/onboarding shows every 4b onboarding state, accessibly", async ({ pag
     state("2 empty").getByText("No local ramen places found near Irvine. Add competitors by name."),
   ).toBeVisible();
   await expect(state("2 error").getByText("Couldn't load nearby places. Add competitors by name.")).toBeVisible();
-  await expect(state("3 success").getByLabel("Short form")).toHaveCount(25);
+  // X23: 25 one-line rows; a row opens its editor when tapped.
+  await expect(state("3 success").getByRole("group", { name: /^\d+$/ })).toHaveCount(25);
+  await expect(state("3 success").getByLabel("Short form")).toHaveCount(0);
 
   // Partial and error states of step 3 come from the user's own actions.
-  await state("3 success").getByLabel("Short form").nth(6).fill("");
+  await state("3 success").getByRole("group", { name: "7", exact: true }).locator("[aria-expanded]").click();
+  await state("3 success").getByLabel("Short form").fill("");
   await state("3 success").getByRole("button", { name: "Finish setup" }).click();
   await expect(state("3 success").getByText("Couldn't save question 7: it's empty.")).toBeVisible();
   await expect(state("3 success").getByText("Edited")).toHaveCount(1);

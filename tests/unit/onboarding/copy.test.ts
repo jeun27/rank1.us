@@ -15,7 +15,9 @@ const filled = (key: string, v: unknown): string[] => {
           ? v(7)
           : key === "cityNote"
             ? v("{Engine}")
-            : v("{cuisine}", "{city}"),
+            : key === "tracked"
+              ? v("{n}", "{total}")
+              : v("{cuisine}", "{city}"),
     ];
   return Object.values(v as Record<string, string>);
 };
