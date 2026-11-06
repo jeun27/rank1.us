@@ -212,12 +212,9 @@ export async function markFreeAuditNotified(serviceDb: DbClient, runId: string, 
 }
 
 // Service client only. Counts one failed notify try (after MAX_NOTIFY_ATTEMPTS it stops being listed).
-export async function bumpFreeAuditNotifyAttempts(serviceDb: DbClient, runId: string): Promise<void> {
-  const { data, error } = await serviceDb.from("free_audits").select("notify_attempts").eq("run_id", runId).single();
+// One SQL statement, so parallel bumps never lose a count. Returns the new count.
+export async function bumpFreeAuditNotifyAttempts(serviceDb: DbClient, runId: string): Promise<number> {
+  const { data, error } = await serviceDb.rpc("bump_free_audit_notify_attempts", { p_run_id: runId });
   if (error) throw error;
-  const { error: updateError } = await serviceDb
-    .from("free_audits")
-    .update({ notify_attempts: data.notify_attempts + 1 })
-    .eq("run_id", runId);
-  if (updateError) throw updateError;
+  return data;
 }

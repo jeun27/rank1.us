@@ -717,6 +717,9 @@ isOneToOne: false
 "archive_scheduled_businesses":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
+"bump_free_audit_notify_attempts":
+{ Args: { "p_run_id": string }; Returns: number
+                           },
 "can_apply_edits":
 { Args: { "p_business_id": string }; Returns: boolean
                            },
