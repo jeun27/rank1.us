@@ -8,10 +8,12 @@ const link = "text-ui text-link underline underline-offset-4";
 
 // G4 on the /app Dashboard (lead Q2, "show the next step only when it's relevant"): the card for a clash,
 // one quiet line when there are no words yet, and nothing otherwise (no clash and too few live in Settings).
-export function NarrativeDashboard({ view }: { view: NarrativeView }) {
+// readOnly (/client, Q4): the clash card only, with no links (the team sets a DFY client's words in /team).
+export function NarrativeDashboard({ view, readOnly = false }: { view: NarrativeView; readOnly?: boolean }) {
   const heading = useId();
   const { words, result } = view;
-  if (!words.want.length && !words.avoid.length)
+  if (!words.want.length && !words.avoid.length) {
+    if (readOnly) return null;
     return (
       <p className="text-caption text-inkMuted">
         {c.noWords}{" "}
@@ -20,6 +22,7 @@ export function NarrativeDashboard({ view }: { view: NarrativeView }) {
         </Link>
       </p>
     );
+  }
   if (!result || result.tooFew || result.clashes === 0) return null;
   const hit = result.avoid.filter((w) => w.answers > 0).map((w) => w.word);
   const s = result.snippet;
@@ -44,9 +47,11 @@ export function NarrativeDashboard({ view }: { view: NarrativeView }) {
           <figcaption className="text-caption text-inkMuted">{c.wordMatch}</figcaption>
         </figure>
       )}
-      <Link href={HREF} className={`self-start ${link}`}>
-        {c.edit}
-      </Link>
+      {!readOnly && (
+        <Link href={HREF} className={`self-start ${link}`}>
+          {c.edit}
+        </Link>
+      )}
     </section>
   );
 }

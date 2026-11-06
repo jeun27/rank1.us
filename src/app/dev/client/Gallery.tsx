@@ -12,6 +12,8 @@ import { ClientDashboard } from "@/components/client/ClientDashboard";
 import { ConnectCard } from "@/components/connections/ConnectCard";
 import { exampleCards } from "@/components/connections/example-data";
 import { exampleDone, exampleFixes, exampleTidyUps } from "@/components/fixes/example-data";
+import { NarrativeDashboard } from "@/components/narrative/NarrativeDashboard";
+import { exampleNarrative, exampleNarrativeNoClash } from "@/components/narrative/example-data";
 
 const NOW = new Date("2026-11-05T12:00:00Z");
 const business = { name: exampleBusiness.name };
@@ -32,6 +34,9 @@ const STATES: Record<string, () => ReactNode> = {
   connect: () => view({ notice: <ConnectCard {...exampleCards.connect} returnTo="/client" audience="dfy" /> }),
   "all-set": () =>
     view({ notice: <ConnectCard {...exampleCards.ready} returnTo="/client" audience="dfy" fixesHref={null} /> }),
+  // Q4: the read-only narrative clash card; no clash renders nothing.
+  narrative: () => view({ narrative: <NarrativeDashboard view={exampleNarrative} readOnly /> }),
+  "narrative-no-clash": () => view({ narrative: <NarrativeDashboard view={exampleNarrativeNoClash} readOnly /> }),
   loading: () => <Skeleton title="Dashboard" />,
   error: () => <ErrorState title="Dashboard" message="We couldn't load your results. Try again." reset={() => {}} />,
 };
