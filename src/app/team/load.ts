@@ -6,7 +6,12 @@ import { listDoneFixes, listFixes } from "@/lib/queries/fixes";
 import { getQuestionsWithLatestAnswers, listRunSummaries } from "@/lib/queries/shell";
 import { listClientUsers } from "@/lib/queries/clients";
 import { listDfyBusinesses } from "@/lib/queries/team";
-import { listConnectionChanges, listConnections, listConnectorInterest } from "@/lib/queries/connections";
+import {
+  listConnectionChangeActors,
+  listConnectionChanges,
+  listConnections,
+  listConnectorInterest,
+} from "@/lib/queries/connections";
 import { getGasReady } from "@/lib/queries/gas-ready";
 import { toTeamChanges } from "@/components/workspace/team-connections-data";
 import { getWorkspaceRows, type WorkspaceRows } from "@/lib/queries/workspace";
@@ -44,10 +49,11 @@ export async function loadTeam(picked: string | undefined): Promise<TeamData> {
   if (!rows) return { kind: "missing" };
   // C-c: the client's Connections document, only with ENABLE_CONNECTIONS (stored data, no provider calls).
   const connectionsOn = process.env.ENABLE_CONNECTIONS === "true";
-  const [latest, conns, changes, interest, gas] = await Promise.all([
+  const [latest, conns, changes, actors, interest, gas] = await Promise.all([
     summaries[0] ? loadPaidRun(summaries[0].id) : null,
     connectionsOn ? listConnections(db, business.id) : [],
     connectionsOn ? listConnectionChanges(db, business.id, 50) : [],
+    connectionsOn ? listConnectionChangeActors(db, business.id) : [],
     connectionsOn ? listConnectorInterest(db, business.id) : [],
     connectionsOn ? getGasReady(db, business.id) : null,
   ]);
@@ -83,7 +89,11 @@ export async function loadTeam(picked: string | undefined): Promise<TeamData> {
               status: c.status,
               selected: c.selected_entities,
             })),
-            changes: toTeamChanges(changes, clientUsers),
+            changes: toTeamChanges(
+              changes,
+              clientUsers,
+              new Set(actors.filter((a) => a.actor_is_team).map((a) => a.change_id)),
+            ),
             interest: [...new Set(interest.map((i) => i.provider))],
           }
         : null,
