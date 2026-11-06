@@ -66,24 +66,42 @@ export function CompetitorSuggestions({
   );
 }
 
+// COPY.md "UX (lead, 2026-11-06)" X26 (WCAG 3.3.1).
+const addNameFirst = "Add a name first.";
+
 // Add a competitor by name (and optional domain).
 export function AddCompetitorForm({ add }: { add: CompetitorActions["add"] }) {
   const [name, setName] = useState("");
   const [domain, setDomain] = useState("");
+  const [missing, setMissing] = useState(false);
   return (
     <form
       noValidate
       className="flex flex-col gap-3 rounded-surface bg-white p-4 shadow-card md:p-6"
       onSubmit={async (e) => {
         e.preventDefault();
-        if (!name.trim()) return;
+        // X26: Add stays enabled; an empty submit says why and puts the cursor where the name goes.
+        if (!name.trim()) {
+          setMissing(true);
+          (e.currentTarget.elements.namedItem("competitor-name") as HTMLInputElement | null)?.focus();
+          return;
+        }
         await add({ name: name.trim(), domain: domain.trim() ? normalizeDomain(domain) : null });
         setName("");
         setDomain("");
       }}
     >
       <div className="grid gap-3 md:grid-cols-2">
-        <PillField label="Name" name="competitor-name" value={name} onChange={(e) => setName(e.target.value)} />
+        <PillField
+          label="Name"
+          name="competitor-name"
+          value={name}
+          error={missing ? addNameFirst : undefined}
+          onChange={(e) => {
+            setName(e.target.value);
+            setMissing(false);
+          }}
+        />
         <PillField
           label="Domain"
           name="competitor-domain"
@@ -93,8 +111,9 @@ export function AddCompetitorForm({ add }: { add: CompetitorActions["add"] }) {
         />
       </div>
       <div>
+        {/* X26: "Add", so the form isn't a second "Add competitor" beside the disclosure that opens it. */}
         <button type="submit" className={ghost}>
-          Add competitor
+          Add
         </button>
       </div>
     </form>

@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { formatPercent } from "@/components/ui/StatNumber";
 import type { LocalCompetitor } from "@/lib/onboarding/types";
 import type { CompetitorRow } from "@/lib/queries/shell";
+import { Icon } from "@/components/ui/Icon";
 import { AddCompetitorForm, CompetitorSuggestions, type CompetitorActions } from "./CompetitorActions";
 import { appCopy as c } from "./copy";
 import { Measured, Page, Section } from "./Page";
@@ -57,7 +58,23 @@ export function CompetitorsView({
         </Section>
       )}
 
-      <AddCompetitorForm add={actions.add} />
+      {/* X26: with competitors tracked, adding one more is a side step, folded behind a text action. */}
+      {empty ? (
+        <AddCompetitorForm add={actions.add} />
+      ) : (
+        <details className="group">
+          <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 text-ui text-link underline underline-offset-4 md:min-h-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep">
+            Add competitor
+            <Icon
+              name="chevronRight"
+              className="size-4 transition-transform group-open:rotate-90 motion-reduce:transition-none"
+            />
+          </summary>
+          <div className="mt-3">
+            <AddCompetitorForm add={actions.add} />
+          </div>
+        </details>
+      )}
     </Page>
   );
 }

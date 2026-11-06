@@ -172,7 +172,7 @@ describe("Competitors (UI.md 4b, SoV only here)", () => {
     render(<CompetitorsView latest={null} tracked={[]} suggestions={[]} actions={actions} now={now} />);
     expect(screen.getByText("No competitors yet. Add 3-5 local places to compare.")).toBeInTheDocument();
     await userEvent.type(screen.getByLabelText("Name"), "Example Soba Stand");
-    await userEvent.click(screen.getByRole("button", { name: "Add competitor" }));
+    await userEvent.click(screen.getByRole("button", { name: "Add" }));
     expect(actions.add).toHaveBeenCalledWith({ name: "Example Soba Stand", domain: null });
   });
 });

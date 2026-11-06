@@ -508,6 +508,8 @@ Strings the lead approved for the UX plan (share/ux-plan §C; founder OK 2026-11
 | Free audit CTA panel, after the leaderboard (X4) | "Rank1 checks these 4 AI engines every week and shows you what to fix next." with the existing "Start for $99/mo" |
 | First-check empty states (X25), chosen from run state | A first check queued or running: "Your first check is running." (no action). None queued: Fix list and Dashboard "Your first check runs Monday." + "Review your questions" (→ /app/questions); /client "The team's first check runs Monday."; History keeps "No weekly checks yet. Your first one runs Monday." + "Review your questions" |
 | /client slot 2 section title (X3) | "What the team did" |
+| Competitors add form, empty submit (X26; lead 2026-11-06, WCAG 3.3.1) | "Add a name first." inline under Name, tied to it with aria-describedby |
+| Competitors add form, submit (X26; lead 2026-11-06) | "Add" (the disclosure above it keeps "Add competitor") |
 
 ## Engine location tooltip
 
