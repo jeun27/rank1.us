@@ -540,6 +540,9 @@ Strings the lead approved for the UX plan (share/ux-plan §C; founder OK 2026-11
 | Reports, the folded settings (X10) | "Branding" (logo, brand color, recipients, Save). The preview fold reuses "Report preview" |
 | Experiments "Start a test", under the test questions (X22; §C) | "Control: the other {n} questions" (n=1: "Control: the other question") + text action "Edit" (opens the control list) |
 | Experiments "Start a test", under a disabled Start (X22; §C) | "Pick at least one test question and a name." (tied with aria-describedby, gone once both are there) |
+| Onboarding step 1, beside a disabled Next: the first missing field (X24; §C) | "Add your business name first." · "Pick a cuisine first." · "Add your city first." · "Add your state first." |
+| Onboarding step 2, beside Next while the place search runs (X24; §C) | "Finding places near you…" |
+| Onboarding step 3, sticky bar beside Finish setup (X23; §C, lead edit a) | "{n} of {total} questions tracked" ({total} is the plan limit, MAX_ACTIVE_QUESTIONS) |
 
 ## Engine location tooltip
 

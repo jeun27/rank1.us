@@ -59,7 +59,7 @@ test("a new owner sets up a business in 3 steps and lands on /app", async ({ pag
   await next(page).click();
 
   await expect(page.getByText("Step 3 of 3")).toBeVisible();
-  await expect(page.getByLabel("Short form")).toHaveCount(25);
+  await expect(page.getByRole("group", { name: /^\d+$/ })).toHaveCount(25);
   await axeClean(page);
   await page.getByRole("button", { name: "Finish setup" }).click();
   await page.waitForURL("**/app", { timeout: 20_000 });
@@ -130,4 +130,24 @@ test("tap targets are at least 44px on every step", async ({ page }) => {
   await page.getByLabel("Business name").fill("Example Ramen House", { timeout: 20_000 });
   await page.getByLabel("Cuisine").selectOption("ramen");
   expect(await small()).toEqual([]);
+});
+
+// X23 (UX plan PR 26b): step 3 is 25 one-line rows, not ~9,900px of open editors; the count + Finish bar
+// stays at the bottom of the screen while the list scrolls.
+test("step 3: one-line rows and a sticky count + Finish bar", async ({ page }) => {
+  await page.goto("/dev/onboarding");
+  const step3 = page.locator('[data-state="3 success"]');
+  await expect(step3.getByRole("group", { name: /^\d+$/ })).toHaveCount(25);
+  const list = (await step3.locator("ol").boundingBox())!;
+  expect(list.height).toBeLessThan(page.viewportSize()!.width < 768 ? 2600 : 1800);
+  for (const h of await step3
+    .getByRole("group", { name: /^\d+$/ })
+    .evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height)))
+    expect(h).toBeLessThan(120);
+  await step3.getByRole("group", { name: "12", exact: true }).scrollIntoViewIfNeeded();
+  const bar = step3.getByText(/^\d+ of \d+ questions tracked$/);
+  await expect(bar).toBeInViewport();
+  await expect(step3.getByRole("button", { name: "Finish setup" })).toBeInViewport();
+  const box = (await step3.getByRole("button", { name: "Finish setup" }).boundingBox())!;
+  expect(box.y + box.height).toBeLessThanOrEqual(page.viewportSize()!.height);
 });

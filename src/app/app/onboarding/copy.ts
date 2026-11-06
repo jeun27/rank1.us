@@ -3,6 +3,14 @@ export const copy = {
   step: (n: number) => `Step ${n} of 3`,
   titles: ["Business", "Competitors", "Questions"],
   next: "Next",
+  // COPY.md "UX (lead, 2026-11-06)" X24: beside a disabled Next.
+  missing: {
+    name: "Add your business name first.",
+    cuisine: "Pick a cuisine first.",
+    city: "Add your city first.",
+    state: "Add your state first.",
+    places: "Finding places near you…",
+  },
   back: "Back",
   finish: "Finish setup",
   domain: { label: "Your domain", placeholder: "yoursite.com", noEnding: "Add the ending, like ramenhouse.com" },
@@ -27,6 +35,8 @@ export const copy = {
   addCompetitor: "Add competitor",
   remove: "Remove",
   track: "Track",
+  // COPY.md "UX (lead, 2026-11-06)" X23 (lead edit a: total is the plan limit).
+  tracked: (n: number, total: number) => `${n} of ${total} questions tracked`,
   shortForm: "Short form",
   longForm: "Long form",
   level: "Location level",
