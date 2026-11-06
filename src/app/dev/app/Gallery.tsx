@@ -42,7 +42,7 @@ const experiment = { end: noop, remove: noop };
 // schema tidy-up are P2 Content), and the P0 baseline from the example run.
 const pillarFixes = fixes.map((f) => ({ ...f, pillar: f.rule_key === "R14" ? ("p5" as const) : ("p2" as const) }));
 const pillarTidyUps = exampleTidyUps.map((f) => ({ ...f, pillar: "p2" as const }));
-const pillarDone = exampleDone.map((f) => ({ ...f, pillar: "p1" as const }));
+const pillarDone = exampleDone.map((f) => ({ ...f, pillar: "p2" as const }));
 const results = "We couldn't load your results. Try again.";
 const fresh = { checkedAt: exampleQuestions.run!.finished_at, answers: 38, now: NOW };
 // Success = everything answered; partial = the 4b partial state of the same page.

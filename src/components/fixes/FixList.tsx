@@ -307,7 +307,21 @@ export function FixList({
   const groupOpen = (p: Pillar) => rankedOpen.filter((f) => pillarOf(f) === p);
   const groupTotal = (p: Pillar) =>
     [...ranked, ...tidyUps].filter((f) => pillarOf(f) === p).length + done.filter((f) => f.pillar === p).length;
-  const groupDone = (p: Pillar) => doneRows.filter((r) => pillarOf(r) === p).length;
+  const groupDoneRows = (p: Pillar) => doneRows.filter((r) => pillarOf(r) === p);
+  const renderDone = (r: Row, lvl: 2 | 3 | 4) => (
+    <FixRow
+      key={r.id}
+      row={r}
+      state="done"
+      canWrite={write}
+      level={lvl}
+      onDone={() => {}}
+      onStart={() => {}}
+      onReopen={() => set(r.id, "todo", "done")}
+    />
+  );
+  // Done rows outside the groups: all of them without pillars, else only those with no pillar.
+  const looseDone = pillared ? doneRows.filter((r) => !pillarOf(r)) : doneRows;
   // Rules the latest run couldn't check, above the groups.
   const uncheckedBlock = unchecked.length > 0 && (
     <div className="flex flex-col gap-3">
@@ -391,45 +405,51 @@ export function FixList({
       {pillared ? (
         <>
           {showOpen && uncheckedBlock}
-          {showOpen &&
-            PILLAR_ORDER.map((p) => {
-              const rows = groupOpen(p);
-              const tidyHere = p === "p2" ? tidyOpen : [];
-              if (!rows.length && !tidyHere.length) return null;
-              const GroupHeading = (["h2", "h3"] as const)[level - 2];
-              const TidyIn = (["h3", "h4"] as const)[level - 2];
-              const cardLevel = (level + 1) as 3 | 4;
-              return (
-                <section key={p} data-pillar={p} aria-labelledby={`pillar-${p}`} className="flex flex-col gap-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <GroupHeading id={`pillar-${p}`} className="flex items-center gap-2 text-ui font-medium">
-                      <span className="inline-flex h-5 items-center rounded-tag border border-border px-1.5 font-mono text-tag text-text2">
-                        {p.toUpperCase()}
-                      </span>
-                      <span>{c.pillars[p]}</span>
-                    </GroupHeading>
-                    <span
-                      data-testid="group-count"
-                      data-computed
-                      className="font-mono text-caption text-inkMuted tabular-nums"
-                    >
-                      {`${groupDone(p)}/${groupTotal(p)}`}
+          {PILLAR_ORDER.map((p) => {
+            // S2: done rows sit in their group, so a fully done group hides only in Open.
+            const rows = showOpen ? groupOpen(p) : [];
+            const tidyHere = showOpen && p === "p2" ? tidyOpen : [];
+            const doneHere = showDone ? groupDoneRows(p) : [];
+            if (!rows.length && !tidyHere.length && !doneHere.length) return null;
+            const GroupHeading = (["h2", "h3"] as const)[level - 2];
+            const TidyIn = (["h3", "h4"] as const)[level - 2];
+            const cardLevel = (level + 1) as 3 | 4;
+            return (
+              <section key={p} data-pillar={p} aria-labelledby={`pillar-${p}`} className="flex flex-col gap-3">
+                <div className="flex items-center justify-between gap-3">
+                  <GroupHeading
+                    id={`pillar-${p}`}
+                    aria-label={`${p.toUpperCase()}: ${c.pillars[p]}`}
+                    className="flex items-center gap-2 text-ui font-medium"
+                  >
+                    <span className="inline-flex h-5 items-center rounded-tag border border-border px-1.5 font-mono text-tag text-text2">
+                      {p.toUpperCase()}
                     </span>
-                  </div>
-                  {rows.length > 0 && (
-                    <ul aria-label={c.pillars[p]} className="flex flex-col gap-3">
-                      {rows.map((f) => renderOpen(f, cardLevel))}
-                    </ul>
-                  )}
-                  {tidyHere.length > 0 && (
-                    <section aria-label={c.tidyUps} className="flex flex-col gap-3">
-                      <TidyIn className="text-caption font-semibold text-text2">{c.tidyUps}</TidyIn>
-                      <ul className="flex flex-col gap-3">{tidyHere.map((f) => renderOpen(f, 4))}</ul>
-                    </section>
-                  )}
-                </section>
-              );
-            })}
+                    <span>{c.pillars[p]}</span>
+                  </GroupHeading>
+                  <span
+                    data-testid="group-count"
+                    data-computed
+                    className="font-mono text-caption text-inkMuted tabular-nums"
+                  >
+                    {`${groupDoneRows(p).length}/${groupTotal(p)}`}
+                  </span>
+                </div>
+                {rows.length + doneHere.length > 0 && (
+                  <ul aria-label={c.pillars[p]} className="flex flex-col gap-3">
+                    {rows.map((f) => renderOpen(f, cardLevel))}
+                    {doneHere.map((r) => renderDone(r, cardLevel))}
+                  </ul>
+                )}
+                {tidyHere.length > 0 && (
+                  <section aria-label={c.tidyUps} className="flex flex-col gap-3">
+                    <TidyIn className="text-caption font-semibold text-text2">{c.tidyUps}</TidyIn>
+                    <ul className="flex flex-col gap-3">{tidyHere.map((f) => renderOpen(f, 4))}</ul>
+                  </section>
+                )}
+              </section>
+            );
+          })}
         </>
       ) : (
         <>
@@ -456,22 +476,9 @@ export function FixList({
           )}
         </>
       )}
-      {showDone && doneRows.length > 0 && (
+      {showDone && looseDone.length > 0 && (
         <section aria-label={c.doneTab} className="flex flex-col gap-3">
-          <ul className="flex flex-col gap-3">
-            {doneRows.map((r) => (
-              <FixRow
-                key={r.id}
-                row={r}
-                state="done"
-                canWrite={write}
-                level={level}
-                onDone={() => {}}
-                onStart={() => {}}
-                onReopen={() => set(r.id, "todo", "done")}
-              />
-            ))}
-          </ul>
+          <ul className="flex flex-col gap-3">{looseDone.map((r) => renderDone(r, level))}</ul>
         </section>
       )}
 
