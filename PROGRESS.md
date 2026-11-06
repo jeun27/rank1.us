@@ -924,3 +924,13 @@ Blocked/open
 - Jelly eye-tracking (UI.md hero row): not built; needs jelly.svg with an eye layer (lead Q2). The 72px Jelly is static.
 - Sections (D38): Features as a hairline bento; the steps as one bordered list; the comparison with a sticky header and the pinned Rank1 column on infoBg; the pricing card as a 12px frame with a top-edge glow (the /app/billing card is unchanged); the final CTA as a bordered panel with a corner glow and a 96px Jelly (was the ink band).
 - Tokens (D39): radius frame 12px, shadow window, and the accent glow (--glow, the `glow` utility). tokens.test now allows 3 gradients; the glow is landing-only (src/components/site) and shadow-window is HeroDemo-only.
+
+## Connections C-a (frontend): Settings → Connections (branch feat/connections-hub)
+
+- Lead OK on the 3-PR split C-a → C-b → C-c, all behind ENABLE_CONNECTIONS (2026-11-06).
+- /app/settings/connections (self-serve) and /client/settings/connections (a DFY client authorizes its own business, OAuth only). /app/settings redirects there. The proxy 404s all three while the flag is off, before anything else, since the pages stream. The rail shows "Settings" and the /client header shows "Connections" only with the flag on.
+- Tiles come from recommend(businesses.vertical) (a thin getBusinessVertical query), in Recommended / Optional / Coming soon, each with its niche helper text. Only gbp, search_console and ga4 connect. Every other tile is "Coming soon" + "Notify me" (noteConnectorInterest, lead Q3), then "We'll let you know.". No fake connect buttons.
+- Connect / Reconnect open a consent sheet that states only what the code does (scope, the 6 GBP fields, review + log, how to revoke, no passwords), then "Continue to Google" → /api/connections/google/start with return=the hub. The callback's ?status= shows a banner.
+- Per connection: status (Connected / Needs reauth / Revoked), the chosen locations, "Choose locations / sites / properties" (listConnectionEntities → pickConnectionEntities), "Disconnect" with the existing one-grant warning, and the change log (field + date only; values stay in the team pane).
+- Without can_connect_business: statuses only, no buttons.
+- Copy is DRAFT for the lead's sign-off (lead Q1), in COPY.md "Connections (lead, 2026-11-06)".
