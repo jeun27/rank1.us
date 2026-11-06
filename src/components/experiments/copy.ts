@@ -24,6 +24,7 @@ export const experimentCopy = {
     link: "Use a link that starts with http:// or https://.",
   },
   confirmDelete: "Delete this test? Its results go too.",
+  cancel: "Cancel",
   saveFailed: "We couldn't save that. Try again.",
   results: "We couldn't load your results. Try again.",
 } as const;

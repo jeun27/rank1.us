@@ -110,3 +110,17 @@ test("a self-serve user is not 404'd on /app/experiments", async ({ page }) => {
   const res = await page.goto("/app/experiments");
   expect(res?.status()).toBe(200);
 });
+
+// X29: Delete test confirms in place; the open confirm is axe clean in both themes and Escape hands focus back.
+for (const theme of ["dark", "light"] as const)
+  test(`inline delete confirm (${theme}): focus on Cancel, axe clean, Escape returns focus`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: theme });
+    await page.goto("/dev/app?state=experiments-success");
+    const card = page.getByRole("article").first();
+    await card.getByRole("button", { name: "Delete test" }).click();
+    const confirm = card.getByRole("group", { name: "Delete this test? Its results go too." });
+    await expect(confirm.getByRole("button", { name: "Cancel" })).toBeFocused();
+    expect((await new AxeBuilder({ page }).analyze()).violations.map((v) => v.id)).toEqual([]);
+    await page.keyboard.press("Escape");
+    await expect(card.getByRole("button", { name: "Delete test" })).toBeFocused();
+  });

@@ -21,12 +21,14 @@ const variants = {
   // D35 .alt: the raised fill with a control-edge hairline.
   alt: `${control} border border-fieldBorder bg-raised text-ink hover:bg-overlay`,
   secondary: "group min-h-11 px-1.5 text-link underline underline-offset-4",
+  // Confirms a destructive step, in the error banner's tones (AA in both themes).
+  danger: `${control} border border-brick/40 bg-errorBg text-brick hover:border-brick`,
   // The final CTA uses the accent (D34: amber is no longer a button colour).
   final: `${control} bg-accent text-onAccent hover:bg-jellyLoading`,
 };
 
 type Props = {
-  variant?: "primary" | "secondary" | "alt" | "final";
+  variant?: "primary" | "secondary" | "alt" | "final" | "danger";
   size?: "md" | "lg";
   href?: string;
   loading?: boolean;
