@@ -452,6 +452,8 @@ const reportProps = {
   settings: { brand_color: "#1D5FC5", report_recipients: ["owner@exampleramen.test"], logoUrl: null },
   reports: [reportRow("r3", "10", "sent"), reportRow("r2", "09", "sent"), reportRow("r1", "08", "generated")],
   previewSrc: "/dev/report-preview.pdf",
+  // Example data: the send after the gallery's fixed Nov 5.
+  nextReport: "2026-12-01",
   actions: {
     save: noop,
     uploadLogo: noop,
