@@ -432,6 +432,25 @@ Strings from the GAS prototype report (share/gas-proto/REPORT.md, lead copy). Fi
 | G2 explainer | "We read robots.txt and load your homepage the way AI crawlers would." |
 | G2 dashboard line (/app, good only) | "AI can read your site · checked {age} ago" |
 
+**G4 "How AI describes you", signed off by the lead (2026-11-06).** /app/settings/narrative and the /app Dashboard. A word match on stored answer text, never an LLM reading.
+
+| Where | String |
+|---|---|
+| Dashboard card title (a clash only) | "How AI describes you" |
+| Settings page title | "How should AI describe you?" |
+| Lists | "Words that fit you", "Words to avoid" |
+| Helper | "Short words or phrases, up to 8 each. We match the words and their endings, not synonyms, so "cheap" won't catch "affordable"." |
+| Clash | "{n} of {d} answers use words you want to avoid: {words}" |
+| Snippet label | "Word match" |
+| No clash (Settings) | "No clashes. None of your "avoid" words came up." |
+| Per-word count (lead: every count carries its base) | "in {n} of {d} answers" / "not yet" |
+| Hint | "Words that never come up are the next thing to say on your own pages." |
+| No words (one quiet Dashboard line) | "Tell us the words that fit you, and we'll check every AI answer for them." + "Add your words" |
+| Actions | "Edit words", "Remove {word}", "Add", "Save" |
+| Saved (frontend; lead to confirm) | "Saved." |
+| Save failed (inline) | "We couldn't save that. Try again." |
+| Inline errors | "Up to 8 words.", "2 to 40 characters.", "That word is in the other list." |
+
 ## Landing (lead, 2026-11-06)
 
 | Where | String |
