@@ -946,15 +946,27 @@ Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/
 - dfy_client gate (lead): the proxy 404s /app/experiments and /new for a dfy_client (my_landing), on top of backend's RLS; a DB e2e covers it in CI.
 - Lead copy (Q1) is in COPY.md "Experiments (lead, 2026-11-05)".
 
+## Connections C-a (frontend): Settings → Connections (branch feat/connections-hub)
+
+- Lead OK on the 3-PR split C-a → C-b → C-c, all behind ENABLE_CONNECTIONS (2026-11-06).
+- /app/settings/connections (self-serve) and /client/settings/connections (a DFY client authorizes its own business, OAuth only). /app/settings redirects there. The proxy 404s all three while the flag is off, before anything else, since the pages stream. The rail shows "Settings" and the /client header shows "Connections" only with the flag on.
+- Tiles come from recommend(businesses.vertical) (a thin getBusinessVertical query), in Recommended / Optional / Coming soon, each with its niche helper text. Only gbp, search_console and ga4 connect. Every other tile is "Coming soon" + "Notify me" (noteConnectorInterest, lead Q3), then "We'll let you know.". No fake connect buttons.
+- Connect / Reconnect open a consent sheet that states only what the code does (scope, the 6 GBP fields, review + log, how to revoke, no passwords), then "Continue to Google" → /api/connections/google/start with return=the hub. The callback's ?status= shows a banner.
+- Per connection: status (Connected / Needs reconnect / Disconnected), the chosen locations, "Choose locations / sites / properties" (listConnectionEntities → pickConnectionEntities), "Disconnect" with the existing one-grant warning, and the change log (field + date only; values stay in the team pane).
+- Without can_connect_business: statuses only, no buttons.
+- Copy: drafted, then signed off by the lead with 3 edits (2026-11-06): the first consent line names openid as well as the scope ("to know which Google account you used. We don't get your email or profile."), GBP edits happen "only after you or the Rank1 team confirm", and the statuses read "Needs reconnect" / "Disconnected" (the enums stay needs_reauth / revoked). In COPY.md "Connections (lead, 2026-11-06)".
+
+
 ## Fix status history (backend): for the check-off Fix list (branch feat/fix-status-history)
 - Lead decisions (2026-11-06): additive only and compatible with live v0.5.0 on the shared DB. A team actor shows as is_team only (the UI says "Rank1 team"); a display name shows only for a non-team member of the same business; never the email.
 - Migration 20261105000023 (+ .down.sql): fixes.status_changed_at / status_changed_by (→ auth.users, on delete set null), null on existing rows (fixes has no updated_at to backfill from). A BEFORE INSERT OR UPDATE trigger forces them: null on insert (reviewer: never the caller's values), set on every status change (actor null for the service detector), kept on any other update, so neither can be written directly. set_fix_status and listFixes are unchanged.
 - done_fixes(business) (invoker, through the fixes RLS): done fixes, newest change first (nulls last), with changed_by from private.fix_status_actor (definer, re-checks the caller can see the fix). Query: listDoneFixes in src/lib/queries/fixes.ts.
 
 
+
 ## Portal (b) (frontend): check-off Fix list (branch feat/fixlist-checkoff)
 
-- Lead OK 2026-11-06 (mockup fixes-mock.html). Stacked on backend #101 (fix status history: status_changed_at / status_changed_by, listDoneFixes with changed_by {is_team, name}); merges after it.
+- Lead OK 2026-11-06 (mockup fixes-mock.html). Built on backend #101 (fix status history: status_changed_at / status_changed_by, listDoneFixes with changed_by {is_team, name}), now on main.
 - The Status select is gone. Each fix has a circle that is a real checkbox (role checkbox, named by the fix title, aria-checked false / mixed / true, aria-keyshortcuts x, tooltip "Mark done (x)"). Click or x = done, with a toast "Marked “{title}” done" + Undo (back to the previous status). "Start" (To do only, s, "Start (s)") sets doing: a half circle + "In progress" + who · date. Done rows are struck through with "Done {date}" · who + Undo (reopens to To do). The DB keeps todo / doing / done via set_fix_status.
 - Who: "Rank1 team" for a team actor, the member's name otherwise, never an email; none when the weekly check closed it (changed_by null).
 - "{done} of {total} done" bar and an Open / Done / All filter. The filter is a segmented control (radiogroup, arrow keys), not tabs, because the team workspace already wraps the list in a document tabpanel.

@@ -1,5 +1,54 @@
 # QA
 
+## Step 17: Before/after test vs control (experiments)
+
+Checked 2026-11-06 on main at 3258a85:
+- #82 (12983e6): experiments db (migration 0020)
+- #81 (ee17282): before/after vs control metrics
+- #99 (3258a85): /app/experiments
+
+The hosted DB has 0020 and 0022 (lead). The UI checks and full e2e ran from the Mac against #99's final head preview at 1aa6078, whose tree is identical to 3258a85. test-db (tests/db/experiments.test.ts) and the local-stack e2e (the dfy_client 404) come from CI on main's push of 3258a85 (run 42169754045). Example data only. QA has no signed-in preview session (the Step 16 N2 blocker), so the live create, end and delete flow comes from CI.
+Preview: https://rank1-nhq6n2w6i-bryan-flowhighlevels-projects.vercel.app (sha 1aa6078, READY).
+Sources: the lead's brief (rank1-step17.md), UI.md 4b "Experiments", COPY.md "Experiments (lead, 2026-11-05)".
+
+Result: PASS. No blocking problems.
+
+### Commands
+
+| Command | Result |
+|---|---|
+| `pnpm test` (sandbox, 3258a85) | PASS. 118 files, 1348 tests passed |
+| `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build` (sandbox) | PASS |
+| CI on main push 3258a85 | PASS. test-db 444 tests (tests/db/experiments.test.ts: 26); e2e 573 passed, 13 skipped |
+| Preview e2e (Mac, 1aa6078) | 503 passed, 2 flaky failures (v3 section N1), including experiments.spec.ts:40, which passed 5 of 6 re-runs |
+
+### Checks
+
+| Check | Result | Evidence |
+|---|---|---|
+| Role gate: dfy_client gets a 404, and RLS refuses | PASS | src/lib/supabase/middleware.ts `experimentsTarget` (normalized path, /app/experiments and /new only) → `my_landing() = 'dfy_client'` → 404. A dfy_client never reaches the /app shell or its nav (AreaGate sends them to /client). db "a dfy_client never sees, creates, ends or deletes experiments", "an outsider, and the team on a self-serve business, are refused", "nobody updates experiments or experiment_questions directly". e2e (CI) "a dfy_client gets a real 404 on /app/experiments and /app/experiments/new", "a self-serve user is not 404'd" |
+| Who may write | PASS | db "self-serve members create, list, end and delete experiments", "the team creates, reads, ends and deletes on a DFY business" |
+| Group rules | PASS | db refuses (22023): no test questions, an empty control group, a question in both groups, a test or control question from another business, a future change date, a non-http link (`javascript:`), a fix from another business, a blank name with no fix. "an experiment without both groups is refused at commit (23514)", "a question from another business can't join an experiment (23514)". UI "a question is in one group only: ticking it in Test unticks it in Control, and back" |
+| Defaults | PASS | db "control defaults to the other active questions; date to LA today; name to the fix title", "refuses when there is no other active question for the default control". UI "the change date defaults to today (LA); control starts as every question", "from a fix: the name defaults to the fix title and fix_id is sent" |
+| 28-day windows | PASS | `experiment_data` (0020): before = [d−28, d), after = [d, min(d+28, ended day+1)), keyed on the run's LA start date. Only ok answers in audit and weekly runs of the business count. experiment.ts `experimentWindows` = D−28..D−1 and D..D+27. db "counts ok answers of audit/weekly runs in [d-28, d) and [d, d+28)", "puts a run one minute before LA midnight on d in before, and midnight in after", "an ended test's after window stops at the end day (included)", "a deleted question drops out of its group and the counts" |
+| Floored points and the difference | PASS | `computeExperiment`: change = floorPct(after) − floorPct(before), difference = test change − control change. Unit "floors each percent before subtracting, so the change matches the two shown percents", "each group gets before/after Metrics with n, the change in whole points, and the difference". UI "Change and Difference are signed floored points", "a negative change uses a minus sign; zero has no sign" |
+| tooFew when n < 10 | PASS | `TOO_FEW = 10`. Any of the 4 cells under 10 → tooFew, change and difference null. UI "too few answers (any cell n < 10): the partial copy instead of numbers". Preview experiments-partial shows "Too few answers to call yet. Next check Monday." |
+| No p-values or significance language | PASS | `grep -rniE "p-value|significan|confidence|statistically" src` finds only the code comment "No p-values here or anywhere". None in rendered text on any experiments state at 375 or 1280 in either theme. The e2e success test asserts the body has no p-value, signific or confiden. "Directional" is always the label (`EXPERIMENT_LABEL`) |
+| Status | PASS | `experimentStatus`: running through D+27 (LA), done from D+28, and 'ended' always wins. db "status is done once LA today is 28 days after the change date". UI "status tags: Running / Done / Ended", "End test shows only while running and ends it", "Delete test asks first ('Delete this test? Its results go too.')" |
+| Fix list button | PASS | FixList.tsx: "Start a before/after test" → `/app/experiments/new?fix=<id>`, shown only with canWrite. UI "each fix links to the form with its id, only with canWrite". e2e "Fix list: 'Start a before/after test' links to the form for that fix" (preview, passed) |
+| UI.md 4b states | PASS | Preview, 375 and 1280, dark and light: experiments-empty, -loading, -error, -partial, -success and -form all have axe 0, one H1, no side scroll, every target ≥ 44px at 375, and the one-line breadcrumb. e2e "/dev/app experiments-{state} ({theme}): one H1, axe clean, no side scroll" (all states, both themes), "success: each card has Before / After as '% · n=', signed points, a Difference and 'Directional'" (phones: percent over n, stacked), "form by keyboard: the rules show inline errors, one group per question" |
+| COPY.md strings | PASS | src/components/experiments/copy.ts matches COPY.md "Experiments (lead, 2026-11-05)" and the UI.md 4b row. Unit "COPY.md has 'Experiments (lead, 2026-11-05)' with the brief's and the approved strings". Nav "Experiments" |
+| Migration rollback | PASS | CI test-db tests/db/migrations.test.ts (3 tests) passed on 3258a85, including "rollbacks undo everything in reverse order, and the migrations re-apply after" (rollbacks/…0020_experiments.down.sql) |
+
+### Blocking problems
+
+None.
+
+### Non-blocking notes
+
+- N1: tests/e2e/experiments.spec.ts:40 is flaky on the preview (reads the cells without waiting). See the v3 section N1.
+- N2: the live signed-in create, end and delete on the hosted DB is still open. It needs a signed-in owner, so it joins the morning run with #78 and Step 16 N2.
+
 ## Step 16: White-label monthly report
 
 Checked 2026-11-06 on main at 386f89f:
