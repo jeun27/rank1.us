@@ -152,11 +152,15 @@ test("C4: the FixList Status select is a 6px control (44px below md, 32px from m
 for (const theme of THEMES)
   test(`visuals ${theme}`, async ({ page }, info) => {
     const shot = (name: string) => `test-results/screenshots/drift-${name}-${theme}-${info.project.name}.png`;
+    // Each page streams in: wait for its content before the capture, so no shot is a blank shell.
     await open(page, "/dev/app?state=switcher-many", theme);
+    await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toBeVisible();
     await page.screenshot({ path: shot("breadcrumb") });
     await open(page, "/dev/app?state=fixes-success", theme);
+    await expect(page.getByLabel("Status").first()).toBeVisible();
     await page.screenshot({ path: shot("fixes") });
     await open(page, "/dev/app?state=dashboard-error", theme);
+    await expect(page.getByRole("alert").first()).toBeVisible();
     await page.screenshot({ path: shot("banner") });
     await open(page, "/dev/ui", theme);
     for (const name of ["Badge", "Banner", "ProgressBar"])
