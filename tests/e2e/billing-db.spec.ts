@@ -21,7 +21,7 @@ test("unpaid owner: 'Start for $99/mo'; no switcher with one business", async ({
   const name = page.getByRole("banner").getByText("Example Ramen House");
   if (page.viewportSize()!.width < 768) await expect(name).toBeHidden();
   else await expect(name).toBeVisible();
-  await expect(page.getByRole("button", { name: "Example Ramen House ▾" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Example Ramen House", exact: true })).toHaveCount(0);
 });
 
 test("paid owner with two businesses: plan math, and the switcher changes the current business", async ({ page }) => {
@@ -43,12 +43,12 @@ test("paid owner with two businesses: plan math, and the switcher changes the cu
   await expect(page.getByRole("button", { name: "Manage billing" })).toBeVisible();
 
   await page.goto("/app");
-  await page.getByRole("button", { name: "Example Ramen House ▾" }).click();
+  await page.getByRole("button", { name: "Example Ramen House", exact: true }).click();
   await page
     .getByRole("list", { name: "Business switcher" })
     .getByRole("button", { name: /^Example Taco Stand/ })
     .click();
-  await expect(page.getByRole("button", { name: "Example Taco Stand ▾" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Example Taco Stand", exact: true })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole("button", { name: "Example Taco Stand ▾" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Example Taco Stand", exact: true })).toBeVisible();
 });
