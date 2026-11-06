@@ -1,0 +1,3 @@
+# X30: entity count right after connect (data-pipeline, branch fix/connection-entity-count)
+
+Backend's #183 (0040) adds connections.entity_count and already saves it when the picker list loads. This PR adds the second call site backend asked for: right after a successful connect, the entities are listed once with the fresh access token and the count is saved, so the hub knows whether to offer "Choose …" before anyone opens the picker. That's 1–2 Google list calls before the callback redirect. It's best effort: a failed listing or count save is logged with its code only and never fails the connect.

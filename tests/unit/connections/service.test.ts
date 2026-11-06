@@ -298,6 +298,18 @@ describe("the entity picker", () => {
     ]);
   });
 
+  it("stores how many entities the account offers", async () => {
+    await svc.listConnectionEntities(ctx(gbpFetch()), "conn-1");
+    expect(q.setConnectionEntityCount).toHaveBeenCalledWith(serviceDb, "conn-1", 2);
+  });
+
+  it("a failed count save is logged by code and the list still returns", async () => {
+    q.setConnectionEntityCount.mockRejectedValue({ code: "22023", message: "Unknown connection" });
+    const c = ctx(gbpFetch());
+    expect(await svc.listConnectionEntities(c, "conn-1")).toHaveLength(2);
+    expect(c.log).toHaveBeenCalledWith("connections: entity count not saved (22023)");
+  });
+
   it("picking keeps only ids Google listed (no arbitrary ids)", async () => {
     const r = await svc.pickConnectionEntities(ctx(gbpFetch()), "conn-1", [
       "locations/2000000000000000002",
