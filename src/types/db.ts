@@ -919,6 +919,9 @@ isOneToOne: false
 "take_rate_token":
 { Args: { "p_kind": string }; Returns: boolean
                            },
+"team_client_queue":
+{ Args: Record<PropertyKey, never>; Returns: { "delta": number | null,"gas_ready": boolean,"id": string,"last_run_failed": boolean,"n": number | null,"name": string,"named": number | null,"needs_reauth": boolean,"open_fixes": number,"started": boolean }[]
+                           },
 "update_connection_tokens":
 { Args: { "p_connection_id": string,"p_enc_access": string,"p_enc_refresh"?: string,"p_expires_at": string }; Returns: undefined
                            },
