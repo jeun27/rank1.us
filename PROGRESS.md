@@ -974,6 +974,11 @@ Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/
 - Migration 20261105000024 (+ .down.sql), additive and compatible with live v0.5.0: fix_rules.pillar and fixes.pillar, NOT NULL, checked p0..p6, backfilled. A trigger gives new rules the mapping's pillar when none is sent (the seed, new rules), and another always gives a fix its rule's pillar on insert or a rule change, so v0.5.0's record_fix_results inserts get it.
 - listFixes items gain pillar (PILLARS / Pillar in src/lib/queries/fixes.ts); the item key test lists it.
 
+## Who/when on open fixes (backend): listFixes actors (branch feat/open-fix-actors)
+- Lead (2026-11-06): listFixes items carry status_changed_at and changed_by {is_team, name} | null, with the same safe mapping as done_fixes (team → is_team only, never an email), null on todo rows. Additive, and listFixes' signature is unchanged.
+- Migration 20261105000026 (+ .down.sql): open_fix_actors(business) (invoker, through the fixes RLS) returns the doing fixes' time and actor via 0023's private.fix_status_actor. listFixes merges it by fix id; the item key test lists the two new fields.
+
+
 
 
 
@@ -987,4 +992,4 @@ Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/
 - No legend line (lead): the shortcuts live in the tooltips and aria-keyshortcuts.
 - dfy_client: the circles are status images (role img, "{title}: {status}"), no Start or Undo.
 - /app/fixes, /client and /team load listDoneFixes next to listFixes.
-- Open with the lead (Q3): open fixes don't carry who/when in #101 yet, so an in-progress row shows only "In progress" until backend adds status_changed_at + changed_by to listFixes items.
+- Who/when on in-progress rows (lead Q3): from backend #108, which adds status_changed_at + changed_by to listFixes items (doing rows; null on todo).
