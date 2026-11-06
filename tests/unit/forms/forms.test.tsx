@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AuditRequestForm } from "@/components/forms/AuditRequestForm";
@@ -93,6 +93,91 @@ describe("AuditRequestForm", () => {
     render(<AuditRequestForm />);
     await fill("owner@example.test", "ramenhouse.com");
     expect(await screen.findByText("Add the ending, like ramenhouse.com")).toBeVisible();
+  });
+
+  // Founder-approved (07:56 UTC): the widget appears once both fields are valid; the button waits for a token.
+  describe("with Turnstile", () => {
+    type Opts = { sitekey: string; callback?: (t: string) => void; "expired-callback"?: () => void };
+    const widget = () => {
+      const w = { opts: null as Opts | null, reset: vi.fn(), remove: vi.fn() };
+      vi.stubGlobal("turnstile", {
+        render: (_el: HTMLElement, o: Opts) => ((w.opts = o), "w1"),
+        reset: w.reset,
+        remove: w.remove,
+      });
+      return w;
+    };
+    afterEach(() => vi.unstubAllEnvs());
+    const button = () => screen.getByRole("button", { name: "Get my free audit" });
+    const region = () => document.querySelector("[data-turnstile-reveal]")!;
+
+    it("empty → partial → valid → token → submit; inactive clicks send nothing", async () => {
+      vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "1x00000000000000000000AA");
+      const w = widget();
+      const { fetch, release } = pendingFetch(202, { status: "queued" });
+      render(<AuditRequestForm />);
+      expect(button()).toHaveAttribute("aria-disabled", "true");
+      expect(button()).toHaveAccessibleDescription("Enter your email and website to continue");
+      expect(region()).toHaveAttribute("data-revealed", "false");
+      expect(region()).toHaveAttribute("inert");
+      await userEvent.type(screen.getByLabelText("Email"), "owner@example.test");
+      expect(region()).toHaveAttribute("data-revealed", "false");
+      await userEvent.type(screen.getByLabelText("Your domain"), "ramenhouse.com");
+      expect(region()).toHaveAttribute("data-revealed", "true");
+      expect(region()).not.toHaveAttribute("inert");
+      expect(button()).toHaveAccessibleDescription("Check the box to continue");
+      await userEvent.click(button());
+      expect(fetch).not.toHaveBeenCalled();
+      await waitFor(() => expect(w.opts?.sitekey).toBe("1x00000000000000000000AA"));
+      act(() => w.opts!.callback!("token-1"));
+      expect(button()).not.toHaveAttribute("aria-disabled");
+      expect(button()).not.toHaveAccessibleDescription();
+      await userEvent.click(button());
+      expect(fetch).toHaveBeenCalledTimes(1);
+      release();
+      expect(await screen.findByRole("status")).toBeInTheDocument();
+    });
+
+    it("editing a field back to invalid: inactive again, the token kept (no reset); valid again: active", async () => {
+      vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "1x00000000000000000000AA");
+      const w = widget();
+      render(<AuditRequestForm />);
+      await userEvent.type(screen.getByLabelText("Email"), "owner@example.test");
+      await userEvent.type(screen.getByLabelText("Your domain"), "ramenhouse.com");
+      await waitFor(() => expect(w.opts).not.toBeNull());
+      act(() => w.opts!.callback!("token-1"));
+      await userEvent.clear(screen.getByLabelText("Your domain"));
+      await userEvent.type(screen.getByLabelText("Your domain"), "ramenhouse");
+      expect(button()).toHaveAttribute("aria-disabled", "true");
+      expect(button()).toHaveAccessibleDescription("Enter your email and website to continue");
+      expect(region()).toHaveAttribute("data-revealed", "true");
+      await userEvent.type(screen.getByLabelText("Your domain"), ".com");
+      expect(button()).not.toHaveAttribute("aria-disabled");
+      expect(w.reset).not.toHaveBeenCalled();
+    });
+
+    it("an inactive click with an invalid field shows the field errors, like before", async () => {
+      vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "1x00000000000000000000AA");
+      widget();
+      render(<AuditRequestForm />);
+      await userEvent.type(screen.getByLabelText("Your domain"), "ramenhouse");
+      await userEvent.click(button());
+      expect(screen.getByText("Add the ending, like ramenhouse.com")).toBeInTheDocument();
+    });
+
+    it("an expired token: inactive again and the widget is reset", async () => {
+      vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "1x00000000000000000000AA");
+      const w = widget();
+      render(<AuditRequestForm />);
+      await userEvent.type(screen.getByLabelText("Email"), "owner@example.test");
+      await userEvent.type(screen.getByLabelText("Your domain"), "ramenhouse.com");
+      await waitFor(() => expect(w.opts).not.toBeNull());
+      act(() => w.opts!.callback!("token-1"));
+      act(() => w.opts!["expired-callback"]!());
+      expect(button()).toHaveAttribute("aria-disabled", "true");
+      expect(button()).toHaveAccessibleDescription("Check the box to continue");
+      expect(w.reset).toHaveBeenCalledWith("w1");
+    });
   });
 
   it("renders no Turnstile widget without NEXT_PUBLIC_TURNSTILE_SITE_KEY", () => {
