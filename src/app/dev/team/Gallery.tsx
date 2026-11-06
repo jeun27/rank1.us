@@ -83,6 +83,15 @@ const extras: TeamExtras = {
     removeClient: noop,
     setFixListVisible: noop,
     dismissReady: noop,
+    // C-c PR 2 on Example data: the preview diffs against an invented "before"; apply does nothing.
+    previewGbp: async (_b: string, _l: string, edit: Record<string, string | undefined>) => ({
+      changes: Object.entries(edit).map(([field, after]) => ({
+        field,
+        before: "Example data: the current value",
+        after,
+      })),
+    }),
+    applyGbp: async () => ({ applied: 1 }),
   },
 };
 

@@ -1,4 +1,5 @@
 "use client";
+import type { GbpChange, GbpEditorProps, GbpTextEdit } from "./GbpEditor";
 import type { TeamConnectionsData } from "./team-connections-data";
 import { createContext, useContext } from "react";
 import type { DoneView, FixView } from "@/components/fixes/FixList";
@@ -46,6 +47,14 @@ export type TeamExtras = {
     setFixListVisible: (businessId: string, visible: boolean) => Result;
     // G3: the team dismisses the ready notice.
     dismissReady?: (businessId: string) => Result;
+    // C-c PR 2: the team's Business Profile preview and apply (3 text fields).
+    previewGbp?: (businessId: string, location: string, edit: GbpTextEdit) => ReturnType<GbpEditorProps["preview"]>;
+    applyGbp?: (
+      businessId: string,
+      location: string,
+      edit: GbpTextEdit,
+      confirmed: GbpChange[],
+    ) => ReturnType<GbpEditorProps["apply"]>;
   };
 };
 

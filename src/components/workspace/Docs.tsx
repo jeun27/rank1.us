@@ -166,6 +166,14 @@ function ConnectionsDoc({
         now={now ?? new Date()}
         onDismiss={async () => a.dismissReady?.(b)}
         onStartFixes={() => onPick({ kind: "section", section: "fixes" })}
+        gbpEdit={
+          a.previewGbp && a.applyGbp
+            ? {
+                preview: (loc, e) => a.previewGbp!(b, loc, e),
+                apply: (loc, e, changes) => a.applyGbp!(b, loc, e, changes),
+              }
+            : undefined
+        }
       />
     </Doc>
   );
