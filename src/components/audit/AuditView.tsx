@@ -19,7 +19,6 @@ import { ENGINES, ENGINE_LABEL, type Metrics, type RunResults } from "./contract
 import { auditCopy as c } from "./copy";
 import { progressFor } from "./progress";
 import { signedPts } from "@/lib/metrics/delta";
-import { ENGINE_IDS } from "@/lib/engines/types";
 
 const D = ({ children }: { children: ReactNode }) => <span data-computed>{children}</span>;
 const namedText = (m: Metric) => `named in ${m.numerator} of ${m.denominator} answers`;
@@ -51,7 +50,7 @@ export function AuditView({
       className="flex flex-col items-start gap-4 rounded-surface bg-white p-4 shadow-card md:flex-row md:items-center md:justify-between md:p-6"
     >
       <p id="audit-cta" className="text-ui font-medium">
-        {c.ctaLead(ENGINE_IDS.length)}
+        {c.ctaLead(ENGINES.length)}
       </p>
       <Button href={`/signin?next=${encodeURIComponent("/app/billing")}`}>{c.paywall}</Button>
     </section>
