@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { formatPercent } from "@/components/ui/StatNumber";
 import type { ExperimentResult, ExperimentStatus, GroupResult } from "@/lib/metrics/experiment";
 import type { Metric } from "@/types/metrics";
-import { signedPts } from "@/lib/metrics/delta";
+import { deltaTone, signedPts } from "@/lib/metrics/delta";
 import { experimentCopy as c } from "./copy";
 
 export type ExperimentCardView = {
@@ -58,9 +58,9 @@ function Results({ name, result }: { name: string; result: ExperimentResult | nu
     <>
       <p className="flex flex-wrap items-center gap-3 text-ui">
         <span className="font-medium">{c.difference}</span>
-        <span data-computed className="font-mono tabular-nums">
+        <Badge tone={deltaTone(result.difference ?? 0)} mono data-computed>
           {signedPts(result.difference ?? 0)}
-        </span>
+        </Badge>
         <Badge tone="info">{result.label}</Badge>
       </p>
       <div className="overflow-hidden rounded-card border border-border">
@@ -179,7 +179,7 @@ function CardActions({
         <p className="text-ui font-medium text-brick">{c.confirmDelete}</p>
         <div className="ml-auto flex gap-3">
           <Button
-            variant="alt"
+            variant="danger"
             onClick={() => {
               setAsking(false);
               onDelete();
