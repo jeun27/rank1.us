@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { formatAge } from "@/components/ui/Freshness";
 import type { Json } from "@/types/db";
+import { gbpEditCopy as gbp } from "./gbp-edit-copy";
+import { GbpEditor, type GbpEditorProps } from "./GbpEditor";
 import { teamConnectionsCopy as c } from "./team-connections-copy";
 import type { TeamConnectionsData } from "./team-connections-data";
 
@@ -23,15 +25,19 @@ export function TeamConnections({
   now,
   onDismiss,
   onStartFixes,
+  gbpEdit,
 }: {
   data: TeamConnectionsData;
   now: Date;
   onDismiss: () => Promise<{ error: string } | undefined | void>;
   onStartFixes: () => void;
+  // C-c PR 2: the team's Business Profile edits (absent where the team can't edit).
+  gbpEdit?: Pick<GbpEditorProps, "preview" | "apply">;
 }) {
   const heading = useId();
   const [hidden, setHidden] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [editing, setEditing] = useState(false);
   const live = data.connections.filter((x) => x.status === "connected").map((x) => name(x.provider));
   const showNotice = data.gas?.showNotice && data.gas.readyAt && !hidden;
   return (
@@ -96,6 +102,19 @@ export function TeamConnections({
                 <p data-testid="task" className="text-caption">
                   {task}
                 </p>
+              )}
+              {gbpEdit && x.provider === "gbp" && x.status === "connected" && x.selected.length > 0 && (
+                <>
+                  <button
+                    type="button"
+                    aria-expanded={editing}
+                    onClick={() => setEditing((e) => !e)}
+                    className="inline-flex min-h-11 items-center self-start text-caption text-link underline underline-offset-4 md:min-h-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+                  >
+                    {gbp.open}
+                  </button>
+                  {editing && <GbpEditor locations={x.selected} preview={gbpEdit.preview} apply={gbpEdit.apply} />}
+                </>
               )}
             </li>
           );
