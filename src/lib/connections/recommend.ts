@@ -44,7 +44,8 @@ export const CONNECTORS = {
   yelp: { niche: "local", later: LOCAL },
   amazon: { niche: "dtc_amazon", later: ["dtc"] },
   // G1 (GAS-Q3): Recommended for saas + dtc, Optional for everyone else; read-only (GAS-Q4).
-  youtube: { niche: "video", recommended: ["saas", "dtc"], optional: [...LOCAL, "other"] },
+  // G1 (lead 2026-11-06): Optional for every vertical; no cuisine keyword to check saas/dtc videos yet.
+  youtube: { niche: "video", optional: [...LOCAL, "saas", "dtc", "other"] },
 } as const satisfies Record<ConnectorKey, Rule>;
 export type Connector = ConnectorKey;
 
