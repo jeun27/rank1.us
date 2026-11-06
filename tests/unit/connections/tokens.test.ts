@@ -20,13 +20,11 @@ const base = () => ({
   load: vi.fn<TokenDeps["load"]>().mockResolvedValue(stored()),
   save: vi.fn<TokenDeps["save"]>().mockResolvedValue(undefined),
   needsReauth: vi.fn<TokenDeps["needsReauth"]>().mockResolvedValue(undefined),
-  refresh: vi
-    .fn<TokenDeps["refresh"]>()
-    .mockResolvedValue({
-      accessToken: "ya29.fresh",
-      refreshToken: null,
-      expiresAt: new Date(NOW + 3600_000).toISOString(),
-    }),
+  refresh: vi.fn<TokenDeps["refresh"]>().mockResolvedValue({
+    accessToken: "ya29.fresh",
+    refreshToken: null,
+    expiresAt: new Date(NOW + 3600_000).toISOString(),
+  }),
   key: KEY,
   now: () => NOW,
 });

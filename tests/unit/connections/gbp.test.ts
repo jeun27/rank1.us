@@ -71,10 +71,10 @@ describe("readLocation", () => {
     const r = await readLocation("t", "locations/2000000000000000001", { fetch });
     expect(r).toEqual({
       description: "Example ramen in Irvine.",
-      regularHours: fx.location.regularHours,
-      specialHours: null,
-      websiteUri: "https://example.com/",
-      primaryPhone: "(949) 555-0100",
+      regular_hours: fx.location.regularHours,
+      special_hours: null,
+      website_uri: "https://example.com/",
+      primary_phone: "(949) 555-0100",
       attributes: {
         "attributes/has_delivery": fx.attributes.attributes[0],
         "attributes/has_wheelchair_accessible_entrance": fx.attributes.attributes[1],
@@ -88,10 +88,10 @@ describe("readLocation", () => {
 
 const BEFORE = {
   description: "Example ramen in Irvine.",
-  regularHours: fx.location.regularHours,
-  specialHours: null,
-  websiteUri: "https://example.com/",
-  primaryPhone: "(949) 555-0100",
+  regular_hours: fx.location.regularHours,
+  special_hours: null,
+  website_uri: "https://example.com/",
+  primary_phone: "(949) 555-0100",
   attributes: { "attributes/has_delivery": fx.attributes.attributes[0] },
 };
 
@@ -99,15 +99,15 @@ describe("diffLocation", () => {
   it("lists only the allowlisted fields that change, before → after", () => {
     expect(EDITABLE_FIELDS).toEqual([
       "description",
-      "regularHours",
-      "specialHours",
-      "websiteUri",
-      "primaryPhone",
+      "regular_hours",
+      "special_hours",
+      "website_uri",
+      "primary_phone",
       "attributes",
     ]);
     const changes = diffLocation(BEFORE, {
       description: "Example ramen and gyoza in Irvine.",
-      websiteUri: "https://example.com/",
+      website_uri: "https://example.com/",
       attributes: {
         "attributes/has_delivery": { name: "attributes/has_delivery", valueType: "BOOL", values: [false] },
       },
@@ -115,7 +115,7 @@ describe("diffLocation", () => {
     expect(changes).toEqual([
       { field: "description", before: "Example ramen in Irvine.", after: "Example ramen and gyoza in Irvine." },
       {
-        field: "attributes/has_delivery",
+        field: "attributes",
         before: fx.attributes.attributes[0],
         after: { name: "attributes/has_delivery", valueType: "BOOL", values: [false] },
       },
@@ -142,16 +142,16 @@ describe("diffLocation", () => {
 
   it("special hours can't be set on a location without regular hours (the API's rule), unless both are set", () => {
     const special = { specialHourPeriods: [{ startDate: { year: 2026, month: 12, day: 25 }, closed: true }] };
-    const noHours = { ...BEFORE, regularHours: null };
-    expect(() => diffLocation(noHours, { specialHours: special })).toThrow(EditNotAllowed);
-    expect(diffLocation(noHours, { specialHours: special, regularHours: fx.location.regularHours })).toHaveLength(2);
-    expect(diffLocation(BEFORE, { specialHours: special })).toEqual([
-      { field: "specialHours", before: null, after: special },
+    const noHours = { ...BEFORE, regular_hours: null };
+    expect(() => diffLocation(noHours, { special_hours: special })).toThrow(EditNotAllowed);
+    expect(diffLocation(noHours, { special_hours: special, regular_hours: fx.location.regularHours })).toHaveLength(2);
+    expect(diffLocation(BEFORE, { special_hours: special })).toEqual([
+      { field: "special_hours", before: null, after: special },
     ]);
   });
 
   it("no change → no rows", () => {
-    expect(diffLocation(BEFORE, { websiteUri: "https://example.com/", description: BEFORE.description })).toEqual([]);
+    expect(diffLocation(BEFORE, { website_uri: "https://example.com/", description: BEFORE.description })).toEqual([]);
   });
 });
 
@@ -159,9 +159,9 @@ describe("applyEdits", () => {
   const LOC = "locations/2000000000000000001";
   const changes = [
     { field: "description", before: "Example ramen in Irvine.", after: "Example ramen and gyoza in Irvine." },
-    { field: "primaryPhone", before: "(949) 555-0100", after: "(949) 555-0101" },
+    { field: "primary_phone", before: "(949) 555-0100", after: "(949) 555-0101" },
     {
-      field: "attributes/has_delivery",
+      field: "attributes",
       before: fx.attributes.attributes[0],
       after: { name: "attributes/has_delivery", valueType: "BOOL", values: [false] },
     },
@@ -225,7 +225,7 @@ describe("applyEdits", () => {
     const err = await applyEdits("t", LOC, changes, { fetch, record }).catch((e) => e);
     expect(err).toBeInstanceOf(GoogleApiError);
     expect(err.status).toBe(403);
-    expect(record.mock.calls.map((c) => c[0].field)).toEqual(["description", "primaryPhone"]);
+    expect(record.mock.calls.map((c) => c[0].field)).toEqual(["description", "primary_phone"]);
   });
 
   it("GoogleApiError carries the status only, never Google's message", async () => {

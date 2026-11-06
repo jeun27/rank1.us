@@ -15,24 +15,25 @@ const INFO = "https://mybusinessbusinessinformation.googleapis.com/v1";
 // reviews, review replies or manager/ownership changes.
 export const EDITABLE_FIELDS = [
   "description",
-  "regularHours",
-  "specialHours",
-  "websiteUri",
-  "primaryPhone",
+  "regular_hours",
+  "special_hours",
+  "website_uri",
+  "primary_phone",
   "attributes",
 ] as const;
 
 export type Attribute = { name: string; valueType?: string; values?: unknown[]; [k: string]: unknown };
 export type GbpFields = {
   description: string | null;
-  regularHours: unknown;
-  specialHours: unknown;
-  websiteUri: string | null;
-  primaryPhone: string | null;
+  regular_hours: unknown;
+  special_hours: unknown;
+  website_uri: string | null;
+  primary_phone: string | null;
   attributes: Record<string, Attribute>;
 };
 export type GbpEdit = Partial<GbpFields>;
-// field = one of EDITABLE_FIELDS (not attributes) or "attributes/<id>".
+// field = one of EDITABLE_FIELDS, the DB's connection_changes spelling. An attribute change is field
+// "attributes" with the attribute itself (its name inside) as before/after.
 export type Change = { field: string; before: unknown; after: unknown };
 
 export class EditNotAllowed extends Error {
@@ -85,10 +86,10 @@ export async function readLocation(token: string, location: string, deps: Deps =
   const phones = loc.phoneNumbers as { primaryPhone?: string } | undefined;
   return {
     description: profile?.description ?? null,
-    regularHours: loc.regularHours ?? null,
-    specialHours: loc.specialHours ?? null,
-    websiteUri: (loc.websiteUri as string | undefined) ?? null,
-    primaryPhone: phones?.primaryPhone ?? null,
+    regular_hours: loc.regularHours ?? null,
+    special_hours: loc.specialHours ?? null,
+    website_uri: (loc.websiteUri as string | undefined) ?? null,
+    primary_phone: phones?.primaryPhone ?? null,
     attributes: Object.fromEntries(((attrs.attributes as Attribute[] | undefined) ?? []).map((a) => [a.name, a])),
   };
 }
@@ -115,12 +116,12 @@ export function diffLocation(before: GbpFields, proposed: GbpEdit): Change[] {
     if (stable(after) !== stable(before[field])) changes.push({ field, before: before[field] ?? null, after });
   }
   // The API refuses specialHours without regularHours on the location.
-  const regular = "regularHours" in proposed ? proposed.regularHours : before.regularHours;
-  if (proposed.specialHours && !regular) throw new EditNotAllowed("specialHours");
+  const regular = "regular_hours" in proposed ? proposed.regular_hours : before.regular_hours;
+  if (proposed.special_hours && !regular) throw new EditNotAllowed("special_hours");
   for (const [name, attr] of Object.entries(proposed.attributes ?? {})) {
     if (!ATTRIBUTE_NAME.test(name) || attr?.name !== name) throw new EditNotAllowed(name);
     const prev = before.attributes[name] ?? null;
-    if (stable(attr) !== stable(prev)) changes.push({ field: name, before: prev, after: attr });
+    if (stable(attr) !== stable(prev)) changes.push({ field: "attributes", before: prev, after: attr });
   }
   return changes;
 }
@@ -128,10 +129,10 @@ export function diffLocation(before: GbpFields, proposed: GbpEdit): Change[] {
 // Field → (updateMask path, request body part). Only these paths ever reach updateMask.
 const MASK: Record<Exclude<(typeof EDITABLE_FIELDS)[number], "attributes">, (v: unknown) => [string, object]> = {
   description: (v) => ["profile.description", { profile: { description: v } }],
-  regularHours: (v) => ["regularHours", { regularHours: v }],
-  specialHours: (v) => ["specialHours", { specialHours: v }],
-  websiteUri: (v) => ["websiteUri", { websiteUri: v }],
-  primaryPhone: (v) => ["phoneNumbers.primaryPhone", { phoneNumbers: { primaryPhone: v } }],
+  regular_hours: (v) => ["regularHours", { regularHours: v }],
+  special_hours: (v) => ["specialHours", { specialHours: v }],
+  website_uri: (v) => ["websiteUri", { websiteUri: v }],
+  primary_phone: (v) => ["phoneNumbers.primaryPhone", { phoneNumbers: { primaryPhone: v } }],
 };
 
 const merge = (a: Record<string, unknown>, b: Record<string, unknown>): Record<string, unknown> => {
@@ -152,7 +153,7 @@ export async function applyEdits(
 ): Promise<{ applied: number }> {
   checkName(location, LOCATION_NAME);
   const fields = changes.filter((c) => c.field in MASK);
-  const attrs = changes.filter((c) => ATTRIBUTE_NAME.test(c.field));
+  const attrs = changes.filter((c) => c.field === "attributes" && ATTRIBUTE_NAME.test((c.after as Attribute)?.name));
   if (fields.length + attrs.length !== changes.length) throw new EditNotAllowed("unknown");
 
   if (fields.length) {
@@ -165,7 +166,7 @@ export async function applyEdits(
     for (const c of fields) await deps.record({ ...c, providerRef: location });
   }
   if (attrs.length) {
-    const mask = attrs.map((c) => c.field).join(",");
+    const mask = attrs.map((c) => (c.after as Attribute).name).join(",");
     await call(token, `${INFO}/${location}/attributes?attributeMask=${encodeURIComponent(mask)}`, deps, {
       method: "PATCH",
       body: { name: `${location}/attributes`, attributes: attrs.map((c) => c.after) },
