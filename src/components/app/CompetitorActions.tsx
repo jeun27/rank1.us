@@ -53,7 +53,13 @@ export function CompetitorSuggestions({
               </span>
             </span>
             <span className="flex gap-2">
-              <button type="button" className={ghost} onClick={() => act(actions.add, s)}>
+              {/* F2: named by its competitor, so screen readers can tell the Adds apart. */}
+              <button
+                type="button"
+                aria-label={`${c.add} ${s.name}`}
+                className={ghost}
+                onClick={() => act(actions.add, s)}
+              >
                 {c.add}
               </button>
               <button type="button" className={ghost} onClick={() => act(actions.dismiss, s)}>
