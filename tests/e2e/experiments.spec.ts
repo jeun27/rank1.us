@@ -69,10 +69,14 @@ test("success: each card has Before / After as '% · n=', signed points, a Diffe
   }
 });
 
-test("Fix list: 'Start a before/after test' links to the form for that fix", async ({ page }) => {
+// X27: offered when a fix is marked done (the toast), not on open fixes.
+test("Fix list: 'Start a before/after test' links to the form for the fix just marked done", async ({ page }) => {
   await page.goto("/dev/app?state=fixes-success");
-  const link = page.getByRole("link", { name: "Start a before/after test" }).first();
-  await expect(link).toHaveAttribute("href", /^\/app\/experiments\/new\?fix=/);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Start a before/after test" })).toHaveCount(0);
+  await page.getByRole("checkbox").first().click();
+  const link = page.getByRole("status").getByRole("link", { name: "Start a before/after test" });
+  await expect(link).toHaveAttribute("href", /^\/app\/experiments\/new\?fix=f3$/);
   await page.goto("/dev/app?state=fixes-readonly");
   await expect(page.getByRole("link", { name: "Start a before/after test" })).toHaveCount(0);
 });

@@ -249,17 +249,31 @@ describe("'Start a test' form", () => {
 });
 
 describe("Fix list: 'Start a before/after test' (on since Step 17)", () => {
-  // X7: collapsed rows keep the link inside the fix's body, so open each one first.
-  it("each fix links to the form with its id, only with canWrite", async () => {
+  // X27: offered once a fix is done (toast and done rows), with that fix's id; never without canWrite.
+  it("each done fix links to the form with its id, only with canWrite", async () => {
+    const done = [
+      { id: "d1", rule_key: "R1", title: "Hours fixed", detail: null, status_changed_at: null, changed_by: null },
+    ];
     const { rerender } = render(
-      <FixList ranked={exampleFixes} tidyUps={[]} unchecked={[]} noDomain={false} canWrite onStatus={vi.fn()} />,
+      <FixList
+        ranked={exampleFixes}
+        tidyUps={[]}
+        done={done}
+        unchecked={[]}
+        noDomain={false}
+        canWrite
+        onStatus={vi.fn()}
+      />,
     );
-    for (const b of screen.getAllByRole("button", { expanded: false })) await userEvent.click(b);
-    const links = screen.getAllByRole("link", { name: "Start a before/after test" });
-    expect(links.map((l) => l.getAttribute("href"))).toEqual(
-      exampleFixes.map((f) => `/app/experiments/new?fix=${f.id}`),
+    await userEvent.click(screen.getByRole("radio", { name: /Done/ }));
+    await userEvent.click(screen.getByRole("button", { name: "Hours fixed", expanded: false }));
+    expect(screen.getByRole("link", { name: "Start a before/after test" })).toHaveAttribute(
+      "href",
+      "/app/experiments/new?fix=d1",
     );
-    rerender(<FixList ranked={exampleFixes} tidyUps={[]} unchecked={[]} noDomain={false} canWrite={false} />);
+    rerender(
+      <FixList ranked={exampleFixes} tidyUps={[]} done={done} unchecked={[]} noDomain={false} canWrite={false} />,
+    );
     expect(screen.queryByRole("link", { name: "Start a before/after test" })).toBeNull();
   });
 });
