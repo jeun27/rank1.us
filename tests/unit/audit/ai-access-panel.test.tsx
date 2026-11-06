@@ -63,6 +63,16 @@ describe("AiAccessPanel", () => {
     expect(screen.getByText(c.cloudflareHint)).toBeInTheDocument();
   });
 
+  it("as fix evidence (level 4): the crawlers stack as a list, no table (fits a narrow fix row)", () => {
+    render(<AiAccessPanel check={check()} now={NOW} level={4} />);
+    const panel = screen.getByRole("region", { name: c.title });
+    expect(within(panel).getByRole("heading", { level: 4, name: c.title })).toBeInTheDocument();
+    expect(within(panel).queryByRole("table")).toBeNull();
+    const items = within(within(panel).getByRole("list", { name: c.crawler })).getAllByRole("listitem");
+    expect(items.map((i) => i.textContent?.split(/Allowed|Blocked/)[0])).toEqual([...AI_CRAWLERS]);
+    expect(items[AI_CRAWLERS.indexOf("PerplexityBot")]).toHaveTextContent(`PerplexityBot${c.blocked}Disallow: /`);
+  });
+
   it("unreachable: one line, no table", () => {
     render(
       <AiAccessPanel
