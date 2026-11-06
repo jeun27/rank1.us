@@ -66,3 +66,43 @@ export const accountSummaries = {
     },
   ],
 };
+
+// YouTube Data API v3 (synthetic Example data), shaped like channels.list (mine=true), playlistItems.list
+// and videos.list (part=snippet,contentDetails): https://developers.google.com/youtube/v3/docs
+export const ytChannels = {
+  items: [
+    {
+      id: "UCexample000000000000001",
+      snippet: { title: "Example Ramen House" },
+      contentDetails: { relatedPlaylists: { uploads: "UUexample000000000000001" } },
+    },
+  ],
+};
+export const ytPlaylistPage1 = {
+  items: [{ contentDetails: { videoId: "vid-1" } }, { contentDetails: { videoId: "vid-2" } }],
+  nextPageToken: "yt-page-2",
+};
+export const ytPlaylistPage2 = { items: [{ contentDetails: { videoId: "vid-3" } }] };
+export const ytVideos = {
+  items: [
+    {
+      id: "vid-1",
+      snippet: {
+        title: "Best ramen in Irvine: a tour",
+        description: "Our tonkotsu ramen.\nFilmed in Irvine.\n0:00 Intro\n0:45 Broth\n2:10 Noodles",
+        publishedAt: "2026-10-20T18:00:00Z",
+      },
+      contentDetails: { duration: "PT7M12S" },
+    },
+    {
+      id: "vid-2",
+      snippet: { title: "Kitchen short", description: "Behind the counter.", publishedAt: "2026-10-27T18:00:00Z" },
+      contentDetails: { duration: "PT45S" },
+    },
+    {
+      id: "vid-3",
+      snippet: { title: "Our story", description: "Since 1990.", publishedAt: "2026-09-01T18:00:00Z" },
+      contentDetails: { duration: "PT12M" },
+    },
+  ],
+};

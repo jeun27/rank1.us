@@ -28,9 +28,11 @@ import {
   refreshAccessToken,
   revokeGrant,
   startAuth,
-  type GoogleConnector,
+  type OAuthConnector,
 } from "./oauth";
 import { listSites } from "./search-console";
+import { checkVideo, type VideoChecks } from "@/lib/metrics/youtube-checks";
+import { listMyChannels, listRecentVideos, type YoutubeVideo } from "./youtube";
 import { refreshReadiness } from "./readiness";
 import { ConnectionError, withGoogleToken, type TokenDeps } from "./tokens";
 
@@ -137,7 +139,7 @@ function failure(e: unknown): Failure {
 
 export async function beginGoogleConnect(
   ctx: Ctx,
-  input: { businessId: string; connector: GoogleConnector; returnTo?: string },
+  input: { businessId: string; connector: OAuthConnector; returnTo?: string },
 ): Promise<{ url: string; cookie: string } | Failure> {
   if (!connectionsEnabled(envOf(ctx))) return "disabled";
   if (!(await canConnectBusiness(ctx.userDb, input.businessId))) return "not_allowed";
@@ -151,7 +153,7 @@ export async function beginGoogleConnect(
 
 export type ConnectOutcome = {
   status: "connected" | "denied" | "error";
-  connector: GoogleConnector | null;
+  connector: OAuthConnector | null;
   returnTo: string;
 };
 
@@ -236,6 +238,7 @@ async function entitiesFor(
   }
   if (provider === "search_console")
     return (await listSites(token, deps)).filter((s) => s.readable).map((s) => ({ id: s.siteUrl, name: s.siteUrl }));
+  if (provider === "youtube") return (await listMyChannels(token, deps)).map((c) => ({ id: c.id, name: c.title }));
   if (provider === "ga4")
     return (await listGa4Properties(token, deps)).map((p) => ({
       id: p.property,
@@ -354,4 +357,94 @@ export async function applyGbpEdit(
     }
     return failure(e);
   }
+}
+
+export type YoutubeChecklist = {
+  keyword: string | null;
+  channel: { id: string; title: string } | null;
+  videos: (YoutubeVideo & { checks: VideoChecks })[];
+};
+
+// G1: the picked channel (else the first one) and its newest videos, each checked against the business's
+// one keyword: its category term (businesses.cuisine, the {cuisine} its questions are built from). No
+// cuisine = no keyword, never a guess.
+async function checklist(ctx: Ctx, c: Visible, keyword: string | null): Promise<YoutubeChecklist> {
+  return withGoogleToken(
+    c.id,
+    async (t) => {
+      const channels = await listMyChannels(t, { fetch: ctx.fetch });
+      const ch = channels.find((x) => x.id === c.selected_entities[0]?.id) ?? channels[0];
+      if (!ch?.uploads) return { keyword, channel: ch ? { id: ch.id, title: ch.title } : null, videos: [] };
+      const videos = await listRecentVideos(t, ch.uploads, { fetch: ctx.fetch });
+      return {
+        keyword,
+        channel: { id: ch.id, title: ch.title },
+        videos: videos.map((v) => ({ ...v, checks: checkVideo(v, keyword) })),
+      };
+    },
+    tokenDeps(ctx, c.business_id),
+  );
+}
+
+const cuisineOf = async (db: DbClient, businessId: string) => {
+  const { data, error } = await db.from("businesses").select("cuisine").eq("id", businessId).maybeSingle();
+  if (error) throw error;
+  return (data?.cuisine as string | null | undefined)?.trim() || null;
+};
+
+// The checklist page (members incl. the dfy_client, and the team on DFY), read-only.
+export async function loadYoutubeChecklist(ctx: Ctx, connectionId: string): Promise<YoutubeChecklist | Failure> {
+  if (!connectionsEnabled(envOf(ctx))) return "disabled";
+  const c = await visible(ctx, connectionId);
+  if (!c || c.provider !== "youtube") return "not_allowed";
+  const [connect, edit] = await Promise.all([
+    canConnectBusiness(ctx.userDb, c.business_id),
+    canApplyEdits(ctx.userDb, c.business_id),
+  ]);
+  if (!connect && !edit) return "not_allowed";
+  try {
+    return await checklist(ctx, c, await cuisineOf(ctx.userDb, c.business_id));
+  } catch (e) {
+    return failure(e);
+  }
+}
+
+// The weekly fix pass (service client): the business's live YouTube connection's checklist, null when it
+// has none, or the connection's failure reason.
+export async function youtubeChecklistForBusiness(
+  serviceDb: DbClient,
+  businessId: string,
+  env: Env = process.env,
+): Promise<YoutubeChecklist | null | Failure> {
+  if (!connectionsEnabled(env)) return "disabled";
+  const { data, error } = await serviceDb
+    .from("connections")
+    .select("id, business_id, provider, status, selected_entities")
+    .eq("business_id", businessId)
+    .eq("provider", "youtube")
+    .neq("status", "revoked")
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const ctx: Ctx = { userDb: serviceDb, serviceDb, env };
+  try {
+    return await checklist(ctx, data as unknown as Visible, await cuisineOf(serviceDb, businessId));
+  } catch (e) {
+    return failure(e);
+  }
+}
+
+// The fix pass's gate for R19–R21 (lead, #146): a live YouTube connection with a chosen channel, and a
+// keyword (businesses.cuisine). Otherwise the rules don't apply and get no rows at all.
+export async function youtubeReady(serviceDb: DbClient, businessId: string): Promise<boolean> {
+  const { data, error } = await serviceDb
+    .from("connections")
+    .select("selected_entities")
+    .eq("business_id", businessId)
+    .eq("provider", "youtube")
+    .eq("status", "connected")
+    .maybeSingle();
+  if (error) throw error;
+  const picked = (data?.selected_entities as unknown as ConnectionEntity[] | undefined) ?? [];
+  return picked.length > 0 && (await cuisineOf(serviceDb, businessId)) !== null;
 }

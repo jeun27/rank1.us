@@ -10,6 +10,10 @@ export const GOOGLE_SCOPES = {
   ga4: "https://www.googleapis.com/auth/analytics.readonly",
 } as const;
 export type GoogleConnector = keyof typeof GOOGLE_SCOPES;
+// Everything OAuth can grant on the same client: the hub's connectors plus G1's read-only YouTube
+// (channel + videos; captions need more than this, so they're never read).
+export const OAUTH_SCOPES = { ...GOOGLE_SCOPES, youtube: "https://www.googleapis.com/auth/youtube.readonly" } as const;
+export type OAuthConnector = keyof typeof OAUTH_SCOPES;
 
 const AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -74,7 +78,7 @@ export type OAuthState = {
   state: string;
   verifier: string;
   businessId: string;
-  connector: GoogleConnector;
+  connector: OAuthConnector;
   // A same-origin path (safeNext) the callback sends the user back to.
   returnTo: string;
   exp: number;
@@ -82,7 +86,7 @@ export type OAuthState = {
 
 // state (32 random bytes) and the PKCE verifier live only in the callback-scoped httpOnly cookie.
 export function startAuth(
-  connector: GoogleConnector,
+  connector: OAuthConnector,
   businessId: string,
   env: Env = process.env,
   now = Date.now(),
@@ -102,7 +106,7 @@ export function startAuth(
     client_id: c.id,
     redirect_uri: c.redirect,
     response_type: "code",
-    scope: `openid ${GOOGLE_SCOPES[connector]}`,
+    scope: `openid ${OAUTH_SCOPES[connector]}`,
     access_type: "offline",
     include_granted_scopes: "true",
     prompt: "consent",
@@ -127,7 +131,7 @@ export function readState(cookie: string | undefined, state: string | null, now 
   } catch {
     throw new OAuthError("bad_state");
   }
-  if (typeof s?.state !== "string" || !(s.connector in GOOGLE_SCOPES) || !sameString(s.state, state) || now > s.exp)
+  if (typeof s?.state !== "string" || !(s.connector in OAUTH_SCOPES) || !sameString(s.state, state) || now > s.exp)
     throw new OAuthError("bad_state");
   return { ...s, returnTo: safeReturn(s.returnTo) };
 }
@@ -169,7 +173,7 @@ export type GrantedTokens = {
 };
 
 export async function exchangeCode(
-  input: { code: string; verifier: string; connector: GoogleConnector },
+  input: { code: string; verifier: string; connector: OAuthConnector },
   deps: Deps = {},
 ): Promise<GrantedTokens> {
   const c = config(deps.env ?? process.env);
@@ -190,7 +194,7 @@ export async function exchangeCode(
   const scopes = String(body.scope ?? "")
     .split(" ")
     .filter(Boolean);
-  if (!scopes.includes(GOOGLE_SCOPES[input.connector])) throw new OAuthError("denied");
+  if (!scopes.includes(OAUTH_SCOPES[input.connector])) throw new OAuthError("denied");
   return {
     accessToken: body.access_token,
     refreshToken: typeof body.refresh_token === "string" ? body.refresh_token : null,

@@ -12,7 +12,12 @@ export type ReadinessDeps = {
   log?: (line: string) => void;
 };
 
-const LABEL: Record<string, string> = { gbp: "Business Profile", search_console: "Search Console", ga4: "Analytics" };
+const LABEL: Record<string, string> = {
+  gbp: "Business Profile",
+  search_console: "Search Console",
+  ga4: "Analytics",
+  youtube: "YouTube",
+};
 const and = (xs: string[]) => (xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs.at(-1)}`);
 const codeOf = (e: unknown) => (typeof e === "object" && e && "code" in e ? String(e.code) : "error");
 

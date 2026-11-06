@@ -1,13 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 import {
-  GOOGLE_SCOPES,
+  OAUTH_SCOPES,
   returnUrl,
   safeReturn,
   siteOrigin,
   STATE_COOKIE,
   stateCookieOptions,
-  type GoogleConnector,
+  type OAuthConnector,
 } from "@/lib/connections/oauth";
+import { LIVE_CONNECTORS } from "@/lib/connections/recommend";
 import { beginGoogleConnect, connectionsEnabled } from "@/lib/connections/service";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -24,12 +25,13 @@ export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams;
   const businessId = q.get("business");
   const connector = q.get("connector");
-  if (!businessId || !connector || !(connector in GOOGLE_SCOPES))
+  // Only connectors whose tile is live can be connected (YouTube joins LIVE_CONNECTORS with its UI).
+  if (!businessId || !connector || !(connector in OAUTH_SCOPES) || !LIVE_CONNECTORS.includes(connector))
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   const returnTo = safeReturn(q.get("return"));
   const r = await beginGoogleConnect(
     { userDb: await createClient(), serviceDb: createServiceClient() },
-    { businessId, connector: connector as GoogleConnector, returnTo },
+    { businessId, connector: connector as OAuthConnector, returnTo },
   );
   if (typeof r === "string") return NextResponse.redirect(returnUrl(returnTo, { connection: connector, status: r }));
   const res = NextResponse.redirect(r.url);

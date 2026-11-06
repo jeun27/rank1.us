@@ -97,4 +97,14 @@ describe("evaluateFixes with rules", () => {
     expect(rs.map((r) => r.rule_key)).toEqual(["R10", "R14", "H1"]);
     expect(s.fetch.mock.calls.map((c) => String(c[0])).filter((u) => /\/p\d$/.test(u))).toEqual([]);
   });
+
+  it("applicable() narrows the rules for this run, and the unchecked fallbacks use the narrowed list", async () => {
+    const d = deps({
+      enabledRules: vi.fn(async () => ["R10", "R14"] as RuleKey[]),
+      evaluate: vi.fn(async () => Promise.reject(new Error("boom"))),
+    });
+    const applicable = vi.fn(async (_run: unknown, rules: RuleKey[]) => rules.filter((r) => r !== "R14"));
+    await checkFixesForOneRun({ ...d, applicable });
+    expect(d.record.mock.calls[0][2].map((r: FixResult) => r.rule_key)).toEqual(["R10"]);
+  });
 });

@@ -8,6 +8,8 @@ const ai = vi.hoisted(() => ({ checkAiAccess: vi.fn() }));
 vi.mock("@/lib/site/ai-access", async (real) => ({ ...(await real<object>()), ...ai }));
 const store = vi.hoisted(() => ({ recordAiAccessCheck: vi.fn(async () => {}) }));
 vi.mock("@/lib/queries/ai-access", async (real) => ({ ...(await real<object>()), ...store }));
+const yt = vi.hoisted(() => ({ youtubeChecklistForBusiness: vi.fn(), youtubeReady: vi.fn(async () => true) }));
+vi.mock("@/lib/connections/service", async (real) => ({ ...(await real<object>()), ...yt }));
 const { checkFixesWith } = await import("@/lib/fixes/service");
 
 // A service client stub: fix_rules.select("key").eq("enabled", true).in("key", [...]).
@@ -119,5 +121,70 @@ describe("checkFixesWith with the AI access check (G2, ENABLE_AI_ACCESS_CHECK)",
     expect(log.mock.calls.flat().join(" ")).toContain("22023");
     expect(log.mock.calls.flat().join(" ")).not.toContain("secret detail");
     log.mockRestore();
+  });
+});
+
+describe("checkFixesWith with YouTube (G1 R19–R21, ENABLE_CONNECTIONS)", () => {
+  const RUN = { runId: "run-1", businessId: "b-1", domain: "example-ramen-house.test" };
+  const checks = (title: string) => ({ title, description: "pass", chapters: "not_needed", saysKeyword: "cant_check" });
+
+  it("flag on, an active connection with a channel and a keyword: 3 grouped R19–R21 results", async () => {
+    yt.youtubeReady.mockResolvedValue(true);
+    const d = db([{ key: "R19" }, { key: "R20" }, { key: "R21" }]);
+    q.listRunsNeedingFixChecks.mockResolvedValue([RUN]);
+    evaluate.mockClear();
+    yt.youtubeChecklistForBusiness.mockResolvedValue({
+      keyword: "ramen",
+      channel: { id: "UC1", title: "Example Ramen House" },
+      videos: [{ id: "v1", title: "Our story", url: "https://www.youtube.com/watch?v=v1", checks: checks("fail") }],
+    });
+    await checkFixesWith(d.client, () => 200_000, { ENABLE_CONNECTIONS: "true" });
+    expect(d.calls.at(-1)).toEqual(["in", "key", ["R10", "R11", "R14", "H1", "R19", "R20", "R21"]]);
+    expect(evaluate).not.toHaveBeenCalled();
+    expect(yt.youtubeChecklistForBusiness).toHaveBeenCalledWith(d.client, "b-1", { ENABLE_CONNECTIONS: "true" });
+    expect(
+      q.recordFixResults.mock.calls.at(-1)![3].map((r: { rule_key: string; result: string }) => [r.rule_key, r.result]),
+    ).toEqual([
+      ["R19", "fix"],
+      ["R20", "ok"],
+      ["R21", "ok"],
+    ]);
+  });
+
+  it("no active connection with a channel, or no keyword → 0 R19–R21 rows (lead, #146 B1/Q)", async () => {
+    for (const ready of [false]) {
+      const d = db([{ key: "R10" }, { key: "R19" }, { key: "R20" }, { key: "R21" }]);
+      q.listRunsNeedingFixChecks.mockResolvedValue([RUN]);
+      evaluate.mockResolvedValue([{ rule_key: "R10", result: "ok", evidence: {}, detail: null }]);
+      yt.youtubeReady.mockResolvedValue(ready);
+      yt.youtubeChecklistForBusiness.mockClear();
+      await checkFixesWith(d.client, () => 200_000, { ENABLE_CONNECTIONS: "true" });
+      expect(evaluate).toHaveBeenCalledWith({ domain: "example-ramen-house.test" }, { rules: ["R10"] });
+      expect(q.recordFixResults.mock.calls.at(-1)![3].map((r: { rule_key: string }) => r.rule_key)).toEqual(["R10"]);
+      expect(yt.youtubeChecklistForBusiness).not.toHaveBeenCalled();
+      expect(yt.youtubeReady).toHaveBeenCalledWith(d.client, "b-1");
+    }
+  });
+
+  it("only YouTube rules enabled and not ready → nothing recorded (no empty call)", async () => {
+    const d = db([{ key: "R19" }]);
+    q.listRunsNeedingFixChecks.mockResolvedValue([RUN]);
+    q.recordFixResults.mockClear();
+    yt.youtubeReady.mockResolvedValue(false);
+    expect(await checkFixesWith(d.client, () => 200_000, { ENABLE_CONNECTIONS: "true" })).toEqual({
+      checked: null,
+      skipped: "no_rules",
+    });
+    expect(q.recordFixResults).not.toHaveBeenCalled();
+  });
+
+  it("flag off: R19–R21 aren't read and YouTube isn't called", async () => {
+    const d = db([{ key: "R10" }]);
+    q.listRunsNeedingFixChecks.mockResolvedValue([RUN]);
+    evaluate.mockResolvedValue([{ rule_key: "R10", result: "ok", evidence: {}, detail: null }]);
+    yt.youtubeChecklistForBusiness.mockClear();
+    await checkFixesWith(d.client, () => 200_000, {});
+    expect(d.calls.at(-1)).toEqual(["in", "key", ["R10", "R11", "R14", "H1"]]);
+    expect(yt.youtubeChecklistForBusiness).not.toHaveBeenCalled();
   });
 });

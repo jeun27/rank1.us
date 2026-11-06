@@ -1,5 +1,5 @@
 // One enabled site rule's outcome, as record_fix_results takes it. detail only for 'fix'.
-export type RuleKey = "R10" | "R11" | "R14" | "R16" | "R18" | "H1";
+export type RuleKey = "R10" | "R11" | "R14" | "R16" | "R18" | "R19" | "R20" | "R21" | "H1";
 export type FixOutcome = "fix" | "ok" | "unchecked";
 export type FixResult = {
   rule_key: RuleKey;
@@ -15,6 +15,9 @@ export const COPY: Record<RuleKey, string> = {
   R14: "Your robots.txt blocks {bots} from {paths}. Check if you meant to.",
   R16: "Your site runs on Cloudflare. Its AI bot blocking is on by default for many new sites, and robots.txt can't show it. Check Security, then Bots, in your Cloudflare dashboard.",
   R18: "Your homepage shows almost no text without JavaScript, so ChatGPT can't read what you offer.",
+  R19: "{n} videos need your keyword in the title.",
+  R20: "{n} videos don't have your keyword in the first two lines of the description.",
+  R21: "{n} videos 5 minutes or longer have no chapters.",
   H1: "Tidy-up: your site has no Restaurant/Menu structured data. This is housekeeping, not an AI visibility fix.",
 };
 

@@ -1,4 +1,5 @@
 import { AI_RULES, SITE_RULES } from "./evaluate";
+import { YOUTUBE_RULES } from "./youtube-rules";
 import { unchecked, type FixResult, type RuleKey } from "./types";
 
 // The cron route's maxDuration is 300 s; fix checks start only with ≥60 s left (lead, 2026-11-05),
@@ -13,6 +14,9 @@ export type FixCheckDeps = {
   enabledRules: () => Promise<RuleKey[]>;
   evaluate: (business: { domain: string | null }, rules: RuleKey[]) => Promise<FixResult[]>;
   record: (businessId: string, runId: string, results: FixResult[]) => Promise<void>;
+  // Narrows the rules to the ones that apply to this run's business (e.g. R19–R21 only with an active
+  // YouTube connection). The unchecked fallbacks then use the narrowed list, so they add no rows either.
+  applicable?: (run: RunToCheck, rules: RuleKey[]) => Promise<RuleKey[]>;
   timeLeftMs: () => number;
   log?: (line: string) => void;
 };
@@ -35,7 +39,9 @@ export async function checkFixesForOneRun(deps: FixCheckDeps): Promise<FixCheckS
   let run: RunToCheck | null;
   let rules: RuleKey[];
   try {
-    rules = (await deps.enabledRules()).filter((r) => SITE_RULES.includes(r) || AI_RULES.includes(r));
+    rules = (await deps.enabledRules()).filter(
+      (r) => SITE_RULES.includes(r) || AI_RULES.includes(r) || (YOUTUBE_RULES as readonly RuleKey[]).includes(r),
+    );
     if (!rules.length) return { checked: null, skipped: "no_rules" };
     run = await deps.next();
   } catch (e) {
@@ -43,6 +49,15 @@ export async function checkFixesForOneRun(deps: FixCheckDeps): Promise<FixCheckS
     return { checked: null, error: codeOf(e) };
   }
   if (!run) return { checked: null, skipped: "none" };
+  if (deps.applicable) {
+    try {
+      rules = await deps.applicable(run, rules);
+    } catch (e) {
+      log(`fix check: failed (${codeOf(e)})`);
+      return { checked: null, error: codeOf(e) };
+    }
+    if (!rules.length) return { checked: null, skipped: "no_rules" };
+  }
   const results = await deps
     .evaluate({ domain: run.domain }, rules)
     .then((rs) => rs.filter((r) => rules.includes(r.rule_key)))
