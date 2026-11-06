@@ -21,12 +21,14 @@ import { createClient } from "@/lib/supabase/server";
 import { loadQueue } from "./queue";
 import {
   addTeamCompetitor,
+  applyTeamGbpEdit,
   decideTeamMention,
   dismissTeamReady,
-  saveTeamNarrativeWords,
   dismissTeamSuggestion,
   inviteTeamClient,
+  previewTeamGbpEdit,
   removeTeamClient,
+  saveTeamNarrativeWords,
   setTeamFixListVisible,
   setTeamFixStatus,
   teamSuggestions,
@@ -123,6 +125,8 @@ export async function loadTeam(picked: string | undefined): Promise<TeamData> {
         dismissReady: dismissTeamReady,
         saveNarrative: saveTeamNarrativeWords,
         decideMention: decideTeamMention,
+        previewGbp: previewTeamGbpEdit,
+        applyGbp: applyTeamGbpEdit,
       },
     },
   };

@@ -20,3 +20,31 @@ export const monthLabel = (periodStart: string) =>
     year: "numeric",
     timeZone: "UTC",
   });
+
+// X10: the next send's date ("2026-12-01"). The 1st before 08:00 LA is still today's send; after that it's
+// next month's.
+export function nextReportDate(now: Date): string {
+  const p = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: TZ,
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      hour: "2-digit",
+      hourCycle: "h23",
+    })
+      .formatToParts(now)
+      .map((x) => [x.type, Number(x.value)]),
+  );
+  const thisMonth = p.day === 1 && p.hour <= HOUR;
+  const [y, m] = thisMonth ? [p.year, p.month] : p.month === 12 ? [p.year + 1, 1] : [p.year, p.month + 1];
+  return `${y}-${String(m).padStart(2, "0")}-01`;
+}
+
+// "2026-12-01" → "Dec 1" (UTC, like monthLabel).
+export const shortDate = (day: string) =>
+  new Date(`${day.slice(0, 10)}T00:00:00Z`).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });

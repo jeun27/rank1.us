@@ -392,6 +392,14 @@ Tile helper text (the niche key in src/lib/connections/recommend.ts):
 | Notify-me interest | "Asked to hear about {connectors}" |
 | Change log (team: values) | "Changes"; each entry "Before: …", "After: …", "by Rank1 team" / "by {name}" (a current client user's email, team UI only) / "by a former user" (lead, #160 S1) and the date |
 
+C-c PR 2, Edit Business Profile (team only; v1 the three text fields, lead Q3; production also waits on Google's GBP API access):
+
+- "Edit Business Profile", "Location" (lead approved 2026-11-06), "Description", "Website", "Primary phone"
+- "Preview changes", then per field "Before" / "After"; "Apply" only after a non-empty diff
+- "No changes to apply."
+- "Google changed this profile since your preview. Here's a fresh one."
+- "Applied." / "We couldn't apply that. Try again."
+
 C-c task lines (at most one per connection):
 
 - "Ask the client to reconnect {connection}"
@@ -527,6 +535,8 @@ Strings the lead approved for the UX plan (share/ux-plan §C; founder OK 2026-11
 | /client slot 2 section title (X3) | "What the team did" |
 | Competitors add form, empty submit (X26; lead 2026-11-06, WCAG 3.3.1) | "Add a name first." inline under Name, tied to it with aria-describedby |
 | Competitors add form, submit (X26; lead 2026-11-06) | "Add" (the disclosure above it keeps "Add competitor") |
+| Reports status line, first on the page (X10; §C, lead edit b) | "Next report {date} to 1 recipient." · "Next report {date} to {n} recipients." · no saved recipients: "Next report {date}. Add a recipient to send it." ({date} as "Dec 1") |
+| Reports, the folded settings (X10) | "Branding" (logo, brand color, recipients, Save). The preview fold reuses "Report preview" |
 
 ## Engine location tooltip
 

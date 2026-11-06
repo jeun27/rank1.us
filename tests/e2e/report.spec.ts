@@ -23,6 +23,10 @@ test("keyboard reaches the settings, the test send and every download", async ({
   await page.goto("/dev/app?state=report-success");
   // focus() doesn't wait for visibility; the streamed content is hidden until React moves it into place.
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  // X10: Branding is folded once recipients are saved; Enter on its summary opens it.
+  const branding = page.locator("summary", { hasText: "Branding" });
+  await branding.focus();
+  await page.keyboard.press("Enter");
   for (const name of ["Upload logo", "Brand color", "Recipients"]) {
     await expect(page.getByLabel(name)).toBeVisible();
     await page.getByLabel(name).focus();
@@ -40,6 +44,7 @@ test("keyboard reaches the settings, the test send and every download", async ({
 
 test("the preview scales to the width", async ({ page }) => {
   await page.goto("/dev/app?state=report-success");
+  await page.locator("summary", { hasText: "Report preview" }).click();
   const iframe = page.getByTitle("Report preview");
   await expect(iframe).toBeVisible();
   const frame = await iframe.boundingBox();
@@ -50,4 +55,26 @@ test("the preview scales to the width", async ({ page }) => {
 test("report-partial: 'Connect GA4' links to the Connections hub", async ({ page }) => {
   await page.goto("/dev/app?state=report-partial");
   await expect(page.getByRole("link", { name: "Connect GA4" })).toHaveAttribute("href", "/app/settings/connections");
+});
+
+// X10 + X28 (UX plan PR 21): the status line and history lead; Preview and Branding sit folded below them.
+test("status line first, history next, Preview and Branding folded; opened Branding is axe clean", async ({ page }) => {
+  await page.goto("/dev/app?state=report-success");
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  const line = page.getByText(/^Next report [A-Z][a-z]{2} \d{1,2} to \d+ recipients?\.$/);
+  await expect(line).toBeVisible();
+  const y = async (l: import("@playwright/test").Locator) => (await l.boundingBox())!.y;
+  const [preview, branding] = [
+    page.locator("summary", { hasText: "Report preview" }),
+    page.locator("summary", { hasText: "Branding" }),
+  ];
+  expect(await y(line)).toBeLessThan(await y(page.getByRole("table")));
+  expect(await y(page.getByRole("table"))).toBeLessThan(await y(preview));
+  expect(await y(preview)).toBeLessThan(await y(branding));
+  await expect(page.getByTitle("Report preview")).toHaveCount(0);
+  await expect(page.getByLabel("Recipients")).toBeHidden();
+  for (const s of [preview, branding]) expect((await s.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await branding.click();
+  await expect(page.getByLabel("Recipients")).toBeVisible();
+  await expectAxeClean(page);
 });

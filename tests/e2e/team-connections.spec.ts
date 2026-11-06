@@ -51,3 +51,28 @@ test("Start on the fix list opens the Fixes document", async ({ page }) => {
   await page.getByRole("button", { name: "Start on the fix list" }).click();
   await expect(page.locator("header").getByText("What to fix next")).toBeVisible();
 });
+
+// C-c PR 2: Edit Business Profile, preview then apply (three fields), on Example data.
+for (const theme of ["dark", "light"] as const)
+  test(`Edit Business Profile ${theme}: preview shows Before/After, Apply only then; axe clean`, async ({
+    page,
+  }, info) => {
+    await page.clock.setFixedTime(NOW);
+    await page.emulateMedia({ colorScheme: theme });
+    await page.goto("/dev/team");
+    await page.getByRole("button", { name: /^Client / }).click();
+    await page.getByRole("button", { name: "Connections", exact: true }).click();
+    if (page.viewportSize()!.width < 768) await page.getByRole("tab", { name: "Document", exact: true }).click();
+    const gbp = page.getByRole("tabpanel").getByRole("listitem", { name: "Google Business Profile" });
+    await gbp.getByRole("button", { name: "Edit Business Profile" }).click();
+    await expect(gbp.getByLabel(/hours/i)).toHaveCount(0);
+    await expect(gbp.getByRole("button", { name: "Apply" })).toHaveCount(0);
+    await gbp.getByLabel("Website").fill("https://exampleramen.test");
+    await gbp.getByRole("button", { name: "Preview changes" }).click();
+    const list = gbp.getByRole("list", { name: "Preview changes" });
+    await expect(list).toContainText("After: https://exampleramen.test");
+    await axeClean(page);
+    await gbp.screenshot({ path: `test-results/screenshots/team-gbp-edit-${theme}-${info.project.name}.png` });
+    await gbp.getByRole("button", { name: "Apply" }).click();
+    await expect(gbp.getByRole("status")).toHaveText("Applied.");
+  });

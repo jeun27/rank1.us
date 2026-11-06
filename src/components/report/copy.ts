@@ -3,6 +3,12 @@ import type { ReportStatus } from "@/lib/queries/reports";
 // docs/COPY.md "Report (lead, 2026-11-05)" and UI.md 4b "Report".
 export const reportCopy = {
   title: "Reports",
+  // COPY.md "UX (lead, 2026-11-06)" X10.
+  next: (date: string, n: number) =>
+    n === 0
+      ? `Next report ${date}. Add a recipient to send it.`
+      : `Next report ${date} to ${n} ${n === 1 ? "recipient" : "recipients"}.`,
+  branding: "Branding",
   empty: "Your first report sends on the 1st.",
   failed: (emails: string) => `The report didn't send to ${emails}. Check the address.`,
   preview: "Report preview",

@@ -25,16 +25,24 @@ const props = (over = {}) => ({
   settings: { brand_color: "#1D5FC5", report_recipients: ["owner@example.test"], logoUrl: null },
   reports: [row()],
   previewSrc: "/app/report/preview.pdf",
+  nextReport: "2026-12-01",
   actions: actions(),
   ...over,
 });
 
+// X10: Preview and Branding are folded (<details>); the tests open them like a user does.
+const open = (name: "Report preview" | "Branding") =>
+  userEvent.click(screen.getByText(name, { selector: "summary, summary *" }));
+
 // UI.md 4b "Report" with the lead's strings (COPY.md "Report (lead, 2026-11-05)").
 describe("ReportView (/app/report)", () => {
-  it("no reports yet: 'Your first report sends on the 1st.' and the preview", () => {
+  it("no reports yet: 'Your first report sends on the 1st.' and the preview (once opened)", async () => {
     render(<ReportView {...props({ reports: [] })} />);
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Reports");
     expect(screen.getByText("Your first report sends on the 1st.")).toBeInTheDocument();
+    // X10: the PDF renders on demand, so the iframe only mounts when Preview opens.
+    expect(screen.queryByTitle("Report preview")).toBeNull();
+    await open("Report preview");
     expect(screen.getByTitle("Report preview")).toHaveAttribute("src", "/app/report/preview.pdf");
   });
 
@@ -75,6 +83,7 @@ describe("ReportView (/app/report)", () => {
   it("settings: Brand color + Recipients save, with 'Saved.'; more than 10 or a bad email is refused", async () => {
     const a = actions();
     render(<ReportView {...props({ actions: a })} />);
+    await open("Branding");
     const recipients = screen.getByLabelText("Recipients");
     expect(screen.getByText("Up to 10 emails, one per line.")).toBeInTheDocument();
     await userEvent.clear(recipients);
@@ -103,6 +112,7 @@ describe("ReportView (/app/report)", () => {
   it("logo: PNG/JPEG only, at most 512 KB; a good file uploads", async () => {
     const a = actions();
     render(<ReportView {...props({ actions: a })} />);
+    await open("Branding");
     const input = screen.getByLabelText("Upload logo");
     await userEvent.upload(input, new File(["<svg/>"], "logo.svg", { type: "image/svg+xml" }), { applyAccept: false });
     expect(screen.getByText("Use a PNG or JPEG.")).toBeInTheDocument();
@@ -115,12 +125,14 @@ describe("ReportView (/app/report)", () => {
 
   it("'Send test to me': 'Test sent to {email}.', or the reused send error", async () => {
     const { unmount } = render(<ReportView {...props()} />);
+    await open("Branding");
     await userEvent.click(screen.getByRole("button", { name: "Send test to me" }));
     expect(await screen.findByText("Test sent to owner@example.test.")).toBeInTheDocument();
     unmount();
     render(
       <ReportView {...props({ actions: actions({ sendTest: vi.fn(async () => ({ status: "failed" as const })) }) })} />,
     );
+    await open("Branding");
     await userEvent.click(screen.getByRole("button", { name: "Send test to me" }));
     expect(await screen.findByText("That didn't send. Try again in a minute.")).toBeInTheDocument();
   });
@@ -134,6 +146,82 @@ describe("ReportView (/app/report)", () => {
     unmount();
     render(<ReportView {...props()} />);
     expect(screen.queryByRole("link", { name: "Connect GA4" })).toBeNull();
+  });
+
+  // X10 + X28 (UX plan PR 21): the status line first, then history, then Preview and Branding folded.
+  describe("status first, settings folded (X10, X28)", () => {
+    it("the status line names the next send and the saved recipients (n), and leads the page", () => {
+      const { container, unmount } = render(<ReportView {...props()} />);
+      const line = screen.getByText("Next report Dec 1 to 1 recipient.");
+      const order = [
+        line,
+        screen.getByRole("table"),
+        screen.getByText("Report preview", { selector: "summary, summary *" }),
+        screen.getByText("Branding", { selector: "summary, summary *" }),
+      ];
+      for (let i = 1; i < order.length; i++)
+        expect(order[i - 1].compareDocumentPosition(order[i]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      for (const d of container.querySelectorAll("details")) expect(d).not.toHaveAttribute("open");
+      unmount();
+      render(
+        <ReportView
+          {...props({
+            settings: { brand_color: null, report_recipients: ["a@example.test", "b@example.test"], logoUrl: null },
+          })}
+        />,
+      );
+      expect(screen.getByText("Next report Dec 1 to 2 recipients.")).toBeInTheDocument();
+    });
+
+    it("no recipients yet: 'Add a recipient to send it.', Branding starts open and there's no test send", () => {
+      const { container } = render(
+        <ReportView {...props({ settings: { brand_color: null, report_recipients: [], logoUrl: null } })} />,
+      );
+      expect(screen.getByText("Next report Dec 1. Add a recipient to send it.")).toBeInTheDocument();
+      const branding = [...container.querySelectorAll("details")].find((d) =>
+        d.querySelector("summary")?.textContent?.includes("Branding"),
+      );
+      expect(branding).toHaveAttribute("open");
+      expect(screen.queryByRole("button", { name: "Send test to me" })).toBeNull();
+    });
+
+    it("Save lights up only when a field changed, then 'Saved.'; the line and the test send follow what's saved", async () => {
+      const a = actions();
+      render(
+        <ReportView
+          {...props({ actions: a, settings: { brand_color: "#1D5FC5", report_recipients: [], logoUrl: null } })}
+        />,
+      );
+      const save = screen.getByRole("button", { name: "Save" });
+      expect(save).toBeEnabled();
+      expect(save).not.toHaveClass("bg-accent");
+      await userEvent.type(screen.getByLabelText("Recipients"), "a@example.test");
+      expect(save).toHaveClass("bg-accent");
+      // Typing doesn't count until it's saved.
+      expect(screen.queryByRole("button", { name: "Send test to me" })).toBeNull();
+      await userEvent.click(save);
+      expect(await screen.findByText("Saved.")).toBeInTheDocument();
+      expect(save).not.toHaveClass("bg-accent");
+      expect(screen.getByText("Next report Dec 1 to 1 recipient.")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Send test to me" })).toBeInTheDocument();
+      // Back to the saved value: nothing to save.
+      fireEvent.change(screen.getByLabelText("Brand color"), { target: { value: "#0a7f3c" } });
+      expect(save).toHaveClass("bg-accent");
+      fireEvent.change(screen.getByLabelText("Brand color"), { target: { value: "#1d5fc5" } });
+      expect(save).not.toHaveClass("bg-accent");
+    });
+
+    it("a failed save keeps Save lit and the line on the old recipients", async () => {
+      const a = actions({ save: vi.fn(async () => ({ error: "failed" })) });
+      render(<ReportView {...props({ actions: a })} />);
+      await open("Branding");
+      const save = screen.getByRole("button", { name: "Save" });
+      await userEvent.type(screen.getByLabelText("Recipients"), "\nb@example.test");
+      await userEvent.click(save);
+      expect(await screen.findByText("We couldn't save that. Try again.")).toBeInTheDocument();
+      expect(save).toHaveClass("bg-accent");
+      expect(screen.getByText("Next report Dec 1 to 1 recipient.")).toBeInTheDocument();
+    });
   });
 
   it("COPY.md has the lead's Report strings", () => {
@@ -162,5 +250,12 @@ describe("ReportView (/app/report)", () => {
       "Connect GA4",
     ])
       expect(copy.slice(copy.indexOf("## Report (lead, 2026-11-05)"))).toContain(`"${s}"`);
+    for (const s of [
+      "Next report {date} to 1 recipient.",
+      "Next report {date} to {n} recipients.",
+      "Next report {date}. Add a recipient to send it.",
+      "Branding",
+    ])
+      expect(copy.slice(copy.lastIndexOf("## UX (lead, 2026-11-06)"))).toContain(`"${s}"`);
   });
 });
