@@ -1,8 +1,8 @@
-# G7 follow-up: one load per page render (data-pipeline, branch fix/mentions-one-load)
+# G7 follow-up: one read per request (data-pipeline, branch fix/mentions-one-load)
 
-Review of #131 (lead, non-blocking): each add/not-relevant click read up to 8 runs.
+Reviews of #131 (each click read up to 8 runs) and #143 (B1, B2).
 
-- loadMentions reads once per page render: the run list (8 back), the decisions, the latest run, and older runs only for added lists that aren't in it. It returns a MentionsView: the lists split by decision, every added URL, and each added list's last known version (its rivals).
-- decideMention(db, b, url, status, view) takes that view, so a decision is two writes (set_mention_target, upsert_mention_fix) and no reads. The caller revalidates the page after.
-- The rules for R17's detail are unchanged (rivals only from the added lists' own stored evidence; the no-names copy when none are known).
-- Test changes, with reason (API change requested by the lead): the decide tests pass the loaded view, and loadMentions now asks for 8 runs. New tests count the queries: a render makes 1 run list + 1 decisions read + only the run reads it needs; a decision makes 0 reads and 2 writes.
+- One shared readTargets per request: the run list (8 back), the latest run, and older runs only for added lists missing from it. loadMentions uses it once per page render, and its return shape is unchanged (MentionTargets).
+- decideMention(db, b, url, status) keeps #142's action signature (B2: no view or copy from the client). It saves the decision, re-reads the decisions once (B1: R17's n always equals the stored added count, even after two quick clicks or a change from another tab), reads the targets once, and upserts R17.
+- R17's rules are unchanged: rivals only from the added lists' own stored evidence, and the no-names copy when none are known.
+- Test changes, with reason (the lead's review): the query-count tests now pin the decision's order (save → decisions → targets → upsert), and a stored-state fake proves n matches the stored added count.

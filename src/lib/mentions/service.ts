@@ -2,6 +2,7 @@ import "server-only";
 import {
   mentionTargets,
   r17Fill,
+  type MentionDecision,
   type MentionInput,
   type MentionTarget,
   type MentionTargets,
@@ -29,23 +30,12 @@ export const mentionsEnabled = (env: Env = process.env) => env.ENABLE_MENTIONS =
 
 const codeOf = (e: unknown) => (typeof e === "object" && e && "code" in e ? String(e.code) : "error");
 
-// The page's view, read once per render (review of #131): the latest run's lists split by the
-// decisions, every added URL, and each added list's last known version (its rivals) from the newest of
-// up to HISTORY_RUNS runs that still cites it. A decision then needs no reads.
-export type MentionsView = MentionTargets & { addedUrls: string[]; known: MentionTarget[] };
-
-export async function loadMentions(
-  db: DbClient,
-  businessId: string,
-  env: Env = process.env,
-): Promise<MentionsView | null | "disabled"> {
-  if (!mentionsEnabled(env)) return "disabled";
-  const [runs, decisions] = await Promise.all([
-    listRunSummaries(db, businessId, HISTORY_RUNS, ["complete", "partial"]),
-    listMentionDecisions(db, businessId),
-  ]);
-  if (!runs.length) return null;
-  const latest = await getRunResults(db, runs[0].id);
+// One read per request (the page render, or a decision): the run list (up to HISTORY_RUNS back), the latest
+// run's lists split by `decisions`, and each added list's last known version (its rivals) from the newest
+// run that still cites it. Older runs are read only for added lists missing from the latest one.
+async function readTargets(db: DbClient, businessId: string, decisions: MentionDecision[]) {
+  const runs = await listRunSummaries(db, businessId, HISTORY_RUNS, ["complete", "partial"]);
+  const latest = runs.length ? await getRunResults(db, runs[0].id) : null;
   if (!latest) return null;
   const view = mentionTargets(latest as unknown as MentionInput, decisions);
   const addedUrls = decisions.filter((d) => d.status === "added").map((d) => normalizeUrl(d.url));
@@ -59,7 +49,18 @@ export async function loadMentions(
     for (const t of mentionTargets(results as unknown as MentionInput, decisions).added)
       if (!known.has(t.url)) known.set(t.url, t);
   }
-  return { ...view, addedUrls, known: [...known.values()] };
+  return { view, addedUrls, known: [...known.values()].filter((t) => addedUrls.includes(t.url)) };
+}
+
+// The page's lists from the latest run, split by the decisions; null before the first run.
+export async function loadMentions(
+  db: DbClient,
+  businessId: string,
+  env: Env = process.env,
+): Promise<MentionTargets | null | "disabled"> {
+  if (!mentionsEnabled(env)) return "disabled";
+  const r = await readTargets(db, businessId, await listMentionDecisions(db, businessId));
+  return r ? r.view : null;
 }
 
 const fillDetail = (n: number, known: MentionTarget[]) => {
@@ -68,16 +69,16 @@ const fillDetail = (n: number, known: MentionTarget[]) => {
   return (n === 1 ? R17_ONE : R17_MANY).replace("{n}", String(n)).replace("{rivals}", fill.rivals);
 };
 
-// "Add to fixes" / "Not relevant" / clear, from the page's loaded view: saves the decision, then rebuilds
-// the one open R17 fix. Two writes, no reads. n = every added list; rivals = only from the added lists'
-// own stored evidence (lead, #131 S1). Errors keep their real cause (S2); the UI shows its generic
-// failure copy for rule_unavailable/bad_detail. The caller revalidates the page after.
+// "Add to fixes" / "Not relevant" / clear. Takes only (business, url, status): R17's copy is built here,
+// never from client input (review of #143, B2). After the save, the decisions are re-read once, so R17's n
+// always equals the stored added count, even after two quick clicks or a change from another tab (B1).
+// Rivals come only from the added lists' own stored evidence (#131 S1). Errors keep their real cause
+// (S2); the UI shows its generic failure copy for rule_unavailable/bad_detail.
 export async function decideMention(
   db: DbClient,
   businessId: string,
   url: string,
   status: "added" | "dismissed" | null,
-  view: MentionsView,
   env: Env = process.env,
 ): Promise<{ fixId: string | null } | "disabled" | "not_allowed" | "bad_url" | "rule_unavailable" | "bad_detail"> {
   if (!mentionsEnabled(env)) return "disabled";
@@ -88,14 +89,12 @@ export async function decideMention(
     if (codeOf(e) === "22023") return "bad_url";
     throw e;
   }
-  const key = normalizeUrl(url);
-  const added = new Set(view.addedUrls);
-  if (status === "added") added.add(key);
-  else added.delete(key);
-  const known = view.known.filter((t) => added.has(t.url));
+  const decisions = await listMentionDecisions(db, businessId);
+  const added = decisions.filter((d) => d.status === "added").length;
+  const known = (await readTargets(db, businessId, decisions))?.known ?? [];
   // The RPC needs a detail even when nothing is added (it then deletes the open R17 and ignores it).
   try {
-    return { fixId: await upsertMentionFix(db, businessId, fillDetail(Math.max(added.size, 1), known)) };
+    return { fixId: await upsertMentionFix(db, businessId, fillDetail(Math.max(added, 1), known)) };
   } catch (e) {
     if (codeOf(e) === "42501") return "not_allowed";
     if (codeOf(e) === "22023")
