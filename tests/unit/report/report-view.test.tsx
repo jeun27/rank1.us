@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ReportView } from "@/components/report/ReportView";
@@ -88,9 +88,10 @@ describe("ReportView (/app/report)", () => {
     expect(a.save).not.toHaveBeenCalled();
     await userEvent.clear(recipients);
     await userEvent.type(recipients, "a@example.test\n\nB@Example.test ");
+    // A native color picker: it only yields #rrggbb, so there is no invalid color to report.
     const color = screen.getByLabelText("Brand color");
-    await userEvent.clear(color);
-    await userEvent.type(color, "#0a7f3c");
+    expect(color).toHaveAttribute("type", "color");
+    fireEvent.change(color, { target: { value: "#0a7f3c" } });
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
     expect(a.save).toHaveBeenCalledWith({
       brand_color: "#0A7F3C",
