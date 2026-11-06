@@ -79,7 +79,15 @@ function FixCard({
           <span />
         )}
         {canWrite && onStatus ? (
-          <StatusControl fix={fix} onStatus={onStatus} onError={onError} />
+          <div className="flex flex-wrap items-center gap-3">
+            <a
+              href={`/app/experiments/new?fix=${encodeURIComponent(fix.id)}`}
+              className="inline-flex min-h-11 items-center text-ui text-link underline underline-offset-4 md:min-h-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+            >
+              {c.startTest}
+            </a>
+            <StatusControl fix={fix} onStatus={onStatus} onError={onError} />
+          </div>
         ) : (
           <Badge tone="info">{c.statuses[fix.status]}</Badge>
         )}

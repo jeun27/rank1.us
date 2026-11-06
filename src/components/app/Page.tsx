@@ -30,7 +30,7 @@ export const Section = ({
       {href ? (
         <Link
           href={href}
-          className="inline-flex min-h-11 items-center gap-2 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-jellyDeep"
+          className="inline-flex min-h-11 items-center gap-2 underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-jellyDeep"
         >
           {title}
           <Icon name="arrowRight" className="size-4" />
