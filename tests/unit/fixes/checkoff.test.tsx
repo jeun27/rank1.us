@@ -158,7 +158,9 @@ describe("progress, tabs and the done list", () => {
     const { onStatus, user } = setup();
     await user.click(screen.getByRole("radio", { name: /Done/ }));
     const r = row(done[0].title);
-    expect(within(r).getByText(done[0].title)).toHaveClass("line-through");
+    // X7: done rows start as one line; the date, actor and Undo are in the opened row.
+    await user.click(within(r).getByRole("button", { name: done[0].title, expanded: false }));
+    expect(within(r).getByRole("heading", { name: done[0].title })).toHaveClass("line-through");
     expect(within(r).getByText(`${c.doneOn("Nov 4")} · Ana`)).toBeInTheDocument();
     await user.click(within(r).getByRole("button", { name: c.undo }));
     expect(onStatus).toHaveBeenLastCalledWith("d1", "todo");
