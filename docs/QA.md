@@ -54,6 +54,7 @@ Result: FAIL. The GA4 "not connected" partial state is missing (F1). Everything 
 ### Blocking problems
 
 - F1: UI.md 4b "partial" is not built. The brief (line 11 and line 17: "Build the GA4 section as 'not connected' for now (hidden + 'Connect GA4' link to /app/settings)") requires a 'Connect GA4' link on /app/report while GA4 isn't connected. /app/report and the gallery have no such link or state. Fix: add the hidden-section + "Connect GA4" link to /app/settings in ReportView, add the string to COPY.md, a /dev/app report-partial state and a test.
+- Lead decision (2026-11-06), recorded for re-verification: the 'Connect GA4' link shows only when ENABLE_CONNECTIONS="true", and goes to /app/settings/connections (not /app/settings). With the flag off (prod), there is no link and no GA4 section. F1 and N1 go to frontend as "fix(app): report GA4 partial state". QA re-verifies both on that PR. N2 stays open with #78 for the morning signed-in run.
 
 ### Non-blocking notes
 
