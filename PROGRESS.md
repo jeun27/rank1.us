@@ -961,3 +961,8 @@ Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/
 - Migration 20261105000023 (+ .down.sql): fixes.status_changed_at / status_changed_by (→ auth.users, on delete set null), null on existing rows (fixes has no updated_at to backfill from). A BEFORE INSERT OR UPDATE trigger forces them: null on insert (reviewer: never the caller's values), set on every status change (actor null for the service detector), kept on any other update, so neither can be written directly. set_fix_status and listFixes are unchanged.
 - done_fixes(business) (invoker, through the fixes RLS): done fixes, newest change first (nulls last), with changed_by from private.fix_status_actor (definer, re-checks the caller can see the fix). Query: listDoneFixes in src/lib/queries/fixes.ts.
 
+
+## /client theme toggle (frontend, branch fix/client-theme-toggle)
+
+- QA/reviewer gap (UI.md:8, D40): /client had the theme but no toggle. AppHeader (the /client header, also the /team placeholders) now carries the same ThemeToggle ("Dark theme", aria-pressed) on the same prefs. The before-paint script already themes /client (THEMED covers it), so a saved choice wins from the first paint. /dev/client renders the same header.
+- QA N1, two flaky e2e tests made deterministic without weakening them: experiments.spec waits for the first cell; the landing demo test holds the IntersectionObserver until it fires it and drives the run with the page clock, so the start and mid-run frames are exact.
