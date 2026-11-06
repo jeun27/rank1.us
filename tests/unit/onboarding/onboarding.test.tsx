@@ -121,6 +121,57 @@ describe("Onboarding 1: Business", () => {
   });
 });
 
+// X24 (UX plan PR 26): a disabled Next names what's missing, tied with aria-describedby (approved strings).
+describe("Onboarding: reason lines next to Next (X24)", () => {
+  const next = () => screen.getByRole("button", { name: "Next" });
+
+  it("step 1 names the first missing field: name, cuisine, city, state", async () => {
+    const { user } = setup({ site: { status: "ok" } });
+    await stepOne(user);
+    await screen.findByLabelText("Business name");
+    expect(next()).toBeDisabled();
+    expect(next()).toHaveAccessibleDescription("Add your business name first.");
+    await user.type(screen.getByLabelText("Business name"), "Example Ramen House");
+    expect(next()).toHaveAccessibleDescription("Pick a cuisine first.");
+    await user.selectOptions(screen.getByLabelText("Cuisine"), "ramen");
+    expect(next()).toBeEnabled();
+    expect(next()).not.toHaveAccessibleDescription();
+    await user.clear(screen.getByLabelText("City"));
+    expect(next()).toHaveAccessibleDescription("Add your city first.");
+    await user.type(screen.getByLabelText("City"), "Irvine");
+    await user.clear(screen.getByLabelText("State"));
+    expect(next()).toBeDisabled();
+    expect(next()).toHaveAccessibleDescription("Add your state first.");
+    expect(screen.getByText("Add your state first.")).toBeVisible();
+  });
+
+  it("step 2: 'Finding places near you…' beside the disabled Next until the search is back", async () => {
+    let done: (r: CompetitorSearch) => void = () => {};
+    const s = setup();
+    vi.mocked(s.actions.findCompetitors).mockReturnValue(new Promise((r) => (done = r)));
+    await toStepTwo(s);
+    await screen.findByText("Step 2 of 3");
+    expect(next()).toBeDisabled();
+    expect(next()).toHaveAccessibleDescription("Finding places near you…");
+    done({ status: "ok", items: five });
+    await screen.findAllByRole("checkbox", { name: /Example/ });
+    expect(next()).toBeEnabled();
+    expect(next()).not.toHaveAccessibleDescription();
+  });
+
+  it("D35: no pill shapes left in onboarding's own buttons and chips", async () => {
+    const s = setup();
+    await stepOne(s.user);
+    await screen.findByLabelText("Business name");
+    const pills = () =>
+      [...document.querySelectorAll("label, button")].filter((e) => e.className.split(" ").includes("rounded-full"));
+    expect(pills()).toEqual([]);
+    await toStepTwoFromBusiness(s);
+    await screen.findAllByRole("checkbox", { name: /Example/ });
+    expect(pills()).toEqual([]);
+  });
+});
+
 describe("Onboarding 2: Competitors", () => {
   it("looks up places for the cuisine and city, then shows 5 pre-ticked rows", async () => {
     const s = setup();
