@@ -263,8 +263,13 @@ describe("Onboarding 3: Questions + location", () => {
     expect(expected).toHaveLength(25);
     expect(rows()).toHaveLength(25);
     expect(rows().map((_, i) => toggle(i).textContent)).toEqual(expected.map((q) => q.short_text));
-    screen.getAllByRole("checkbox", { name: "Track" }).forEach((b) => expect(b).toBeChecked());
-    rows().forEach((r) => expect(within(r).getByText("City", { selector: ":not(option)" })).toBeInTheDocument());
+    screen.getAllByRole("checkbox", { name: /^Track: / }).forEach((b) => expect(b).toBeChecked());
+    // S2 (#178): the location tag is neutral; info blue is for You only.
+    rows().forEach((r) => expect(within(r).getByText("City", { selector: ":not(option)" })).toHaveClass("bg-raised"));
+    // S1 (#178): each Track names its question, so 25 checkboxes aren't all just "Track".
+    expect(screen.getAllByRole("checkbox", { name: /^Track: / }).map((b) => b.getAttribute("aria-label"))).toEqual(
+      expected.map((q) => `Track: ${q.short_text}`),
+    );
     expect(screen.queryAllByLabelText("Short form")).toHaveLength(0);
     expect(screen.queryAllByLabelText("Long form")).toHaveLength(0);
   });
@@ -288,7 +293,7 @@ describe("Onboarding 3: Questions + location", () => {
     const s = setup();
     await toStepThree(s);
     expect(screen.getByText(`25 of ${MAX_ACTIVE_QUESTIONS} questions tracked`)).toBeInTheDocument();
-    await s.user.click(screen.getAllByRole("checkbox", { name: "Track" })[3]);
+    await s.user.click(screen.getAllByRole("checkbox", { name: /^Track: / })[3]);
     expect(screen.getByText(`24 of ${MAX_ACTIVE_QUESTIONS} questions tracked`)).toBeInTheDocument();
   });
 
@@ -325,7 +330,11 @@ describe("Onboarding 3: Questions + location", () => {
     await openRow(s, 6);
     await s.user.clear(screen.getByLabelText("Short form"));
     await openRow(s, 0);
-    await s.user.click(screen.getByRole("button", { name: "Finish setup" }));
+    // S3 (#178): Finish is never disabled for a missing input; pressing it says what's wrong.
+    const finish = screen.getByRole("button", { name: "Finish setup" });
+    expect(finish).not.toBeDisabled();
+    expect(finish).not.toHaveAttribute("aria-disabled");
+    await s.user.click(finish);
     expect(screen.getByText("Couldn't save question 7: it's empty.")).toBeInTheDocument();
     expect(toggle(6)).toHaveAttribute("aria-expanded", "true");
     // An emptied line still names itself (axe button-name): the muted "Short form" label.
@@ -340,7 +349,7 @@ describe("Onboarding 3: Questions + location", () => {
     await s.user.click(boxes[4]);
     await s.user.click(screen.getByRole("button", { name: "Next" }));
     await screen.findByText("Step 3 of 3");
-    await s.user.click(screen.getAllByRole("checkbox", { name: "Track" })[1]);
+    await s.user.click(screen.getAllByRole("checkbox", { name: /^Track: / })[1]);
     await openRow(s, 0);
     await s.user.selectOptions(screen.getByLabelText("Location level"), "state");
     await s.user.click(screen.getByRole("button", { name: "Finish setup" }));
