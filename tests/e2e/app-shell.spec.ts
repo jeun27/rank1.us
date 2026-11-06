@@ -39,18 +39,25 @@ const STATES = [
   "history-error",
 ];
 
-for (const state of STATES) {
-  test(`/dev/app ${state}: one H1, axe clean, no side scroll`, async ({ page }, info) => {
-    await page.goto(`/dev/app?state=${state}`);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-    const axe = await new AxeBuilder({ page }).analyze();
-    expect(axe.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(", ")}`)).toEqual([]);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-      page.viewportSize()!.width,
-    );
-    await page.screenshot({ path: `test-results/screenshots/app-${state}-${info.project.name}.png`, fullPage: true });
-  });
-}
+// v3: every state in both themes (the gallery follows prefers-color-scheme, like a first visit to /app).
+for (const theme of ["dark", "light"] as const)
+  for (const state of STATES) {
+    test(`/dev/app ${state} (${theme}): one H1, axe clean, no side scroll`, async ({ page }, info) => {
+      await page.emulateMedia({ colorScheme: theme });
+      await page.goto(`/dev/app?state=${state}`);
+      await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+      const axe = await new AxeBuilder({ page }).analyze();
+      expect(axe.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(", ")}`)).toEqual([]);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+        page.viewportSize()!.width,
+      );
+      await page.screenshot({
+        path: `test-results/screenshots/app-${state}-${theme}-${info.project.name}.png`,
+        fullPage: true,
+      });
+    });
+  }
 
 test("questions drawer: keyboard opens it, Tab stays inside, Esc closes and focus returns", async ({ page }) => {
   await page.goto("/dev/app?state=questions-partial");

@@ -5,13 +5,15 @@ import { expectAxeClean, expectNoSideScroll } from "./helpers/forms";
 const STATES = ["success", "fixes", "partial", "no-run", "no-run-fixes", "removed", "loading", "error"] as const;
 
 for (const state of STATES)
-  test(`/dev/client ${state}: one H1, axe clean, no side scroll`, async ({ page }) => {
-    await page.goto(`/dev/client?state=${state}`);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Dashboard");
-    await expectNoSideScroll(page);
-    await expectAxeClean(page);
-  });
+  for (const theme of ["dark", "light"] as const)
+    test(`/dev/client ${state} (${theme}): one H1, axe clean, no side scroll`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: theme });
+      await page.goto(`/dev/client?state=${state}`);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText("Dashboard");
+      await expectNoSideScroll(page);
+      await expectAxeClean(page);
+    });
 
 test("read-only: no Status select, no competitor edits, no billing or prices", async ({ page }) => {
   for (const state of ["success", "fixes"]) {

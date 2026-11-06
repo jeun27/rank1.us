@@ -3,12 +3,14 @@ import { expectAxeClean, expectNoSideScroll } from "./helpers/forms";
 
 // Step 16: /app/report on Example data (/dev/app, 404 in production).
 for (const state of ["report-empty", "report-success", "report-failed", "report-loading", "report-error"] as const)
-  test(`/dev/app ${state}: one H1, axe clean, no side scroll`, async ({ page }) => {
-    await page.goto(`/dev/app?state=${state}`);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-    await expectNoSideScroll(page);
-    await expectAxeClean(page);
-  });
+  for (const theme of ["dark", "light"] as const)
+    test(`/dev/app ${state} (${theme}): one H1, axe clean, no side scroll`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: theme });
+      await page.goto(`/dev/app?state=${state}`);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+      await expectNoSideScroll(page);
+      await expectAxeClean(page);
+    });
 
 test("keyboard reaches the settings, the test send and every download", async ({ page }) => {
   await page.goto("/dev/app?state=report-success");
