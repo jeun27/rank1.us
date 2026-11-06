@@ -742,7 +742,7 @@ Changed
 - Add: actions.add (quantity +1 with default proration, or Checkout when unpaid). Then it polls seats every 2 s until seats_quantity rises → /app/onboarding. After 30 s it keeps "Adding your business…" with "Try again" and no error (lead).
 - Lead copy in COPY.md "Billing (lead, 2026-11-05)".
 - Wiring:
-  - /app/billing reads getBillingState (#72); Checkout is offered only without a live subscription (null, canceled, incomplete_expired); incomplete, past_due and unpaid show the failed banner + 'Update card' (portal), paused shows the plan + 'Manage billing', and the server actions never start a second Checkout (lead, #74 review);
+  - /app/billing reads getBillingState (#72); Checkout only for null, canceled and incomplete_expired (terminal in Stripe; one shared NO_SUBSCRIPTION in src/components/billing/status.ts, lead #79); incomplete, past_due and unpaid show the failed banner + 'Update card' and the plan with the "Past due" warn badge + 'Manage billing' (portal); paused shows the plan with the "Paused" warn badge + 'Manage billing'; the server actions never start a second Checkout; authCopy.checkoutClosed and its COPY.md stub row are deleted (lead Q2);
   - the header switcher (HeaderSwitcher in the /app layout) reads listMyBusinesses (name, city) + each business's latest run summary;
   - the cookie rank1_business (httpOnly, path /app) is set by selectBusinessAction after checking listMyBusinesses, and getCurrentBusiness(db, cookie) honors it in loadShell and the competitor actions;
   - Add/Remove failures reuse "We couldn't save that. Try again."; "We couldn't open billing…" is only for the Checkout/portal redirects (lead);
@@ -770,6 +770,11 @@ Changed
 - Logs carry counts and PG codes only.
 - Review (#77): the drain reads with the service client, which bypasses the DFY fix_list_visible rule. So the report loader applies it: a DFY business with the fix list hidden gets no "What to fix next" section (no heading, no placeholder). DFY visible and self-serve always show it. Tested on the rendered PDF and the email.
 
+## Fix (data-pipeline): exact percent floors (branch fix/exact-percent-floors)
+- Bug (reviewer, Step 17): compute.ts floorPct did Math.floor(value × 100). Floating point makes 0.29 × 100 = 28.999…, so 29 of 100 showed as 28% in the leaderboard change, and progress bars were 1 low.
+- One shared helper: floorPct(metric) = Math.floor(numerator × 100 / denominator), null at denominator 0. formatPercent (UI and the report PDF), pointsChange, History and progressPercent all use it. A test fails if any other src file floors a ratio × 100.
+- Tests: 29/100, 57/100, 7/25, 58/200 give exact results in floorPct, formatPercent and progressPercent.
+
 ## Step 17 (data-pipeline): before/after vs control math (branch feat/step17-experiment-math)
 - Step 17 built from ENG_HANDOFF_OVERNIGHT §6 + UI.md 4b; Build Pack not readable; reconcile later.
 
@@ -783,7 +788,5 @@ Lead decisions (2026-11-05)
 
 Changed
 - src/lib/metrics/experiment.ts (pure): computeExperiment(counts) → per group {before, after: Metric, change}, difference, tooFew, label. When tooFew, change and difference are null so no number can be shown by mistake. experimentWindows(D) and experimentStatus(e, now). The edge table went to backend for getExperimentData's db tests.
-- Percents floor with exact integer math (numerator × 100 / denominator, like formatPercent), so 29 of 100 is 29%.
 
-Open
-- compute.ts floorPct uses value × 100, which floors 29/100 to 28 (floating point) while formatPercent shows 29%. That affects the leaderboard change. It's not changed here; flagged to the lead.
+- Percents use the shared floorPct (fixed in #83: exact integer floors).
