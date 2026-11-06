@@ -48,10 +48,16 @@ revoke update, delete on table public.experiment_questions from authenticated;
 create or replace function private.check_experiment() returns trigger
 language plpgsql security definer set search_path = '' as $$
 declare
+  eid uuid;
   ex public.experiments;
 begin
-  select * into ex from public.experiments
-  where id = case when tg_table_name = 'experiments' then new.id else new.experiment_id end;
+  -- NEW has a different shape per table, so read the id in separate branches.
+  if tg_table_name = 'experiments' then
+    eid := new.id;
+  else
+    eid := new.experiment_id;
+  end if;
+  select * into ex from public.experiments where id = eid;
   if not found then
     return null;
   end if;
