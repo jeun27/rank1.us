@@ -37,10 +37,33 @@ export class OAuthError extends Error {
 
 type Env = Record<string, string | undefined>;
 
+// NEXT_PUBLIC_SITE_URL is the only base for the redirect URI and the return URL: https, or not_configured.
+// The request Host is never used.
+export function siteOrigin(env: Env = process.env): string {
+  let u: URL;
+  try {
+    u = new URL(env.NEXT_PUBLIC_SITE_URL ?? "");
+  } catch {
+    throw new OAuthError("not_configured");
+  }
+  if (u.protocol !== "https:") throw new OAuthError("not_configured");
+  return u.origin;
+}
+
 function config(env: Env) {
-  const { GOOGLE_CLIENT_ID: id, GOOGLE_CLIENT_SECRET: secret, NEXT_PUBLIC_SITE_URL: site } = env;
-  if (!id || !secret || !site) throw new OAuthError("not_configured");
-  return { id, secret, redirect: `${site.replace(/\/+$/, "")}${CALLBACK_PATH}` };
+  const { GOOGLE_CLIENT_ID: id, GOOGLE_CLIENT_SECRET: secret } = env;
+  if (!id || !secret) throw new OAuthError("not_configured");
+  return { id, secret, redirect: `${siteOrigin(env)}${CALLBACK_PATH}` };
+}
+
+// Open-redirect guard: a relative path (safeNext: "/…", not "//" or "/\\", no scheme) under /app, /client or
+// /team only. Anything else returns to /app/settings.
+export const DEFAULT_RETURN = "/app/settings";
+const RETURN_AREAS = ["/app", "/client", "/team"];
+export function safeReturn(raw: string | null | undefined): string {
+  const p = safeNext(raw);
+  const path = p?.split(/[?#]/)[0];
+  return p && RETURN_AREAS.some((a) => path === a || path!.startsWith(`${a}/`)) ? p : DEFAULT_RETURN;
 }
 
 export const redirectUri = (env: Env = process.env) => config(env).redirect;
@@ -63,7 +86,7 @@ export function startAuth(
   businessId: string,
   env: Env = process.env,
   now = Date.now(),
-  returnTo = "/app",
+  returnTo: string = DEFAULT_RETURN,
 ) {
   const c = config(env);
   const s: OAuthState = {
@@ -71,7 +94,7 @@ export function startAuth(
     verifier: b64url(48),
     businessId,
     connector,
-    returnTo: safeNext(returnTo) ?? "/app",
+    returnTo: safeReturn(returnTo),
     exp: now + STATE_TTL_MS,
   };
   const url = new URL(AUTH_URL);
@@ -106,7 +129,7 @@ export function readState(cookie: string | undefined, state: string | null, now 
   }
   if (typeof s?.state !== "string" || !(s.connector in GOOGLE_SCOPES) || !sameString(s.state, state) || now > s.exp)
     throw new OAuthError("bad_state");
-  return { ...s, returnTo: safeNext(s.returnTo) ?? "/app" };
+  return { ...s, returnTo: safeReturn(s.returnTo) };
 }
 
 type Deps = { env?: Env; fetch?: typeof fetch; now?: number };
@@ -207,11 +230,10 @@ export async function revokeGrant(token: string, deps: { fetch?: typeof fetch } 
   }
 }
 
-// Where the browser goes after start/callback: the same-origin return path on NEXT_PUBLIC_SITE_URL, with the
-// outcome in the query (never a code, token or account detail).
-export function returnUrl(returnTo: string, params: Record<string, string | null>, base: string) {
-  const site = (process.env.NEXT_PUBLIC_SITE_URL || base).replace(/\/+$/, "");
-  const u = new URL(`${site}${safeNext(returnTo) ?? "/app"}`);
+// Where the browser goes after start/callback: the guarded return path on NEXT_PUBLIC_SITE_URL, with the
+// outcome in the query (never a code, token or account detail). not_configured without an https site URL.
+export function returnUrl(returnTo: string, params: Record<string, string | null>, env: Env = process.env) {
+  const u = new URL(`${siteOrigin(env)}${safeReturn(returnTo)}`);
   for (const [k, v] of Object.entries(params)) if (v) u.searchParams.set(k, v);
   return u.toString();
 }

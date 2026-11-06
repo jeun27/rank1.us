@@ -54,6 +54,18 @@ describe("GET /api/connections/google/start", () => {
     });
   });
 
+  it("NEXT_PUBLIC_SITE_URL unset or http → 503 not_configured before Google or any access check", async () => {
+    for (const site of ["", "http://rank1.example"]) {
+      vi.stubEnv("NEXT_PUBLIC_SITE_URL", site);
+      const res = await start.GET(req("/api/connections/google/start?business=b&connector=gbp"));
+      expect(res.status).toBe(503);
+      expect(await res.json()).toEqual({ error: "not_configured" });
+      expect(res.headers.get("location")).toBeNull();
+    }
+    expect(svc.beginGoogleConnect).not.toHaveBeenCalled();
+    expect(db.createClient).not.toHaveBeenCalled();
+  });
+
   it("an unknown connector or no business → 400, no access check", async () => {
     for (const q of ["?business=b&connector=shopify", "?connector=gbp", "?business=b"])
       expect((await start.GET(req(`/api/connections/google/start${q}`))).status).toBe(400);
@@ -78,7 +90,10 @@ describe("GET /api/connections/google/callback", () => {
       { status: "denied", connector: "ga4", returnTo: "/app" },
       "https://rank1.example/app?connection=ga4&status=denied",
     ],
-    [{ status: "error", connector: null, returnTo: "/app" }, "https://rank1.example/app?status=error"],
+    [
+      { status: "error", connector: null, returnTo: "/app/settings" },
+      "https://rank1.example/app/settings?status=error",
+    ],
   ])("%j → redirect, and the state cookie is cleared", async (outcome, location) => {
     svc.finishGoogleConnect.mockResolvedValue(outcome);
     const res = await callback.GET(
@@ -92,11 +107,22 @@ describe("GET /api/connections/google/callback", () => {
     expect(svc.finishGoogleConnect.mock.calls[0][1]).toEqual({ cookie: "c0ok", state: "st", code: "4/c", error: null });
   });
 
-  it("a thrown error still clears the cookie and lands on /app?status=error", async () => {
+  it("a thrown error still clears the cookie and lands on /app/settings?status=error", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     svc.finishGoogleConnect.mockRejectedValue(new Error("db down: secret detail"));
     const res = await callback.GET(req("/api/connections/google/callback?state=st&code=c", "rank1_google_oauth=x"));
-    expect(res.headers.get("location")).toBe("https://rank1.example/app?status=error");
+    expect(res.headers.get("location")).toBe("https://rank1.example/app/settings?status=error");
     expect(res.headers.get("set-cookie")).toContain("Max-Age=0");
+  });
+
+  it("NEXT_PUBLIC_SITE_URL unset or http → 503 not_configured, no redirect to the request host", async () => {
+    for (const site of ["", "http://rank1.example"]) {
+      vi.stubEnv("NEXT_PUBLIC_SITE_URL", site);
+      const res = await callback.GET(req("/api/connections/google/callback?state=st&code=c", "rank1_google_oauth=x"));
+      expect(res.status).toBe(503);
+      expect(res.headers.get("location")).toBeNull();
+      expect(res.headers.get("set-cookie")).toContain("Max-Age=0");
+    }
+    expect(svc.finishGoogleConnect).not.toHaveBeenCalled();
   });
 });

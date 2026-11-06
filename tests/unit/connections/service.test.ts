@@ -150,7 +150,7 @@ describe("finishGoogleConnect", () => {
     expect(await svc.finishGoogleConnect(c, { cookie, state: "forged", code: "4/x", error: null })).toEqual({
       status: "error",
       connector: null,
-      returnTo: "/app",
+      returnTo: "/app/settings",
     });
     expect(c.fetch).not.toHaveBeenCalled();
   });

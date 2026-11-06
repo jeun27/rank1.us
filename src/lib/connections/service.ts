@@ -19,6 +19,7 @@ import { applyEdits, diffLocation, EditNotAllowed, listAccounts, listLocations, 
 import type { Change, GbpEdit } from "./gbp";
 import { GoogleApiError } from "./google-api";
 import {
+  DEFAULT_RETURN,
   exchangeCode,
   OAuthError,
   readState,
@@ -137,7 +138,7 @@ export async function finishGoogleConnect(
     s = readState(q.cookie, q.state, ctx.now?.());
   } catch {
     log("connections: callback bad_state");
-    return { status: "error", connector: null, returnTo: "/app" };
+    return { status: "error", connector: null, returnTo: DEFAULT_RETURN };
   }
   const out = (status: ConnectOutcome["status"]) => {
     log(`connections: ${s.connector} ${status}`);

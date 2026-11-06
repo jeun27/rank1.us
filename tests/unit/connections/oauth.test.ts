@@ -8,6 +8,7 @@ import {
   OAuthError,
   readState,
   redirectUri,
+  returnUrl,
   refreshAccessToken,
   revokeGrant,
   STATE_COOKIE,
@@ -46,6 +47,17 @@ describe("redirect URI", () => {
     expect(redirectUri({ ...ENV, NEXT_PUBLIC_SITE_URL: "https://rank1.example/" })).toBe(
       "https://rank1.example/api/connections/google/callback",
     );
+  });
+
+  it("NEXT_PUBLIC_SITE_URL unset or not https → not_configured (never the request host)", () => {
+    for (const site of [undefined, "", "http://rank1.example", "rank1.example", "ftp://rank1.example"]) {
+      expect(() => redirectUri({ ...ENV, NEXT_PUBLIC_SITE_URL: site })).toThrow("not_configured");
+      expect(() => returnUrl("/app", {}, { ...ENV, NEXT_PUBLIC_SITE_URL: site })).toThrow("not_configured");
+    }
+    expect(returnUrl("/client", { status: "connected", connection: null }, ENV)).toBe(
+      "https://rank1.example/client?status=connected",
+    );
+    expect(returnUrl("//evil.example", {}, ENV)).toBe("https://rank1.example/app/settings");
   });
 
   it("missing client id, secret or site URL → not_configured", () => {
@@ -88,14 +100,27 @@ describe("startAuth", () => {
     });
   });
 
-  it("returnTo is kept only as a same-origin path (default /app)", () => {
+  it("returnTo must be a relative path under /app, /client or /team; anything else → /app/settings (open-redirect guard)", () => {
     const read = (r?: string) => {
       const { url, cookie } = startAuth("gbp", "biz-1", ENV, NOW, r);
       return readState(cookie, new URL(url).searchParams.get("state"), NOW).returnTo;
     };
-    expect(read("/client/settings")).toBe("/client/settings");
-    expect(read()).toBe("/app");
-    for (const bad of ["https://evil.example/x", "//evil.example", "/\\evil.example"]) expect(read(bad)).toBe("/app");
+    for (const ok of ["/client/settings", "/app", "/app/settings?tab=connections", "/team", "/team/clients/1"])
+      expect(read(ok)).toBe(ok);
+    expect(read()).toBe("/app/settings");
+    for (const bad of [
+      "https://evil.example/x",
+      "//evil.example",
+      "/\\evil.example",
+      "javascript:alert(1)",
+      "/signin",
+      "/apps",
+      "/application",
+      "/api/connections/google/start",
+      "app/settings",
+      "",
+    ])
+      expect(read(bad)).toBe("/app/settings");
   });
 
   it("every start gets a fresh state and verifier", () => {
