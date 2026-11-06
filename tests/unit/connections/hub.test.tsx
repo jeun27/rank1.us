@@ -333,22 +333,19 @@ describe("one primary per screen (UI.md)", () => {
 // the evidence on the P4 fixes. The picker reads "Choose channel".
 describe("the YouTube tile", () => {
   const yt = { id: "y1", provider: "youtube" as const, status: "connected" as const, selected: [] };
-  it("connected: Connected · n videos checked, Choose channel and Disconnect", () => {
-    hub({ industry: "other", connections: [yt], youtubeVideos: 3 });
+  // #150 review: no live read, and nothing stores a "videos checked" count, so the tile shows the status only.
+  it("connected: Connected, Choose channel and Disconnect", () => {
+    hub({ industry: "other", connections: [yt] });
     const t = tile(c.names.youtube);
-    expect(t).toHaveTextContent("Connected · 3 videos checked");
+    expect(within(t).getByTestId("status")).toHaveTextContent(c.statuses.connected);
+    expect(t).not.toHaveTextContent("videos checked");
     expect(within(t).getByRole("button", { name: c.pick.youtube })).toBeInTheDocument();
     expect(c.pick.youtube).toBe("Choose channel");
   });
 
   // No keyword (cuisine null): no R19–R21 fixes exist, so the checklist never shows; the tile says it instead.
   it("connected, no keyword: the tile adds the plain no-keyword line", () => {
-    hub({ industry: "other", connections: [yt], youtubeVideos: 3, youtubeNoKeyword: true });
+    hub({ industry: "other", connections: [yt], youtubeNoKeyword: true });
     expect(tile(c.names.youtube)).toHaveTextContent("Add your main keyword to check your videos.");
-  });
-
-  it("connected without a count (the read failed): just Connected", () => {
-    hub({ industry: "other", connections: [yt] });
-    expect(tile(c.names.youtube)).not.toHaveTextContent("videos checked");
   });
 });
