@@ -10,7 +10,7 @@ import { Jelly } from "@/components/ui/Jelly";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { Logo } from "@/components/ui/Logo";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { StatNumber, formatPercent } from "@/components/ui/StatNumber";
+import { StatNumber, VisibilityCell } from "@/components/ui/StatNumber";
 import { Table } from "@/components/ui/Table";
 import type { AiAccessCheck } from "@/lib/queries/ai-access";
 import type { Metric } from "@/types/metrics";
@@ -271,7 +271,7 @@ export function Leaderboard({ metrics, top, change = true }: { metrics: Metrics;
             {b.kind === "business" && <Badge tone="info">{c.you}</Badge>}
           </span>
         ),
-        v: b.tooFew ? c.tooFew : <D>{`${formatPercent(b.metric)} (${namedText(b.metric)})`}</D>,
+        v: b.tooFew ? c.tooFew : <VisibilityCell metric={b.metric} />,
         c: <D>{points(b.change)}</D>,
       }))}
     />

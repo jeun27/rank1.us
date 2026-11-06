@@ -1,7 +1,7 @@
 import { appCopy as c } from "@/components/app/copy";
 import { auditCopy } from "@/components/audit/copy";
 import { Badge } from "@/components/ui/Badge";
-import { formatPercent } from "@/components/ui/StatNumber";
+import { VisibilityCell } from "@/components/ui/StatNumber";
 import { Table } from "@/components/ui/Table";
 import { deltaTone, signedPts } from "@/lib/metrics/delta";
 import { QUEUE_TAGS, type QueueRow } from "@/lib/workspace/queue";
@@ -31,13 +31,7 @@ export function ClientQueue({ rows, formAction }: { rows: QueueRow[]; formAction
             <span data-computed>{r.name}</span>
           </a>
         ),
-        v: (
-          <span data-computed>
-            {r.visibility?.denominator
-              ? `${formatPercent(r.visibility)} (named in ${r.visibility.numerator} of ${r.visibility.denominator} answers)`
-              : "–"}
-          </span>
-        ),
+        v: r.visibility?.denominator ? <VisibilityCell metric={r.visibility} /> : <span data-computed>–</span>,
         c:
           r.delta === null ? (
             "–"

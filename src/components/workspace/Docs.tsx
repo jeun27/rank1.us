@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Freshness } from "@/components/ui/Freshness";
 import { Icon } from "@/components/ui/Icon";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { StatNumber } from "@/components/ui/StatNumber";
+import { StatNumber, VisibilityCell } from "@/components/ui/StatNumber";
 import { Table } from "@/components/ui/Table";
 import type { LocalCompetitor } from "@/lib/onboarding/types";
 import { ENGINES, ENGINE_LABEL, type WorkspaceView } from "@/lib/queries/workspace";
@@ -25,7 +25,6 @@ import {
   namedText,
   pointsChange,
   pointsDelta,
-  visibilityText,
   type Selection,
 } from "@/lib/workspace/context";
 import type { DocSel } from "./DocPane";
@@ -111,7 +110,7 @@ function Leaderboard({ view, top }: { view: WorkspaceView; top?: number }) {
             {c.you && <Badge tone="info">You</Badge>}
           </span>
         ),
-        n: <D>{visibilityText(c.named)}</D>,
+        n: <VisibilityCell metric={c.named} />,
       }))}
     />
   );
@@ -330,7 +329,7 @@ function SectionDoc({
                 )}
               </span>
             ),
-            v: <D>{visibilityText(c.visibility)}</D>,
+            v: <VisibilityCell metric={c.visibility} />,
             c: <D>{pointsChange(c.visibility, view.checks[i + 1]?.visibility) ?? "–"}</D>,
           }))}
         />
