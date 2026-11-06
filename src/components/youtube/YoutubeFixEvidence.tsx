@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
+import { safeHref } from "@/components/mentions/MentionsSection";
 import { Button } from "@/components/ui/Button";
 import { youtubeCopy as c } from "./copy";
 
@@ -9,15 +10,6 @@ type FixVideo = { id: string; title: string; url: string };
 
 const action =
   "inline-flex min-h-11 items-center text-caption text-link underline underline-offset-4 md:min-h-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
-
-const safeHref = (url: string) => {
-  try {
-    const { protocol } = new URL(url);
-    return protocol === "http:" || protocol === "https:" ? url : null;
-  } catch {
-    return null;
-  }
-};
 
 function Template({ text }: { text: string }) {
   const [done, setDone] = useState(false);
