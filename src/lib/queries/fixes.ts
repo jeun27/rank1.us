@@ -24,8 +24,13 @@ export type OpenFix = {
   pillar: Pillar;
 };
 
-// What the fix list shows: no size, evidence, why_note or other rule internals.
-export type FixItem = Omit<OpenFix, "size">;
+// Who moved a fix to its status: a team actor is { is_team: true, name: null } ("Rank1 team"); a
+// member's display name, never the email. Null when the weekly check did it.
+export type FixActor = { is_team: boolean; name: string | null };
+
+// What the fix list shows: no size, evidence, why_note or other rule internals. status_changed_at
+// and changed_by are set on doing rows only (null on todo).
+export type FixItem = Omit<OpenFix, "size"> & { status_changed_at: string | null; changed_by: FixActor | null };
 
 export type FixList = {
   // Open fixes, smallest effort first (S, S-M, M, M-L, L), then rule key. Never hygiene rules.
@@ -62,20 +67,26 @@ export async function openFixes(
   };
 }
 
-const toItem = (f: OpenFix): FixItem => ({
-  id: f.id,
-  rule_key: f.rule_key,
-  title: f.title,
-  detail: f.detail,
-  affected_answers: f.affected_answers,
-  status: f.status,
-  pillar: f.pillar,
-});
+type Actors = Map<string, { status_changed_at: string | null; changed_by: FixActor | null }>;
+
+const toItem =
+  (actors: Actors) =>
+  (f: OpenFix): FixItem => ({
+    id: f.id,
+    rule_key: f.rule_key,
+    title: f.title,
+    detail: f.detail,
+    affected_answers: f.affected_answers,
+    status: f.status,
+    pillar: f.pillar,
+    status_changed_at: actors.get(f.id)?.status_changed_at ?? null,
+    changed_by: actors.get(f.id)?.changed_by ?? null,
+  });
 
 // The fix list a member may see through RLS (self-serve and team always; dfy_client only when
 // fix_list_visible). A caller who can't see it gets empty lists.
 export async function listFixes(db: DbClient, businessId: string): Promise<FixList> {
-  const [{ ranked, tidyUps, titles }, checks] = await Promise.all([
+  const [{ ranked, tidyUps, titles }, checks, doing] = await Promise.all([
     openFixes(db, businessId),
     db
       .from("fix_checks")
@@ -84,14 +95,22 @@ export async function listFixes(db: DbClient, businessId: string): Promise<FixLi
       .order("created_at", { ascending: false })
       .order("rule_key")
       .limit(50),
+    db.rpc("open_fix_actors", { p_business_id: businessId }),
   ]);
   if (checks.error) throw checks.error;
+  if (doing.error) throw doing.error;
+  const actors: Actors = new Map(
+    doing.data.map((a) => [
+      a.id,
+      { status_changed_at: a.status_changed_at, changed_by: a.changed_by as FixActor | null },
+    ]),
+  );
   const lastRunId = checks.data[0]?.run_id ?? null;
   const unchecked = checks.data
     .filter((c) => c.run_id === lastRunId && c.result === "unchecked")
     .map((c) => ({ rule_key: c.rule_key, title: titles.get(c.rule_key) ?? c.rule_key }))
     .sort((a, b) => byKey(a.rule_key, b.rule_key));
-  return { ranked: ranked.map(toItem), tidyUps: tidyUps.map(toItem), unchecked, lastRunId };
+  return { ranked: ranked.map(toItem(actors)), tidyUps: tidyUps.map(toItem(actors)), unchecked, lastRunId };
 }
 
 export type DoneFix = {
@@ -101,8 +120,8 @@ export type DoneFix = {
   detail: string | null;
   // Null for fixes closed before status history existed (they sort last).
   status_changed_at: string | null;
-  // Null when the weekly check closed it. A team actor is { is_team: true, name: null } ("Rank1 team").
-  changed_by: { is_team: boolean; name: string | null } | null;
+  // Null when the weekly check closed it.
+  changed_by: FixActor | null;
 };
 
 // The business's done fixes, newest change first, with the same visibility as the fix list.

@@ -23,7 +23,33 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "ai_traffic": {
+            "ai_access_checks": {
+                  Row: {
+                    "business_id": string | null,"checked_at": string,"cloudflare": boolean,"crawlers": Json,"domain": string,"outcome": string,"pages_checked": number,"run_id": string,"status_gptbot": number | null,"status_normal": number | null,"visible_words": number | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "business_id"?: string | null,"checked_at"?: string,"cloudflare"?: boolean,"crawlers"?: Json,"domain": string,"outcome": string,"pages_checked"?: number,"run_id": string,"status_gptbot"?: number | null,"status_normal"?: number | null,"visible_words"?: number | null
+                  }
+                  Update: {
+                    "business_id"?: string | null,"checked_at"?: string,"cloudflare"?: boolean,"crawlers"?: Json,"domain"?: string,"outcome"?: string,"pages_checked"?: number,"run_id"?: string,"status_gptbot"?: number | null,"status_normal"?: number | null,"visible_words"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "ai_access_checks_business_id_fkey"
+      columns: ["business_id"]
+isOneToOne: false
+      referencedRelation: "businesses"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ai_access_checks_run_id_fkey"
+      columns: ["run_id"]
+isOneToOne: false
+      referencedRelation: "runs"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"ai_traffic": {
                   Row: {
                     "business_id": string,"date": string,"sessions": number,"source": string
                   }
@@ -801,8 +827,14 @@ isOneToOne: false
 "note_connector_interest":
 { Args: { "p_business_id": string,"p_provider": string }; Returns: undefined
                            },
+"open_fix_actors":
+{ Args: { "p_business_id": string }; Returns: { "changed_by": Json,"id": string,"status_changed_at": string | null }[]
+                           },
 "prune_ephemeral":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"record_ai_access_check":
+{ Args: { "p": Json,"p_run_id": string }; Returns: undefined
                            },
 "record_connection_change":
 { Args: { "p_actor": string,"p_after": Json,"p_before": Json,"p_connection_id": string,"p_field": string,"p_provider_ref": string }; Returns: string

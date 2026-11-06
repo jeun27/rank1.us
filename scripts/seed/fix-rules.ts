@@ -1,5 +1,5 @@
 // fix_rules seed: R1-R15 and H1, parsed from docs/SCHEMA.md section 5b so copy stays verbatim.
-// A1-A6 are not seeded yet (founder sends them later).
+// A1-A6 come from migration 0014 and R16 from 0025 (so the hosted DB gets them), never the seed.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -57,12 +57,14 @@ const cells = (line: string) =>
     .slice(1, -1)
     .map((c) => c.trim().replace(/\\\|/g, "|"));
 
+const MIGRATION_RULES = new Set(["R16"]);
+
 export function fixRules(schemaMd = readFileSync(join(process.cwd(), "docs", "SCHEMA.md"), "utf8")): FixRuleSeed[] {
   const section = schemaMd.split("# 5b.")[1];
   if (!section) throw new Error("docs/SCHEMA.md has no section 5b");
   return section
     .split("\n")
-    .filter((l) => /^\| (R\d+|H1) \|/.test(l))
+    .filter((l) => /^\| (R\d+|H1) \|/.test(l) && !MIGRATION_RULES.has(cells(l)[0]))
     .map((line) => {
       const [key, title, size, detection, data_source, customer_copy, why_note] = cells(line);
       const unverified = UNVERIFIED[key] ?? [];
