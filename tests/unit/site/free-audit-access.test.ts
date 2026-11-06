@@ -48,6 +48,32 @@ describe("checkFreeAuditAccess (the run-jobs hook for free audits)", () => {
     });
   });
 
+  it("a site whose check throws is still recorded (unreachable), so it leaves the oldest-first queue", async () => {
+    // A queue backed by "no check row yet", like runs_needing_ai_access_check.
+    const recorded = new Map<string, { outcome: string }>();
+    const queue = ["run-bad", "run-ok"];
+    const next = vi.fn(async () => {
+      const runId = queue.find((id) => !recorded.has(id));
+      return runId ? { runId, domain: `${runId}.example.test` } : null;
+    });
+    const check = vi.fn(async (domain: string) => {
+      if (domain.startsWith("run-bad")) throw new Error("site exploded");
+      return CHECK;
+    });
+    const record = vi.fn(async (runId: string, c: { outcome: string }) => void recorded.set(runId, c));
+    const d = deps({ next, check, record });
+    expect(await checkFreeAuditAccess(d)).toEqual({ checked: 1, failed: true });
+    expect(recorded.get("run-bad")).toMatchObject({
+      outcome: "unreachable",
+      domain: "run-bad.example.test",
+      pagesChecked: 0,
+    });
+    expect(await checkFreeAuditAccess(d)).toEqual({ checked: 1 });
+    expect(check.mock.calls.map((c) => c[0])).toEqual(["run-bad.example.test", "run-ok.example.test"]);
+    expect(await checkFreeAuditAccess(d)).toEqual({ checked: 0, skipped: "none" });
+    expect(check).toHaveBeenCalledTimes(2); // the bad site was checked once, then skipped
+  });
+
   it("errors never throw, and the log carries the PG code only (no domain or run id)", async () => {
     const d = deps({
       record: vi.fn().mockRejectedValue(Object.assign(new Error("example-ramen.test bad"), { code: "22023" })),
