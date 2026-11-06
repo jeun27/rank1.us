@@ -109,22 +109,20 @@ export function ClientSwitcher({
           setActive(at);
           setOpen((o) => !o);
         }}
-        className={`js-only inline-flex min-h-11 min-w-0 max-w-56 items-center gap-2 rounded-control px-2 font-medium text-ink hover:bg-raised md:min-h-8 ${focus}`}
+        className={`js-only inline-flex min-h-11 min-w-0 max-w-56 items-center gap-1.5 rounded-control px-2 font-medium text-ink hover:bg-raised md:min-h-8 ${focus}`}
       >
         <span className="sr-only">Client</span>{" "}
         <span
           aria-hidden
           data-computed
-          className="grid size-5 shrink-0 place-items-center rounded-[4px] bg-warnBg text-caption font-semibold text-warnText"
+          className="grid size-5 shrink-0 place-items-center rounded-[4px] bg-overlay text-caption font-semibold text-ink"
         >
           {current.name[0]}
         </span>
         <span data-computed className="truncate">
           {current.name}
         </span>
-        <span aria-hidden className="text-inkMuted">
-          ▾
-        </span>
+        <Icon name="chevronDown" className="size-3.5 text-inkMuted" />
       </button>
       {open && (
         <div className="absolute top-full left-0 z-30 mt-1 w-[min(18rem,calc(100vw-2rem))] rounded-card border border-border bg-overlay p-1 shadow-overlay">
