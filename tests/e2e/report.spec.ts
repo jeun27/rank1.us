@@ -12,7 +12,10 @@ for (const state of ["report-empty", "report-success", "report-failed", "report-
 
 test("keyboard reaches the settings, the test send and every download", async ({ page }) => {
   await page.goto("/dev/app?state=report-success");
+  // focus() doesn't wait for visibility; the streamed content is hidden until React moves it into place.
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   for (const name of ["Upload logo", "Brand color", "Recipients"]) {
+    await expect(page.getByLabel(name)).toBeVisible();
     await page.getByLabel(name).focus();
     await expect(page.getByLabel(name)).toBeFocused();
   }
