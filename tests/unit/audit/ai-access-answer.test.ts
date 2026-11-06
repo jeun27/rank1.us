@@ -51,11 +51,11 @@ describe("aiAccessAnswer", () => {
   it("only other crawlers blocked: info, the owner's call", () => {
     expect(aiAccessAnswer(check({ outcome: "blocked", crawlers: crawlers(["GPTBot", "Google-Extended"]) }))).toEqual({
       tone: "info",
-      line: "AI search can read your site. You block 2 training crawlers, which is your call.",
+      line: "AI search can read your site. You block 2 other AI crawlers, which is your call.",
       hint: null,
     });
     expect(aiAccessAnswer(check({ outcome: "blocked", crawlers: crawlers(["GPTBot"]) })).line).toBe(
-      "AI search can read your site. You block 1 training crawler, which is your call.",
+      "AI search can read your site. You block 1 other AI crawler, which is your call.",
     );
   });
 
@@ -120,7 +120,7 @@ describe("copy", () => {
     for (const s of [
       '"{n} of 6 AI crawlers can read your site"',
       '"AI search can\'t read your site: {bots} {is/are} blocked in robots.txt."',
-      '"AI search can read your site. You block {n} training crawlers, which is your call."',
+      '"AI search can read your site. You block {n} other AI crawlers, which is your call."',
       '"{n} words show"',
       '"We couldn\'t reach {domain}."',
       '"Checked {age} ago · robots.txt + homepage"',

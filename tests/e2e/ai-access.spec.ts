@@ -12,7 +12,7 @@ const panel = (scope: Page | Locator) => scope.getByRole("region", { name: "Can 
 const CASES: [string, string | RegExp][] = [
   ["good", "AI can read your site."],
   ["search", "AI search can't read your site: OAI-SearchBot and PerplexityBot are blocked in robots.txt."],
-  ["training", "AI search can read your site. You block 1 training crawler, which is your call."],
+  ["training", "AI search can read your site. You block 1 other AI crawler, which is your call."],
   ["js", "Your homepage shows almost no text without JavaScript, so ChatGPT can't read what you offer."],
   ["cloudflare", "Your site lets AI in, but Cloudflare may be blocking it."],
   ["edge", /^Your site may be blocking AI crawlers at the edge/],
