@@ -90,7 +90,7 @@ export function BusinessSwitcher({
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex min-h-11 max-w-56 items-center gap-1 truncate rounded-full px-3 text-ui font-semibold hover:bg-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+        className="inline-flex min-h-11 max-w-56 items-center gap-1 truncate rounded-control px-2 text-ui font-medium hover:bg-raised md:min-h-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
       >
         {`${current.name} ▾`}
       </button>
@@ -116,7 +116,7 @@ export function BusinessSwitcher({
       {open && (
         <div
           data-testid="switcher-panel"
-          className="z-20 flex flex-col gap-2 bg-paper p-2 shadow-card max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:rounded-t-surface md:absolute md:left-0 md:mt-1 md:w-80 md:rounded-surface"
+          className="z-20 flex flex-col gap-2 border border-border bg-overlay p-2 shadow-overlay max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:rounded-t-surface md:absolute md:left-0 md:mt-1 md:w-80 md:rounded-surface"
         >
           {businesses.length > SEARCH_OVER && (
             <label className="flex flex-col gap-1 px-2 pt-1 text-caption font-semibold">
