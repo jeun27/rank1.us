@@ -114,7 +114,7 @@ export function SourcesView({
             <Measured checkedAt={checkedAt} answers={answers} now={now} />
             <LocationSelect locations={sources.locations} value={location} action={formAction} hidden={formHidden} />
           </div>
-          {/* X11: what to act on first. G7 (frontend) puts its "lists that name rivals" table here. */}
+          {/* X11: what to act on first (after G7's lists above): the domains to get listed on. */}
           {sources.topDomains.length > 0 && (
             <Table
               caption={c.title}
