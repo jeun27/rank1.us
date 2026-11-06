@@ -18,22 +18,22 @@ const LOCAL: Industry[] = [
 // The founder's connector map (2026-11-06), one row per industry.
 const EXPECTED: Record<Industry, { recommended: string[]; optional: string[]; later: string[] }> = {
   restaurant: {
-    recommended: ["google_business_profile"],
-    optional: ["opentable_resy", "search_console", "site_cms"],
+    recommended: ["gbp"],
+    optional: ["opentable", "resy", "search_console", "site_cms"],
     later: ["apple_business_connect", "bing_places", "yelp"],
   },
   ...Object.fromEntries(
     (["hvac", "plumbing", "roofing", "pest_control", "auto", "beauty", "gym", "dental"] as const).map((i) => [
       i,
       {
-        recommended: ["google_business_profile"],
+        recommended: ["gbp"],
         optional: ["search_console", "site_cms"],
         later: ["apple_business_connect", "bing_places", "yelp"],
       },
     ]),
   ),
   events: {
-    recommended: ["google_business_profile", "site_cms"],
+    recommended: ["gbp", "site_cms"],
     optional: ["search_console"],
     later: ["apple_business_connect", "bing_places", "yelp"],
   },
@@ -47,7 +47,7 @@ const EXPECTED: Record<Industry, { recommended: string[]; optional: string[]; la
     optional: ["ga4"],
     later: ["amazon"],
   },
-  other: { recommended: [], optional: ["ga4", "google_business_profile", "search_console"], later: [] },
+  other: { recommended: [], optional: ["ga4", "gbp", "search_console"], later: [] },
 } as unknown as Record<Industry, { recommended: string[]; optional: string[]; later: string[] }>;
 
 describe("recommend (industry → connectors)", () => {
@@ -59,9 +59,8 @@ describe("recommend (industry → connectors)", () => {
   });
 
   it("GBP is recommended to every local niche and to no online-only one", () => {
-    for (const i of LOCAL) expect(ids(recommend(i).recommended)).toContain("google_business_profile");
-    for (const i of ["saas", "dtc", "other"] as const)
-      expect(ids(recommend(i).recommended)).not.toContain("google_business_profile");
+    for (const i of LOCAL) expect(ids(recommend(i).recommended)).toContain("gbp");
+    for (const i of ["saas", "dtc", "other"] as const) expect(ids(recommend(i).recommended)).not.toContain("gbp");
   });
 
   it("med-spa isn't an industry; it falls under other, which has nothing recommended", () => {
@@ -86,8 +85,23 @@ describe("recommend (industry → connectors)", () => {
       // "later" tiles are never connectable yet.
       for (const t of r.later) expect(t.available).toBe("coming_soon");
     }
-    expect([...LIVE_CONNECTORS].sort()).toEqual(["ga4", "google_business_profile", "search_console"]);
-    expect(Object.keys(CONNECTORS).length).toBe(11);
+    expect([...LIVE_CONNECTORS].sort()).toEqual(["ga4", "gbp", "search_console"]);
+    expect(Object.keys(CONNECTORS).sort()).toEqual(
+      [
+        "gbp",
+        "apple_business_connect",
+        "bing_places",
+        "yelp",
+        "opentable",
+        "resy",
+        "site_cms",
+        "shopify",
+        "amazon",
+        "g2_capterra",
+        "search_console",
+        "ga4",
+      ].sort(),
+    );
   });
 
   it("tiles keep the config order, so the hub is stable", () => {

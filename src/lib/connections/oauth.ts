@@ -4,7 +4,7 @@ import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 // only for its own scope (+ openid, for the account `sub` that identifies the grant; no email or profile).
 // https://developers.google.com/identity/protocols/oauth2/web-server
 export const GOOGLE_SCOPES = {
-  google_business_profile: "https://www.googleapis.com/auth/business.manage",
+  gbp: "https://www.googleapis.com/auth/business.manage",
   search_console: "https://www.googleapis.com/auth/webmasters.readonly",
   ga4: "https://www.googleapis.com/auth/analytics.readonly",
 } as const;

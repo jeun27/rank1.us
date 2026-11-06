@@ -1,4 +1,4 @@
-// Industry → connector recommendations (founder map, 2026-11-06). ONE table: the hub, the onboarding step and
+// Industry → connector recommendations (founder map, 2026-11-06). Keys match backend's connector list (0021). ONE table: the hub, the onboarding step and
 // the dashboard card all read it. Tiers: recommended, optional, later ("Optional later" → Coming soon).
 // Industries not listed for a connector don't see its tile.
 export const INDUSTRIES = [
@@ -41,13 +41,14 @@ type Rule = { niche: Niche; recommended?: Industry[]; optional?: Industry[]; lat
 // Order = display order inside a tier. 'other' (incl. med-spa) gets no recommendation; it can still
 // connect the live Google connectors from Settings.
 export const CONNECTORS = {
-  google_business_profile: { niche: "local", recommended: LOCAL, optional: ["other"] },
+  gbp: { niche: "local", recommended: LOCAL, optional: ["other"] },
   site_cms: { niche: "site", recommended: ["saas", "dtc", "events"], optional: not(LOCAL, "events") },
   search_console: { niche: "site", recommended: ["saas", "dtc"], optional: [...LOCAL, "other"] },
   shopify: { niche: "dtc_store", recommended: ["dtc"] },
   g2_capterra: { niche: "saas_reviews", recommended: ["saas"] },
   ga4: { niche: "ai_referrals", optional: ["saas", "dtc", "other"] },
-  opentable_resy: { niche: "restaurant_booking", optional: ["restaurant"] },
+  opentable: { niche: "restaurant_booking", optional: ["restaurant"] },
+  resy: { niche: "restaurant_booking", optional: ["restaurant"] },
   apple_business_connect: { niche: "local", later: LOCAL },
   bing_places: { niche: "local", later: LOCAL },
   yelp: { niche: "local", later: LOCAL },
@@ -56,7 +57,7 @@ export const CONNECTORS = {
 export type Connector = keyof typeof CONNECTORS;
 
 // Only these have a working flow; every other tile is "Coming soon" + Notify me (no fake connect buttons).
-export const LIVE_CONNECTORS: readonly string[] = ["google_business_profile", "search_console", "ga4"];
+export const LIVE_CONNECTORS: readonly string[] = ["gbp", "search_console", "ga4"];
 
 export type Tile = { connector: Connector; niche: Niche; available: "live" | "coming_soon" };
 export type Recommendations = { recommended: Tile[]; optional: Tile[]; later: Tile[] };

@@ -71,7 +71,7 @@ describe("startAuth", () => {
 
   it("scopes are exactly the approved read/edit set", () => {
     expect(GOOGLE_SCOPES).toEqual({
-      google_business_profile: "https://www.googleapis.com/auth/business.manage",
+      gbp: "https://www.googleapis.com/auth/business.manage",
       search_console: "https://www.googleapis.com/auth/webmasters.readonly",
       ga4: "https://www.googleapis.com/auth/analytics.readonly",
     });
@@ -97,7 +97,7 @@ describe("startAuth", () => {
 });
 
 describe("readState", () => {
-  const { url, cookie } = startAuth("google_business_profile", "biz-1", ENV, NOW);
+  const { url, cookie } = startAuth("gbp", "biz-1", ENV, NOW);
   const state = new URL(url).searchParams.get("state")!;
 
   it("a wrong, missing or expired state is refused", () => {
