@@ -1,42 +1,73 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { ReactNode } from "react";
+import { Icon, type IconName } from "@/components/ui/Icon";
 import { appCopy as c } from "./copy";
 
-// Only pages that exist (lead): later steps add Report, Experiments, Settings.
-const ITEMS = [
-  { href: "/app", label: c.dashboard },
-  { href: "/app/competitors", label: c.competitors },
-  { href: "/app/questions", label: c.questions },
-  { href: "/app/sources", label: c.sources },
-  { href: "/app/fixes", label: c.fixNext },
-  { href: "/app/report", label: c.reports },
-  { href: "/app/history", label: c.history },
-  { href: "/app/billing", label: c.billing },
-] as const;
+// Only pages that exist (lead). v3 (D14): grouped like the mockup's rail.
+export const NAV_GROUPS: { href: string; label: string; icon: IconName }[][] = [
+  [{ href: "/app", label: c.dashboard, icon: "dashboard" }],
+  [
+    { href: "/app/competitors", label: c.competitors, icon: "users" },
+    { href: "/app/questions", label: c.questions, icon: "question" },
+    { href: "/app/sources", label: c.sources, icon: "link" },
+  ],
+  [
+    { href: "/app/fixes", label: c.fixNext, icon: "wrench" },
+    { href: "/app/report", label: c.reports, icon: "file" },
+    { href: "/app/history", label: c.history, icon: "history" },
+  ],
+  [{ href: "/app/billing", label: c.billing, icon: "card" }],
+];
 
-// Left rail at md+, a sideways-scrolling tab row on phones. Hidden while onboarding.
-export function AppNav() {
+export const isCurrent = (path: string, href: string) =>
+  href === "/app" ? path === "/app" : path === href || path.startsWith(`${href}/`);
+
+// The rail: a header (logo), the page links (hidden while onboarding) and a footer (Account), all in the
+// App nav landmark. A column at md+, a sideways-scrolling row on phones.
+export function AppNav({ header, footer }: { header?: ReactNode; footer?: ReactNode }) {
   const path = usePathname();
-  if (path.startsWith("/app/onboarding")) return null;
-  const current = (href: string) => (href === "/app" ? path === "/app" : path === href || path.startsWith(`${href}/`));
+  const onboarding = path.startsWith("/app/onboarding");
   return (
-    <nav aria-label={c.nav} className="border-b border-border md:w-52 md:shrink-0 md:border-r md:border-b-0">
-      <ul className="flex gap-1 overflow-x-auto px-3 py-2 md:flex-col md:px-4 md:py-6">
-        {ITEMS.map((i) => (
-          <li key={i.href} className="shrink-0">
-            <Link
-              href={i.href}
-              aria-current={current(i.href) ? "page" : undefined}
-              className={`flex min-h-11 items-center rounded-card px-3 text-ui font-semibold focus-visible:outline-2 focus-visible:outline-jellyDeep ${
-                current(i.href) ? "bg-white text-ink shadow-card" : "text-inkMuted hover:text-ink"
-              }`}
+    <nav aria-label={c.nav} className="flex min-w-0 flex-1 items-center md:flex-col md:items-stretch">
+      {header}
+      {!onboarding && (
+        <div className="flex min-w-0 flex-1 gap-1 overflow-x-auto px-2 py-2 md:flex-none md:flex-col md:gap-0 md:overflow-visible md:py-1">
+          {NAV_GROUPS.map((group, i) => (
+            <ul
+              key={i}
+              className={`flex shrink-0 gap-1 md:flex-col md:gap-0.5 ${i ? "md:mt-2 md:border-t md:border-border md:pt-2" : ""}`}
             >
-              {i.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+              {group.map((item) => {
+                const on = isCurrent(path, item.href);
+                return (
+                  <li key={item.href} className="shrink-0">
+                    <Link
+                      href={item.href}
+                      aria-current={on ? "page" : undefined}
+                      className={`flex h-11 items-center gap-2.5 rounded-control px-2.5 text-ui md:h-8 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep ${
+                        on ? "bg-raised text-ink" : "text-text2 hover:bg-raised hover:text-ink"
+                      }`}
+                    >
+                      <Icon name={item.icon} className={`size-4 ${on ? "text-accent" : "text-inkMuted"}`} />
+                      {item.label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          ))}
+        </div>
+      )}
+      {footer}
     </nav>
   );
+}
+
+// The current page's nav label, for the breadcrumb.
+export function CurrentPage() {
+  const path = usePathname();
+  const item = NAV_GROUPS.flat().find((i) => isCurrent(path, i.href));
+  return item ? <span aria-current="page">{item.label}</span> : null;
 }

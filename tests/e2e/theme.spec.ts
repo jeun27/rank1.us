@@ -55,3 +55,39 @@ test("a saved light theme never leaks onto public pages through client-side link
   await page.waitForURL("**/dev/team");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
 });
+
+// #92 review, the logo path: a saved light theme on /app → the rail logo → the landing is dark → back is light.
+for (const [where, link] of [
+  ["the rail logo", "App"],
+  ["the breadcrumb Rank1", "Breadcrumb"],
+] as const)
+  test(`light on /app → ${where} → the landing is dark → back to /app is light`, async ({ page }) => {
+    test.skip(where === "the rail logo" && page.viewportSize()!.width < 768, "the rail logo shows from md up");
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.addInitScript(() => localStorage.setItem("rank1.workspace", JSON.stringify({ theme: "light" })));
+    await page.goto("/dev/app?state=dashboard-success");
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+    await page.getByRole("navigation", { name: link }).getByRole("link", { name: "Rank1" }).click();
+    await page.waitForURL((u) => u.pathname === "/");
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    await page.goBack();
+    await page.waitForURL("**/dev/app**");
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  });
+
+// #92 review, the header logo (AppHeader on /client): needs the local stack to sign a client in.
+test("light on /client → the header logo → the landing is dark → back to /client is light", async ({ page }) => {
+  test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
+  const { newUser, openMagicLink } = await import("./helpers/auth");
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.addInitScript(() => localStorage.setItem("rank1.workspace", JSON.stringify({ theme: "light" })));
+  await openMagicLink(page, (await newUser("theme-client", "dfy_client")).email);
+  await page.waitForURL("**/client");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await page.getByRole("banner").getByRole("link", { name: "Rank1" }).click();
+  await page.waitForURL((u) => u.pathname === "/");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.goBack();
+  await page.waitForURL("**/client");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+});

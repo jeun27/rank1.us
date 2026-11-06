@@ -888,7 +888,6 @@ Blocked/open
 - Buttons (D35, lead O2): 6px radius; 32px from md (40px for size lg and the final CTA) and 44px below md, since UI.md keeps "44px below md". Press is translateY(1px) and the secondary arrow nudges on hover. The final CTA uses the accent (amber is no longer a button). A new `alt` variant. The Google button keeps its aurora ring on the 6px shape. The tap-target e2e checks run below md; dev-ui.spec checks 32/40px from md.
 - Chart colours (lead O1, supersedes Step 9 Q3 O1 "4 solid + 2 striped"): dedicated per-theme series1-3 tokens, 3 solids + 3 stripes in both themes. Reddit/YouTube/Review sites are solid on series1/2/3; Social and News and blogs are striped in series1/2, and Other in neutral inkMuted. Dark #3987E5 / #D95926 / #199E70; light keeps #1A5FBF / #D98E2B / #279EF2. The dataviz validator (all pairs) passes in both themes; its output is in the PR.
 - Docs: the old colour words in UI.md:159,200 and COPY.md:20,78,150,274 now use the v3 token names (visual notes only; quoted strings untouched).
-
 ## Step 18 (backend): hardening (branch fix/step18-hardening)
 - Already done before this step (evidence in the PR): every cron route compares CRON_SECRET in constant time (cronAuthorized: SHA-256 digests + timingSafeEqual), and every cron/API 5xx body is a fixed label, never DB error text.
 - Migration 20261105000022 (+ .down.sql):
@@ -897,3 +896,11 @@ Blocked/open
   - create_free_audit: p.daily_limit is a whole number (else 22023); the server passes auditDailyLimit(), so AUDIT_DAILY_LIMIT stays the one knob (lead Q1). Missing or null skips the DB cap so the live v0.5.0 build keeps working on the shared hosted DB (lead); the app-level check still runs. Under a transaction advisory lock it counts free audits since UTC midnight and raises P0429 at the cap. A lead that already has a run still gets it back. startFreeAudit already logs the code and returns no run (lead Q2: no new copy).
 - README "Releasing": apply missing migrations to the hosted DB, then `notify pgrst, 'reload schema'`, before the deploy.
 - Tests: the claim-order test now expects the half-and-half split (the rule changed, lead-approved). free-audit and e2e inputs pass daily_limit.
+
+## v3 PR 2a (frontend): the /app shell (branch feat/v3-shell)
+
+- Rail (D14): the App nav is the rail. It holds the logo, the pages in 4 groups with icons (Dashboard | Competitors, Questions, Sources | What to fix next, Reports, History | Billing) and Account at the foot. It's dark in both themes (rail token #0B0C0E, §7) and a sideways row on phones. During onboarding it keeps the logo and Account but no page links.
+- Top bar (D42): a breadcrumb, Rank1 / business / page (aria-label "Breadcrumb", lead copy). The business crumb is the Business switcher (a 6px trigger, overlay popover); the theme toggle is on the right. The "/" separators are CSS ::before content, so the <ol> holds only <li>s.
+- /dev/app renders every state inside the shell; the switcher states put the switcher in the breadcrumb.
+- Theme on navigation: ThemeSync (#92) re-applies themeFor on pathname changes. The e2e covers the rail logo, the breadcrumb Rank1 and the /client header logo (local stack).
+- Split (lead D1): 2a is /app; 2b is the /team shell (the client switcher listbox in the breadcrumb, the Context panel on the right, the document as main).

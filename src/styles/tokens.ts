@@ -34,6 +34,7 @@ export const darkColors = {
   series1: "#3987E5",
   series2: "#D95926",
   series3: "#199E70",
+  rail: "#0B0C0E", // the left rail, dark in both themes (D14)
 } as const;
 
 // Light (O2): cool grey, no beige. Same names, so every component switches with data-theme.
@@ -67,6 +68,7 @@ export const colors = {
   series1: "#1A5FBF",
   series2: "#D98E2B",
   series3: "#279EF2",
+  rail: "#0B0C0E",
 } as const;
 
 // [font-size px, line-height px]; mobile -> md+ where UI.md gives two sizes.

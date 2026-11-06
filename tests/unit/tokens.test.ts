@@ -47,6 +47,8 @@ describe("Tailwind theme matches the v3 tokens", () => {
       series1: "#3987E5",
       series2: "#D95926",
       series3: "#199E70",
+      // The rail stays dark in both themes (D14): #0B0C0E.
+      rail: "#0B0C0E",
     });
   });
 
@@ -81,6 +83,7 @@ describe("Tailwind theme matches the v3 tokens", () => {
       series1: "#1A5FBF",
       series2: "#D98E2B",
       series3: "#279EF2",
+      rail: "#0B0C0E",
     });
     expect(Object.keys(colors).sort()).toEqual(Object.keys(darkColors).sort());
   });

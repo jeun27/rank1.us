@@ -36,6 +36,7 @@
   --color-series1: #3987E5;
   --color-series2: #D95926;
   --color-series3: #199E70;
+  --color-rail: #0B0C0E;
 }
 
 /* v3 (D33): Inter for everything, JetBrains Mono for data only (numbers, domains, question strings). */
@@ -131,6 +132,7 @@
   --color-series1: #1A5FBF;
   --color-series2: #D98E2B;
   --color-series3: #279EF2;
+  --color-rail: #0B0C0E;
 }
 
 /* Dark again for subtrees that stay dark in the light theme: the rail (D14). */
@@ -164,6 +166,7 @@
   --color-series1: #3987E5;
   --color-series2: #D95926;
   --color-series3: #199E70;
+  --color-rail: #0B0C0E;
 }
 
 /* Pane open/close and tab switch: 150-200ms, off for reduced motion. */
