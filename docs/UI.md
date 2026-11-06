@@ -1,6 +1,6 @@
 # Section 4. Full UI spec
 
-Design v3 (Jeun 2026-11-06: "yes to all, O2"). Supabase/Profound-style: near-black neutral surfaces, 1px hairlines instead of shadows, compact Inter type, mono for numbers only, 6px radii, dense controls, one accent (Jelly blue). Decisions, the before/after and every contrast pair: [docs/design/v3.md](design/v3.md). This replaces the "Field Notes" world (paper, Fraunces, pills, light-only customer pages). Sections 4a and 4b below keep their exact copy; only the visual notes changed.
+Design v3 (Jeun 2026-11-06: "yes to all, O2"), then the template portal look (D44, founder 2026-11-06 05:23-05:31 UTC). Pure black surfaces, 1px hairlines instead of shadows, compact Inter type, mono for numbers only, 6px radii, dense controls, one accent: white in dark (#1A5FBF in light). Decisions, the before/after and every contrast pair: [docs/design/v3.md](design/v3.md). This replaces the "Field Notes" world (paper, Fraunces, pills, light-only customer pages). Sections 4a and 4b below keep their exact copy; only the visual notes changed.
 
 ## Themes
 
@@ -16,31 +16,31 @@ Same token names in both themes, so every component switches with `data-theme`.
 
 | Token | Dark (default) | Light | Use |
 |---|---|---|---|
-| page | #0E0F11 | #F6F7F9 | Page background |
-| panel | #151619 | #FFFFFF | Panels, cards, table surfaces, pane backgrounds |
-| raised | #1C1E22 | #F0F2F5 | Hovered or selected rows, secondary buttons, KPI tiles, active tab |
-| overlay | #24262B | #E8EBEF | Menus, popovers, tooltips, the switcher list |
-| rail | #0B0C0E | #0B0C0E | Nav rail, both themes |
-| hairline | #2B2E34 | #E2E5EA | 1px borders and dividers (decorative) |
+| page | #000000 | #F6F7F9 | Page background |
+| panel | #0A0A0A | #FFFFFF | Panels, cards, table surfaces, pane backgrounds |
+| raised | #111214 | #F0F2F5 | Hovered or selected rows, secondary buttons, KPI tiles, active tab |
+| overlay | #18191B | #E8EBEF | Menus, popovers, tooltips, the switcher list |
+| rail | #000000 | #000000 | Nav rail, both themes |
+| hairline | rgba(55, 65, 81, 0.55) | #E2E5EA | 1px borders and dividers (decorative) |
 | hairlineStrong | #41454D | #CDD1D8 | Active-tab ring, menu border |
 | controlEdge | #71767F | #7D838D | 1px edge of inputs, selects, chips and secondary buttons (≥3:1, WCAG 1.4.11) |
 | text | #EDEEF0 | #111316 | Primary text |
 | text2 | #B3B7BF | #4A4F57 | Secondary text, rail labels |
 | muted | #8C919B | #646A73 | Captions, table headers, 'Checked 14 h ago' |
-| accent | #279EF2 | #1A5FBF | The one accent (D34): primary button fill, focus ring, chart business line, active nav icon, glows |
-| onAccent | #0E0F11 | #FFFFFF | Text on the accent fill |
-| accentHover | #4FAEF7 | #18579F | Primary button hover |
-| link | #79C0FA | #1A5FBF | Links, secondary text actions, accent text |
+| accent | #FFFFFF | #1A5FBF | The one accent (D44, was Jelly blue in D34): primary button fill, chart business line (R3), active nav icon, the landing glows |
+| onAccent | #000000 | #FFFFFF | Text on the accent fill (white buttons, black text) |
+| accentHover | #E5E5E5 | #18579F | Primary button hover |
+| link | #FFFFFF | #1A5FBF | Links and secondary text actions, always underlined (R1: never colour alone) |
 | success / successBg | #5FBF8E / #13291F | #2F6F4F / #E6EFE9 | Up / visible / complete |
 | error / errorBg | #F08A7E / #33191A | #B3443A / #F7E6E3 | Down / alerts / 'Before' / failed |
 | warn / warnBg | #E8B45F / #2E2312 | #8A5A12 / #FBEFD9 | 'Moved', partial runs, "Doing". A state colour only, never a button |
-| info / infoBg | #79C0FA / #14263B | #1A5FBF / #E5EFFC | Info badge, 'You' row and tag, 'Example data' |
-| jelly | #279EF2 | #279EF2 | The mascot (never recoloured). In dark it equals the accent |
+| info / infoBg | #79C0FA / #14263B | #1A5FBF / #E5EFFC | Info badge, 'You' row and tag, 'Example data', info banners, focus rings (R2: the blue stays) |
+| jelly | #279EF2 | #279EF2 | The mascot (never recoloured); no longer the accent (D44) |
 
 Rules:
 - One accent. Amber and green are state colours, not brand colours. Do not use Supabase green or any competitor's colour.
 - Status colours only where they carry meaning.
-- Never put white text on the dark accent (2.89:1). Text on #279EF2 is #0E0F11.
+- The dark accent is white, so text on it is #000000 (21:1). Headings h1/h2 in /app, /team and /client fade from white to 60% white (heading-gradient, -0.04em, dark only; forced colours show plain text). No glows in the app areas; the landing keeps its glows (D39).
 
 ## Contrast (checked, WCAG AA)
 
@@ -48,17 +48,17 @@ Text needs 4.5:1. UI edges and chart lines need 3:1.
 
 | Pair | Dark | Light |
 |---|---|---|
-| text on page / panel / raised / overlay | 16.52 / 15.58 / 14.38 / 13.04 | 17.36 / 18.61 / 16.59 / – |
-| text2 on page / panel / raised / overlay | 9.54 / 9.00 / 8.30 / 7.53 | 7.69 / 8.24 / 7.35 / – |
-| muted on page / panel / raised / overlay | 6.06 / 5.72 / 5.28 / 4.79 | 5.09 / 5.45 / 4.86 / – |
-| link on page / panel / raised / overlay | 9.80 / 9.25 / 8.53 / 7.74 | 5.71 / 6.12 / 5.45 / – |
-| onAccent on accent / on accentHover | 6.63 / 7.97 | 6.12 / – |
-| accent line or icon on page / panel / raised | 6.63 / 6.25 / 5.77 | 5.71 / 6.12 / 5.45 |
+| text on page / panel / raised / overlay | 18.09 / 17.05 / 16.14 / 15.15 | 17.36 / 18.61 / 16.59 / – |
+| text2 on page / panel / raised / overlay | 10.44 / 9.84 / 9.32 / 8.75 | 7.69 / 8.24 / 7.35 / – |
+| muted on page / panel / raised / overlay | 6.64 / 6.26 / 5.92 / 5.56 | 5.09 / 5.45 / 4.86 / – |
+| link on page / panel / raised / overlay | 21.00 / 19.80 / 18.74 / 17.59 | 5.71 / 6.12 / 5.45 / – |
+| onAccent on accent / on accentHover | 21.00 / 16.67 | 6.12 / – |
+| accent line or icon on page / panel / raised | 21.00 / 19.80 / 18.74 | 5.71 / 6.12 / 5.45 |
 | success on successBg | 6.84 | 5.10 (5.99 on panel) |
 | error on errorBg | 6.67 | 4.57 (5.52 on panel, 4.92 on raised) |
 | warn on warnBg | 8.15 | 5.19 (5.91 on panel) |
 | info on infoBg | 7.83 | 5.27 |
-| controlEdge on page / panel / raised / overlay | 4.20 / 3.96 / 3.66 / 3.32 | 3.82 on panel / 3.40 on raised |
+| controlEdge on page / panel / raised / overlay | 4.60 / 4.34 / 4.11 / 3.85 | 3.82 on panel / 3.40 on raised |
 | rail text / rail icon on rail | 9.73 / 6.19 | same (rail is dark) |
 | competitor-average line (text at 60%) | 6.42 | 4.88 |
 
@@ -76,7 +76,8 @@ Hairlines (1.1–1.4:1) are decorative dividers only. No control relies on a hai
 | depth | 1px hairline | Panels and cards have no shadow (D36) |
 | shadow-overlay | 0 16px 40px rgb(0 0 0 / 0.5) | Menus, popovers and tooltips only |
 | shadow-window | 0 30px 80px -20px rgb(0 0 0 / 0.7) | The landing demo window only |
-| glow | radial-gradient of accent at 8–22% opacity, blurred | Decorative only, on the landing: hero, behind the demo, pricing top edge, final CTA corner. Never behind text that needs it for contrast (D39) |
+| glow | radial-gradient of Jelly blue (#279EF2) at 18%, blurred | Decorative only, on the landing: hero, behind the demo, pricing top edge, final CTA corner. Never in /app, /team or /client (D44). Never behind text that needs it for contrast (D39) |
+| heading-gradient | linear-gradient(180deg, #FFFFFF, 60% white), background-clip text, -0.04em | App h1/h2 in /app, /team and /client, dark only; plain text in light and in forced colours (D44) |
 | aurora | linear-gradient(90deg, #E8B85A, #5FB8B3, #279EF2), 2px ring | Google sign-in button only (kept, on a 6px shape) |
 
 ## Type
@@ -107,7 +108,7 @@ Inter (variable, optical size 14–32; SIL OFL) for all text. JetBrains Mono (SI
 
 | Component | Spec |
 |---|---|
-| Button primary | Accent fill, onAccent text, Inter 500 13px, 32h (40h in the landing hero, 36h in forms), radius 6, no shadow. Hover accentHover. Press translateY(1px). Focus 2px accent ring offset 2. Loading: same fill + 14px spinner + the loading label ('Checking…'). One per screen; the header CTA is the secondary style |
+| Button primary | Accent fill (white in dark, D44), onAccent text (black), Inter 500 13px, 32h (40h in the landing hero, 36h in forms), radius 6, no shadow. Hover accentHover. Press translateY(1px). Focus 2px info-blue ring offset 2 (R2). Loading: same fill + 14px spinner + the loading label ('Checking…'). One per screen; the header CTA is the secondary style |
 | Button secondary (`alt`) | Raised fill, text colour, 1px controlEdge, same sizes. Hover overlay fill |
 | Text action | Link colour, Inter 500, trailing 12–14px drawn arrow that nudges 2px on hover. 44px tap area on touch |
 | Button disabled | A real `<button disabled>`: raised fill, muted label at 75% opacity, controlEdge at 60%, 14px lock icon (WCAG 1.4.3 exempts disabled controls) |

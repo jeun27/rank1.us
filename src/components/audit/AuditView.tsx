@@ -114,7 +114,7 @@ function Results({
 }) {
   const firstUrl = (domain: string) => results.citations.find((x) => x.domain === domain)?.url;
   const download =
-    "inline-flex min-h-11 items-center gap-2 px-1.5 text-ui font-semibold text-jellyDeep underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
+    "inline-flex min-h-11 items-center gap-2 px-1.5 text-ui font-semibold text-link underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
   return (
     <>
       <Hero metrics={metrics} now={now} />
@@ -139,7 +139,7 @@ function Results({
                       href={url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex min-h-11 items-center gap-2 text-jellyDeep underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-jellyDeep"
+                      className="inline-flex min-h-11 items-center gap-2 text-link underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-jellyDeep"
                     >
                       <Icon name="link" className="size-4" />
                       <D>{s.domain}</D>

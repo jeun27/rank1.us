@@ -8,7 +8,7 @@ import type { Loaded } from "@/components/audit/load";
 export function Page({ title, children }: { title: string; children: ReactNode }) {
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-8 px-5 py-8 md:px-8 md:py-10">
-      <h1 className="font-display text-h2 font-semibold md:text-h2-md">{title}</h1>
+      <h1 className="heading-gradient font-display text-h2 font-semibold md:text-h2-md">{title}</h1>
       {children}
     </main>
   );
@@ -26,11 +26,11 @@ export const Section = ({
   href?: string;
 }) => (
   <section aria-label={label} className="flex flex-col gap-3">
-    <h2 className="font-display text-h3 font-semibold">
+    <h2 className="heading-gradient font-display text-h3 font-semibold">
       {href ? (
         <Link
           href={href}
-          className="inline-flex min-h-11 items-center gap-2 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-jellyDeep"
+          className="inline-flex min-h-11 items-center gap-2 underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-jellyDeep"
         >
           {title}
           <Icon name="arrowRight" className="size-4" />

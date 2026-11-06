@@ -468,7 +468,7 @@ function CompetitorRow({ c, onToggle, onRemove }: { c: Competitor; onToggle: () 
         <button
           type="button"
           onClick={onRemove}
-          className="min-h-11 px-2 text-caption font-semibold text-jellyDeep hover:underline"
+          className="min-h-11 px-2 text-caption font-semibold text-link underline underline-offset-4"
         >
           {copy.remove}
         </button>
