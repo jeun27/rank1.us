@@ -152,13 +152,15 @@ describe("Competitors (UI.md 4b, SoV only here)", () => {
     });
   });
 
-  it("rule 3: every number shows n, plus freshness and 'API-measured, directional' (phone cards too)", () => {
+  // X8: phones use the same leaderboard table (stacked), so the separate phone card list is gone.
+  it("rule 3: every number shows n, plus freshness and 'API-measured, directional' (one table at every width)", () => {
     render(
       <CompetitorsView latest={exampleLatest} tracked={exampleTracked} suggestions={[]} actions={actions} now={now} />,
     );
-    const cards = screen.getByRole("list", { name: "Competitors" });
-    expect(within(cards).getByText("33% (named in 80 of 240 answers)")).toBeInTheDocument();
-    expect(within(cards).getByText("100% (named in 240 of 240 answers)")).toBeInTheDocument();
+    expect(screen.queryByRole("list", { name: "Competitors" })).not.toBeInTheDocument();
+    const table = screen.getByRole("table", { name: "Competitors" });
+    expect(within(table).getByText("33% (named in 80 of 240 answers)")).toBeInTheDocument();
+    expect(within(table).getByText("100% (named in 240 of 240 answers)")).toBeInTheDocument();
     expect(
       screen.getByText(/^Checked \d+ (min|h|d) ago · 240 answers · API-measured, directional$/),
     ).toBeInTheDocument();

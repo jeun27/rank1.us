@@ -17,7 +17,7 @@ export default function AppLayout({ children }: LayoutProps<"/app">) {
             </Suspense>
           }
           actions={<ThemeToggle />}
-          settings={process.env.ENABLE_CONNECTIONS === "true"}
+          settings={process.env.ENABLE_CONNECTIONS === "true" || process.env.ENABLE_NARRATIVE === "true"}
         >
           <div className="mx-auto flex w-full max-w-page">{children}</div>
         </AppShell>
