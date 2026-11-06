@@ -372,6 +372,8 @@ Strings from the GAS prototype report (share/gas-proto/REPORT.md, lead copy). Fi
 |---|---|
 | R16 title | "Your site lets AI in, but Cloudflare may be blocking it." |
 | R16 customer copy | "Your site runs on Cloudflare. Its AI bot blocking is on by default for many new sites, and robots.txt can't show it. Check Security, then Bots, in your Cloudflare dashboard." |
+| R17 title (G7, the grouped fix) | "Get on these lists" |
+| R17 customer copy | "{n} lists AI cites name {rivals} but not you." |
 
 ## Landing (lead, 2026-11-06)
 

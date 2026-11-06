@@ -977,3 +977,9 @@ Found by the GAS prototype agent; lead list C1-C5 (2026-11-06), matched to docs/
 - Lead (2026-11-06): listFixes items carry status_changed_at and changed_by {is_team, name} | null, with the same safe mapping as done_fixes (team → is_team only, never an email), null on todo rows. Additive, and listFixes' signature is unchanged.
 - Migration 20261105000026 (+ .down.sql): open_fix_actors(business) (invoker, through the fixes RLS) returns the doing fixes' time and actor via 0023's private.fix_status_actor. listFixes merges it by fix id; the item key test lists the two new fields.
 
+## G7 (backend): mention target decisions (branch feat/mention-decisions)
+- GAS brief, lead decisions 2026-11-06 (G7 note OK): candidates ("Lists that name your rivals but not you") are computed on read by data-pipeline from the latest run's stored citations; only users' decisions are stored. U7: "Add to fixes" feeds ONE grouped P3 fix. Behind ENABLE_MENTIONS.
+- Migration 20261105000030 (+ .down.sql), additive: mention_target_decisions (business, url http/https ≤ 2000, status added|dismissed, decided_by, decided_at; pk business+url). Read: members incl. the dfy_client and the team on DFY. set_mention_target(business, url, status|null) (definer, can_write_business; never a dfy_client) sets, replaces or clears.
+- Fix rule R17 "Get on these lists" (p3; customer copy from the prototype's grouped fix), enabled. The key check widens to R17 and 0024's pillar map gains it. Like R16 it comes from the migration, so the seed generator skips it; the fresh-reset test expects 24 rules with R17 enabled. SCHEMA 5b row, COPY.md GAS entry, AEO.md R1-R17.
+- Queries: src/lib/queries/mentions.ts (listMentionDecisions, setMentionTarget).
+

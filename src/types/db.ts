@@ -546,6 +546,26 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"mention_target_decisions": {
+                  Row: {
+                    "business_id": string,"decided_at": string,"decided_by": string | null,"status": string,"url": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "business_id": string,"decided_at"?: string,"decided_by"?: string | null,"status": string,"url": string
+                  }
+                  Update: {
+                    "business_id"?: string,"decided_at"?: string,"decided_by"?: string | null,"status"?: string,"url"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "mention_target_decisions_business_id_fkey"
+      columns: ["business_id"]
+isOneToOne: false
+      referencedRelation: "businesses"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"questions": {
                   Row: {
                     "active": boolean,"active_form": string,"business_id": string,"city": string | null,"country": string | null,"dfs_location_code": number | null,"id": string,"location_level": string,"long_text": string | null,"short_text": string,"state": string | null,"template_key": string | null
@@ -874,6 +894,9 @@ isOneToOne: false
                            },
 "set_fix_status":
 { Args: { "p_fix_id": string,"p_status": string }; Returns: undefined
+                           },
+"set_mention_target":
+{ Args: { "p_business_id": string,"p_status": string,"p_url": string }; Returns: undefined
                            },
 "set_report_settings":
 { Args: { "p_brand_color": string | null,"p_business_id": string,"p_report_recipients": string[] }; Returns: undefined
