@@ -388,6 +388,8 @@ Strings from the GAS prototype report (share/gas-proto/REPORT.md, lead copy). Fi
 | R16 customer copy | "Your site runs on Cloudflare. Its AI bot blocking is on by default for many new sites, and robots.txt can't show it. Check Security, then Bots, in your Cloudflare dashboard." |
 | R17 title (G7, the grouped fix) | "Get on these lists" |
 | R17 customer copy | "{n} lists AI cites name {rivals} but not you." |
+| R18 title (G2, JS-empty homepage) | "Your homepage needs JavaScript to show its text" |
+| R18 customer copy (lead, every vertical) | "Your homepage shows almost no text without JavaScript, so ChatGPT can't read what you offer." |
 
 ## Landing (lead, 2026-11-06)
 
