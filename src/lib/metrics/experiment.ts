@@ -7,7 +7,7 @@ export const EXPERIMENT_LABEL = "Directional";
 
 export type Cell = { named: number; n: number };
 export type GroupCounts = { before: Cell; after: Cell };
-// From getExperimentData: ok answers of each group's questions in each window.
+// From getExperimentData: ok answers of each group's questions, in the runs whose start date falls in each window.
 export type ExperimentCounts = { test: GroupCounts; control: GroupCounts };
 
 export type GroupResult = { before: Metric; after: Metric; change: number | null };
@@ -46,7 +46,8 @@ const parse = (d: string) => {
 };
 const addDays = (t: number, days: number) => new Date(t + days * DAY_MS).toISOString().slice(0, 10);
 
-// Inclusive America/Los_Angeles calendar dates (answers are bucketed by their LA date):
+// Inclusive America/Los_Angeles calendar dates, keyed on the run start date (runs.started_at in LA), so a
+// run's answers never split across windows, as in History (lead, 2026-11-06):
 // before = D−28..D−1, after = D..D+27. Calendar math in UTC, so DST never moves an edge.
 export function experimentWindows(changeDate: string) {
   const t = parse(changeDate);

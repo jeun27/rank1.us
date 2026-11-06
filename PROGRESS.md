@@ -775,7 +775,8 @@ Changed
 
 Lead decisions (2026-11-05)
 - Not for dfy_client (backend RLS + no UI). No p-values and no significance language. The label is always "Directional".
-- Before = ok answers of a group's questions in weekly/audit runs on LA dates D−28..D−1. After = D..D+27 (inclusive, 28 days each). D = change_date.
+- Before = ok answers of a group's questions in weekly/audit runs that started on LA dates D−28..D−1. After = D..D+27 (inclusive, 28 days each). D = change_date.
+- A run counts by its start date (the LA date of runs.started_at), not answers.checked_at, so a run's answers never split across windows. Same as History (lead, 2026-11-06).
 - Change = after% − before% in floored whole points, each with n. Difference = test change − control change.
 - Any of the 4 cells with n < 10 → tooFew: the UI shows "Too few answers to call yet. Next check Monday." instead of numbers.
 - Status: 'running' through D+27, 'done' from D+28. A user's early 'ended' wins.

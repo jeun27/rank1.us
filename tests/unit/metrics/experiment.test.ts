@@ -100,7 +100,7 @@ describe("computeExperiment", () => {
   });
 });
 
-describe("experimentWindows (inclusive America/Los_Angeles dates)", () => {
+describe("experimentWindows (inclusive America/Los_Angeles run start dates)", () => {
   it("before = D−28..D−1 and after = D..D+27, 28 days each", () => {
     expect(EXPERIMENT_DAYS).toBe(28);
     expect(experimentWindows("2026-11-16")).toEqual({
