@@ -149,7 +149,7 @@ export function Workspace({ view, team = null }: { view: WorkspaceView; team?: T
                 team ? (
                   <ClientSwitcher team={team} onClients={team.clients ? openClients : undefined} />
                 ) : (
-                  <span data-computed className="truncate">
+                  <span data-computed data-crumb-static className="truncate">
                     {view.business.name}
                   </span>
                 )
@@ -157,7 +157,9 @@ export function Workspace({ view, team = null }: { view: WorkspaceView; team?: T
               page={<span aria-current="page">{label}</span>}
             />
             <div className="flex shrink-0 items-center gap-1">
-              <ThemeToggle />
+              <span className="max-md:hidden">
+                <ThemeToggle />
+              </span>
               <button
                 type="button"
                 aria-expanded={contextOpen}

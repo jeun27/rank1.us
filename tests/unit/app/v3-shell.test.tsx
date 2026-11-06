@@ -1,9 +1,14 @@
 import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppNav } from "@/components/app/AppNav";
 import { AppShell } from "@/components/app/AppShell";
 
 const path = { current: "/app/competitors" };
+// The shell renders the real ThemeToggle, which reads the system theme.
+beforeEach(() =>
+  vi.stubGlobal("matchMedia", () => ({ matches: false, addEventListener() {}, removeEventListener() {} })),
+);
+afterEach(() => vi.unstubAllGlobals());
 vi.mock("next/navigation", () => ({ usePathname: () => path.current }));
 
 // v3 PR 2 (D14/D42): the dark rail with grouped items, and a breadcrumb top bar.
@@ -32,7 +37,7 @@ describe("v3 /app shell", () => {
   it("the rail is a dark subtree in both themes; the breadcrumb is Rank1 / business / page", () => {
     path.current = "/app/sources";
     render(
-      <AppShell business={<span>Example Ramen House</span>} actions={<button type="button">Dark theme</button>}>
+      <AppShell business={<span>Example Ramen House</span>}>
         <main>
           <h1>Sources</h1>
         </main>
@@ -49,6 +54,11 @@ describe("v3 /app shell", () => {
     expect(items).toEqual(["Rank1", "Example Ramen House", "Sources"]);
     expect(within(crumbs).getByText("Sources")).toHaveAttribute("aria-current", "page");
     expect(within(crumbs).getByRole("link", { name: "Rank1" })).toHaveAttribute("href", "/");
-    expect(screen.getByRole("banner")).toContainElement(screen.getByRole("button", { name: "Dark theme" }));
+    // X9a: the actions sit in the top bar from md, and inside Account below md.
+    const [account, bar] = screen.getAllByRole("button", { name: "Dark theme" });
+    expect(screen.getByRole("banner")).toContainElement(bar);
+    expect(bar.parentElement).toHaveClass("max-md:hidden");
+    expect(account.closest("details")).not.toBeNull();
+    expect(account.parentElement).toHaveClass("md:hidden");
   });
 });

@@ -15,7 +15,12 @@ describe("AppHeader (the /client header)", () => {
   it("has the 'Dark theme' toggle (aria-pressed) next to Account", () => {
     render(<AppHeader />);
     const header = screen.getByRole("banner");
-    const toggle = within(header).getByRole("button", { name: "Dark theme" });
-    expect(toggle).toHaveAttribute("aria-pressed");
+    // X9a: md+ shows it in the bar (hidden below md); phones get the same toggle inside Account.
+    const [bar, phone] = within(header).getAllByRole("button", { name: "Dark theme" });
+    expect(bar).toHaveAttribute("aria-pressed");
+    expect(bar.closest("details")).toBeNull();
+    expect(bar.parentElement).toHaveClass("max-md:hidden");
+    expect(phone.closest("details")).not.toBeNull();
+    expect(phone.parentElement).toHaveClass("md:hidden");
   });
 });

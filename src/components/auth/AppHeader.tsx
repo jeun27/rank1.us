@@ -21,27 +21,33 @@ export function AppHeader({ switcher, connections = false }: { switcher?: ReactN
             Connections
           </Link>
         )}
-        <ThemeToggle />
-        <AccountMenu />
+        <span className="max-md:hidden">
+          <ThemeToggle />
+        </span>
+        <AccountMenu extra={<ThemeToggle labelled />} />
       </div>
     </header>
   );
 }
 
 // details/summary: opens without JS. Sign out is a POST, so a prefetch can't trigger it.
+// extra: phone-only items above Sign out (X9a: the theme toggle moves here below md).
 export function AccountMenu({
   summary = c.account,
   summaryClassName = `${navLink} cursor-pointer list-none`,
   popupClassName = "right-0 mt-1",
+  extra,
 }: {
   summary?: ReactNode;
   summaryClassName?: string;
   popupClassName?: string;
+  extra?: ReactNode;
 }) {
   return (
     <details className="relative">
       <summary className={summaryClassName}>{summary}</summary>
       <div className={`absolute z-10 min-w-40 rounded-card bg-raised p-1 shadow-card ${popupClassName}`}>
+        {extra && <div className="md:hidden">{extra}</div>}
         <form action="/auth/signout" method="post">
           <button type="submit" className={`${navLink} w-full`}>
             {c.signOut}

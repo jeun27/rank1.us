@@ -60,7 +60,7 @@ export function BusinessSwitcher({
   const current = businesses.find((b) => b.id === currentId) ?? businesses[0];
   if (businesses.length < 2)
     return (
-      <span data-crumb-name className="min-w-0 truncate text-ui font-semibold">
+      <span data-crumb-name data-crumb-static className="min-w-0 truncate text-ui font-semibold">
         {current?.name}
       </span>
     );

@@ -22,8 +22,11 @@ for (const state of ["dashboard-success", "switcher-one", "switcher-many"])
   test(`C5 ${state}: the /app breadcrumb is one line, the business crumb ellipsizes`, async ({ page }) => {
     await page.goto(`/dev/app?state=${state}`);
     const crumbs = page.getByRole("navigation", { name: "Breadcrumb" });
-    const items = crumbs.getByRole("listitem");
-    await expect(items).toHaveCount(3);
+    await expect(crumbs.locator("li")).toHaveCount(3);
+    // X9a: phones keep only the page crumb, plus the switcher when there are several businesses.
+    const phoneCrumbs = state === "switcher-many" ? 2 : 1;
+    const items = crumbs.locator("li").locator("visible=true");
+    await expect(items).toHaveCount(isMobile(page) ? phoneCrumbs : 3);
     const boxes = await items.evaluateAll((els) => els.map((e) => e.getBoundingClientRect()));
     const mid = (b: DOMRect) => b.top + b.height / 2;
     for (const b of boxes) expect(Math.abs(mid(b) - mid(boxes[0]))).toBeLessThanOrEqual(1);
@@ -40,8 +43,9 @@ for (const state of ["dashboard-success", "switcher-one", "switcher-many"])
     // One header row: the breadcrumb and the theme toggle share it.
     const bar = (await page.getByRole("banner").boundingBox())!;
     expect(bar.height).toBeLessThanOrEqual(isMobile(page) ? 52 : 48);
-    // The name span truncates (text-overflow: ellipsis on a clipped box).
+    // The name span truncates (text-overflow: ellipsis on a clipped box), wherever it shows.
     const name = crumbs.locator("[data-crumb-name]");
+    if (isMobile(page) && state !== "switcher-many") return expect(name).toBeHidden();
     expect(await css(page, '[aria-label="Breadcrumb"] [data-crumb-name]', ["text-overflow", "overflow"])).toEqual({
       "text-overflow": "ellipsis",
       overflow: "hidden",

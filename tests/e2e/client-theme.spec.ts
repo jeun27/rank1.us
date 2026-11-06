@@ -8,7 +8,13 @@ test("the /client header toggles the theme, saves it, and the saved choice wins 
   await page.emulateMedia({ colorScheme: "light" });
   await page.goto("/dev/client");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-  const toggle = page.getByRole("banner").getByRole("button", { name: "Dark theme" });
+  // X9a: from md the toggle is in the bar; on phones it's inside Account.
+  const phone = page.viewportSize()!.width < 768;
+  const openAccount = async () => phone && (await page.getByText("Account", { exact: true }).first().click());
+  const visibleToggle = () =>
+    page.getByRole("banner").getByRole("button", { name: "Dark theme" }).locator("visible=true");
+  await openAccount();
+  const toggle = visibleToggle();
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
   await page.screenshot({
     path: `test-results/screenshots/client-theme-light-${info.project.name}.png`,
@@ -20,10 +26,8 @@ test("the /client header toggles the theme, saves it, and the saved choice wins 
   // Saved: a reload (system still light) is dark from the first paint.
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await expect(page.getByRole("banner").getByRole("button", { name: "Dark theme" })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  await openAccount();
+  await expect(visibleToggle()).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await page.screenshot({
     path: `test-results/screenshots/client-theme-dark-${info.project.name}.png`,
