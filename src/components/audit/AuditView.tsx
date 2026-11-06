@@ -217,16 +217,20 @@ export function EngineTable({ results, metrics }: { results: RunResults; metrics
 }
 
 // top: the Dashboard's top 5. change: false drops the change column (Dashboard: visibility only).
+// Phones stack the rows and pin the You row first (X8).
 export function Leaderboard({ metrics, top, change = true }: { metrics: Metrics; top?: number; change?: boolean }) {
+  const shown = metrics.leaderboard.slice(0, top);
   return (
     <Table
       caption={c.competitors}
+      stack
+      pin={(i) => shown[i].kind === "business"}
       columns={[
         { key: "b", header: c.business },
         { key: "v", header: c.visibility, numeric: true },
         ...(change ? [{ key: "c", header: c.change, numeric: true }] : []),
       ]}
-      rows={metrics.leaderboard.slice(0, top).map((b) => ({
+      rows={shown.map((b) => ({
         b: (
           <span className="flex items-center gap-2">
             <D>{b.name}</D>

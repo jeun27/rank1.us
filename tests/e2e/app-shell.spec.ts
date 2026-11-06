@@ -258,6 +258,23 @@ test("/dev/app dashboard: the H1 is 22/28 -0.02em and the hero number is 44px", 
   await expect(page.locator("main p.text-hero").first()).toHaveCSS("font-size", "44px");
 });
 
+// X8 (UI.md Table, D43): at 375 the leaderboard stacks; the You row comes first and its result is on screen.
+for (const path of ["/dev/app?state=competitors-success", "/dev/app?state=dashboard-success", "/dev/audit"])
+  test(`${path}: phones pin the You row first with its result visible, no side scroll`, async ({ page }) => {
+    test.skip(page.viewportSize()!.width >= 768, "the stacked table is the phone layout");
+    await page.goto(path);
+    const table = page.getByRole("table", { name: "Competitors" }).first();
+    const rows = table.locator("tbody tr");
+    const tops = await rows.evaluateAll((trs) => trs.map((tr) => tr.getBoundingClientRect().top));
+    const you = rows.filter({ hasText: "You" });
+    const youTop = (await you.boundingBox())!.y;
+    expect(Math.min(...tops)).toBeGreaterThanOrEqual(youTop - 1);
+    const result = you.locator("td").nth(1);
+    const box = (await result.boundingBox())!;
+    expect(box.x + box.width).toBeLessThanOrEqual(375);
+    expect((await you.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+  });
 // X1 (UX plan L1): the next fix is on the first screen at 375 and 1280, and its one link opens that fix.
 test("/dev/app dashboard: the next-fix card is in the first viewport", async ({ page }) => {
   await page.goto("/dev/app?state=dashboard-success");
