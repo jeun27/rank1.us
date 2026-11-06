@@ -44,3 +44,22 @@ test("phones: More opens the rest of the pages and Account, and Escape closes it
   const last = (await page.locator("main > *").last().boundingBox())!;
   expect(last.y + last.height).toBeLessThanOrEqual((await bar(page).boundingBox())!.y + 1);
 });
+
+test("phones: the done toast sits above the bottom bar, not over it", async ({ page }) => {
+  test.skip(!phone(page), "phone layout");
+  await page.goto("/dev/app?state=fixes-success");
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await page.getByRole("checkbox").first().click();
+  const toast = page.getByRole("status").filter({ has: page.getByRole("button", { name: "Undo" }) });
+  await expect(toast).toBeVisible();
+  const [t, b] = [(await toast.boundingBox())!, (await bar(page).boundingBox())!];
+  expect(t.y + t.height).toBeLessThanOrEqual(b.y);
+  // Both stay usable: the bar's links still take the tap, and the toast's Undo is on screen.
+  await expect(bar(page).getByRole("link", { name: "Competitors" })).toBeInViewport();
+  expect(
+    await page.evaluate(
+      ([x, y]) => document.elementFromPoint(x, y)?.closest("[data-bottom-nav]") !== null,
+      [b.x + b.width / 2, b.y + b.height / 2],
+    ),
+  ).toBe(true);
+});
