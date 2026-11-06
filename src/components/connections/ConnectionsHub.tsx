@@ -218,7 +218,10 @@ function TileCard({
     );
 
   return (
-    <article aria-label={c.names[connector]} className="flex flex-col gap-3 rounded-card border border-border bg-white p-4 md:p-5">
+    <article
+      aria-label={c.names[connector]}
+      className="flex flex-col gap-3 rounded-card border border-border bg-white p-4 md:p-5"
+    >
       <header className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-ui font-semibold">{c.names[connector]}</h3>
         {comingSoon ? (
