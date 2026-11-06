@@ -376,7 +376,6 @@ Tile helper text (the niche key in src/lib/connections/recommend.ts):
 | Buttons | "Connect", "Reconnect", "Disconnect", "Notify me", "Continue to Google", "Cancel", "Save" |
 | Notify me, after | "We'll let you know." |
 | Picker | "Choose locations", "Choose sites", "Choose properties", "Choose channel" (Business Profile / Search Console / Analytics / YouTube) |
-| YouTube tile status (G1) | "Connected · {n} videos checked" |
 | Change log | "Changes"; fields "Description", "Hours", "Special hours", "Website", "Primary phone", "Attributes" with the date |
 | Callback banners | "{connector} is connected." / "Nothing was connected: Google access wasn't allowed." / "We couldn't connect that. Try again." |
 | Any failed action | "We couldn't do that. Try again." |
@@ -470,27 +469,20 @@ G7 "Lists that name your rivals but not you" (/app/sources, and the R17 fix's ev
 | R17 evidence, more than 3 | "+{n} more" |
 | New-tab links (visually hidden, #142 review) | "(opens in a new tab)" |
 
-**G1 YouTube "Search-ready checklist", signed off by the lead (2026-11-06).** The evidence inside the P4 fixes R19–R21; read-only, behind ENABLE_CONNECTIONS.
+**G1 YouTube, signed off by the lead (2026-11-06).** Each P4 fix (R19 title, R20 description, R21 chapters) shows its own failing videos from the stored evidence (#150 review: no live read, no full checklist per fix). Behind ENABLE_CONNECTIONS.
 
 | Where | String |
 |---|---|
-| Title | "Search-ready checklist" |
-| Header | "Keyword: {keyword}" · "{n} videos" |
-| Checks | "Keyword in title", "Keyword in the first two lines", "Chapters", "Says the keyword" |
-| Values (text + tone) | "Yes", "No", "Not needed", "Can't check", "No keyword" (edge cases only; with no keyword the checklist shows the plain line alone) |
-| Can't check reason | "YouTube doesn't share captions with read-only access." |
-| No keyword (plain text, no action, lead Q2) | "Add your main keyword to check your videos." |
-| No videos | "No videos on this channel yet." |
-| No channel (lead C4) | "No YouTube channel on this Google account." |
-| Read failed (lead C5) | "We couldn't load your videos. Try again." |
-| Reconnect (needs reconnect / revoked) | "Reconnect YouTube" |
+| Header | "Keyword: {keyword}" |
+| Under R19 only | "Says the keyword: Can't check" |
+| No keyword (the YouTube tile, plain text, no action, lead Q2) | "Add your main keyword to check your videos." |
 | Suggest fix (copy-only) | "Suggest fix", "Copy", "Copied", "Apply in YouTube" (disabled) + "Coming soon" |
 
 Suggest fix templates (copy-only, nothing is written to YouTube):
 
-- Title: "{keyword} | {title}"
-- First description line: "{keyword} at {business}: {line}"
-- Chapters: "0:00 Intro"
+- R19 title: "{keyword} | {title}"
+- R20 description, the opening to put before the first line (the stored evidence has no description): "{keyword} at {business}:"
+- R21 chapters: "0:00 Intro"
 
 ## Landing (lead, 2026-11-06)
 

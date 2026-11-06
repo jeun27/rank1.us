@@ -1,7 +1,7 @@
 "use client";
 import { CompetitorsView } from "@/components/app/CompetitorsView";
-import { exampleYoutube, exampleYoutubeNoKeyword } from "@/components/youtube/example-data";
-import { YoutubeChecklistPanel } from "@/components/youtube/YoutubeChecklist";
+import { exampleYoutubeFixVideos } from "@/components/youtube/example-data";
+import { YoutubeFixEvidence } from "@/components/youtube/YoutubeFixEvidence";
 import { narrativeCopy } from "@/components/narrative/copy";
 import {
   exampleNarrative,
@@ -298,47 +298,47 @@ export const STATES: Record<string, () => React.ReactNode> = {
       reassure={<AiReassure check={exampleAiAccess("good")} now={NOW} />}
     />
   ),
-  // G1: the YouTube checklist as the R19 fix's evidence, its states, and the live YouTube tile.
-  ...Object.fromEntries(
-    (
-      [
-        ["fixes-youtube", exampleYoutube],
-        ["fixes-youtube-nokeyword", exampleYoutubeNoKeyword],
-        ["fixes-youtube-reauth", "needs_reauth"],
-      ] as const
-    ).map(([k, checklist]) => [
-      k,
-      () => (
-        <Page title="What to fix next">
-          <FixList
-            ranked={[
-              {
-                ...fixes[0],
-                id: "example-r19",
-                rule_key: "R19",
-                title: "Put your keyword in your video titles",
-                detail: "1 video needs your keyword in the title.",
-                pillar: "p4",
-                evidence: <YoutubeChecklistPanel checklist={checklist} business="Example Ramen House" />,
-              },
-            ]}
-            tidyUps={[]}
-            done={[]}
-            unchecked={[]}
-            noDomain={false}
-            canWrite
-            onStatus={noop}
-          />
-        </Page>
-      ),
-    ]),
+  // G1: each YouTube fix with its own stored videos (#150 review), and the live YouTube tile.
+  "fixes-youtube": () => (
+    <Page title="What to fix next">
+      <FixList
+        ranked={(
+          [
+            ["R19", "Put your keyword in your video titles", "1 video needs your keyword in the title."],
+            [
+              "R20",
+              "Put your keyword in the first two lines of the description",
+              "2 videos don't have your keyword in the first two lines of the description.",
+            ],
+            ["R21", "Add chapters on videos 5 minutes or longer", "1 video 5 minutes or longer has no chapters."],
+          ] as const
+        ).map(([rule, title, detail]) => ({
+          ...fixes[0],
+          id: `example-${rule}`,
+          rule_key: rule,
+          title,
+          detail,
+          pillar: "p4" as const,
+          evidence: (
+            <YoutubeFixEvidence
+              rule={rule}
+              videos={exampleYoutubeFixVideos[rule]}
+              keyword="ramen"
+              business="Example Ramen House"
+            />
+          ),
+        }))}
+        tidyUps={[]}
+        done={[]}
+        unchecked={[]}
+        noDomain={false}
+        canWrite
+        onStatus={noop}
+      />
+    </Page>
   ),
   "connections-youtube": () => (
-    <Hub
-      industry="other"
-      connections={[{ id: "ex-yt", provider: "youtube", status: "connected", selected: [] }]}
-      youtubeVideos={3}
-    />
+    <Hub industry="other" connections={[{ id: "ex-yt", provider: "youtube", status: "connected", selected: [] }]} />
   ),
   "fixes-partial": () => (
     <Page title="What to fix next">

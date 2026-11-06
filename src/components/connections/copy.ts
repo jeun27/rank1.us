@@ -85,8 +85,6 @@ export const connectionsCopy = {
   // G1 (lead): one Google grant covers every Google service, so Disconnect names them all.
   revokeConfirm:
     "This disconnects every Google service Rank1 uses: Business Profile, Search Console, Analytics and YouTube.",
-  // G1: the YouTube tile's status (the checklist is the P4 fixes' evidence).
-  youtubeChecked: (n: number) => `Connected · ${n} videos checked`,
   changes: "Changes",
   failed: "We couldn't do that. Try again.",
   outcomes: {

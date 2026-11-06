@@ -1,31 +1,18 @@
 // G1 strings: COPY.md "GAS (lead, 2026-11-06)", G1 rows, signed off by the lead (2026-11-06).
 export const youtubeCopy = {
-  title: "Search-ready checklist",
   keyword: (k: string) => `Keyword: ${k}`,
-  videos: (n: number) => `${n} videos`,
-  titleCheck: "Keyword in title",
-  descriptionCheck: "Keyword in the first two lines",
-  chaptersCheck: "Chapters",
-  saysCheck: "Says the keyword",
-  yes: "Yes",
-  no: "No",
-  notNeeded: "Not needed",
-  cantCheck: "Can't check",
-  noKeywordCell: "No keyword",
-  cantReason: "YouTube doesn't share captions with read-only access.",
+  // Under R19 only (#150 review): captions can't be read with read-only access.
+  saysLine: "Says the keyword: Can't check",
   noKeyword: "Add your main keyword to check your videos.",
-  noVideos: "No videos on this channel yet.",
-  noChannel: "No YouTube channel on this Google account.",
-  loadFailed: "We couldn't load your videos. Try again.",
-  reconnect: "Reconnect YouTube",
   suggest: "Suggest fix",
   copy: "Copy",
   copied: "Copied",
   apply: "Apply in YouTube",
   comingSoon: "Coming soon",
   newTab: "(opens in a new tab)",
-  // Copy-only templates (lead D3): nothing is written to YouTube.
+  // Copy-only templates (lead D3): nothing is written to YouTube. The stored evidence has no description,
+  // so the R20 template is the opening to put before the first line.
   titleTemplate: (keyword: string, title: string) => `${keyword} | ${title}`,
-  lineTemplate: (keyword: string, business: string, line: string) => `${keyword} at ${business}: ${line}`,
+  lineTemplate: (keyword: string, business: string) => `${keyword} at ${business}:`,
   chaptersTemplate: "0:00 Intro",
 };

@@ -38,8 +38,6 @@ export type HubProps = {
   // The callback's ?connection=&status=.
   outcome: { connector: string | null; status: string } | null;
   actions: HubActions;
-  // G1: how many videos the YouTube checklist read (the tile's status); absent when not connected or the read failed.
-  youtubeVideos?: number;
   // G1: the business has no keyword (cuisine null), so no R19–R21 fixes exist; the tile says so.
   youtubeNoKeyword?: boolean;
 };
@@ -185,11 +183,7 @@ function TileCard({
         ) : (
           conn && (
             <span data-testid="status">
-              <Badge tone={STATUS_TONE[conn.status]}>
-                {connector === "youtube" && conn.status === "connected" && props.youtubeVideos != null
-                  ? c.youtubeChecked(props.youtubeVideos)
-                  : c.statuses[conn.status]}
-              </Badge>
+              <Badge tone={STATUS_TONE[conn.status]}>{c.statuses[conn.status]}</Badge>
             </span>
           )
         )}
