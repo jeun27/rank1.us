@@ -57,7 +57,11 @@ describe("tiles by industry (one recommend() table)", () => {
             .getAllByRole("article")
             .map((a) => a.getAttribute("aria-label")),
         ).toEqual(r[tier].map((t) => c.names[t.connector]));
-        for (const t of r[tier]) expect(within(region!).getByText(c.niches[t.niche])).toBeInTheDocument();
+        // Each tile carries its own niche helper text (two tiles can share one).
+        for (const t of r[tier])
+          expect(
+            within(within(region!).getByRole("article", { name: c.names[t.connector] })).getByText(c.niches[t.niche]),
+          ).toBeInTheDocument();
       }
     },
   );
