@@ -80,7 +80,7 @@ describe("Dashboard (UI.md 4b)", () => {
     expect(screen.getByRole("link", { name: "Start for $99/mo" })).toHaveAttribute("href", "/app/billing");
   });
 
-  it("success: hero + n + freshness, per engine, leaderboard top 5 without SoV, top 3 fixes, the 8-run line", () => {
+  it("success: hero + n + freshness, per engine, leaderboard top 5 without SoV, the next fix, the 8-run line", () => {
     render(
       <Dashboard business={exampleBusiness} latest={exampleLatest} series={series} fixes={exampleFixes} now={now} />,
     );
@@ -90,15 +90,17 @@ describe("Dashboard (UI.md 4b)", () => {
     expect(screen.getByText(/API-measured, directional/)).toBeInTheDocument();
     expect(screen.getByRole("table", { name: "Competitors" })).toBeInTheDocument();
     expect(screen.queryByText("Share of voice")).not.toBeInTheDocument();
+    // X1: one next-fix card (the first open fix) replaced the list of 3 titles.
     expect(screen.getByRole("heading", { name: "What to fix next" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "What to fix next" })).toHaveAttribute("href", "/app/fixes");
-    expect(screen.getAllByRole("listitem").filter((li) => li.textContent?.includes("Example data: "))).toHaveLength(3);
+    expect(screen.getByRole("link", { name: "What to fix next" })).toHaveAttribute("href", "/app/fixes#fix-f1");
+    expect(screen.getByText(exampleFixes[0].title)).toBeInTheDocument();
+    expect(screen.queryByText(exampleFixes[1].title)).not.toBeInTheDocument();
     const line = screen.getByRole("table", { name: "Visibility" });
     expect(within(line).getAllByRole("row")).toHaveLength(9);
     expect(within(line).getByText("named in 44 of 240 answers")).toBeInTheDocument();
   });
 
-  it("partial run: the warn badge; no fixes: the Fix list empty copy, no link; under 2 runs: no line", () => {
+  it("partial run: the warn badge; no fixes: no next-fix card or empty line (X1); under 2 runs: no line", () => {
     render(
       <Dashboard
         business={exampleBusiness}
@@ -109,7 +111,9 @@ describe("Dashboard (UI.md 4b)", () => {
       />,
     );
     expect(screen.getByText(/^Last run partial: \d+ of 250 answers$/)).toBeInTheDocument();
-    expect(screen.getByText("Nothing to fix yet. Run your first check.")).toBeInTheDocument();
+    // X1 (S3): nothing to do renders nothing here; the Fix list's own empty state covers it.
+    expect(screen.queryByText("Nothing to fix yet. Run your first check.")).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "What to fix next" })).not.toBeInTheDocument();
     expect(screen.queryByRole("table", { name: "Visibility" })).not.toBeInTheDocument();
   });
 });

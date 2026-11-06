@@ -100,11 +100,11 @@ export function HeroDemo() {
           {/* Reads "named in 34% of 160 answers, +6 pts"; the numbers come from the demo fixture. */}
           <p className="mt-5 text-body" data-hero-text>
             named in{" "}
-            <span data-demo-anim className="font-mono text-h3 font-semibold text-ink tabular-nums">
+            <span data-demo-anim className="font-mono text-h3 font-medium text-ink tabular-nums">
               {formatPercent(f.visibility)}
             </span>{" "}
             of <span className="font-mono tabular-nums">{f.visibility.denominator}</span> answers,{" "}
-            <span className="font-mono font-semibold text-moss tabular-nums">
+            <span className="font-mono font-medium text-moss tabular-nums">
               {pointsChange(f.visibility, demoLastWeek)}
             </span>
           </p>

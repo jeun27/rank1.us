@@ -1,5 +1,7 @@
 "use client";
 import { CompetitorsView } from "@/components/app/CompetitorsView";
+import { AiAccessPanel, AiReassure } from "@/components/audit/AiAccessPanel";
+import { exampleAiAccess } from "@/components/audit/example-data";
 import { Dashboard } from "@/components/app/Dashboard";
 import { HistoryView } from "@/components/app/HistoryView";
 import { QuestionsView } from "@/components/app/QuestionsView";
@@ -13,7 +15,8 @@ import { ExperimentForm } from "@/components/experiments/ExperimentForm";
 import { ExperimentList } from "@/components/experiments/ExperimentList";
 import { exampleExperiments, exampleTestQuestions, exampleTooFew } from "@/components/experiments/example-data";
 import { ConnectionsHub } from "@/components/connections/ConnectionsHub";
-import { exampleConnected, exampleHub } from "@/components/connections/example-data";
+import { ConnectCard } from "@/components/connections/ConnectCard";
+import { exampleCards, exampleConnected, exampleHub } from "@/components/connections/example-data";
 import { FixList } from "@/components/fixes/FixList";
 import { ReportView } from "@/components/report/ReportView";
 import type { ReportRow } from "@/lib/queries/reports";
@@ -74,6 +77,24 @@ export const STATES: Record<string, () => React.ReactNode> = {
   "dashboard-success": () => (
     <Dashboard business={exampleBusiness} latest={exampleLatest} series={series} fixes={exampleFixes} now={NOW} />
   ),
+  // C-b: the connect card on the dashboard (ENABLE_CONNECTIONS), and the onboarding connect step.
+  ...Object.fromEntries(
+    (["connect", "reauth", "readonly", "ready"] as const).map((k) => [
+      `dashboard-${k === "ready" ? "all-set" : `card-${k}`}`,
+      () => (
+        <Dashboard
+          business={exampleBusiness}
+          latest={exampleLatest}
+          series={series}
+          fixes={exampleFixes}
+          now={NOW}
+          notice={<ConnectCard {...exampleCards[k]} />}
+        />
+      ),
+    ]),
+  ),
+  "onboarding-connect": () => <ConnectStep card={exampleCards.connect} />,
+  "onboarding-connect-done": () => <ConnectStep card={{ ...exampleCards.ready, fixesHref: null }} />,
   "dashboard-partial": () => (
     <Dashboard
       business={exampleBusiness}
@@ -146,6 +167,35 @@ export const STATES: Record<string, () => React.ReactNode> = {
         onStatus={noop}
       />
     </Page>
+  ),
+  // G2: the AI access panel as the evidence on the R14 fix, and the dashboard's quiet good line.
+  "fixes-ai-access": () => (
+    <Page title="What to fix next">
+      <Measured {...latestMeasured(exampleLatest)} now={NOW} />
+      <FixList
+        ranked={pillarFixes.map((f) =>
+          f.rule_key === "R14"
+            ? { ...f, evidence: <AiAccessPanel check={exampleAiAccess("search")} now={NOW} level={4} /> }
+            : f,
+        )}
+        tidyUps={pillarTidyUps}
+        done={pillarDone}
+        unchecked={[]}
+        noDomain={false}
+        canWrite
+        onStatus={noop}
+      />
+    </Page>
+  ),
+  "dashboard-ai-good": () => (
+    <Dashboard
+      business={exampleBusiness}
+      latest={exampleLatest}
+      series={series}
+      fixes={exampleFixes}
+      now={NOW}
+      reassure={<AiReassure check={exampleAiAccess("good")} now={NOW} />}
+    />
   ),
   "fixes-partial": () => (
     <Page title="What to fix next">
@@ -276,6 +326,15 @@ const switcher = (businesses: SwitcherBusiness[]) => (
   />
 );
 // Settings → Connections on Example data (shown here whatever ENABLE_CONNECTIONS says).
+// The /app/onboarding/connect layout, on Example data.
+function ConnectStep({ card }: { card: React.ComponentProps<typeof ConnectCard> }) {
+  return (
+    <main className="mx-auto flex max-w-2xl flex-col gap-6 px-5 py-10 md:px-8 md:py-16">
+      <h1 className="font-display text-display font-semibold">Add your business</h1>
+      <ConnectCard {...card} returnTo="/app/onboarding/connect" skipHref="/app" />
+    </main>
+  );
+}
 function Hub(over: Partial<React.ComponentProps<typeof ConnectionsHub>>) {
   return (
     <Page title="Connections">

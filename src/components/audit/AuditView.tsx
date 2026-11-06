@@ -10,7 +10,9 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatNumber, formatPercent } from "@/components/ui/StatNumber";
 import { Table } from "@/components/ui/Table";
+import type { AiAccessCheck } from "@/lib/queries/ai-access";
 import type { Metric } from "@/types/metrics";
+import { AiAccessPanel } from "./AiAccessPanel";
 import { ENGINES, ENGINE_LABEL, type Metrics, type RunResults } from "./contract";
 import { auditCopy as c } from "./copy";
 import { progressFor } from "./progress";
@@ -26,12 +28,15 @@ export function AuditView({
   free,
   exportBase,
   now,
+  aiAccess = null,
 }: {
   results: RunResults;
   metrics: Metrics;
   free: boolean;
   exportBase: string;
   now: Date;
+  // G2 (/audit only, behind ENABLE_AI_ACCESS_CHECK): below the leaderboard (lead U6).
+  aiAccess?: AiAccessCheck | null;
 }) {
   const { run } = results;
   const running = run.status === "queued" || run.status === "running";
@@ -50,7 +55,7 @@ export function AuditView({
       ) : run.status === "failed" ? (
         <Banner tone="error">{c.runFailed}</Banner>
       ) : (
-        <Results results={results} metrics={metrics} exportBase={exportBase} now={now} />
+        <Results results={results} metrics={metrics} exportBase={exportBase} now={now} aiAccess={aiAccess} />
       )}
       {free && !running && run.status !== "failed" && (
         <Card>
@@ -106,11 +111,13 @@ function Results({
   metrics,
   exportBase,
   now,
+  aiAccess,
 }: {
   results: RunResults;
   metrics: Metrics;
   exportBase: string;
   now: Date;
+  aiAccess: AiAccessCheck | null;
 }) {
   const firstUrl = (domain: string) => results.citations.find((x) => x.domain === domain)?.url;
   const download =
@@ -125,6 +132,8 @@ function Results({
         <h2 className="font-display text-h3 font-semibold">{c.competitors}</h2>
         <Leaderboard metrics={metrics} />
       </section>
+
+      {aiAccess && <AiAccessPanel check={aiAccess} now={now} />}
 
       {metrics.sources.length > 0 && (
         <section className="flex flex-col gap-3">

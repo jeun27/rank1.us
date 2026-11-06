@@ -1,8 +1,9 @@
 "use client";
-import { useEffect, useState, type KeyboardEvent } from "react";
+import { useEffect, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from "react";
 import { rovingIndex } from "@/components/workspace/hooks";
 import { Banner } from "@/components/ui/Banner";
 import { Card } from "@/components/ui/Card";
+import { Icon } from "@/components/ui/Icon";
 import { PILLAR_ORDER, type FixItem, type FixStatus, type Pillar } from "@/lib/queries/fixes";
 import type { Metric } from "@/types/metrics";
 import { fixCopy as c } from "./copy";
@@ -16,6 +17,8 @@ export type FixView = Pick<FixItem, "id" | "rule_key" | "title" | "detail" | "af
   changed_by?: Actor | null;
   // G5 (#102): the fix's pillar. Real fixes always have one; older fixtures don't (plain sections then).
   pillar?: Pillar;
+  // G2: the evidence the page attaches (the AI access panel on R14, R16 and R18), in the open fix's collapsible body (X7).
+  evidence?: ReactNode;
 };
 // listDoneFixes (#101), newest change first.
 export type DoneView = {
@@ -37,6 +40,7 @@ type Row = {
   at: string | null;
   by: Actor | null;
   pillar?: Pillar;
+  evidence?: ReactNode;
 };
 
 const FILTERS = ["open", "done", "all"] as const;
@@ -51,8 +55,8 @@ const joined = (...parts: (string | null)[]) => parts.filter(Boolean).join(" · 
 const focus = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
 const control = `inline-flex h-11 shrink-0 items-center rounded-control border border-fieldBorder bg-raised px-3 text-ui font-medium text-ink hover:bg-overlay md:h-8 ${focus}`;
 
-// The check-off circle: empty (to do), half (in progress), checked (done).
-function Mark({ state }: { state: FixStatus }) {
+// The check-off circle: empty (to do), half (in progress), checked (done). The Dashboard card reuses it.
+export function Mark({ state }: { state: FixStatus }) {
   return (
     <svg viewBox="0 0 20 20" className="size-5" aria-hidden>
       <circle
@@ -85,6 +89,8 @@ function FixRow({
   onDone,
   onStart,
   onReopen,
+  expanded,
+  onToggle,
 }: {
   row: Row;
   state: FixStatus;
@@ -93,6 +99,9 @@ function FixRow({
   onDone: () => void;
   onStart: () => void;
   onReopen: () => void;
+  // X7: one line (check-off, title, affected) until opened; open = the full card.
+  expanded: boolean;
+  onToggle: () => void;
 }) {
   const Heading = (["h2", "h3", "h4"] as const)[level - 2];
   const done = state === "done";
@@ -104,7 +113,15 @@ function FixRow({
     e.preventDefault();
   };
   return (
-    <li onKeyDown={onKey} className="flex gap-3 rounded-card border border-border bg-white p-4 md:p-5">
+    <li
+      id={`fix-${row.id}`}
+      onKeyDown={onKey}
+      className={`flex gap-3 ${
+        expanded
+          ? "my-1 rounded-card border border-border bg-white p-4 md:p-5"
+          : "items-center border-b border-border px-1 py-1 max-md:flex-wrap"
+      }`}
+    >
       {canWrite ? (
         <button
           type="button"
@@ -124,60 +141,100 @@ function FixRow({
           <Mark state={state} />
         </span>
       )}
-      <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <Heading data-computed className={`text-ui font-semibold ${done ? "text-inkMuted line-through" : ""}`}>
-          {row.title}
+      <div className={`flex min-w-0 flex-1 gap-2 ${expanded ? "flex-col" : "items-center max-md:flex-wrap"}`}>
+        <Heading
+          data-computed
+          className={`min-w-0 flex-1 text-ui font-semibold ${done ? "text-inkMuted line-through" : ""}`}
+        >
+          <button
+            type="button"
+            id={`fix-${row.id}-title`}
+            aria-expanded={expanded}
+            aria-controls={`fix-${row.id}-body`}
+            onClick={onToggle}
+            className={`flex min-h-11 w-full items-center gap-2 text-left md:min-h-10 ${expanded ? "md:min-h-0" : ""} ${focus}`}
+          >
+            <span className="min-w-0 flex-1">{row.title}</span>
+            <Icon
+              name="chevronRight"
+              className={`size-4 shrink-0 text-inkMuted transition-transform motion-reduce:transition-none ${expanded ? "rotate-90" : ""}`}
+            />
+          </button>
         </Heading>
-        {row.detail && (
-          <p data-computed className={`text-ui ${done ? "text-inkMuted" : ""}`}>
-            {row.detail}
-          </p>
-        )}
-        {row.affected !== null && !done && (
-          <p data-computed className="text-caption text-inkMuted tabular-nums">
+        {!expanded && row.affected !== null && !done && (
+          <p data-computed className="shrink-0 text-caption text-inkMuted tabular-nums">
             {c.affected(row.affected)}
           </p>
         )}
-        <div className="flex flex-wrap items-center gap-3">
-          {state === "doing" && (
-            <p className="flex items-center gap-2 text-caption">
-              <span aria-hidden className="size-1.5 rounded-full bg-ink" />
-              <span className="font-medium">{c.inProgress}</span>
-              {(row.by || row.at) && (
-                <span data-computed className="text-inkMuted">
-                  {joined(who(row.by), row.at ? day(row.at) : null)}
-                </span>
-              )}
+        <div id={`fix-${row.id}-body`} hidden={!expanded} className="flex flex-col gap-2">
+          {row.detail && (
+            <p data-computed className={`text-ui ${done ? "text-inkMuted" : ""}`}>
+              {row.detail}
             </p>
           )}
-          {done && (
-            <p data-computed className="text-caption text-inkMuted">
-              {joined(row.at ? c.doneOn(day(row.at)) : c.doneTab, who(row.by))}
+          {row.evidence && !done && <div className="rounded-card border border-border p-3">{row.evidence}</div>}
+          {expanded && row.affected !== null && !done && (
+            <p data-computed className="text-caption text-inkMuted tabular-nums">
+              {c.affected(row.affected)}
             </p>
           )}
-          {canWrite && state === "todo" && (
-            <button type="button" aria-keyshortcuts="s" title={c.startTip} onClick={onStart} className={control}>
-              {c.start}
-            </button>
-          )}
-          {canWrite && done && (
-            <button type="button" onClick={onReopen} className={control}>
-              {c.undo}
-            </button>
-          )}
-          {canWrite && !done && (
-            <a
-              href={`/app/experiments/new?fix=${encodeURIComponent(row.id)}`}
-              className="inline-flex min-h-11 items-center text-ui text-link underline underline-offset-4 md:min-h-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
-            >
-              {c.startTest}
-            </a>
-          )}
+          <div className="flex flex-wrap items-center gap-3">
+            {state === "doing" && (
+              <p className="flex items-center gap-2 text-caption">
+                <span aria-hidden className="size-1.5 rounded-full bg-ink" />
+                <span className="font-medium">{c.inProgress}</span>
+                {(row.by || row.at) && (
+                  <span data-computed className="text-inkMuted">
+                    {joined(who(row.by), row.at ? day(row.at) : null)}
+                  </span>
+                )}
+              </p>
+            )}
+            {done && (
+              <p data-computed className="text-caption text-inkMuted">
+                {joined(row.at ? c.doneOn(day(row.at)) : c.doneTab, who(row.by))}
+              </p>
+            )}
+            {canWrite && state === "todo" && (
+              <button type="button" aria-keyshortcuts="s" title={c.startTip} onClick={onStart} className={control}>
+                {c.start}
+              </button>
+            )}
+            {canWrite && done && (
+              <button type="button" onClick={onReopen} className={control}>
+                {c.undo}
+              </button>
+            )}
+            {canWrite && !done && (
+              <a
+                href={`/app/experiments/new?fix=${encodeURIComponent(row.id)}`}
+                className="inline-flex min-h-11 items-center text-ui text-link underline underline-offset-4 md:min-h-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+              >
+                {c.startTest}
+              </a>
+            )}
+          </div>
         </div>
       </div>
     </li>
   );
 }
+
+// X7: the fix open on load, the first open one in display order (the Dashboard card shows the same one).
+function firstOpen(ranked: FixView[], tidyUps: FixView[]): string | undefined {
+  if (![...ranked, ...tidyUps].some((f) => f.pillar)) return (ranked[0] ?? tidyUps[0])?.id;
+  for (const p of PILLAR_ORDER) {
+    const first = ranked.find((f) => f.pillar === p) ?? (p === "p2" ? tidyUps[0] : undefined);
+    if (first) return first.id;
+  }
+}
+
+// The fix a #fix-{id} link points at ("" on the server and before hydration).
+const onHash = (cb: () => void) => (
+  window.addEventListener("hashchange", cb),
+  () => window.removeEventListener("hashchange", cb)
+);
+const hashFix = () => window.location.hash.match(/^#fix-(.+)$/)?.[1] ?? "";
 
 const fromOpen = (f: FixView): Row => ({
   id: f.id,
@@ -187,6 +244,7 @@ const fromOpen = (f: FixView): Row => ({
   at: f.status_changed_at ?? null,
   by: f.changed_by ?? null,
   pillar: f.pillar,
+  evidence: f.evidence,
 });
 const fromDone = (f: DoneView): Row => ({
   id: f.id,
@@ -230,8 +288,27 @@ export function FixList({
   const [failed, setFailed] = useState(false);
   const [filter, setFilter] = useState<Filter>("open");
   const [toast, setToast] = useState<{ id: string; title: string; prev: FixStatus } | null>(null);
+  // Open by default: the first open fix and the #fix-{id} target. A click flips a row from its default.
+  const first = firstOpen(ranked, tidyUps);
+  const target = useSyncExternalStore(onHash, hashFix, () => "");
+  const [flipped, setFlipped] = useState<Set<string>>(() => new Set());
+  const isOpen = (id: string) => (id === first || id === target) !== flipped.has(id);
+  const toggle = (id: string) =>
+    setFlipped((s) => {
+      const next = new Set(s);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
   const write = canWrite && Boolean(onStatus);
   const TidyHeading = level === 2 ? "h2" : "h3";
+
+  // The Dashboard card links to #fix-{id}: bring that fix into view and focus its title.
+  useEffect(() => {
+    const title = target && document.getElementById(`fix-${target}-title`);
+    if (!title) return;
+    title.scrollIntoView({ block: "center" });
+    title.focus();
+  }, [target]);
 
   useEffect(() => {
     if (!toast) return;
@@ -295,6 +372,8 @@ export function FixList({
         onDone={() => markDone(f.id, f.title, state)}
         onStart={() => set(f.id, "doing", state)}
         onReopen={() => set(f.id, "todo", "done")}
+        expanded={isOpen(f.id)}
+        onToggle={() => toggle(f.id)}
       />
     );
   };
@@ -316,6 +395,8 @@ export function FixList({
       onDone={() => {}}
       onStart={() => {}}
       onReopen={() => set(r.id, "todo", "done")}
+      expanded={isOpen(r.id)}
+      onToggle={() => toggle(r.id)}
     />
   );
   // Done rows outside the groups: all of them without pillars, else only those with no pillar.
@@ -434,7 +515,7 @@ export function FixList({
                   </span>
                 </div>
                 {rows.length + doneHere.length > 0 && (
-                  <ul aria-label={c.pillars[p]} className="flex flex-col gap-3">
+                  <ul aria-label={c.pillars[p]} className="flex flex-col">
                     {rows.map((f) => renderOpen(f, cardLevel))}
                     {doneHere.map((r) => renderDone(r, cardLevel))}
                   </ul>
@@ -442,7 +523,7 @@ export function FixList({
                 {tidyHere.length > 0 && (
                   <section aria-label={c.tidyUps} className="flex flex-col gap-3">
                     <TidyIn className="text-caption font-semibold text-text2">{c.tidyUps}</TidyIn>
-                    <ul className="flex flex-col gap-3">{tidyHere.map((f) => renderOpen(f, 4))}</ul>
+                    <ul className="flex flex-col">{tidyHere.map((f) => renderOpen(f, 4))}</ul>
                   </section>
                 )}
               </section>
@@ -452,7 +533,7 @@ export function FixList({
       ) : (
         <>
           {showOpen && rankedOpen.length > 0 && (
-            <ul aria-label={c.title} className="flex flex-col gap-3">
+            <ul aria-label={c.title} className="flex flex-col">
               {rankedOpen.map((f) => renderOpen(f, level))}
             </ul>
           )}
@@ -460,7 +541,7 @@ export function FixList({
           {showOpen && tidyOpen.length > 0 && (
             <section aria-label={c.tidyUps} className="flex flex-col gap-3">
               <div className="flex items-baseline justify-between gap-3">
-                <TidyHeading className="font-display text-h3 font-semibold">{c.tidyUps}</TidyHeading>
+                <TidyHeading className="font-display text-section font-medium">{c.tidyUps}</TidyHeading>
                 <span
                   data-testid="group-count"
                   data-computed
@@ -469,14 +550,14 @@ export function FixList({
                   {tidyOpen.length}
                 </span>
               </div>
-              <ul className="flex flex-col gap-3">{tidyOpen.map((f) => renderOpen(f, level === 2 ? 3 : 4))}</ul>
+              <ul className="flex flex-col">{tidyOpen.map((f) => renderOpen(f, level === 2 ? 3 : 4))}</ul>
             </section>
           )}
         </>
       )}
       {showDone && looseDone.length > 0 && (
         <section aria-label={c.doneTab} className="flex flex-col gap-3">
-          <ul className="flex flex-col gap-3">{looseDone.map((r) => renderDone(r, level))}</ul>
+          <ul className="flex flex-col">{looseDone.map((r) => renderDone(r, level))}</ul>
         </section>
       )}
 

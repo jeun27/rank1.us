@@ -23,7 +23,7 @@ const fieldError: Partial<Record<ContactField, string>> = {
 };
 const FIELDS: ContactField[] = ["name", "email", "industry", "industry_other", "tier", "message"];
 const box =
-  "w-full bg-white text-ui text-ink shadow-field outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep";
+  "w-full bg-paper text-ui text-ink outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep";
 const boxEdge = (error?: string) => (error ? "border-2 border-brick" : "border border-fieldBorder");
 
 // Contact us form, used on /contact and in the ContactUsLink modal.
@@ -126,7 +126,7 @@ export function ContactForm() {
           maxLength={5000}
           aria-invalid={err("message") ? true : undefined}
           aria-describedby={err("message") ? `${messageId}-error` : undefined}
-          className={`block resize-y rounded-banner px-5 py-3 ${box} ${boxEdge(err("message"))}`}
+          className={`block resize-y rounded-control px-3 py-2 ${box} ${boxEdge(err("message"))}`}
         />
         {err("message") && (
           <p id={`${messageId}-error`} className="mt-1.5 text-caption text-brick">
@@ -168,7 +168,7 @@ function SelectField({ label, name, placeholder, options, error, value, onChange
         {...(onChange ? { value, onChange: (e) => onChange(e.target.value) } : { defaultValue: "" })}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${id}-error` : undefined}
-        className={`h-12 rounded-full px-5 ${box} ${boxEdge(error)}`}
+        className={`h-11 rounded-control px-3 md:h-9 ${box} ${boxEdge(error)}`}
       >
         <option value="" disabled>
           {placeholder}

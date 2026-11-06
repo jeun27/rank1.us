@@ -151,7 +151,9 @@ export default function DevUiPage() {
 
       <Section name="Badge" example>
         <div className="flex flex-wrap gap-2">
-          <Badge tone="success">{pointsChange(you.now, you.lastWeek)}</Badge>
+          <Badge tone="success" mono>
+            {pointsChange(you.now, you.lastWeek)}
+          </Badge>
           <Badge tone="error">Paused</Badge>
           <Badge tone="warn">{partialRunLabel(examplePartialRun)}</Badge>
           <Badge tone="info">You</Badge>

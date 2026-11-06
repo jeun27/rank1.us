@@ -3,6 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { Onboarding } from "@/app/app/onboarding/Onboarding";
 import type { CompetitorSearch, OnboardingActions, OnboardingInput, SiteRead } from "@/app/app/onboarding/contract";
+import { connectionsCopy as c } from "@/components/connections/copy";
+import { VERTICALS } from "@/lib/queries/onboarding";
 import { buildQuestions } from "@/lib/questions/templates";
 
 const places = [
@@ -22,7 +24,14 @@ const five = [
   "Example Pho Spot",
 ].map((name, i) => ({ name, domain: `example-${i + 1}.test`, rating: 4 + i / 10, cid: `cid-${i + 1}` }));
 
-function setup(over: Partial<{ site: SiteRead; search: CompetitorSearch; finish: OnboardingActions["finish"] }> = {}) {
+function setup(
+  over: Partial<{
+    site: SiteRead;
+    search: CompetitorSearch;
+    finish: OnboardingActions["finish"];
+    verticals: boolean;
+  }> = {},
+) {
   const actions: OnboardingActions = {
     readSite: vi.fn(
       async (): Promise<SiteRead> => over.site ?? { status: "ok", name: "Example Ramen House", cuisine: "ramen" },
@@ -30,7 +39,7 @@ function setup(over: Partial<{ site: SiteRead; search: CompetitorSearch; finish:
     findCompetitors: vi.fn(async (): Promise<CompetitorSearch> => over.search ?? { status: "ok", items: five }),
     finish: vi.fn(over.finish ?? (async () => undefined)),
   };
-  render(<Onboarding places={places} cuisines={cuisines} actions={actions} />);
+  render(<Onboarding places={places} cuisines={cuisines} actions={actions} verticals={over.verticals} />);
   return { actions, user: userEvent.setup() };
 }
 
@@ -41,6 +50,10 @@ async function stepOne(user: ReturnType<typeof userEvent.setup>, domain = "examp
 
 async function toStepTwo(s: ReturnType<typeof setup>) {
   await stepOne(s.user);
+  await toStepTwoFromBusiness(s);
+}
+
+async function toStepTwoFromBusiness(s: ReturnType<typeof setup>) {
   await screen.findByLabelText("Business name");
   for (const name of [
     "Diamond Jamboree",
@@ -267,5 +280,39 @@ describe("Onboarding 3: Questions + location", () => {
     expect(await screen.findByText("Step 2 of 3")).toBeInTheDocument();
     expect(screen.getAllByRole("checkbox", { name: /Example/ })).toHaveLength(5);
     expect(s.actions.findCompetitors).toHaveBeenCalledTimes(1);
+  });
+});
+
+// C-b (lead OK 2026-11-06, Q4): "What kind of business?" sits in step 1 only with ENABLE_CONNECTIONS on
+// (the page passes verticals). Q5 (lead): questions come from the restaurant templates whatever the
+// vertical, so a non-restaurant pick still gets the full set.
+describe("Onboarding 1: the vertical (ENABLE_CONNECTIONS)", () => {
+  it("off: no select, and no vertical sent", async () => {
+    const s = setup();
+    await stepOne(s.user);
+    await screen.findByLabelText("Business name");
+    expect(screen.queryByLabelText(c.card.industry)).toBeNull();
+  });
+
+  it("on: Restaurant by default; HVAC is sent as hvac, still with the full question set", async () => {
+    const s = setup({ verticals: true });
+    await stepOne(s.user);
+    const select = await screen.findByLabelText(c.card.industry);
+    expect(select).toHaveDisplayValue(c.card.verticals.restaurant);
+    expect(
+      within(select)
+        .getAllByRole("option")
+        .map((o) => o.textContent),
+    ).toEqual(VERTICALS.map((v) => c.card.verticals[v]));
+    await s.user.selectOptions(select, c.card.verticals.hvac);
+    await toStepTwoFromBusiness(s);
+    await screen.findByText("Step 2 of 3");
+    await screen.findAllByRole("checkbox", { name: /Example/ });
+    await s.user.click(screen.getByRole("button", { name: "Next" }));
+    await screen.findByText("Step 3 of 3");
+    await s.user.click(screen.getByRole("button", { name: "Finish setup" }));
+    const input = vi.mocked(s.actions.finish).mock.calls[0][0] as OnboardingInput;
+    expect(input.business.vertical).toBe("hvac");
+    expect(input.questions).toHaveLength(25);
   });
 });

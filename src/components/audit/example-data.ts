@@ -1,3 +1,4 @@
+import { AI_CRAWLERS, type AiAccessCheck } from "@/lib/queries/ai-access";
 // Example data: an invented Irvine ramen audit for the /dev/audit gallery and unit tests. Not real results.
 import { metric } from "@/lib/metrics";
 import { ENGINES, type Engine, type Metrics, type RunResults, type RunStatus } from "./contract";
@@ -105,3 +106,41 @@ export const exampleMetrics: Metrics = {
   jobs: { ok: 240, failed: 10 },
   freshness: "2026-11-05T12:30:00Z",
 };
+
+// G2 on Example data: one stored check per outcome (invented domain, the 6 checked crawlers).
+const exampleCrawlers = (blocked: string[]) =>
+  AI_CRAWLERS.map((agent) => ({
+    agent,
+    allowed: !blocked.includes(agent),
+    line: blocked.includes(agent) ? "Disallow: /" : agent === "GPTBot" ? "Allow: /" : null,
+  }));
+export type ExampleAiCase = "good" | "search" | "training" | "js" | "cloudflare" | "edge" | "unreachable";
+export const exampleAiAccess = (k: ExampleAiCase): AiAccessCheck => ({
+  run_id: "example-run",
+  business_id: null,
+  domain: "exampleramen.test",
+  checked_at: "2026-11-05T12:30:00Z",
+  outcome: (
+    {
+      good: "good",
+      search: "blocked",
+      training: "blocked",
+      js: "js_empty",
+      cloudflare: "cloudflare",
+      edge: "cloudflare",
+      unreachable: "unreachable",
+    } as const
+  )[k],
+  crawlers:
+    k === "unreachable"
+      ? []
+      : exampleCrawlers(
+          k === "search" ? ["PerplexityBot", "OAI-SearchBot"] : k === "training" ? ["Google-Extended"] : [],
+        ),
+  visible_words: k === "unreachable" ? null : k === "js" ? 12 : 420,
+  status_normal: k === "unreachable" ? null : 200,
+  status_gptbot: k === "unreachable" ? null : k === "edge" ? 403 : 200,
+  cloudflare: k === "cloudflare" || k === "edge",
+  pages_checked: k === "unreachable" ? 0 : 1,
+  error: k === "unreachable" ? "timeout" : null,
+});

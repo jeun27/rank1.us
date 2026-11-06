@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { AuditView } from "@/components/audit/AuditView";
-import { exampleMetrics, exampleRun } from "@/components/audit/example-data";
+import { exampleAiAccess, exampleMetrics, exampleRun, type ExampleAiCase } from "@/components/audit/example-data";
 
 export const metadata: Metadata = { title: "Audit states", robots: { index: false } };
 
@@ -32,6 +32,8 @@ const STATES = {
   },
   "free-results": { results: exampleRun("complete", { kind: "free_audit" }), free: true },
 } as const;
+// G2: the free audit with each stored AI access outcome (?state=free-ai-{case}).
+const AI_CASES: ExampleAiCase[] = ["good", "search", "training", "js", "cloudflare", "edge", "unreachable"];
 type GalleryState = keyof typeof STATES;
 
 export default function DevAuditPage({ searchParams }: PageProps<"/dev/audit">) {
@@ -44,8 +46,9 @@ export default function DevAuditPage({ searchParams }: PageProps<"/dev/audit">) 
 }
 
 async function Gallery({ searchParams }: Pick<PageProps<"/dev/audit">, "searchParams">) {
-  const state = String((await searchParams).state ?? "results") as GalleryState;
-  const s = STATES[state] ?? notFound();
+  const raw = String((await searchParams).state ?? "results");
+  const ai = AI_CASES.find((k) => raw === `free-ai-${k}`);
+  const s = ai ? STATES["free-results"] : (STATES[raw as GalleryState] ?? notFound());
   return (
     <AuditView
       results={s.results}
@@ -53,6 +56,7 @@ async function Gallery({ searchParams }: Pick<PageProps<"/dev/audit">, "searchPa
       free={s.free}
       exportBase={s.free ? "/audit/example-token" : "/app/runs/example-run"}
       now={NOW}
+      aiAccess={ai ? exampleAiAccess(ai) : null}
     />
   );
 }
