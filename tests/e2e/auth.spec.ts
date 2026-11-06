@@ -195,7 +195,8 @@ for (const [role, home] of [
     await page.goto("/team");
     // The role check streams inside Suspense, so the redirect lands just after the shell.
     await expect(page).toHaveURL(new RegExp(`${home}$`));
-    await expect(page.locator("nav")).toHaveCount(0);
+    // The team workspace never renders for them (v3: /app pages have their own App rail and breadcrumb).
+    await expect(page.locator("#ws-nav")).toHaveCount(0);
   });
 }
 
