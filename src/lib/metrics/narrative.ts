@@ -55,17 +55,30 @@ const hitsIn = (text: string, word: string, wins: [number, number][]): Hit[] =>
     .map((m) => ({ start: m.index, end: m.index + m[0].length }))
     .filter((h) => wins.some(([a, b]) => h.start >= a && h.end <= b));
 
-// ~160 characters around the hit, cut on word boundaries, "…" where cut.
+// ~160 characters around the hit, cut on word boundaries with "…". A cut never moves past the hit: when a
+// long token runs up to (or from) it, the token itself is cut, so the offsets stay inside the snippet.
 function snippet(text: string, hit: Hit, word: string, kind: Snippet["kind"]): Snippet {
   let a = Math.max(0, hit.start - SNIPPET_SIDE);
   let b = Math.min(text.length, hit.end + SNIPPET_SIDE);
-  if (a > 0) a = text.indexOf(" ", a) + 1 || hit.start;
-  if (b < text.length) b = Math.max(hit.end, text.lastIndexOf(" ", b));
+  if (a > 0) {
+    const space = text.indexOf(" ", a);
+    if (space !== -1 && space < hit.start) a = space + 1;
+  }
+  if (b < text.length) {
+    const space = text.lastIndexOf(" ", b);
+    if (space > hit.end) b = space;
+  }
+  const raw = text.slice(a, b);
+  const lead = raw.length - raw.trimStart().length;
   const pre = a > 0 ? "…" : "";
-  const body = text.slice(a, b).trim();
-  const lead = text.slice(a, b).length - text.slice(a, b).trimStart().length;
   const start = pre.length + (hit.start - a - lead);
-  return { text: `${pre}${body}${b < text.length ? "…" : ""}`, start, end: start + (hit.end - hit.start), word, kind };
+  return {
+    text: `${pre}${raw.trim()}${b < text.length ? "…" : ""}`,
+    start,
+    end: start + (hit.end - hit.start),
+    word,
+    kind,
+  };
 }
 
 export function matchNarrative(input: NarrativeInput): NarrativeResult {

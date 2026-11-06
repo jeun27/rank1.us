@@ -117,6 +117,26 @@ describe("matchNarrative", () => {
     for (const w of s.text.replace(/…/g, "").split(/\s+/).filter(Boolean)) expect(words.has(w), w).toBe(true);
   });
 
+  it("a 200-char token right before the hit: offsets stay inside the snippet, cut mid-token with '…'", () => {
+    const text = `${"y".repeat(200)}-cheap at Example Ramen House`;
+    const r = matchNarrative({ names: NAMES, words: { want: [], avoid: ["cheap"] }, answers: ten([ans(text)]) });
+    const s = r.snippet!;
+    expect(s.start).toBeGreaterThanOrEqual(0);
+    expect(s.end).toBeLessThanOrEqual(s.text.length);
+    expect(s.text.slice(s.start, s.end)).toBe("cheap");
+    expect(s.text.startsWith("…y")).toBe(true);
+    // And after: a long token right after the hit is cut too, never the hit itself.
+    const after = `Example Ramen House is cheap-${"z".repeat(200)}`;
+    const t = matchNarrative({
+      names: NAMES,
+      words: { want: [], avoid: ["cheap"] },
+      answers: ten([ans(after)]),
+    }).snippet!;
+    expect(t.text.slice(t.start, t.end)).toBe("cheap");
+    expect(t.end).toBeLessThanOrEqual(t.text.length);
+    expect(t.text.endsWith("z…")).toBe(true);
+  });
+
   it("no words, or no hits → no snippet; lists keep the user's order", () => {
     expect(matchNarrative({ names: NAMES, words: { want: [], avoid: [] }, answers: ten() })).toMatchObject({
       want: [],
