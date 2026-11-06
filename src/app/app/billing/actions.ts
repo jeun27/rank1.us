@@ -5,11 +5,8 @@ import { redirect } from "next/navigation";
 import { getBillingState, listMyBusinesses } from "@/lib/queries/billing";
 import { addBusinessSeat, openPortal, removeBusinessAtPeriodEnd, startCheckout } from "@/lib/stripe/service";
 import { createClient } from "@/lib/supabase/server";
+import { NO_SUBSCRIPTION } from "@/components/billing/status";
 import { BUSINESS_COOKIE } from "../current";
-
-// Checkout only without a live subscription (null, canceled, incomplete_expired); every other status goes
-// to the portal or adds a seat, never a second Checkout (lead, #74 review).
-const NO_SUBSCRIPTION = new Set<string | null>([null, "canceled", "incomplete_expired"]);
 
 // The caller's own client: data-pipeline's helpers find the workspace from it (RLS). Stripe redirects
 // happen outside try, since redirect() throws by design. Errors return codes only (nothing logged).

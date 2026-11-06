@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import type { SubscriptionStatus } from "@/lib/queries/billing";
 import { billingCopy as c } from "./copy";
+import { NO_SUBSCRIPTION } from "./status";
 
 export type BillingStatus = SubscriptionStatus | null;
-// No live Stripe subscription: the only states that may start a Checkout (lead, #74 review).
-export const NO_SUBSCRIPTION: ReadonlySet<BillingStatus> = new Set([null, "canceled", "incomplete_expired"]);
+
 export type BillingState = { status: BillingStatus; seats: number; nextInvoiceAt: string | null };
 type Open = () => Promise<{ error: string } | undefined | void>;
 
@@ -58,7 +58,8 @@ export function BillingView({
           <div className="flex flex-col items-start gap-3">
             <p className="flex items-center gap-2 text-caption font-semibold text-inkMuted">
               {c.plan}
-              {status === "past_due" && <Badge tone="warn">{c.pastDue}</Badge>}
+              {paymentFailed && <Badge tone="warn">{c.pastDue}</Badge>}
+              {status === "paused" && <Badge tone="warn">{c.paused}</Badge>}
             </p>
             <p data-computed className="font-display text-h3 font-semibold tabular-nums">
               {c.planLine(billing.seats)}
