@@ -8,6 +8,8 @@ const ai = vi.hoisted(() => ({ checkAiAccess: vi.fn() }));
 vi.mock("@/lib/site/ai-access", async (real) => ({ ...(await real<object>()), ...ai }));
 const store = vi.hoisted(() => ({ recordAiAccessCheck: vi.fn(async () => {}) }));
 vi.mock("@/lib/queries/ai-access", async (real) => ({ ...(await real<object>()), ...store }));
+const yt = vi.hoisted(() => ({ youtubeChecklistForBusiness: vi.fn() }));
+vi.mock("@/lib/connections/service", async (real) => ({ ...(await real<object>()), ...yt }));
 const { checkFixesWith } = await import("@/lib/fixes/service");
 
 // A service client stub: fix_rules.select("key").eq("enabled", true).in("key", [...]).
@@ -119,5 +121,52 @@ describe("checkFixesWith with the AI access check (G2, ENABLE_AI_ACCESS_CHECK)",
     expect(log.mock.calls.flat().join(" ")).toContain("22023");
     expect(log.mock.calls.flat().join(" ")).not.toContain("secret detail");
     log.mockRestore();
+  });
+});
+
+describe("checkFixesWith with YouTube (G1 R19–R21, ENABLE_CONNECTIONS)", () => {
+  const RUN = { runId: "run-1", businessId: "b-1", domain: "example-ramen-house.test" };
+  const checks = (title: string) => ({ title, description: "pass", chapters: "not_needed", saysKeyword: "cant_check" });
+
+  it("flag on: R19–R21 are read from fix_rules and recorded from the business's YouTube checklist", async () => {
+    const d = db([{ key: "R19" }, { key: "R20" }, { key: "R21" }]);
+    q.listRunsNeedingFixChecks.mockResolvedValue([RUN]);
+    evaluate.mockClear();
+    yt.youtubeChecklistForBusiness.mockResolvedValue({
+      keyword: "ramen",
+      channel: { id: "UC1", title: "Example Ramen House" },
+      videos: [{ id: "v1", title: "Our story", checks: checks("fail") }],
+    });
+    await checkFixesWith(d.client, () => 200_000, { ENABLE_CONNECTIONS: "true" });
+    expect(d.calls.at(-1)).toEqual(["in", "key", ["R10", "R11", "R14", "H1", "R19", "R20", "R21"]]);
+    expect(evaluate).not.toHaveBeenCalled();
+    expect(yt.youtubeChecklistForBusiness).toHaveBeenCalledWith(d.client, "b-1", { ENABLE_CONNECTIONS: "true" });
+    expect(
+      q.recordFixResults.mock.calls.at(-1)![3].map((r: { rule_key: string; result: string }) => [r.rule_key, r.result]),
+    ).toEqual([
+      ["R19", "fix"],
+      ["R20", "ok"],
+      ["R21", "ok"],
+    ]);
+  });
+
+  it("no YouTube connection → R19–R21 unchecked (not_connected), so they never open a fix", async () => {
+    const d = db([{ key: "R19" }]);
+    q.listRunsNeedingFixChecks.mockResolvedValue([RUN]);
+    yt.youtubeChecklistForBusiness.mockResolvedValue(null);
+    await checkFixesWith(d.client, () => 200_000, { ENABLE_CONNECTIONS: "true" });
+    expect(q.recordFixResults.mock.calls.at(-1)![3]).toEqual([
+      { rule_key: "R19", result: "unchecked", evidence: { reason: "not_connected" }, detail: null },
+    ]);
+  });
+
+  it("flag off: R19–R21 aren't read and YouTube isn't called", async () => {
+    const d = db([{ key: "R10" }]);
+    q.listRunsNeedingFixChecks.mockResolvedValue([RUN]);
+    evaluate.mockResolvedValue([{ rule_key: "R10", result: "ok", evidence: {}, detail: null }]);
+    yt.youtubeChecklistForBusiness.mockClear();
+    await checkFixesWith(d.client, () => 200_000, {});
+    expect(d.calls.at(-1)).toEqual(["in", "key", ["R10", "R11", "R14", "H1"]]);
+    expect(yt.youtubeChecklistForBusiness).not.toHaveBeenCalled();
   });
 });

@@ -458,3 +458,59 @@ describe("G3: GAS readiness is refreshed after every connection change", () => {
     expect(c.readiness).not.toHaveBeenCalled();
   });
 });
+
+describe("G1 YouTube checklist", () => {
+  const ytFetch = () =>
+    vi.fn<typeof globalThis.fetch>(async (input) => {
+      const u = new URL(String(input));
+      if (u.pathname.endsWith("/channels")) return json(fx.ytChannels);
+      if (u.pathname.endsWith("/playlistItems"))
+        return json(u.searchParams.get("pageToken") ? fx.ytPlaylistPage2 : fx.ytPlaylistPage1);
+      return json(fx.ytVideos);
+    });
+  // The caller's client: the youtube connection row, then the business's cuisine (the keyword).
+  const ytDb = (cuisine: string | null = "ramen") => {
+    let n = 0;
+    return {
+      auth: { getUser: async () => ({ data: { user: { id: "user-1" } } }) },
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: async () =>
+              n++ === 0
+                ? { data: conn({ provider: "youtube", selected_entities: [] }), error: null }
+                : { data: { cuisine }, error: null },
+          }),
+        }),
+      }),
+    } as never;
+  };
+
+  it("reads the channel's newest videos and checks each against the business's keyword", async () => {
+    const r = await svc.loadYoutubeChecklist(ctx(ytFetch(), ytDb()), "conn-1");
+    expect(r).toMatchObject({
+      keyword: "ramen",
+      channel: { id: "UCexample000000000000001", title: "Example Ramen House" },
+    });
+    const v = (r as { videos: { id: string; checks: unknown }[] }).videos;
+    expect(v.map((x) => [x.id, x.checks])).toEqual([
+      ["vid-1", { title: "pass", description: "pass", chapters: "pass", saysKeyword: "cant_check" }],
+      ["vid-2", { title: "fail", description: "fail", chapters: "not_needed", saysKeyword: "cant_check" }],
+      ["vid-3", { title: "fail", description: "fail", chapters: "fail", saysKeyword: "cant_check" }],
+    ]);
+  });
+
+  it("no cuisine → no keyword, never a guess", async () => {
+    const r = await svc.loadYoutubeChecklist(ctx(ytFetch(), ytDb(null)), "conn-1");
+    expect((r as { keyword: string | null }).keyword).toBeNull();
+  });
+
+  it("not a YouTube connection, or no access → not_allowed; flag off → disabled", async () => {
+    expect(await svc.loadYoutubeChecklist(ctx(ytFetch()), "conn-1")).toBe("not_allowed"); // the gbp row
+    q.canConnectBusiness.mockResolvedValue(false);
+    q.canApplyEdits.mockResolvedValue(false);
+    expect(await svc.loadYoutubeChecklist(ctx(ytFetch(), ytDb()), "conn-1")).toBe("not_allowed");
+    const off = { ...ctx(ytFetch(), ytDb()), env: { ...ENV, ENABLE_CONNECTIONS: "false" } };
+    expect(await svc.loadYoutubeChecklist(off, "conn-1")).toBe("disabled");
+  });
+});

@@ -8,6 +8,8 @@ import { checkFixesForOneRun } from "./cron";
 import { AI_RULES, evaluateFixes, SITE_RULES } from "./evaluate";
 import { checkCloudflare } from "./r16-cloudflare";
 import { checkJsEmpty } from "./r18-js-empty";
+import { youtubeFixes, YOUTUBE_RULES } from "./youtube-rules";
+import { connectionsEnabled, youtubeChecklistForBusiness } from "@/lib/connections/service";
 import type { RuleKey } from "./types";
 
 // The real dependencies on the service client. fix_rules is service-only, so the enabled-rule read
@@ -20,18 +22,23 @@ export function checkFixesWith(
   env: Record<string, string | undefined> = process.env,
 ) {
   const ai = aiAccessEnabled(env);
+  const youtube = connectionsEnabled(env);
   let run: RunNeedingFixChecks | null = null;
   return checkFixesForOneRun({
     async enabledRules() {
-      const keys = ai ? [...SITE_RULES, ...AI_RULES] : SITE_RULES;
+      const keys = [...SITE_RULES, ...(ai ? AI_RULES : []), ...(youtube ? YOUTUBE_RULES : [])];
       const { data, error } = await db.from("fix_rules").select("key").eq("enabled", true).in("key", keys);
       if (error) throw error;
       return (data ?? []).map((r) => r.key as RuleKey);
     },
     next: async () => (run = (await listRunsNeedingFixChecks(db, 1))[0] ?? null),
     async evaluate(business, rules) {
-      const site = rules.filter((r) => !AI_RULES.includes(r));
+      const yt: RuleKey[] = YOUTUBE_RULES.filter((r) => rules.includes(r));
+      const site = rules.filter((r) => !AI_RULES.includes(r) && !yt.includes(r));
       const results = site.length ? await evaluateFixes(business, { rules: site }) : [];
+      // G1: one grouped fix per YouTube rule, from the business's own channel (read-only).
+      if (youtube && run && yt.length)
+        results.push(...youtubeFixes(yt, await youtubeChecklistForBusiness(db, run.businessId, env)));
       if (!ai || !run) return results;
       const check = business.domain ? await checkAiAccess(business.domain) : null;
       if (check)

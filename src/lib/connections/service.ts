@@ -31,7 +31,8 @@ import {
   type OAuthConnector,
 } from "./oauth";
 import { listSites } from "./search-console";
-import { listMyChannels } from "./youtube";
+import { checkVideo, type VideoChecks } from "@/lib/metrics/youtube-checks";
+import { listMyChannels, listRecentVideos, type YoutubeVideo } from "./youtube";
 import { refreshReadiness } from "./readiness";
 import { ConnectionError, withGoogleToken, type TokenDeps } from "./tokens";
 
@@ -354,6 +355,81 @@ export async function applyGbpEdit(
       await refreshReady(ctx, target.c.business_id);
       return "needs_reauth";
     }
+    return failure(e);
+  }
+}
+
+export type YoutubeChecklist = {
+  keyword: string | null;
+  channel: { id: string; title: string } | null;
+  videos: (YoutubeVideo & { checks: VideoChecks })[];
+};
+
+// G1: the picked channel (else the first one) and its newest videos, each checked against the business's
+// one keyword: its category term (businesses.cuisine, the {cuisine} its questions are built from). No
+// cuisine = no keyword, never a guess.
+async function checklist(ctx: Ctx, c: Visible, keyword: string | null): Promise<YoutubeChecklist> {
+  return withGoogleToken(
+    c.id,
+    async (t) => {
+      const channels = await listMyChannels(t, { fetch: ctx.fetch });
+      const ch = channels.find((x) => x.id === c.selected_entities[0]?.id) ?? channels[0];
+      if (!ch?.uploads) return { keyword, channel: ch ? { id: ch.id, title: ch.title } : null, videos: [] };
+      const videos = await listRecentVideos(t, ch.uploads, { fetch: ctx.fetch });
+      return {
+        keyword,
+        channel: { id: ch.id, title: ch.title },
+        videos: videos.map((v) => ({ ...v, checks: checkVideo(v, keyword) })),
+      };
+    },
+    tokenDeps(ctx, c.business_id),
+  );
+}
+
+const cuisineOf = async (db: DbClient, businessId: string) => {
+  const { data, error } = await db.from("businesses").select("cuisine").eq("id", businessId).maybeSingle();
+  if (error) throw error;
+  return (data?.cuisine as string | null | undefined)?.trim() || null;
+};
+
+// The checklist page (members incl. the dfy_client, and the team on DFY), read-only.
+export async function loadYoutubeChecklist(ctx: Ctx, connectionId: string): Promise<YoutubeChecklist | Failure> {
+  if (!connectionsEnabled(envOf(ctx))) return "disabled";
+  const c = await visible(ctx, connectionId);
+  if (!c || c.provider !== "youtube") return "not_allowed";
+  const [connect, edit] = await Promise.all([
+    canConnectBusiness(ctx.userDb, c.business_id),
+    canApplyEdits(ctx.userDb, c.business_id),
+  ]);
+  if (!connect && !edit) return "not_allowed";
+  try {
+    return await checklist(ctx, c, await cuisineOf(ctx.userDb, c.business_id));
+  } catch (e) {
+    return failure(e);
+  }
+}
+
+// The weekly fix pass (service client): the business's live YouTube connection's checklist, null when it
+// has none, or the connection's failure reason.
+export async function youtubeChecklistForBusiness(
+  serviceDb: DbClient,
+  businessId: string,
+  env: Env = process.env,
+): Promise<YoutubeChecklist | null | Failure> {
+  if (!connectionsEnabled(env)) return "disabled";
+  const { data, error } = await serviceDb
+    .from("connections")
+    .select("id, business_id, provider, status, selected_entities")
+    .eq("business_id", businessId)
+    .eq("provider", "youtube")
+    .neq("status", "revoked")
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const ctx: Ctx = { userDb: serviceDb, serviceDb, env };
+  try {
+    return await checklist(ctx, data as unknown as Visible, await cuisineOf(serviceDb, businessId));
+  } catch (e) {
     return failure(e);
   }
 }

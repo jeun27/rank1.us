@@ -10,6 +10,9 @@ const TITLE: Record<RuleKey, string> = {
   R14: "robots.txt allows AI search crawlers",
   R16: "Your site lets AI in, but Cloudflare may be blocking it.",
   R18: "Your homepage needs JavaScript to show its text",
+  R19: "Put your keyword in your video titles",
+  R20: "Put your keyword in the first two lines of the description",
+  R21: "Add chapters on videos 5 minutes or longer",
   H1: "Restaurant/Menu schema (hygiene only)",
 };
 

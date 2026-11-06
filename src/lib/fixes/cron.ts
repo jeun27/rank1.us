@@ -1,4 +1,5 @@
 import { AI_RULES, SITE_RULES } from "./evaluate";
+import { YOUTUBE_RULES } from "./youtube-rules";
 import { unchecked, type FixResult, type RuleKey } from "./types";
 
 // The cron route's maxDuration is 300 s; fix checks start only with ≥60 s left (lead, 2026-11-05),
@@ -35,7 +36,9 @@ export async function checkFixesForOneRun(deps: FixCheckDeps): Promise<FixCheckS
   let run: RunToCheck | null;
   let rules: RuleKey[];
   try {
-    rules = (await deps.enabledRules()).filter((r) => SITE_RULES.includes(r) || AI_RULES.includes(r));
+    rules = (await deps.enabledRules()).filter(
+      (r) => SITE_RULES.includes(r) || AI_RULES.includes(r) || (YOUTUBE_RULES as readonly RuleKey[]).includes(r),
+    );
     if (!rules.length) return { checked: null, skipped: "no_rules" };
     run = await deps.next();
   } catch (e) {
