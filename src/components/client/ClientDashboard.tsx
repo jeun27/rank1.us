@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { EngineTable, Hero, Leaderboard } from "@/components/audit/AuditView";
 import type { Loaded } from "@/components/audit/load";
 import { appCopy as c } from "@/components/app/copy";
@@ -31,12 +32,15 @@ export function ClientDashboard({
   runs,
   fixes,
   now,
+  notice,
 }: {
   business: { name: string } | null;
   latest: Loaded | null;
   runs: RunSummary[];
   fixes: ClientFixes | null;
   now: Date;
+  // C-b: the connect card, the slot below the hero (UX plan), or first with no run.
+  notice?: ReactNode;
 }) {
   if (!business)
     return (
@@ -64,6 +68,7 @@ export function ClientDashboard({
     return (
       <Page title={c.dashboard}>
         {name}
+        {notice}
         <Card>
           <p className="text-body-lg">{c.noChecks}</p>
         </Card>
@@ -86,6 +91,7 @@ export function ClientDashboard({
           {run.status === "partial" && <Badge tone="warn">{c.lastPartial(run.jobs_ok, run.jobs_total)}</Badge>}
         </div>
       </Hero>
+      {notice}
       {series.visible && (
         <Section title={c.visibility}>
           <VisibilityLine points={series.points} />

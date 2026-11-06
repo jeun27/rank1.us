@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { EngineTable, Hero, Leaderboard } from "@/components/audit/AuditView";
 import type { Loaded } from "@/components/audit/load";
 import { Badge } from "@/components/ui/Badge";
@@ -18,12 +19,15 @@ export function Dashboard({
   series,
   fixes,
   now,
+  notice,
 }: {
   business: { name: string; paid: boolean } | null;
   latest: Loaded | null;
   series: { points: SeriesPoint[]; visible: boolean };
   fixes: TopFix[];
   now: Date;
+  // C-b: the connect card, after the hero (UX plan slot 3, after PR6's next-fix card), or first with no run.
+  notice?: ReactNode;
 }) {
   if (!business)
     return (
@@ -40,6 +44,7 @@ export function Dashboard({
   if (!latest)
     return (
       <Page title={c.dashboard}>
+        {notice}
         <Card>
           {business.paid ? (
             <p className="text-body-lg">{c.noChecks}</p>
@@ -63,6 +68,7 @@ export function Dashboard({
           {run.status === "partial" && <Badge tone="warn">{c.lastPartial(run.jobs_ok, run.jobs_total)}</Badge>}
         </div>
       </Hero>
+      {notice}
       {series.visible && (
         <Section title={c.visibility}>
           <VisibilityLine points={series.points} />

@@ -264,11 +264,20 @@ describe("the ENABLE_CONNECTIONS gate (proxy, a real 404 before the page streams
       "/app/settings",
       "/app/settings/connections",
       "/client/settings/connections",
+      // C-b: the onboarding connect step.
+      "/app/onboarding/connect",
       "/APP/settings/",
       "//app/./settings/connections",
     ])
       expect(connectionsTarget(p), p).toBe(true);
-    for (const p of ["/app", "/app/settingsx", "/app/settings/connections/x", "/team/settings", "/client"])
+    for (const p of [
+      "/app",
+      "/app/onboarding",
+      "/app/settingsx",
+      "/app/settings/connections/x",
+      "/team/settings",
+      "/client",
+    ])
       expect(connectionsTarget(p), p).toBe(false);
   });
 });

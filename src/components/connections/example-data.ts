@@ -1,4 +1,5 @@
 // Example data for the /dev/app connections states: invented locations and changes, no real accounts.
+import type { ConnectCardProps } from "./ConnectCard";
 import type { HubProps } from "./ConnectionsHub";
 
 const noop = async () => undefined;
@@ -30,4 +31,20 @@ export const exampleConnected: Partial<HubProps> = {
     { id: "ex-c1", connectionId: "ex-gbp", field: "regular_hours", at: "2026-11-04T18:00:00Z" },
     { id: "ex-c2", connectionId: "ex-gbp", field: "description", at: "2026-11-02T16:30:00Z" },
   ],
+};
+
+// C-b: the connect card's states on Example data (a restaurant: Business Profile is its one live Recommended).
+const card = (state: ConnectCardProps["state"], over: Partial<ConnectCardProps> = {}): ConnectCardProps => ({
+  state,
+  businessId: "example-business",
+  returnTo: "/app",
+  canConnect: true,
+  audience: "self",
+  ...over,
+});
+export const exampleCards = {
+  connect: card({ kind: "connect", rows: [{ connector: "gbp", status: "missing" }] }),
+  reauth: card({ kind: "connect", rows: [{ connector: "gbp", status: "needs_reauth" }] }),
+  readonly: card({ kind: "connect", rows: [{ connector: "gbp", status: "needs_reauth" }] }, { canConnect: false }),
+  ready: card({ kind: "ready", connectors: ["gbp"] }, { fixesHref: "/app/fixes" }),
 };
