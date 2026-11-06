@@ -8,7 +8,7 @@ import { DomainField } from "@/components/ui/DomainField";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { connectionsCopy } from "@/components/connections/copy";
 import { VERTICALS, type Vertical } from "@/lib/queries/onboarding";
-import { buildQuestions, type Picks } from "@/lib/questions/templates";
+import { MAX_ACTIVE_QUESTIONS, buildQuestions, type Picks } from "@/lib/questions/templates";
 import { normalizeDomain } from "@/lib/spam/validate";
 import type { CompetitorSearch, LocalPlace, OnboardingActions, OnboardingInput } from "./contract";
 import { copy } from "./copy";
@@ -169,10 +169,12 @@ function useNudge() {
 
 const notReady = "aria-disabled:cursor-not-allowed aria-disabled:opacity-60";
 
-// Back + the one primary button; a sticky bar on phones.
-function Bar({ onBack, children }: { onBack?: () => void; children: ReactNode }) {
+// Back + the one primary button; a sticky bar on phones (pinned: at every width, for step 3's long list).
+function Bar({ onBack, pinned = false, children }: { onBack?: () => void; pinned?: boolean; children: ReactNode }) {
   return (
-    <div className="sticky bottom-0 -mx-5 flex items-center justify-between gap-3 border-t border-border bg-paper px-5 py-3 md:static md:mx-0 md:border-0 md:px-0">
+    <div
+      className={`sticky bottom-0 -mx-5 flex items-center justify-between gap-3 border-t border-border bg-paper px-5 py-3 ${pinned ? "md:mx-0 md:px-0" : "md:static md:mx-0 md:border-0 md:px-0"}`}
+    >
       {onBack ? (
         <button type="button" onClick={onBack} className={ghost}>
           {copy.back}
@@ -180,7 +182,8 @@ function Bar({ onBack, children }: { onBack?: () => void; children: ReactNode })
       ) : (
         <span />
       )}
-      <div className="flex items-center gap-3">{children}</div>
+      {/* Wraps at 375 so a reason or the count never pushes the page sideways. */}
+      <div className="flex min-w-0 flex-wrap items-center justify-end gap-x-3 gap-y-1 text-right">{children}</div>
     </div>
   );
 }
@@ -592,6 +595,8 @@ function QuestionsStep({
   const b = d.business;
   const key = questionKey(b, d.picks);
   const [empty, setEmpty] = useState<number | null>(null);
+  // X23: one row's editor open at a time.
+  const [open, setOpen] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState(false);
 
@@ -616,7 +621,7 @@ function QuestionsStep({
   const finish = async () => {
     const bad = rows.findIndex((q) => q.active && (!q.short.trim() || !q.long.trim()));
     setEmpty(bad >= 0 ? bad : null);
-    if (bad >= 0) return;
+    if (bad >= 0) return setOpen(bad);
     const input: OnboardingInput = {
       business: {
         name: b.name.trim(),
@@ -658,12 +663,23 @@ function QuestionsStep({
   return (
     <div className="flex flex-col gap-4">
       {failed && <Banner tone="error">{copy.saveFailed}</Banner>}
-      <ol className="flex flex-col gap-3">
+      <ol className="flex flex-col divide-y divide-border rounded-card border border-border bg-white">
         {rows.map((q, i) => (
-          <QuestionRow key={i} n={i + 1} q={q} error={empty === i} onChange={(p) => update(i, p)} />
+          <QuestionRow
+            key={i}
+            n={i + 1}
+            q={q}
+            error={empty === i}
+            open={open === i}
+            onToggle={() => setOpen(open === i ? null : i)}
+            onChange={(p) => update(i, p)}
+          />
         ))}
       </ol>
-      <Bar onBack={onBack}>
+      <Bar onBack={onBack} pinned>
+        <p data-computed className="text-caption text-inkMuted tabular-nums">
+          {copy.tracked(rows.filter((q) => q.active).length, MAX_ACTIVE_QUESTIONS)}
+        </p>
         <Button onClick={finish} loading={saving}>
           {copy.finish}
         </Button>
@@ -672,96 +688,120 @@ function QuestionsStep({
   );
 }
 
+// X23: one line (Track, the short form, the location tag); tapping the short form opens the editor.
 function QuestionRow({
   n,
   q,
   error,
+  open,
+  onToggle,
   onChange,
 }: {
   n: number;
   q: Question;
   error: boolean;
+  open: boolean;
+  onToggle: () => void;
   onChange: (p: Partial<Question>) => void;
 }) {
   const id = useId();
+  const short = useRef<HTMLInputElement>(null);
   const edited = q.short !== q.template.short || q.long !== q.template.long;
   const field =
-    "w-full rounded-card border border-fieldBorder bg-white px-3 text-ui focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep";
+    "w-full rounded-control border border-fieldBorder bg-white px-3 text-ui focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep";
+  useEffect(() => {
+    if (open) short.current?.focus();
+  }, [open]);
   return (
     <li>
       <fieldset
         aria-describedby={error ? `${id}-error` : undefined}
-        className={`flex flex-col gap-3 rounded-surface bg-white p-4 shadow-card md:p-5 ${q.active ? "" : "opacity-75"} ${error ? "border-2 border-brick" : ""}`}
+        className={`flex min-w-0 flex-col ${q.active ? "" : "opacity-75"} ${error ? "border-2 border-brick" : ""}`}
       >
         <legend className="sr-only">{n}</legend>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <span aria-hidden data-computed className="text-caption font-semibold text-inkMuted tabular-nums">
-            {n}
-          </span>
-          {edited && <Badge tone="warn">{copy.edited}</Badge>}
-          <label className="ml-auto inline-flex min-h-11 cursor-pointer items-center gap-2 text-caption font-semibold">
+        {/* min-w-0 on the fieldset too: fieldsets default to min-content, which defeats the truncate. */}
+        <div className="flex min-h-11 items-center gap-3 px-3 md:min-h-10">
+          <label className="inline-flex min-h-11 shrink-0 cursor-pointer items-center md:min-h-10">
             <input
               type="checkbox"
               checked={q.active}
               onChange={() => onChange({ active: !q.active })}
               className="size-5 accent-jellyDeep"
             />
-            {copy.track}
+            <span className="sr-only">{copy.track}</span>
           </label>
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-controls={`${id}-edit`}
+            onClick={onToggle}
+            data-computed
+            className="min-h-11 min-w-0 flex-1 truncate text-left text-ui md:min-h-10 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep"
+          >
+            {/* Emptied: the muted field name keeps the line named and shows what's missing. */}
+            {q.short.trim() ? q.short : <span className="text-inkMuted">{copy.shortForm}</span>}
+          </button>
+          {edited && <Badge tone="warn">{copy.edited}</Badge>}
+          <Badge tone="info">{copy.levels[q.level]}</Badge>
         </div>
-        <div>
-          <label htmlFor={`${id}-short`} className="mb-1 block text-caption font-semibold">
-            {copy.shortForm}
-          </label>
-          <input
-            id={`${id}-short`}
-            value={q.short}
-            onChange={(e) => onChange({ short: e.target.value })}
-            className={`${field} h-11`}
-          />
-        </div>
-        <div>
-          <label htmlFor={`${id}-long`} className="mb-1 block text-caption font-semibold">
-            {copy.longForm}
-          </label>
-          <textarea
-            id={`${id}-long`}
-            rows={3}
-            value={q.long}
-            onChange={(e) => onChange({ long: e.target.value })}
-            className={`${field} py-2`}
-          />
-        </div>
-        <div className="flex flex-col gap-2 md:flex-row md:items-start md:gap-4">
-          <div className="md:w-48">
-            <label htmlFor={`${id}-level`} className="mb-1 block text-caption font-semibold">
-              {copy.level}
-            </label>
-            <select
-              id={`${id}-level`}
-              value={q.level}
-              onChange={(e) => onChange({ level: e.target.value as Level })}
-              className={`${select} border-fieldBorder`}
-            >
-              {LEVELS.map((l) => (
-                <option key={l} value={l}>
-                  {copy.levels[l]}
-                </option>
-              ))}
-            </select>
+        {open && (
+          <div id={`${id}-edit`} className="flex flex-col gap-3 border-t border-border p-3 md:p-4">
+            <div>
+              <label htmlFor={`${id}-short`} className="mb-1 block text-caption font-semibold">
+                {copy.shortForm}
+              </label>
+              <input
+                ref={short}
+                id={`${id}-short`}
+                value={q.short}
+                onChange={(e) => onChange({ short: e.target.value })}
+                className={`${field} h-11`}
+              />
+            </div>
+            <div>
+              <label htmlFor={`${id}-long`} className="mb-1 block text-caption font-semibold">
+                {copy.longForm}
+              </label>
+              <textarea
+                id={`${id}-long`}
+                rows={3}
+                value={q.long}
+                onChange={(e) => onChange({ long: e.target.value })}
+                className={`${field} py-2`}
+              />
+            </div>
+            <div className="flex flex-col gap-2 md:flex-row md:items-start md:gap-4">
+              <div className="md:w-48">
+                <label htmlFor={`${id}-level`} className="mb-1 block text-caption font-semibold">
+                  {copy.level}
+                </label>
+                <select
+                  id={`${id}-level`}
+                  value={q.level}
+                  onChange={(e) => onChange({ level: e.target.value as Level })}
+                  className={`${select} border-fieldBorder`}
+                >
+                  {LEVELS.map((l) => (
+                    <option key={l} value={l}>
+                      {copy.levels[l]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {q.level !== "country" && (
+                <ul className="flex flex-col gap-1 text-caption text-inkMuted md:pt-6">
+                  {["ChatGPT", "Gemini"].map((e) => (
+                    <li key={e} data-computed title={copy.cityNote(e)}>
+                      {copy.cityNote(e)}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
-          {q.level !== "country" && (
-            <ul className="flex flex-col gap-1 text-caption text-inkMuted md:pt-6">
-              {["ChatGPT", "Gemini"].map((e) => (
-                <li key={e} data-computed title={copy.cityNote(e)}>
-                  {copy.cityNote(e)}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        )}
         {error && (
-          <p id={`${id}-error`} data-computed className="text-caption font-semibold text-brick">
+          <p id={`${id}-error`} data-computed className="px-3 pb-3 text-caption font-semibold text-brick">
             {copy.emptyQuestion(n)}
           </p>
         )}

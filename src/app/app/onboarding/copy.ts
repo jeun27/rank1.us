@@ -35,6 +35,8 @@ export const copy = {
   addCompetitor: "Add competitor",
   remove: "Remove",
   track: "Track",
+  // COPY.md "UX (lead, 2026-11-06)" X23 (lead edit a: total is the plan limit).
+  tracked: (n: number, total: number) => `${n} of ${total} questions tracked`,
   shortForm: "Short form",
   longForm: "Long form",
   level: "Location level",
