@@ -88,6 +88,7 @@ describe("ThemeSync", () => {
     const { render } = await import("@testing-library/react");
     const { useLayoutEffect } = await import("react");
     const { vi } = await import("vitest");
+    vi.resetModules();
     const nav = { path: "/team" };
     vi.doMock("next/navigation", () => ({ usePathname: () => nav.path }));
     vi.stubGlobal("matchMedia", () => ({ matches: false }));
