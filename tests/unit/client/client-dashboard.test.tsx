@@ -16,8 +16,9 @@ describe("ClientDashboard (/client)", () => {
     expect(screen.getByText("Example Ramen House", { selector: "p" })).toBeInTheDocument();
     expect(screen.getAllByText(/API-measured, directional/).length).toBeGreaterThan(0);
     expect(screen.getByRole("table", { name: "History" })).toBeInTheDocument();
+    // X3: the last 4 checks (founder OK: History cut to the last 4 weeks on /client).
     expect(within(screen.getByRole("table", { name: "History" })).getAllByRole("row")).toHaveLength(
-      exampleRuns.length + 1,
+      Math.min(exampleRuns.length, 4) + 1,
     );
     expect(screen.queryByRole("heading", { name: "What to fix next" })).toBeNull();
     expect(screen.queryByText(/share of voice/i)).toBeNull();
