@@ -31,6 +31,9 @@ const wordRe = (w: string) => {
   return new RegExp(`(?<!${L})${[...parts, `${last}(?:s|es|er|est)?`].join("\\s+")}(?!${L})`, "giu");
 };
 
+// The same whole-word + simple-endings rule, for other checks (G1 YouTube).
+export const hasWord = (text: string, word: string) => word.trim() !== "" && wordRe(word).test(text);
+
 // [start, end) ranges within WINDOW characters of any name occurrence, merged.
 function windows(text: string, names: string[]): [number, number][] {
   const out: [number, number][] = [];
