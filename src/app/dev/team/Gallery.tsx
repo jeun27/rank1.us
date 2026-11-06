@@ -29,6 +29,51 @@ const extras: TeamExtras = {
   },
   loadSuggestions: async () => exampleSuggestions,
   clients: { users: [{ user_id: "example-user", email: "owner@exampleramen.test" }], fixListVisible: false },
+  // C-c: the Connections document on Example data (the G3 notice shows; Search Console needs reconnecting).
+  connections: {
+    business: view.business.name,
+    gas: { readyAt: "2026-11-05T11:48:00Z", showNotice: true },
+    connections: [
+      {
+        id: "ex-gbp",
+        provider: "gbp",
+        status: "connected",
+        selected: [{ id: "l1", name: "Example Ramen House, Irvine" }],
+      },
+      { id: "ex-sc", provider: "search_console", status: "needs_reauth", selected: [] },
+      { id: "ex-ga4", provider: "ga4", status: "connected", selected: [] },
+    ],
+    changes: [
+      {
+        id: "ex-c1",
+        connectionId: "ex-gbp",
+        field: "website_uri",
+        before: "http://old.exampleramen.test",
+        after: "https://exampleramen.test",
+        by: { kind: "team" },
+        at: "2026-11-04T18:00:00Z",
+      },
+      {
+        id: "ex-c2",
+        connectionId: "ex-gbp",
+        field: "description",
+        before: "Ramen in Irvine.",
+        after: "Tonkotsu ramen near Diamond Jamboree, open late on weekends.",
+        by: { kind: "client", email: "owner@exampleramen.test" },
+        at: "2026-11-02T16:30:00Z",
+      },
+      {
+        id: "ex-c3",
+        connectionId: "ex-gbp",
+        field: "primary_phone",
+        before: "(949) 555-0100",
+        after: "(949) 555-0199",
+        by: { kind: "former" },
+        at: "2026-10-28T10:00:00Z",
+      },
+    ],
+    interest: ["yelp"],
+  },
   actions: {
     status: noop,
     add: noop,
@@ -37,6 +82,16 @@ const extras: TeamExtras = {
       ({ status: email.includes("@") ? "invited" : "invalid_email" }) as const,
     removeClient: noop,
     setFixListVisible: noop,
+    dismissReady: noop,
+    // C-c PR 2 on Example data: the preview diffs against an invented "before"; apply does nothing.
+    previewGbp: async (_b: string, _l: string, edit: Record<string, string | undefined>) => ({
+      changes: Object.entries(edit).map(([field, after]) => ({
+        field,
+        before: "Example data: the current value",
+        after,
+      })),
+    }),
+    applyGbp: async () => ({ applied: 1 }),
   },
 };
 

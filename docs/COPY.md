@@ -384,6 +384,27 @@ Tile helper text (the niche key in src/lib/connections/recommend.ts):
 | Consent, Google Analytics | "Rank1 asks Google for read-only access to Google Analytics (analytics.readonly) and to know which Google account you used. We don't get your email or profile.", "We can only read. We never change anything in Google Analytics.", "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.", "We never ask for your password." |
 | Consent, YouTube (G1, lead 2026-11-06) | "Rank1 asks Google for read-only access to YouTube (youtube.readonly) and to know which Google account you used. We don't get your email or profile.", "We can only read. We never change anything on YouTube.", "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.", "We never ask for your password." |
 
+**C-c, signed off by the lead (2026-11-06).** The team's Connections document for one DFY client (/team, ENABLE_CONNECTIONS). The G3 notice lives only here (the queue shows the tag).
+
+| Where | String |
+|---|---|
+| G3 notice | "{Business} is ready for GAS" · "{connections} connected {age} ago." · "Start on the fix list" · "Dismiss" |
+| Notify-me interest | "Asked to hear about {connectors}" |
+| Change log (team: values) | "Changes"; each entry "Before: …", "After: …", "by Rank1 team" / "by {name}" (a current client user's email, team UI only) / "by a former user" (lead, #160 S1) and the date |
+
+C-c PR 2, Edit Business Profile (team only; v1 the three text fields, lead Q3; production also waits on Google's GBP API access):
+
+- "Edit Business Profile", "Location" (lead approved 2026-11-06), "Description", "Website", "Primary phone"
+- "Preview changes", then per field "Before" / "After"; "Apply" only after a non-empty diff
+- "No changes to apply."
+- "Google changed this profile since your preview. Here's a fresh one."
+- "Applied." / "We couldn't apply that. Try again."
+
+C-c task lines (at most one per connection):
+
+- "Ask the client to reconnect {connection}"
+- "Ask the client to choose their {locations|sites|properties}" (lead Q5)
+
 **C-b, signed off by the lead (2026-11-06).** The onboarding connect step and the dashboard card, plus the G3 client "You're all set" state. "{names}" joins the connector names with "and"; one name reads "is connected".
 
 | Where | String |
@@ -459,7 +480,7 @@ G3 team tags on the /team client queue (X5, planner 11:13; lead-approved prototy
 |---|---|
 | Queue status tags | "Needs attention" (error) · "Ready for GAS" (success) · "Waiting on client" (warn) · "In progress" (neutral) |
 
-## UX (lead, 2026-11-06)
+## G7 mentions (lead, 2026-11-06)
 
 G7 "Lists that name your rivals but not you" (/app/sources, and the R17 fix's evidence), signed off by the lead (2026-11-06).
 
@@ -506,8 +527,13 @@ Strings the lead approved for the UX plan (share/ux-plan §C; founder OK 2026-11
 | The fixes page, everywhere (X16) | "What to fix next": the /app and /team rail item and the page and document title (/team said "Fix list") |
 | Questions dot legend, above the list (X18) | "Named" · "Not named", each beside the real filled / hollow dot |
 | Free audit CTA panel, after the leaderboard (X4) | "Rank1 checks these 4 AI engines every week and shows you what to fix next." with the existing "Start for $99/mo" |
+| First-check empty states (X25), chosen from run state | A first check queued or running: "Your first check is running." (no action). None queued: Fix list and Dashboard "Your first check runs Monday." + "Review your questions" (→ /app/questions); /client "The team's first check runs Monday."; History keeps "No weekly checks yet. Your first one runs Monday." + "Review your questions" |
 | /client slot 2 section title (X3) | "What the team did" |
 | Phone bottom bar, last item (X2) | "More" (opens the other pages and Account) |
+| Competitors add form, empty submit (X26; lead 2026-11-06, WCAG 3.3.1) | "Add a name first." inline under Name, tied to it with aria-describedby |
+| Competitors add form, submit (X26; lead 2026-11-06) | "Add" (the disclosure above it keeps "Add competitor") |
+| Reports status line, first on the page (X10; §C, lead edit b) | "Next report {date} to 1 recipient." · "Next report {date} to {n} recipients." · no saved recipients: "Next report {date}. Add a recipient to send it." ({date} as "Dec 1") |
+| Reports, the folded settings (X10) | "Branding" (logo, brand color, recipients, Save). The preview fold reuses "Report preview" |
 
 ## Engine location tooltip
 

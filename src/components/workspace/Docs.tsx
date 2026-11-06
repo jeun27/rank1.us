@@ -6,7 +6,7 @@ import { FixList } from "@/components/fixes/FixList";
 import { Badge } from "@/components/ui/Badge";
 import { Freshness } from "@/components/ui/Freshness";
 import { Icon } from "@/components/ui/Icon";
-import { Jelly } from "@/components/ui/Jelly";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { StatNumber } from "@/components/ui/StatNumber";
 import { Table } from "@/components/ui/Table";
 import type { LocalCompetitor } from "@/lib/onboarding/types";
@@ -21,12 +21,15 @@ import {
   linksText,
   namedText,
   pointsChange,
+  pointsDelta,
   visibilityText,
   type Selection,
 } from "@/lib/workspace/context";
 import type { DocSel } from "./DocPane";
 import { NAV_SECTIONS, SECTION_ICON } from "./Sidebar";
 import { ClientsPanel } from "./ClientsPanel";
+import { TeamConnections } from "./TeamConnections";
+import { deltaTone, signedPts } from "@/lib/metrics/delta";
 import { useTeam, type TeamExtras } from "./team";
 import { ClientQueue } from "./ClientQueue";
 
@@ -66,12 +69,16 @@ function Doc({
 const H = ({ children }: { children: string }) => <h3 className="text-ui font-semibold">{children}</h3>;
 
 function Summary({ view }: { view: WorkspaceView }) {
-  const change = pointsChange(view.latest.visibility, view.checks[1]?.visibility);
+  const change = pointsDelta(view.latest.visibility, view.checks[1]?.visibility);
   return (
     <>
       <div className="flex items-end gap-4" data-computed>
         <StatNumber metric={view.latest.visibility} />
-        {change && <Badge tone="info">{change}</Badge>}
+        {change !== null && (
+          <Badge tone={deltaTone(change)} mono>
+            {signedPts(change)}
+          </Badge>
+        )}
       </div>
       <Table
         caption="Engine"
@@ -138,6 +145,40 @@ function CompetitorTools({ team }: { team: TeamExtras }) {
   );
 }
 
+// C-c: the Connections document of the selected DFY client (team only, ENABLE_CONNECTIONS).
+function ConnectionsDoc({
+  view,
+  now,
+  onPick,
+}: {
+  view: WorkspaceView;
+  now: Date | null;
+  onPick: (s: Selection) => void;
+}) {
+  const team = useTeam();
+  if (!team?.connections) return null;
+  const { businessId: b, actions: a } = team;
+  return (
+    <Doc title="Connections" view={view} now={now}>
+      <TeamConnections
+        key={b}
+        data={team.connections}
+        now={now ?? new Date()}
+        onDismiss={async () => a.dismissReady?.(b)}
+        onStartFixes={() => onPick({ kind: "section", section: "fixes" })}
+        gbpEdit={
+          a.previewGbp && a.applyGbp
+            ? {
+                preview: (loc, e) => a.previewGbp!(b, loc, e),
+                apply: (loc, e, changes) => a.applyGbp!(b, loc, e, changes),
+              }
+            : undefined
+        }
+      />
+    </Doc>
+  );
+}
+
 // Step 12: the Clients tab of the selected DFY client (team only).
 function ClientsDoc({ view, now }: { view: WorkspaceView; now: Date | null }) {
   const team = useTeam();
@@ -160,14 +201,7 @@ function ClientsDoc({ view, now }: { view: WorkspaceView; now: Date | null }) {
   );
 }
 
-function Empty({ message }: { message: string }) {
-  return (
-    <div className="flex flex-col items-center gap-4 py-8 text-center">
-      <Jelly size={80} />
-      <p className="text-body-lg">{message}</p>
-    </div>
-  );
-}
+const Empty = ({ message }: { message: string }) => <EmptyState message={message} />;
 
 function SectionDoc({
   view,
@@ -399,6 +433,7 @@ export function DocView({
 }) {
   if (sel.kind === "new") return <NewTab onPick={onPick} />;
   if (sel.kind === "clients") return <ClientsDoc view={view} now={now} />;
+  if (sel.kind === "connections") return <ConnectionsDoc view={view} now={now} onPick={onPick} />;
   const title = contextFor(view, sel).title;
   return (
     <Doc title={title} view={view} now={now}>

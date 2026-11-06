@@ -6,12 +6,13 @@ import { LoadingState } from "@/components/ui/LoadingState";
 const field = { label: "Your domain", placeholder: "yoursite.com", buttonLabel: "Add my business" };
 
 describe("EmptyState", () => {
-  it("shows Jelly (64-96px), the message and a Field + Button with exactly one submit button", () => {
+  // UI.md "Empty": a 48–64px Jelly (X25 uses 56).
+  it("shows Jelly (48-64px), the message and a Field + Button with exactly one submit button", () => {
     render(<EmptyState message="Nothing tracked yet." field={field} />);
     const jelly = screen.getByRole("img");
     const w = Number(jelly.getAttribute("width"));
-    expect(w).toBeGreaterThanOrEqual(64);
-    expect(w).toBeLessThanOrEqual(96);
+    expect(w).toBeGreaterThanOrEqual(48);
+    expect(w).toBeLessThanOrEqual(64);
     expect(screen.getByText("Nothing tracked yet.")).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "Your domain" })).toHaveAttribute("placeholder", "yoursite.com");
     const buttons = screen.getAllByRole("button");

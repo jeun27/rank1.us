@@ -85,6 +85,10 @@ export const STATES: Record<string, () => React.ReactNode> = {
   "dashboard-first-check": () => (
     <Dashboard business={exampleBusiness} latest={null} series={none} fixes={[]} now={NOW} />
   ),
+  // X25: a first check already queued or running (nothing to do but wait).
+  "dashboard-first-running": () => (
+    <Dashboard business={exampleBusiness} latest={null} series={none} fixes={[]} now={NOW} firstCheck="running" />
+  ),
   "dashboard-success": () => (
     <Dashboard business={exampleBusiness} latest={exampleLatest} series={series} fixes={exampleFixes} now={NOW} />
   ),
@@ -365,6 +369,12 @@ export const STATES: Record<string, () => React.ReactNode> = {
       <FixList ranked={[]} tidyUps={[]} unchecked={[]} noDomain={false} canWrite />
     </Page>
   ),
+  // X25: no run yet, none queued: it runs Monday, review the questions meanwhile.
+  "fixes-first-check": () => (
+    <Page title="What to fix next">
+      <FixList ranked={[]} tidyUps={[]} unchecked={[]} noDomain={false} canWrite firstCheck="monday" />
+    </Page>
+  ),
   "fixes-loading": () => <Skeleton title="What to fix next" />,
   "fixes-error": () => <ErrorState title="What to fix next" message={results} reset={() => {}} />,
   "history-success": () => <HistoryView runs={allComplete} />,
@@ -442,6 +452,8 @@ const reportProps = {
   settings: { brand_color: "#1D5FC5", report_recipients: ["owner@exampleramen.test"], logoUrl: null },
   reports: [reportRow("r3", "10", "sent"), reportRow("r2", "09", "sent"), reportRow("r1", "08", "generated")],
   previewSrc: "/dev/report-preview.pdf",
+  // Example data: the send after the gallery's fixed Nov 5.
+  nextReport: "2026-12-01",
   actions: {
     save: noop,
     uploadLogo: noop,

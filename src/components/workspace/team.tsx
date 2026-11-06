@@ -1,4 +1,6 @@
 "use client";
+import type { GbpChange, GbpEditorProps, GbpTextEdit } from "./GbpEditor";
+import type { TeamConnectionsData } from "./team-connections-data";
 import { createContext, useContext } from "react";
 import type { DoneView, FixView } from "@/components/fixes/FixList";
 import type { LocalCompetitor } from "@/lib/onboarding/types";
@@ -30,6 +32,8 @@ export type TeamExtras = {
   loadSuggestions: (businessId: string) => Promise<LocalCompetitor[]>;
   // Step 12: the client users of this DFY client and the fix-list toggle (team only). null in galleries without it.
   clients: { users: ClientUserView[]; fixListVisible: boolean } | null;
+  // C-c: the client's Connections document (ENABLE_CONNECTIONS); null when the flag is off.
+  connections?: TeamConnectionsData | null;
   // X5: every DFY client, sorted by what needs the team first; the default document when present.
   queue?: QueueRow[];
   // Open on the queue: /team with no client picked (a queue row opens /team?b= on that client).
@@ -41,6 +45,16 @@ export type TeamExtras = {
     invite: (businessId: string, email: string) => Promise<{ status: InviteStatus }>;
     removeClient: (businessId: string, userId: string) => Result;
     setFixListVisible: (businessId: string, visible: boolean) => Result;
+    // G3: the team dismisses the ready notice.
+    dismissReady?: (businessId: string) => Result;
+    // C-c PR 2: the team's Business Profile preview and apply (3 text fields).
+    previewGbp?: (businessId: string, location: string, edit: GbpTextEdit) => ReturnType<GbpEditorProps["preview"]>;
+    applyGbp?: (
+      businessId: string,
+      location: string,
+      edit: GbpTextEdit,
+      confirmed: GbpChange[],
+    ) => ReturnType<GbpEditorProps["apply"]>;
   };
 };
 

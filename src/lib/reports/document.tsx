@@ -1,18 +1,31 @@
-import { Document, Image, Page, StyleSheet, Text, View, renderToBuffer } from "@react-pdf/renderer";
+import { join } from "node:path";
+import { Document, Font, Image, Page, StyleSheet, Text, View, renderToBuffer } from "@react-pdf/renderer";
 import { colors } from "@/styles/tokens";
 import { REPORT_COPY } from "./copy";
 import type { ReportData } from "./data";
 
+// Inter, like the app (F1b's files): Helvetica has no U+2212, so "−3 pts" lost its minus (#165 review).
+// next.config traces the files into every route that renders the PDF.
+const font = (w: 400 | 600) => join(process.cwd(), `src/components/audit/fonts/inter-latin-${w}-normal.woff`);
+Font.register({
+  family: "Inter",
+  fonts: [
+    { src: font(400), fontWeight: 400 },
+    { src: font(600), fontWeight: 600 },
+  ],
+});
+
 // White-label: only the business's name, logo and accent color; no product name, logo or credit.
 const s = StyleSheet.create({
-  page: { padding: 40, fontFamily: "Helvetica", fontSize: 10, color: colors.ink },
+  page: { padding: 40, fontFamily: "Inter", fontSize: 10, color: colors.ink },
   cover: { marginBottom: 20 },
   logo: { width: 120, height: 48, objectFit: "contain", marginBottom: 8 },
-  name: { fontSize: 22, fontFamily: "Helvetica-Bold" },
+  name: { fontSize: 22, fontFamily: "Inter", fontWeight: 600 },
   month: { fontSize: 12, color: colors.inkMuted, marginTop: 2 },
   h: {
     fontSize: 13,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "Inter",
+    fontWeight: 600,
     marginTop: 16,
     marginBottom: 6,
     paddingBottom: 3,
@@ -20,7 +33,7 @@ const s = StyleSheet.create({
   },
   row: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 2 },
   muted: { color: colors.inkMuted },
-  big: { fontSize: 18, fontFamily: "Helvetica-Bold" },
+  big: { fontSize: 18, fontFamily: "Inter", fontWeight: 600 },
   footer: { position: "absolute", bottom: 24, left: 40, right: 40, fontSize: 8, color: colors.inkMuted },
 });
 
@@ -112,7 +125,7 @@ export function ReportDocument({ data }: { data: ReportData }) {
           <Section title={h.fixes} accent={data.accent}>
             {data.fixes.map((f) => (
               <View key={f.title} style={{ marginBottom: 4 }}>
-                <Text style={{ fontFamily: "Helvetica-Bold" }}>{f.title}</Text>
+                <Text style={{ fontFamily: "Inter", fontWeight: 600 }}>{f.title}</Text>
                 {f.detail ? <Text>{f.detail}</Text> : null}
               </View>
             ))}

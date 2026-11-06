@@ -45,6 +45,9 @@ test("owner saves recipients and a color, they persist; a history download redir
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByRole("status")).toHaveText("Saved.");
   await page.reload();
+  // X10: with recipients saved the status line counts them and Branding starts folded.
+  await expect(page.getByText(/^Next report [A-Z][a-z]{2} \d{1,2} to 2 recipients\.$/)).toBeVisible();
+  await page.locator("summary", { hasText: "Branding" }).click();
   await expect(page.getByLabel("Recipients")).toHaveValue("a@example.test\nb@example.test");
   await expect(page.getByText("#0A7F3C")).toBeVisible();
 

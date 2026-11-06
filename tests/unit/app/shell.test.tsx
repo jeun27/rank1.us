@@ -73,7 +73,9 @@ describe("Dashboard (UI.md 4b)", () => {
     const { unmount } = render(
       <Dashboard business={exampleBusiness} latest={null} series={series} fixes={[]} now={now} />,
     );
-    expect(screen.getByText("No weekly checks yet. Your first one runs Monday.")).toBeInTheDocument();
+    // X25: none queued yet (the default) → it runs Monday, with the one next step.
+    expect(screen.getByText("Your first check runs Monday.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Review your questions" })).toHaveAttribute("href", "/app/questions");
     unmount();
     render(
       <Dashboard business={{ ...exampleBusiness, paid: false }} latest={null} series={series} fixes={[]} now={now} />,
@@ -171,7 +173,7 @@ describe("Competitors (UI.md 4b, SoV only here)", () => {
     render(<CompetitorsView latest={null} tracked={[]} suggestions={[]} actions={actions} now={now} />);
     expect(screen.getByText("No competitors yet. Add 3-5 local places to compare.")).toBeInTheDocument();
     await userEvent.type(screen.getByLabelText("Name"), "Example Soba Stand");
-    await userEvent.click(screen.getByRole("button", { name: "Add competitor" }));
+    await userEvent.click(screen.getByRole("button", { name: "Add" }));
     expect(actions.add).toHaveBeenCalledWith({ name: "Example Soba Stand", domain: null });
   });
 });
