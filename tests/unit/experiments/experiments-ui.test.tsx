@@ -34,13 +34,14 @@ describe("results (UI.md 4b Experiments success)", () => {
     const table = screen.getByRole("table", { name: "New menu page" });
     const rows = within(table)
       .getAllByRole("row")
+      .filter((r) => within(r).queryByRole("rowheader"))
       .map((r) =>
         within(r)
-          .queryAllByRole("cell")
+          .getAllByRole("cell")
           .map((td) => td.textContent),
       );
     // 40/120 = 33%, 52/120 = 43% (+10); 30/100 = 30%, 33/100 = 33% (+3); difference +7.
-    expect(rows.filter((r) => r.length)).toEqual([
+    expect(rows).toEqual([
       ["33% · n=120", "43% · n=120", "+10 pts"],
       ["30% · n=100", "33% · n=100", "+3 pts"],
     ]);
@@ -53,7 +54,7 @@ describe("results (UI.md 4b Experiments success)", () => {
       within(table)
         .getAllByRole("columnheader")
         .map((h) => h.textContent),
-    ).toEqual(["", c.before, c.after, c.change]);
+    ).toEqual([c.before, c.after, c.change]);
     const art = screen.getByRole("article");
     expect(within(art).getByText(c.difference).parentElement).toHaveTextContent(`${c.difference}+7 pts`);
     expect(within(art).getByText("Directional")).toBeInTheDocument();
