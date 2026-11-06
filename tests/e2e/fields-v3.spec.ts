@@ -42,6 +42,8 @@ const FORMS: { name: string; open: (page: Page) => Promise<Locator> }[] = [
     name: "competitors",
     open: async (page) => {
       await page.goto("/dev/app?state=competitors-success");
+      // X26: with competitors tracked, the add form is folded behind "Add competitor".
+      await page.getByText("Add competitor", { exact: true }).first().click();
       return page.getByLabel("Domain", { exact: true });
     },
   },

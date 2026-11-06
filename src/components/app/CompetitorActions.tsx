@@ -76,7 +76,11 @@ export function AddCompetitorForm({ add }: { add: CompetitorActions["add"] }) {
       className="flex flex-col gap-3 rounded-surface bg-white p-4 shadow-card md:p-6"
       onSubmit={async (e) => {
         e.preventDefault();
-        if (!name.trim()) return;
+        // X26: Add stays enabled; an empty submit puts the cursor where the missing name goes.
+        if (!name.trim()) {
+          (e.currentTarget.elements.namedItem("competitor-name") as HTMLInputElement | null)?.focus();
+          return;
+        }
         await add({ name: name.trim(), domain: domain.trim() ? normalizeDomain(domain) : null });
         setName("");
         setDomain("");
