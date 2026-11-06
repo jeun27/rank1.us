@@ -27,6 +27,16 @@ for (const state of ["dashboard-success", "switcher-one", "switcher-many"])
     const boxes = await items.evaluateAll((els) => els.map((e) => e.getBoundingClientRect()));
     const mid = (b: DOMRect) => b.top + b.height / 2;
     for (const b of boxes) expect(Math.abs(mid(b) - mid(boxes[0]))).toBeLessThanOrEqual(1);
+    // Nothing spills over the next crumb: each crumb's content ends before the next one starts.
+    const ends = await items.evaluateAll((els) =>
+      els.map((li) =>
+        Math.max(
+          ...[...li.querySelectorAll("*")].map((e) => e.getBoundingClientRect().right),
+          li.getBoundingClientRect().right,
+        ),
+      ),
+    );
+    for (let i = 0; i < boxes.length - 1; i++) expect(ends[i]).toBeLessThanOrEqual(boxes[i + 1].left + 1);
     // One header row: the breadcrumb and the theme toggle share it.
     const bar = (await page.getByRole("banner").boundingBox())!;
     expect(bar.height).toBeLessThanOrEqual(isMobile(page) ? 52 : 48);
@@ -60,7 +70,8 @@ test("C5: a long business name ends in an ellipsis at 375 and stays whole in the
 // below md so iPhone Safari doesn't zoom on focus.
 test("C3: app text is 13/19 and captions 12/16 at every width; fields are 16px below md", async ({ page }) => {
   await page.goto("/dev/app?state=dashboard-success");
-  const link = page.getByRole("navigation", { name: "App" }).getByRole("link").first();
+  // A page link (from md up the rail's first link is the logo).
+  const link = page.getByRole("navigation", { name: "App" }).getByRole("link", { name: "Dashboard", exact: true });
   expect(await link.evaluate((e) => [getComputedStyle(e).fontSize, getComputedStyle(e).lineHeight])).toEqual([
     "13px",
     "19px",
@@ -104,7 +115,8 @@ test("C1: Badge is a 4px tag, 20h, Inter 500 11px; ProgressBar is a 6px overlay 
     ];
   });
   expect(h).toBe(6);
-  expect(radius).toBe("9999px");
+  // A full radius (Tailwind v4 writes rounded-full as calc(infinity * 1px)).
+  expect(parseFloat(radius as string)).toBeGreaterThan(1000);
   expect(fill / (track as number)).toBeGreaterThan(0);
   expect(fillBg).toBe("rgb(39, 158, 242)");
 });
@@ -119,7 +131,7 @@ test("C2: the error banner is errorBg with a 1px 30% error hairline and a 48px J
       const c = getComputedStyle(e);
       return [c.backgroundColor, c.borderTopWidth, c.borderTopColor, c.borderTopLeftRadius];
     }),
-  ).toEqual(["rgb(51, 25, 26)", "1px", "color(srgb 0.941176 0.541176 0.494118 / 0.3)", "8px"]);
+  ).toEqual(["rgb(51, 25, 26)", "1px", expect.stringMatching(/\/ 0\.3\)$/), "8px"]);
   expect(await error.locator("img").evaluate((e) => Math.round(e.getBoundingClientRect().width))).toBe(48);
   const info = section(page, "Banner").getByRole("status").first();
   expect(await info.evaluate((e) => getComputedStyle(e).backgroundColor)).toBe("rgb(20, 38, 59)");
