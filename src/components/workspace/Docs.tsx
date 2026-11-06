@@ -28,6 +28,7 @@ import type { DocSel } from "./DocPane";
 import { NAV_SECTIONS, SECTION_ICON } from "./Sidebar";
 import { ClientsPanel } from "./ClientsPanel";
 import { useTeam, type TeamExtras } from "./team";
+import { ClientQueue } from "./ClientQueue";
 
 const D = ({ children }: { children: ReactNode }) => <span data-computed>{children}</span>;
 
@@ -144,6 +145,7 @@ function ClientsDoc({ view, now }: { view: WorkspaceView; now: Date | null }) {
   const { businessId: b, actions: a } = team;
   return (
     <Doc title="Clients" view={view} now={now}>
+      {team.queue && team.queue.length > 0 && <ClientQueue rows={team.queue} formAction={team.formAction} />}
       <ClientsPanel
         key={b}
         users={team.clients.users}

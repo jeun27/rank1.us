@@ -4,6 +4,7 @@ import { exampleDone, exampleFixes, exampleTidyUps, exampleUnchecked } from "@/c
 import { NoClients } from "@/components/workspace/NoClients";
 import { Workspace } from "@/components/workspace/Workspace";
 import type { TeamExtras } from "@/components/workspace/team";
+import type { QueueRow } from "@/lib/workspace/queue";
 import { buildWorkspace } from "@/lib/queries/workspace";
 import { exampleWorkspaceRows } from "@/app/team/example-data";
 
@@ -39,7 +40,17 @@ const extras: TeamExtras = {
   },
 };
 
+// X5: the client queue (Example data), one client per tag; /team opens on it.
+const m = (n: number, d: number) => ({ value: n / d, numerator: n, denominator: d });
+const queue: QueueRow[] = [
+  { id: "example-client-4", name: "Example Noodle Bar", tag: "attention", visibility: m(48, 240), delta: -4, open: 3 },
+  { id: view.business.id, name: view.business.name, tag: "ready", visibility: m(70, 233), delta: 6, open: 4 },
+  { id: "example-client-2", name: "Example Taco Stand", tag: "waiting", visibility: null, delta: null, open: 2 },
+  { id: "example-client-3", name: "Example Pho Spot", tag: "progress", visibility: m(96, 240), delta: 0, open: 1 },
+];
+
 export function Gallery({ state }: { state?: string }) {
   if (state === "no-clients") return <NoClients />;
+  if (state === "queue") return <Workspace view={view} team={{ ...extras, queue, openQueue: true }} />;
   return <Workspace view={view} team={extras} />;
 }

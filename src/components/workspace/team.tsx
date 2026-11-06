@@ -3,6 +3,7 @@ import { createContext, useContext } from "react";
 import type { DoneView, FixView } from "@/components/fixes/FixList";
 import type { LocalCompetitor } from "@/lib/onboarding/types";
 import type { InviteStatus } from "@/lib/queries/clients";
+import type { QueueRow } from "@/lib/workspace/queue";
 import type { FixStatus } from "@/lib/queries/fixes";
 import type { CompetitorInput } from "@/lib/queries/shell";
 import type { ContextInput } from "@/lib/workspace/context";
@@ -29,6 +30,10 @@ export type TeamExtras = {
   loadSuggestions: (businessId: string) => Promise<LocalCompetitor[]>;
   // Step 12: the client users of this DFY client and the fix-list toggle (team only). null in galleries without it.
   clients: { users: ClientUserView[]; fixListVisible: boolean } | null;
+  // X5: every DFY client, sorted by what needs the team first; the default document when present.
+  queue?: QueueRow[];
+  // Open on the queue: /team with no client picked (a queue row opens /team?b= on that client).
+  openQueue?: boolean;
   actions: {
     status: (businessId: string, fixId: string, status: FixStatus) => Result;
     add: (businessId: string, c: CompetitorInput) => Result;

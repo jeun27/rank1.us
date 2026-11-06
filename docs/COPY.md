@@ -452,6 +452,13 @@ Strings from the GAS prototype report (share/gas-proto/REPORT.md, lead copy). Fi
 | Save failed (inline) | "We couldn't save that. Try again." |
 | Inline errors | "Up to 8 words.", "2 to 40 characters.", "That word is in the other list." |
 
+
+G3 team tags on the /team client queue (X5, planner 11:13; lead-approved prototype copy):
+
+| Where | String |
+|---|---|
+| Queue status tags | "Needs attention" (error) · "Ready for GAS" (success) · "Waiting on client" (warn) · "In progress" (neutral) |
+
 ## UX (lead, 2026-11-06)
 
 G7 "Lists that name your rivals but not you" (/app/sources, and the R17 fix's evidence), signed off by the lead (2026-11-06).
