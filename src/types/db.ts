@@ -854,6 +854,9 @@ isOneToOne: false
 "run_summaries":
 { Args: { "p_business_id": string,"p_limit"?: number,"p_statuses"?: string[] }; Returns: { "finished_at": string | null,"jobs_failed": number,"jobs_ok": number,"jobs_total": number,"kind": string,"n": number,"named": number,"per_engine": Json,"run_id": string,"started_at": string | null,"status": string }[]
                            },
+"runs_needing_ai_access_check":
+{ Args: { "p_limit": number }; Returns: { "domain": string,"run_id": string }[]
+                           },
 "runs_needing_fix_checks":
 { Args: { "p_limit"?: number }; Returns: { "business_id": string,"domain": string | null,"run_id": string }[]
                            },

@@ -1,0 +1,1 @@
+- 2026-11-06, backend -> data-pipeline: `listRunsNeedingAiAccess(svc, limit)` → { runId, domain }[] on feat/ai-access-pending: finished free audits of the last 7 days with no AI access check, oldest first (≤ 100). Call it from the run-jobs hook (1 per tick, behind ENABLE_AI_ACCESS_CHECK), then recordAiAccessCheck(svc, runId, …). Status: open.
