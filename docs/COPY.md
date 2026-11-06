@@ -346,6 +346,24 @@ Tile helper text (the niche key in src/lib/connections/recommend.ts):
 | saas_reviews | "For software with review listings." |
 | ai_referrals | "Shows visits that came from AI answers." |
 
+**C-a, signed off by the lead (2026-11-06).** The hub, Settings → Connections. Every consent line states only what the code does (the scope and openid, the GBP fields after a confirm, review + log, revoke, no passwords).
+
+| Where | String |
+|---|---|
+| Page title | "Connections" |
+| Tier headings | "Recommended", "Optional", "Coming soon" |
+| Tile names | "Google Business Profile", "Google Search Console", "Google Analytics", "Website / CMS", "Shopify", "G2 / Capterra", "OpenTable", "Resy", "Apple Business Connect", "Bing Places", "Yelp", "Amazon" |
+| Status tags | "Connected", "Needs reconnect", "Disconnected"; a tile without a working flow: "Coming soon" |
+| Buttons | "Connect", "Reconnect", "Disconnect", "Notify me", "Continue to Google", "Cancel", "Save" |
+| Notify me, after | "We'll let you know." |
+| Picker | "Choose locations", "Choose sites", "Choose properties" (Business Profile / Search Console / Analytics) |
+| Change log | "Changes"; fields "Description", "Hours", "Special hours", "Website", "Primary phone", "Attributes" with the date |
+| Callback banners | "{connector} is connected." / "Nothing was connected: Google access wasn't allowed." / "We couldn't connect that. Try again." |
+| Any failed action | "We couldn't do that. Try again." |
+| Consent, Google Business Profile | "Rank1 asks Google to manage your Business Profile (business.manage) and to know which Google account you used. We don't get your email or profile.", "We only change these fields, and only after you or the Rank1 team confirm: description, hours, special hours, website, primary phone and attributes.", "Every change is shown before it's applied, and logged with who made it, when, and what changed.", "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.", "We never ask for your password." |
+| Consent, Search Console | "Rank1 asks Google for read-only access to Search Console (webmasters.readonly) and to know which Google account you used. We don't get your email or profile.", "We can only read. We never change anything in Search Console.", "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.", "We never ask for your password." |
+| Consent, Google Analytics | "Rank1 asks Google for read-only access to Google Analytics (analytics.readonly) and to know which Google account you used. We don't get your email or profile.", "We can only read. We never change anything in Google Analytics.", "To stop, use Disconnect here, or remove Rank1 at myaccount.google.com/permissions.", "We never ask for your password." |
+
 ## GAS (lead, 2026-11-06)
 
 Strings from the GAS prototype report (share/gas-proto/REPORT.md, lead copy). Fix rule R16 (pillar p5, SCHEMA.md 5b):

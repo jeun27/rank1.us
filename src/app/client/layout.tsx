@@ -7,7 +7,7 @@ export default function ClientLayout({ children }: LayoutProps<"/client">) {
   return (
     <Suspense>
       <AreaGate area="/client">
-        <AppHeader />
+        <AppHeader connections={process.env.ENABLE_CONNECTIONS === "true"} />
         {children}
       </AreaGate>
     </Suspense>
