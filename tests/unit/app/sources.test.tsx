@@ -112,3 +112,27 @@ describe("Sources (UI.md 4b)", () => {
     for (const s of strings) expect(md, s).toContain(s);
   });
 });
+
+// X11 (UX plan PR 22): what to act on first. The top domains table (where to get listed) comes before the
+// per-engine bars, and the location filter sits in the freshness row instead of a block of its own.
+describe("Sources order (X11)", () => {
+  it("freshness + location filter, then top domains, then the engine cards", () => {
+    render(
+      <SourcesView
+        sources={sources}
+        location={undefined}
+        checkedAt="2026-11-02T14:40:00Z"
+        answers={38}
+        now={new Date("2026-11-05T14:40:00Z")}
+      />,
+    );
+    const table = screen.getByRole("table", { name: "Sources" });
+    const firstEngine = screen.getByRole("region", { name: "ChatGPT" });
+    expect(table.compareDocumentPosition(firstEngine) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const select = screen.getByRole("combobox");
+    const fresh = screen.getByText(/API-measured, directional/);
+    const row = select.closest("[data-sources-toolbar]")!;
+    expect(row).toContainElement(fresh);
+    expect(select.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+});

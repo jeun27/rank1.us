@@ -109,9 +109,39 @@ export function SourcesView({
         </Card>
       ) : (
         <>
-          <Measured checkedAt={checkedAt} answers={answers} now={now} />
+          {/* X11: the freshness line and a compact location filter share one row. */}
+          <div data-sources-toolbar className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            <Measured checkedAt={checkedAt} answers={answers} now={now} />
+            <LocationSelect locations={sources.locations} value={location} action={formAction} hidden={formHidden} />
+          </div>
+          {/* X11: what to act on first (after G7's lists above): the domains to get listed on. */}
+          {sources.topDomains.length > 0 && (
+            <Table
+              caption={c.title}
+              columns={[
+                { key: "d", header: c.domain },
+                { key: "c", header: c.category },
+                { key: "l", header: c.links, numeric: true },
+                { key: "e", header: c.engines },
+              ]}
+              rows={sources.topDomains.map((d) => ({
+                d: (
+                  <a
+                    href={`https://${d.domain}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-11 items-center text-link underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-jellyDeep"
+                  >
+                    <span data-computed>{d.domain}</span>
+                  </a>
+                ),
+                c: c.categories[d.category],
+                l: <span data-computed>{d.links}</span>,
+                e: <span data-computed>{d.engines.map((x) => ENGINE_LABEL[x]).join(", ")}</span>,
+              }))}
+            />
+          )}
           <Patterns />
-          <LocationSelect locations={sources.locations} value={location} action={formAction} hidden={formHidden} />
           <ul aria-label={c.category} className="flex flex-wrap gap-x-4 gap-y-2 text-caption">
             {CATEGORY_ORDER.map((k) => (
               <li key={k} className="flex items-center gap-1.5">
@@ -168,32 +198,6 @@ export function SourcesView({
               );
             })}
           </div>
-          {sources.topDomains.length > 0 && (
-            <Table
-              caption={c.title}
-              columns={[
-                { key: "d", header: c.domain },
-                { key: "c", header: c.category },
-                { key: "l", header: c.links, numeric: true },
-                { key: "e", header: c.engines },
-              ]}
-              rows={sources.topDomains.map((d) => ({
-                d: (
-                  <a
-                    href={`https://${d.domain}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex min-h-11 items-center text-link underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-jellyDeep"
-                  >
-                    <span data-computed>{d.domain}</span>
-                  </a>
-                ),
-                c: c.categories[d.category],
-                l: <span data-computed>{d.links}</span>,
-                e: <span data-computed>{d.engines.map((x) => ENGINE_LABEL[x]).join(", ")}</span>,
-              }))}
-            />
-          )}
         </>
       )}
     </Page>
