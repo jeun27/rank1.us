@@ -789,7 +789,7 @@ isOneToOne: false
 { Args: { "p_business_id": string }; Returns: undefined
                            },
 "done_fixes":
-{ Args: { "p_business_id": string }; Returns: { "changed_by": Json,"detail": string | null,"id": string,"rule_key": string,"status_changed_at": string | null,"title": string }[]
+{ Args: { "p_business_id": string }; Returns: { "changed_by": Json,"detail": string | null,"id": string,"pillar": string,"rule_key": string,"status_changed_at": string | null,"title": string }[]
                            },
 "end_experiment":
 { Args: { "p_experiment_id": string }; Returns: boolean

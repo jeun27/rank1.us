@@ -118,6 +118,8 @@ export type DoneFix = {
   rule_key: string;
   title: string;
   detail: string | null;
+  // G5 group (the rule's pillar), for the per-group done counts.
+  pillar: Pillar;
   // Null for fixes closed before status history existed (they sort last).
   status_changed_at: string | null;
   // Null when the weekly check closed it.
@@ -129,7 +131,7 @@ export type DoneFix = {
 export async function listDoneFixes(db: DbClient, businessId: string): Promise<DoneFix[]> {
   const { data, error } = await db.rpc("done_fixes", { p_business_id: businessId });
   if (error) throw error;
-  return data.map((f) => ({ ...f, changed_by: f.changed_by as DoneFix["changed_by"] }));
+  return data.map((f) => ({ ...f, pillar: f.pillar as Pillar, changed_by: f.changed_by as DoneFix["changed_by"] }));
 }
 
 // Sets a fix's status (self-serve members and team only). Errors: 42501 not allowed or not
