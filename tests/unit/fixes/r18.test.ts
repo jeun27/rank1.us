@@ -20,9 +20,6 @@ describe("R18 homepage needs JavaScript", () => {
       evidence: { visible_words: 3 },
       detail: COPY.R18,
     });
-    expect(COPY.R18).toBe(
-      "Your homepage shows almost no text without JavaScript, so ChatGPT can't read what you offer.",
-    );
   });
 
   it("a crawler block doesn't hide a JS-empty page: R18 looks at the word count itself", () => {

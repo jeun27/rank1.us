@@ -76,14 +76,47 @@ describe("checkAiAccess", () => {
     expect((await run(site({ robots: "User-agent: ClaudeBot\nDisallow: /" }))).outcome).toBe("blocked");
   });
 
-  it.each([403, 429, 503])("blocked: our UA gets 200 but the GPTBot UA gets %i", async (status) => {
-    const r = await run(site({ gptbotStatus: status }));
-    expect(r).toMatchObject({ outcome: "blocked", statusNormal: 200, statusGptbot: status });
+  it.each([403, 429, 503])(
+    "a GPTBot-UA %i while our UA gets 200 is only a soft edge hint, never 'blocked' (bot managers block unverified GPTBot UAs)",
+    async (status) => {
+      const r = await run(site({ gptbotStatus: status }));
+      expect(r).toMatchObject({ outcome: "cloudflare", statusNormal: 200, statusGptbot: status, cloudflare: false });
+    },
+  );
+
+  it("a challenge page for the GPTBot UA is the same soft hint", async () => {
+    const r = await run(site({ gptbotBody: "<title>Just a moment...</title><div id=cf-chl-widget></div>" }));
+    expect(r.outcome).toBe("cloudflare");
   });
 
-  it("blocked: the GPTBot UA gets a challenge page", async () => {
-    const r = await run(site({ gptbotBody: "<title>Just a moment...</title><div id=cf-chl-widget></div>" }));
-    expect(r.outcome).toBe("blocked");
+  it("'blocked' comes from robots.txt only", async () => {
+    expect((await run(site({ robots: "User-agent: *\nAllow: /", gptbotStatus: 403 }))).outcome).not.toBe("blocked");
+    expect((await run(site({ robots: "User-agent: GPTBot\nDisallow: /" }))).outcome).toBe("blocked");
+  });
+
+  it("the GPTBot-UA request says it's a Rank1 test, and goes to the homepage only, once", async () => {
+    expect(GPTBOT_UA).toBe(
+      "Mozilla/5.0 (compatible; GPTBot/1.2; +https://openai.com/gptbot) Rank1-AccessCheck/1.0 (+https://rank1.us)",
+    );
+    const fetch = site({});
+    await run(fetch);
+    const asBot = fetch.mock.calls.filter((c) => (c[1]?.headers as Record<string, string>)["User-Agent"] === GPTBOT_UA);
+    expect(asBot.map((c) => new URL(String(c[0])).pathname)).toEqual(["/"]);
+  });
+
+  it("one 15 s deadline for the whole check: once it's spent, no further request is made", async () => {
+    let t = 1_000_000;
+    const slow = vi.fn<typeof fetch>(async (input, init) => {
+      t += 8_000; // each request "takes" 8 s
+      return site({})(input, init);
+    });
+    const r = await checkAiAccess("example-ramen.test", {
+      transport: (u, init) => slow(u, init),
+      lookup: PUBLIC,
+      now: () => t,
+    });
+    expect(slow).toHaveBeenCalledTimes(2); // robots (8 s) + home (16 s) → no GPTBot request
+    expect(r).toMatchObject({ statusGptbot: null, pagesChecked: 1 });
   });
 
   it(`js_empty: under ${JS_EMPTY_WORDS} visible words without JavaScript`, async () => {
@@ -96,8 +129,10 @@ describe("checkAiAccess", () => {
   it("cloudflare: a hint from cf-ray or server: cloudflare when nothing else is wrong", async () => {
     expect((await run(site({ headers: { "cf-ray": "8f0000000000-LAX" } }))).outcome).toBe("cloudflare");
     expect((await run(site({ headers: { server: "cloudflare" } }))).cloudflare).toBe(true);
-    // A real block outranks the hint.
-    expect((await run(site({ headers: { server: "cloudflare" }, gptbotStatus: 403 }))).outcome).toBe("blocked");
+    // A robots.txt block outranks the hint.
+    expect(
+      (await run(site({ robots: "User-agent: ClaudeBot\nDisallow: /", headers: { server: "cloudflare" } }))).outcome,
+    ).toBe("blocked");
   });
 
   it("unreachable: the homepage fails, or the domain is refused by the guard", async () => {

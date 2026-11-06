@@ -148,6 +148,25 @@ describe("guardedGet against a local server (test-only allow)", () => {
   });
 });
 
+describe("an overall deadline across redirects", () => {
+  it("each hop only gets what's left of the deadline", async () => {
+    handler = (req, res) => {
+      if (req.url === "/") {
+        res.writeHead(302, { location: "/slow" });
+        return res.end();
+      }
+      setTimeout(() => res.end("late"), 300); // within the 5 s per-request limit, past the deadline
+    };
+    const r = await guardedGet(at("/"), local({ deadline: Date.now() + 150 }));
+    expect(r).toEqual({ ok: false, reason: "timeout" });
+  });
+
+  it("a deadline already passed → timeout with no request", async () => {
+    expect(await guardedGet(at("/"), local({ deadline: Date.now() - 1 }))).toEqual({ ok: false, reason: "timeout" });
+    expect(seen).toHaveLength(0);
+  });
+});
+
 describe("guardedGet with production defaults", () => {
   it.each([
     "http://127.0.0.1/",

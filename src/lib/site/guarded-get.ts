@@ -28,6 +28,9 @@ export type GuardOptions = {
   timeoutMs?: number;
   maxBytes?: number;
   maxRedirects?: number;
+  // An overall deadline (epoch ms) shared by every hop; each hop gets min(timeoutMs, what's left).
+  deadline?: number;
+  now?: () => number;
   // Only redirects that stay on this bare host (www-insensitive) are followed, when set.
   sameSite?: string;
   // Tests only: open the guard to a local test server. Production uses the defaults.
@@ -146,8 +149,10 @@ export async function guardedGet(input: string | URL, opts: GuardOptions = {}): 
       const addrs = await lookup(url.hostname).catch(() => []);
       if (!addrs.length || addrs.some((a) => !allow(a.address))) return { ok: false, reason: "blocked_address" };
     }
+    const left = opts.deadline === undefined ? Infinity : opts.deadline - (opts.now ?? Date.now)();
+    if (left <= 0) return { ok: false, reason: "timeout" };
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), opts.timeoutMs ?? TIMEOUT_MS);
+    const timer = setTimeout(() => ctrl.abort(), Math.min(opts.timeoutMs ?? TIMEOUT_MS, left));
     try {
       const res = await transport(url, { headers: { ...opts.headers }, signal: ctrl.signal });
       const location = res.headers.get("location");
