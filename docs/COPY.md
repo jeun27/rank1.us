@@ -533,6 +533,8 @@ Strings the lead approved for the UX plan (share/ux-plan §C; founder OK 2026-11
 | Competitors add form, submit (X26; lead 2026-11-06) | "Add" (the disclosure above it keeps "Add competitor") |
 | Reports status line, first on the page (X10; §C, lead edit b) | "Next report {date} to 1 recipient." · "Next report {date} to {n} recipients." · no saved recipients: "Next report {date}. Add a recipient to send it." ({date} as "Dec 1") |
 | Reports, the folded settings (X10) | "Branding" (logo, brand color, recipients, Save). The preview fold reuses "Report preview" |
+| Onboarding step 1, beside a disabled Next: the first missing field (X24; §C) | "Add your business name first." · "Pick a cuisine first." · "Add your city first." · "Add your state first." |
+| Onboarding step 2, beside Next while the place search runs (X24; §C) | "Finding places near you…" |
 
 ## Engine location tooltip
 

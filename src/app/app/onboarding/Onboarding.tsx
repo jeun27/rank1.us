@@ -68,12 +68,13 @@ export const emptyDraft: Draft = {
   questions: null,
 };
 
+// D35: 6px controls, like the rest of the app (no Field Notes pills).
 const ghost =
-  "inline-flex min-h-11 items-center justify-center rounded-full border border-fieldBorder bg-white px-5 text-ui font-semibold text-ink hover:bg-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
+  "inline-flex min-h-11 items-center justify-center rounded-control border border-fieldBorder bg-white px-5 text-ui font-semibold text-ink hover:bg-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
 const select =
   "h-11 w-full rounded-control border bg-paper px-3 text-ui text-ink focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep md:h-9";
 const chip =
-  "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-fieldBorder bg-white px-4 text-ui has-checked:border-jellyDeep has-checked:bg-infoBg has-disabled:cursor-not-allowed has-disabled:opacity-60 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-jellyDeep";
+  "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-control border border-fieldBorder bg-white px-4 text-ui has-checked:border-jellyDeep has-checked:bg-infoBg has-disabled:cursor-not-allowed has-disabled:opacity-60 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-jellyDeep";
 
 const searchKey = (b: Business) => [b.cuisine, b.city, b.state, b.domain].join("|");
 const questionKey = (b: Business, p: Picks) => JSON.stringify([b.cuisine, b.city, b.state, p]);
@@ -139,6 +140,15 @@ export function Onboarding({
 
 type StepProps = { d: Draft; set: (p: Partial<Draft>) => void };
 
+// X24: the muted line beside a disabled Next, naming what's missing (the button points at it).
+function Reason({ id, text }: { id: string; text: string | null }) {
+  return text ? (
+    <p id={id} className="text-caption text-inkMuted">
+      {text}
+    </p>
+  ) : null;
+}
+
 // Back + the one primary button; a sticky bar on phones.
 function Bar({ onBack, children }: { onBack?: () => void; children: ReactNode }) {
   return (
@@ -150,7 +160,7 @@ function Bar({ onBack, children }: { onBack?: () => void; children: ReactNode })
       ) : (
         <span />
       )}
-      {children}
+      <div className="flex items-center gap-3">{children}</div>
     </div>
   );
 }
@@ -212,6 +222,7 @@ function BusinessStep({
   const cuisineId = useId();
   const verticalId = useId();
   const sellsId = useId();
+  const reasonId = useId();
   const b = d.business;
   const setB = (patch: Partial<Business>) => set({ business: { ...b, ...patch } });
   const read = d.site === "ok" || d.site === "unreadable";
@@ -263,7 +274,17 @@ function BusinessStep({
     );
 
   const attention = d.site === "ok" && !d.siteCuisine && !b.cuisine;
-  const ready = b.name.trim() && b.cuisine && b.city.trim() && b.state.trim();
+  // X24: the first missing field, in form order.
+  const missing = !b.name.trim()
+    ? copy.missing.name
+    : !b.cuisine
+      ? copy.missing.cuisine
+      : !b.city.trim()
+        ? copy.missing.city
+        : !b.state.trim()
+          ? copy.missing.state
+          : null;
+  const ready = !missing;
   const ofKind = (k: LocalPlace["kind"]) => places.filter((p) => p.kind === k).map((p) => p.name);
   const pick = (k: keyof Picks) => (v: string[]) => set({ picks: { ...d.picks, [k]: v } });
 
@@ -354,7 +375,8 @@ function BusinessStep({
       <Checks legend={copy.dietary} options={DIETARY} picked={d.picks.dietary} onChange={pick("dietary")} />
       <Checks legend={copy.occasion} options={OCCASIONS} picked={d.picks.occasion} onChange={pick("occasion")} />
       <Bar>
-        <Button type="submit" disabled={!ready}>
+        <Reason id={reasonId} text={missing} />
+        <Button type="submit" disabled={!ready} aria-describedby={missing ? reasonId : undefined}>
           {copy.next}
         </Button>
       </Bar>
@@ -374,6 +396,7 @@ function CompetitorsStep({
   const [name, setName] = useState("");
   const [domain, setDomain] = useState("");
   const [domainError, setDomainError] = useState(false);
+  const reasonId = useId();
 
   useEffect(() => {
     if (d.search?.key === key) return;
@@ -473,7 +496,8 @@ function CompetitorsStep({
       )}
 
       <Bar onBack={onBack}>
-        <Button onClick={onNext} disabled={!result}>
+        <Reason id={reasonId} text={result ? null : copy.missing.places} />
+        <Button onClick={onNext} disabled={!result} aria-describedby={result ? undefined : reasonId}>
           {copy.next}
         </Button>
       </Bar>
