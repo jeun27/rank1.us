@@ -113,4 +113,3 @@ Requests between agents (for example, a new field frontend needs from backend). 
 - 2026-11-06, backend -> frontend: G5 pillars on feat/fix-pillars. listFixes ranked/tidyUps items now carry `pillar: "p0" | … | "p6"` (PILLARS and Pillar in src/lib/queries/fixes.ts). Group order per the lead: p5, p3, p2, p1, p4, p6, with p0 as the baseline line. H1 is p2 and stays in tidyUps. Status: open.
 
 - 2026-11-06, backend -> frontend: who/when on open fixes on feat/open-fix-actors. listFixes items (ranked and tidyUps) gain `status_changed_at: string | null` and `changed_by: { is_team, name } | null`, set on doing rows only (null on todo). Same mapping as listDoneFixes: is_team true → "Rank1 team" (name always null); otherwise a member's display name, never the email. listFixes' signature is unchanged. Status: open.
-- 2026-11-06, backend -> frontend: listDoneFixes items now carry `pillar` (p0..p6) on feat/done-fix-pillar, for the per-group done counts. Status: open.
