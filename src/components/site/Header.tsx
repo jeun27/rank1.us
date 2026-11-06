@@ -20,7 +20,8 @@ export function Header() {
         <a href="#faq" className={navLink}>
           FAQ
         </a>
-        <ContactUsLink className={navLink}>Contact us</ContactUsLink>
+        {/* X20: the phone header keeps Pricing, FAQ and Log in; pricing and the footer keep Contact us. */}
+        <ContactUsLink className={`${navLink} max-md:hidden`}>Contact us</ContactUsLink>
         <Link href="/signin" className={navLink}>
           {authCopy.logIn}
         </Link>

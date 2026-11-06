@@ -3,14 +3,11 @@ import { HeroDemo } from "./HeroDemo";
 import { demoEngines } from "./demo-data";
 import { container } from "./Section";
 
-// An engine name inside the sub sentence: a bordered tag with a blue dot (D37).
+// An engine name inside the sub sentence, in ink on the text2 sentence. X20 (founder OK): plain text, no
+// bordered chip with a dot, which read as a button (replaces that part of D37).
 function EngineTag({ name }: { name: string }) {
   return (
-    <span
-      data-engine-tag
-      className="inline-flex items-center gap-1.5 rounded-[4px] border border-border px-1.5 align-baseline text-ink"
-    >
-      <span aria-hidden className="size-1.5 rounded-full bg-accent" />
+    <span data-engine-tag className="text-ink">
       {name}
     </span>
   );
