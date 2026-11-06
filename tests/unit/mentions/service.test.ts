@@ -50,7 +50,7 @@ beforeEach(() => {
 describe("loadMentions", () => {
   it("reads the latest complete/partial run and the decisions with the caller's client", async () => {
     const r = await loadMentions(userDb, "biz-1", ON);
-    expect(q.listRunSummaries).toHaveBeenCalledWith(userDb, "biz-1", 1, ["complete", "partial"]);
+    expect(q.listRunSummaries).toHaveBeenCalledWith(userDb, "biz-1", 8, ["complete", "partial"]);
     expect(q.getRunResults).toHaveBeenCalledWith(userDb, "run-1");
     expect(r).toMatchObject({ n: 1, candidates: [{ url: LIST, rivals: ["Example Noodle Bar"] }] });
   });
@@ -59,6 +59,54 @@ describe("loadMentions", () => {
     q.listRunSummaries.mockResolvedValue([]);
     expect(await loadMentions(userDb, "biz-1", ON)).toBeNull();
     expect(await loadMentions(userDb, "biz-1", {})).toBe("disabled");
+  });
+});
+
+const reads = () =>
+  q.listRunSummaries.mock.calls.length + q.getRunResults.mock.calls.length + q.listMentionDecisions.mock.calls.length;
+
+describe("query counts and freshness (reviews of #131, #143)", () => {
+  it("a page render reads once: one run list (8 back), one decisions read, only the runs it needs", async () => {
+    await loadMentions(userDb, "biz-1", ON);
+    expect(q.listRunSummaries).toHaveBeenCalledTimes(1);
+    expect(q.listMentionDecisions).toHaveBeenCalledTimes(1);
+    expect(q.getRunResults).toHaveBeenCalledTimes(1); // nothing added → no history lookups
+  });
+
+  it("a decision: save, re-read the decisions once, the latest run, then upsert (no history when not needed)", async () => {
+    q.listMentionDecisions.mockResolvedValue([{ url: LIST, status: "added", decided_at: "x" }]);
+    await decideMention(userDb, "biz-1", LIST, "added", ON);
+    expect(q.setMentionTarget).toHaveBeenCalledTimes(1);
+    expect(q.listMentionDecisions).toHaveBeenCalledTimes(1);
+    expect(q.listRunSummaries).toHaveBeenCalledTimes(1);
+    expect(q.getRunResults).toHaveBeenCalledTimes(1);
+    expect(q.upsertMentionFix).toHaveBeenCalledTimes(1);
+    expect(q.setMentionTarget.mock.invocationCallOrder[0]).toBeLessThan(
+      q.listMentionDecisions.mock.invocationCallOrder[0],
+    );
+  });
+
+  it("B1: R17's n always equals the stored added count (two quick clicks, or a change from another tab)", async () => {
+    const stored = new Map<string, "added" | "dismissed">();
+    q.setMentionTarget.mockImplementation(
+      async (_db: unknown, _b: string, url: string, st: "added" | "dismissed" | null) => {
+        if (st) stored.set(url, st);
+        else stored.delete(url);
+      },
+    );
+    q.listMentionDecisions.mockImplementation(async () =>
+      [...stored].map(([url, status]) => ({ url, status, decided_at: "x" })),
+    );
+    await decideMention(userDb, "biz-1", LIST, "added", ON);
+    stored.set("https://other-tab.test/list", "added"); // another tab added one meanwhile
+    await decideMention(userDb, "biz-1", "https://reddit.test/r/irvine", "added", ON);
+    const added = [...stored.values()].filter((v) => v === "added").length;
+    expect(added).toBe(3);
+    expect(q.upsertMentionFix.mock.calls.at(-1)![2]).toMatch(/^3 lists AI cite /);
+  });
+
+  it("B2: the action's inputs are only business, url and status (the client never sends R17 copy or a view)", () => {
+    expect(decideMention.length).toBe(4); // (db, businessId, url, status[, env])
   });
 });
 
@@ -104,7 +152,6 @@ describe("decideMention", () => {
     q.getRunResults.mockImplementation(async (_db: unknown, id: string) => (id === "run-1" ? RESULTS : older));
     q.listMentionDecisions.mockResolvedValue([{ url: OLD, status: "added", decided_at: "x" }]);
     await decideMention(userDb, "biz-1", OLD, "added", ON);
-    expect(q.listRunSummaries).toHaveBeenCalledWith(userDb, "biz-1", 8, ["complete", "partial"]);
     expect(q.upsertMentionFix.mock.calls[0][2]).toBe("1 list AI cites names Example Pho Spot but not you.");
   });
 
@@ -117,7 +164,7 @@ describe("decideMention", () => {
       { url: "https://never-seen.test/y", status: "added", decided_at: "y" },
     ]);
     await decideMention(userDb, "biz-1", "https://never-seen.test/y", "added", ON);
-    expect(q.upsertMentionFix.mock.calls[1][2]).toBe("2 lists AI cite don't name you.");
+    expect(q.upsertMentionFix.mock.calls.at(-1)![2]).toBe("2 lists AI cite don't name you.");
   });
 
   it("n counts every added list; rivals come from the lists still cited", async () => {
