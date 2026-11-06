@@ -14,7 +14,11 @@ import { exampleWorkspaceRows } from "@/app/team/example-data";
 // document, never /app (that's the team member's own business). Behind ENABLE_MENTIONS (mentions null).
 const NOW = new Date("2026-11-05T12:00:00Z");
 const view = buildWorkspace(exampleWorkspaceRows());
-const team = (over: Partial<TeamExtras> = {}, decide = vi.fn(async () => ({ fixId: "fix-r17" }))): TeamExtras => ({
+type DecideMention = NonNullable<TeamExtras["actions"]["decideMention"]>;
+const team = (
+  over: Partial<TeamExtras> = {},
+  decide: DecideMention = vi.fn(async () => ({ fixId: "fix-r17" })),
+): TeamExtras => ({
   businesses: [{ id: "b1", name: "Example Ramen House" }],
   businessId: "b1",
   formAction: "/team",
@@ -34,6 +38,8 @@ const team = (over: Partial<TeamExtras> = {}, decide = vi.fn(async () => ({ fixI
   },
   ...over,
 });
+// The row is re-rendered in its new list after a decision, so it's looked up again each time.
+const row = () => document.querySelector('[data-url="https://lists.example.test/best-ramen-irvine"]') as HTMLElement;
 const sources = (t: TeamExtras, onPick = vi.fn()) => {
   render(
     <TeamProvider value={t}>
@@ -55,10 +61,9 @@ describe("the team's Sources document: G7 mentions", () => {
   it("Add to fixes decides for this client through the team action", async () => {
     const decide = vi.fn(async () => ({ fixId: "fix-r17" }));
     const { user } = sources(team({}, decide));
-    const row = document.querySelector('[data-url="https://lists.example.test/best-ramen-irvine"]') as HTMLElement;
-    await user.click(within(row).getByRole("button", { name: c.add }));
+    await user.click(within(row()).getByRole("button", { name: c.add }));
     expect(decide).toHaveBeenCalledWith("b1", "https://lists.example.test/best-ramen-irvine", "added");
-    expect(within(row).getByText(c.added)).toBeInTheDocument();
+    expect(within(row()).getByText(c.added)).toBeInTheDocument();
   });
 
   it("View opens the team's Fixes document, not /app", async () => {
@@ -76,10 +81,9 @@ describe("the team's Sources document: G7 mentions", () => {
         vi.fn(async () => ({ error: "not_allowed" })),
       ),
     );
-    const row = document.querySelector('[data-url="https://lists.example.test/best-ramen-irvine"]') as HTMLElement;
-    await user.click(within(row).getByRole("button", { name: c.add }));
-    expect(within(row).getByRole("status")).toHaveTextContent(c.failed);
-    expect(within(row).getByRole("button", { name: c.add })).toBeInTheDocument();
+    await user.click(within(row()).getByRole("button", { name: c.add }));
+    expect(within(row()).getByRole("status")).toHaveTextContent(c.failed);
+    expect(within(row()).getByRole("button", { name: c.add })).toBeInTheDocument();
   });
 
   it.each([
