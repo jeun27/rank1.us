@@ -134,7 +134,8 @@ test("sticky bar: below md only, after the hero, hidden over #pricing and #audit
   await expect(sticky(page)).toBeHidden();
 });
 
-test("at most one jellyDeep primary button in the viewport at any scroll position", async ({ page }) => {
+// v3 (D34): the dark landing's primary fill is the accent, Jelly blue #279EF2.
+test("at most one accent primary button in the viewport at any scroll position", async ({ page }) => {
   await page.goto("/");
   const height = await page.evaluate(() => document.documentElement.scrollHeight);
   const step = page.viewportSize()!.height / 3;
@@ -149,7 +150,7 @@ test("at most one jellyDeep primary button in the viewport at any scroll positio
           el.offsetParent !== null &&
           r.bottom > 0 &&
           r.top < vh &&
-          getComputedStyle(el).backgroundColor === "rgb(26, 95, 191)"
+          getComputedStyle(el).backgroundColor === "rgb(39, 158, 242)"
         );
       }).length;
     });
@@ -271,4 +272,159 @@ test("Contact us in the header, pricing and footer opens the Contact us dialog",
     await expect(dialog).toHaveCount(0);
   }
   await expect(page).toHaveURL(/\/$/);
+});
+
+// ---- v3 PR 3 (D37-D41, lead OK 2026-11-06) ----
+const ACCENT = "rgb(39, 158, 242)";
+const demo = (page: Page) => page.locator("[data-demo]");
+const isMobile = (page: Page) => page.viewportSize()!.width < 768;
+
+test("hero: one H1 read as one sentence, line 2 in the accent; H1 + CTA left, sub right (stacked < md)", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const h1 = page.getByRole("heading", { level: 1, name: "Be the brand AI names first.", exact: true });
+  await expect(h1).toHaveCount(1);
+  expect(await h1.getByText("AI names first.").evaluate((el) => getComputedStyle(el).color)).toBe(ACCENT);
+  expect(await h1.getByText("Be the brand").evaluate((el) => getComputedStyle(el).color)).not.toBe(ACCENT);
+  const sub = page.locator("[data-hero-sub]");
+  await expect(sub.locator("[data-engine-tag]")).toHaveText(["ChatGPT", "Gemini", "Google AI Overview", "Perplexity"]);
+  const [h, b, cta] = [
+    (await h1.boundingBox())!,
+    (await sub.boundingBox())!,
+    (await page.locator("#hero").getByRole("link", { name: "Get my free audit" }).boundingBox())!,
+  ];
+  if (isMobile(page)) expect(b.y).toBeGreaterThan(h.y + h.height - 1);
+  else {
+    expect(b.x).toBeGreaterThan(h.x + h.width / 2);
+    expect(cta.x).toBeLessThan(b.x);
+  }
+  // 40h primary in the hero from md up (UI.md), 44 below md.
+  expect(cta.height).toBe(isMobile(page) ? 44 : 40);
+  // Decorative glows: aria-hidden, never in the a11y tree.
+  const glows = page.locator("[data-glow]");
+  expect(await glows.count()).toBeGreaterThanOrEqual(4);
+  for (const g of await glows.all()) await expect(g).toHaveAttribute("aria-hidden", "true");
+});
+
+test("demo window: a 12px frame with the window shadow; Example data; the typed question in mono", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  const d = demo(page);
+  const css = await d.evaluate((el) => {
+    const c = getComputedStyle(el);
+    return { radius: c.borderTopLeftRadius, shadow: c.boxShadow, border: c.borderTopWidth };
+  });
+  expect(css).toEqual({ radius: "12px", shadow: "rgba(0, 0, 0, 0.7) 0px 30px 80px -20px", border: "1px" });
+  await expect(d.getByText("Example data")).toBeVisible();
+  const q = d.locator("[data-demo-question]");
+  await expect(q).toHaveText("best ramen in Irvine");
+  expect(await q.evaluate((el) => getComputedStyle(el).fontFamily)).toMatch(/JetBrains Mono/i);
+  await expect(d.locator("[data-demo-bar]")).toHaveCount(4);
+  await expect(d.locator("[data-demo-row]")).toHaveCount(4);
+});
+
+// The final state, as the server renders it: 34% of 160, You 2nd (past Example Udon House), bars full.
+const expectFinal = async (page: Page) => {
+  const d = demo(page);
+  await expect(d).toHaveAttribute("data-demo-state", "final");
+  await expect(d.locator("[data-demo-question]")).toHaveText("best ramen in Irvine");
+  await expect(d.locator("[data-hero-text]")).toHaveText("named in 34% of 160 answers, +6 pts");
+  await expect(d.locator("[data-demo-row]").nth(1)).toHaveAttribute("data-you", "");
+  await expect(d.locator("[data-demo-row][data-you]")).toContainText("2");
+  for (const bar of await d.locator("[data-demo-fill]").all())
+    expect(await bar.evaluate((el) => getComputedStyle(el).visibility)).toBe("visible");
+};
+
+test("reduced motion: the demo shows its final state, no movement", async ({ page }, info) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await demo(page).scrollIntoViewIfNeeded();
+  await expectFinal(page);
+  await page.waitForTimeout(800);
+  await expectFinal(page);
+  await demo(page).screenshot({ path: `test-results/screenshots/landing-demo-final-${info.project.name}.png` });
+});
+
+test.describe("without JavaScript", () => {
+  test.use({ javaScriptEnabled: false });
+  test("the landing renders and the demo is in its final state", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("html")).not.toHaveClass(/(^|\s)js(\s|$)/);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Be the brand AI names first.");
+    await expectFinal(page);
+    await expect(demo(page)).toBeVisible();
+  });
+});
+
+test("motion on: the demo runs once when it scrolls into view, then ends on the final state", async ({
+  page,
+}, info) => {
+  await page.goto("/");
+  const d = demo(page);
+  // Above the fold on desktop; on phones it starts when scrolled to.
+  await d.scrollIntoViewIfNeeded();
+  await expect(d).toHaveAttribute("data-demo-state", "running");
+  // Mid-run: the question is part typed.
+  await expect.poll(async () => (await d.locator("[data-demo-question]").textContent())!.length).toBeGreaterThan(3);
+  expect((await d.locator("[data-demo-question]").textContent())!.length).toBeLessThan("best ramen in Irvine".length);
+  await d.screenshot({ path: `test-results/screenshots/landing-demo-mid-${info.project.name}.png` });
+  await expect(d).toHaveAttribute("data-demo-state", "final", { timeout: 8000 });
+  await expectFinal(page);
+  const ran = await d.innerText();
+  // Once only: scrolling away and back doesn't replay it.
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await d.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
+  await expect(d).toHaveAttribute("data-demo-state", "final");
+  // It ends on exactly the DOM the server renders (and reduced motion shows).
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.reload();
+  expect(await demo(page).innerText()).toBe(ran);
+});
+
+test("Jelly: 72px on the demo corner (hidden on phones); 96px in the final CTA (hidden on phones)", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const hero = demo(page).locator("img[src*='jelly']");
+  const cta = page.locator("#audit img[src*='jelly']");
+  if (isMobile(page)) {
+    await expect(hero).toBeHidden();
+    await expect(cta).toBeHidden();
+    return;
+  }
+  expect((await hero.boundingBox())!.width).toBe(72);
+  expect((await cta.boundingBox())!.width).toBe(96);
+  await expect(cta).toHaveAttribute("alt", "");
+});
+
+test("D38 frames: bento features, one bordered steps list, sticky comparison header, pricing and CTA frames", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const box = (sel: string) =>
+    page
+      .locator(sel)
+      .first()
+      .evaluate((el) => {
+        const c = getComputedStyle(el);
+        return { border: c.borderTopWidth, radius: c.borderTopLeftRadius, gap: c.rowGap };
+      });
+  // Bento: one 12px frame with shared hairlines (no gaps between the cards).
+  expect(await box("#features [data-bento]")).toEqual({ border: "1px", radius: "12px", gap: "normal" });
+  await expect(page.locator("#features [data-bento] > li")).toHaveCount(3);
+  // Steps: one bordered list.
+  expect((await box("#how-it-works ol")).border).toBe("1px");
+  await expect(page.locator("#how-it-works ol > li")).toHaveCount(3);
+  // Comparison: sticky header; the pinned Rank1 column is blue-tinted.
+  const th = page.locator("#comparison thead th").first();
+  expect(await th.evaluate((el) => getComputedStyle(el).position)).toBe("sticky");
+  const rank1 = page.locator("#comparison").getByRole("columnheader", { name: "Rank1" });
+  expect(await rank1.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(20, 38, 59)");
+  // Pricing and the final CTA: 12px frames, each with a glow.
+  expect((await box("#pricing [data-frame]")).radius).toBe("12px");
+  await expect(page.locator("#pricing [data-glow]")).toHaveCount(1);
+  expect(await box("#audit [data-frame]")).toMatchObject({ border: "1px", radius: "12px" });
+  await expect(page.locator("#audit [data-glow]")).toHaveCount(1);
 });
