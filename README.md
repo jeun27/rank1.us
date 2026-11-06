@@ -38,5 +38,6 @@ Merging to main does not deploy. Production deploys happen only when Jeun says "
 
 1. Tag `vX.Y.Z` on main, annotated, with the changelog = merged PR titles since the last tag.
 2. Push the tag.
-3. Lead only: from a clean checkout of that exact tag (a fresh clone or `git worktree add` at the tag, no local changes, then `pnpm install --frozen-lockfile`), run `vercel deploy --prod`.
-4. Post the included PRs to Jeun.
+3. Lead only: apply missing migrations to the hosted DB first (every `supabase/migrations` file newer than the hosted one, in order), then run `notify pgrst, 'reload schema'` so the API sees the new objects.
+4. Lead only: from a clean checkout of that exact tag (a fresh clone or `git worktree add` at the tag, no local changes, then `pnpm install --frozen-lockfile`), run `vercel deploy --prod`.
+5. Post the included PRs to Jeun.
