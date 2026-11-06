@@ -13,7 +13,14 @@ const LD = (o: unknown) => `<script type="application/ld+json">${JSON.stringify(
 describe("copy", () => {
   it("templates are the SCHEMA.md §5b customer copy, verbatim", () => {
     const byKey = Object.fromEntries(fixRules().map((r) => [r.key, r.customer_copy]));
-    for (const [k, v] of Object.entries(COPY)) expect(v, k).toBe(byKey[k]);
+    // R16 isn't seeded (migration 0025 inserts it), so it is checked against that migration below.
+    for (const [k, v] of Object.entries(COPY)) if (k !== "R16") expect(v, k).toBe(byKey[k]);
+  });
+
+  it("R16's template is migration 0025's customer_copy, verbatim", async () => {
+    const { readFileSync } = await import("node:fs");
+    const sql = readFileSync(`${process.cwd()}/supabase/migrations/20261105000025_ai_access.sql`, "utf8");
+    expect(sql.replace(/''/g, "'")).toContain(`'${COPY.R16}'`);
   });
 });
 

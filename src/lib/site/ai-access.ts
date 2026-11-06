@@ -7,6 +7,9 @@ import { guardedGet, type GuardOptions } from "./guarded-get";
 // the same page requested as GPTBot, and a Cloudflare hint. Three requests at most, all through the guard.
 // It reads public pages only and stores outcomes and counts, never page text.
 
+export const aiAccessEnabled = (env: Record<string, string | undefined> = process.env) =>
+  env.ENABLE_AI_ACCESS_CHECK === "true";
+
 // OpenAI's published GPTBot user agent (https://platform.openai.com/docs/bots).
 export const GPTBOT_UA =
   "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; GPTBot/1.1; +https://openai.com/gptbot)";
