@@ -65,6 +65,7 @@ const ctx = (fetch: typeof globalThis.fetch = vi.fn(), db = userDb()) => ({
   fetch,
   now: () => NOW,
   log: vi.fn(),
+  readiness: vi.fn(async () => ({})),
 });
 
 beforeEach(() => {
@@ -373,5 +374,77 @@ describe("GBP edits (preview → confirm → apply)", () => {
     expect(await svc.applyGbpEdit(ctx(fetch), "conn-1", LOC, proposed, [change])).toBe("needs_reauth");
     expect(q.setConnectionStatus).toHaveBeenCalledWith(serviceDb, "conn-1", "needs_reauth");
     expect(q.recordConnectionChange).not.toHaveBeenCalled();
+  });
+});
+
+describe("G3: GAS readiness is refreshed after every connection change", () => {
+  const LOC = "locations/2000000000000000001";
+  const started = (connector: "gbp" | "ga4" = "gbp") => {
+    const { url, cookie } = startAuth(connector, "biz-1", ENV, NOW);
+    return { cookie, state: new URL(url).searchParams.get("state")! };
+  };
+
+  it("after save_connection (a successful connect), for that business", async () => {
+    const fetch = vi.fn(async () =>
+      json({
+        access_token: "ya29.x",
+        refresh_token: "1//x",
+        expires_in: 3599,
+        scope: "openid https://www.googleapis.com/auth/business.manage",
+        id_token: idToken("sub-1"),
+      }),
+    );
+    const c = ctx(fetch);
+    await svc.finishGoogleConnect(c, { ...started(), code: "4/x", error: null });
+    expect(c.readiness).toHaveBeenCalledWith("biz-1");
+    expect(q.saveConnection.mock.invocationCallOrder[0]).toBeLessThan(c.readiness.mock.invocationCallOrder[0]);
+  });
+
+  it("not after a denied or failed connect (nothing changed)", async () => {
+    const c = ctx(vi.fn());
+    await svc.finishGoogleConnect(c, { ...started(), code: null, error: "access_denied" });
+    expect(c.readiness).not.toHaveBeenCalled();
+  });
+
+  it("after revoke_connection", async () => {
+    const c = ctx(vi.fn(async () => new Response("", { status: 200 })));
+    await svc.revokeGoogleConnection(c, "conn-1");
+    expect(c.readiness).toHaveBeenCalledWith("biz-1");
+    expect(q.revokeConnection.mock.invocationCallOrder[0]).toBeLessThan(c.readiness.mock.invocationCallOrder[0]);
+  });
+
+  it("not when Google's revoke failed (nothing changed in Rank1)", async () => {
+    const c = ctx(vi.fn(async () => new Response("", { status: 503 })));
+    await svc.revokeGoogleConnection(c, "conn-1");
+    expect(c.readiness).not.toHaveBeenCalled();
+  });
+
+  it("after a token-refresh failure marks needs_reauth", async () => {
+    q.getConnectionTokens.mockResolvedValue(tokens({ expires_at: new Date(NOW).toISOString() }));
+    const c = ctx(vi.fn(async () => json({ error: "invalid_grant" }, 400)));
+    expect(await svc.listConnectionEntities(c, "conn-1")).toBe("needs_reauth");
+    expect(c.readiness).toHaveBeenCalledWith("biz-1");
+  });
+
+  it("after a 401 while applying a GBP edit marks needs_reauth", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async (input, init) =>
+      init?.method === "PATCH"
+        ? json({}, 401)
+        : json(new URL(String(input)).pathname.endsWith("/attributes") ? fx.attributes : fx.location),
+    );
+    const c = ctx(fetch);
+    const change = {
+      field: "description",
+      before: "Example ramen in Irvine.",
+      after: "Example ramen and gyoza in Irvine.",
+    };
+    expect(await svc.applyGbpEdit(c, "conn-1", LOC, { description: change.after }, [change])).toBe("needs_reauth");
+    expect(c.readiness).toHaveBeenCalledWith("biz-1");
+  });
+
+  it("flag off → no connection change, no readiness refresh", async () => {
+    const c = { ...ctx(vi.fn()), env: { ...ENV, ENABLE_CONNECTIONS: "false" } };
+    await svc.revokeGoogleConnection(c, "conn-1");
+    expect(c.readiness).not.toHaveBeenCalled();
   });
 });

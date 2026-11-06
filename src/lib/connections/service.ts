@@ -1,4 +1,5 @@
 import "server-only";
+import { sendEmail } from "@/lib/email/resend";
 import type { DbClient } from "@/lib/queries/client";
 import {
   canApplyEdits,
@@ -12,6 +13,7 @@ import {
   updateConnectionTokens,
   type ConnectionEntity,
 } from "@/lib/queries/connections";
+import { refreshGasReady } from "@/lib/queries/gas-ready";
 import type { Json } from "@/types/db";
 import { decryptToken, encryptToken, tokenKey, TokenKeyError } from "./crypto";
 import { listGa4Properties } from "./ga4";
@@ -29,6 +31,7 @@ import {
   type GoogleConnector,
 } from "./oauth";
 import { listSites } from "./search-console";
+import { refreshReadiness } from "./readiness";
 import { ConnectionError, withGoogleToken, type TokenDeps } from "./tokens";
 
 // Connections (behind ENABLE_CONNECTIONS). Every entry point checks the flag, then the caller's access
@@ -42,6 +45,8 @@ export type Ctx = {
   fetch?: typeof fetch;
   now?: () => number;
   log?: (line: string) => void;
+  // G3: recompute gas_ready_at after a connection change (and email the team once). Tests inject a fake.
+  readiness?: (businessId: string) => Promise<unknown>;
 };
 
 export const connectionsEnabled = (env: Env = process.env) => env.ENABLE_CONNECTIONS === "true";
@@ -68,7 +73,27 @@ async function visible(ctx: Ctx, connectionId: string): Promise<Visible | null> 
   return data as unknown as Visible | null;
 }
 
-function tokenDeps(ctx: Ctx): TokenDeps {
+// After every save_connection, revoke_connection and needs_reauth (G3). Never throws.
+function refreshReady(ctx: Ctx, businessId: string) {
+  if (ctx.readiness) return ctx.readiness(businessId);
+  return refreshReadiness(businessId, {
+    async business(id) {
+      const { data, error } = await ctx.serviceDb
+        .from("businesses")
+        .select("name, vertical")
+        .eq("id", id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    refresh: (id, set) => refreshGasReady(ctx.serviceDb, id, set),
+    send: sendEmail,
+    env: envOf(ctx),
+    log: logOf(ctx),
+  });
+}
+
+function tokenDeps(ctx: Ctx, businessId: string): TokenDeps {
   const env = envOf(ctx);
   return {
     async load(id) {
@@ -82,7 +107,10 @@ function tokenDeps(ctx: Ctx): TokenDeps {
         expiresAt: t.expiresAt,
         ...(t.encRefresh ? { encRefresh: t.encRefresh } : {}),
       }),
-    needsReauth: (id) => setConnectionStatus(ctx.serviceDb, id, "needs_reauth"),
+    async needsReauth(id) {
+      await setConnectionStatus(ctx.serviceDb, id, "needs_reauth");
+      await refreshReady(ctx, businessId);
+    },
     refresh: (r) => refreshAccessToken(r, { env, fetch: ctx.fetch, now: ctx.now?.() }),
     key: tokenKey(env),
     now: ctx.now,
@@ -163,6 +191,7 @@ export async function finishGoogleConnect(
       encRefresh: t.refreshToken ? encryptToken(t.refreshToken, key) : null,
       expiresAt: t.expiresAt,
     });
+    await refreshReady(ctx, s.businessId);
     return out("connected");
   } catch (e) {
     return out(e instanceof OAuthError && e.reason === "denied" ? "denied" : "error");
@@ -191,6 +220,7 @@ export async function revokeGoogleConnection(
   }
   const revoked = await revokeConnection(ctx.serviceDb, connectionId);
   logOf(ctx)(`connections: ${c.provider} revoked (${revoked.length})`);
+  await refreshReady(ctx, c.business_id);
   return "revoked";
 }
 
@@ -220,7 +250,11 @@ export async function listConnectionEntities(ctx: Ctx, connectionId: string): Pr
   const c = await visible(ctx, connectionId);
   if (!c || !(await canConnectBusiness(ctx.userDb, c.business_id))) return "not_allowed";
   try {
-    return await withGoogleToken(connectionId, (t) => entitiesFor(c.provider, t, { fetch: ctx.fetch }), tokenDeps(ctx));
+    return await withGoogleToken(
+      connectionId,
+      (t) => entitiesFor(c.provider, t, { fetch: ctx.fetch }),
+      tokenDeps(ctx, c.business_id),
+    );
   } catch (e) {
     return failure(e);
   }
@@ -251,9 +285,9 @@ async function editTarget(ctx: Ctx, connectionId: string, location: string): Pro
   return { c, userId: auth.user.id };
 }
 
-const diffLive = (ctx: Ctx, connectionId: string, location: string, proposed: GbpEdit) =>
-  withGoogleToken(connectionId, (t) => readLocation(t, location, { fetch: ctx.fetch }), tokenDeps(ctx)).then((before) =>
-    diffLocation(before, proposed),
+const diffLive = (ctx: Ctx, c: Visible, location: string, proposed: GbpEdit) =>
+  withGoogleToken(c.id, (t) => readLocation(t, location, { fetch: ctx.fetch }), tokenDeps(ctx, c.business_id)).then(
+    (before) => diffLocation(before, proposed),
   );
 
 // The team's diff before applying: before → after per allowlisted field, from the live profile.
@@ -266,7 +300,7 @@ export async function previewGbpEdit(
   const target = await editTarget(ctx, connectionId, location);
   if (typeof target === "string") return target;
   try {
-    return { changes: await diffLive(ctx, connectionId, location, proposed) };
+    return { changes: await diffLive(ctx, target.c, location, proposed) };
   } catch (e) {
     if (e instanceof EditNotAllowed) return "not_allowed_field";
     return failure(e);
@@ -287,11 +321,11 @@ export async function applyGbpEdit(
   let changes: Change[];
   let token: string;
   try {
-    changes = await diffLive(ctx, connectionId, location, proposed);
+    changes = await diffLive(ctx, target.c, location, proposed);
     if (stable(changes) !== stable(confirmed)) return "stale";
     if (!changes.length) return { applied: 0 };
     // A fresh token (refreshed if needed). The apply itself is not retried, so no field is applied twice.
-    token = await withGoogleToken(connectionId, async (t) => t, tokenDeps(ctx));
+    token = await withGoogleToken(connectionId, async (t) => t, tokenDeps(ctx, target.c.business_id));
   } catch (e) {
     if (e instanceof EditNotAllowed) return "not_allowed_field";
     return failure(e);
@@ -315,6 +349,7 @@ export async function applyGbpEdit(
   } catch (e) {
     if (e instanceof GoogleApiError && e.status === 401) {
       await setConnectionStatus(ctx.serviceDb, connectionId, "needs_reauth");
+      await refreshReady(ctx, target.c.business_id);
       return "needs_reauth";
     }
     return failure(e);
