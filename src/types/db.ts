@@ -924,6 +924,9 @@ isOneToOne: false
                            },
 "upsert_mention_fix":
 { Args: { "p_business_id": string,"p_detail": string }; Returns: string
+                           },
+"withdraw_fixes":
+{ Args: { "p_business_id": string,"p_rule_keys": string[] }; Returns: number
                            }
           }
           Enums: {

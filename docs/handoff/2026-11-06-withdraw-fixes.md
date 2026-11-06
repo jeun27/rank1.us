@@ -1,0 +1,1 @@
+- 2026-11-06, backend -> data-pipeline: `withdrawFixes(svc, businessId, ["R19", "R20", "R21"])` → deleted count on feat/withdraw-fixes (RPC withdraw_fixes(p_business_id uuid, p_rule_keys text[]) → int). Service only; deletes todo R19-R21 only; 22023 for other keys or an empty list. Status: open.
