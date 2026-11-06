@@ -48,7 +48,7 @@ export async function loadTeam(picked: string | undefined): Promise<TeamData> {
     listFixes(db, business.id),
     listClientUsers(db, business.id),
     listDoneFixes(db, business.id),
-    loadQueue(db, businesses),
+    loadQueue(db),
   ]);
   if (!rows) return { kind: "missing" };
   // C-c: the client's Connections document, only with ENABLE_CONNECTIONS (stored data, no provider calls).

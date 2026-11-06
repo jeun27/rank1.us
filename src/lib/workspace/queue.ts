@@ -1,3 +1,5 @@
+import { metric } from "@/lib/metrics/compute";
+import type { TeamQueueRow } from "@/lib/queries/team";
 import type { Metric } from "@/types/metrics";
 
 // X5: the /team client queue. Tags are the lead-approved G3 team tags (COPY.md GAS); In progress is
@@ -42,3 +44,21 @@ export const sortQueue = (rows: QueueRow[]) =>
       b.open - a.open ||
       a.name.localeCompare(b.name),
   );
+
+// One team_client_queue() row (0038, counted as the per-client reads were) as a queue row. g3 is
+// ENABLE_CONNECTIONS: without it there's no tag column.
+export const queueRowFromRpc = (r: TeamQueueRow, g3: boolean): QueueRow => ({
+  id: r.id,
+  name: r.name,
+  tag: g3
+    ? queueTag({
+        lastRunFailed: r.last_run_failed,
+        connections: r.needs_reauth ? ["needs_reauth"] : [],
+        gasReady: r.gas_ready,
+        started: r.started,
+      })
+    : null,
+  visibility: r.named == null || r.n == null ? null : metric(r.named, r.n),
+  delta: r.delta,
+  open: r.open_fixes,
+});
