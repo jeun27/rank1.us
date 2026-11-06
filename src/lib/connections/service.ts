@@ -184,7 +184,7 @@ export async function finishGoogleConnect(
       { code: q.code, verifier: s.verifier, connector: s.connector },
       { env: envOf(ctx), fetch: ctx.fetch, now: ctx.now?.() },
     );
-    await saveConnection(ctx.serviceDb, {
+    const connectionId = await saveConnection(ctx.serviceDb, {
       businessId: s.businessId,
       provider: s.connector,
       externalAccountId: t.sub,
@@ -195,6 +195,14 @@ export async function finishGoogleConnect(
       expiresAt: t.expiresAt,
     });
     await refreshReady(ctx, s.businessId);
+    // X30: count the entities once now, with the fresh token, so the hub knows straight away whether to
+    // offer "Choose …" (before anyone opens the picker). Best effort: a failure never fails the connect.
+    try {
+      const list = await entitiesFor(s.connector, t.accessToken, { fetch: ctx.fetch });
+      await setConnectionEntityCount(ctx.serviceDb, connectionId, list.length);
+    } catch (e) {
+      logOf(ctx)(`connections: entity count not saved (${(e as { code?: string }).code ?? "error"})`);
+    }
     return out("connected");
   } catch (e) {
     return out(e instanceof OAuthError && e.reason === "denied" ? "denied" : "error");
