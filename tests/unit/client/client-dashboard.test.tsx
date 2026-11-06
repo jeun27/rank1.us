@@ -39,14 +39,15 @@ describe("ClientDashboard (/client)", () => {
 
   it("no run yet but the fix list is shown: the note and the fix list", () => {
     render(<ClientDashboard business={business} latest={null} runs={[]} fixes={fixes} now={NOW} />);
-    expect(screen.getByText("No weekly checks yet. Your first one runs Monday.")).toBeInTheDocument();
+    // X25: the client's wording, with no action (the team runs the checks).
+    expect(screen.getByText("The team's first check runs Monday.")).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 2, name: "What to fix next" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Status")).toBeNull();
   });
 
   it("no run yet: the first-check note", () => {
     render(<ClientDashboard business={business} latest={null} runs={[]} fixes={null} now={NOW} />);
-    expect(screen.getByText("No weekly checks yet. Your first one runs Monday.")).toBeInTheDocument();
+    expect(screen.getByText("The team's first check runs Monday.")).toBeInTheDocument();
   });
 
   it("access removed: 'Nothing tracked yet.' and no button", () => {

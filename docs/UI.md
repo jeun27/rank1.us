@@ -124,7 +124,7 @@ Inter (variable, optical size 14–32; SIL OFL) for all text. JetBrains Mono (SI
 | Freshness | 14–16px clock icon + caption muted: 'Checked 14 h ago · 250 answers · API-measured, directional' |
 | Error banner | errorBg fill, 1px error hairline at 30%, radius 8, 48px worried Jelly, one error-colour sentence (Inter 500) + one fix action as a text action on the right |
 | Info banner | infoBg fill, 1px info hairline at 25%, radius 8, 28px info icon chip, info-colour text |
-| Empty | Panel, 48–64px Jelly, centred 15px message, DomainField ('yoursite.com' / 'Add my business') |
+| Empty | Panel, 56px Jelly, centred message, and one next step: a DomainField ('yoursite.com' / 'Add my business'), one action, or none while a first check is running (X25: the sentence follows run state) |
 | Loading + progress | Panel, squishing 64px Jelly, 14px accent spinner + message, 6px track (overlay) with an accent fill (scaleX transform), 'n of d answers' muted left, the floored percent in link colour right (both mono). Reduced motion stops the spinner and squish |
 | Nav rail | Rail colour, 220–232px (64 collapsed), icon 16px + label Inter 400 13px, 32h rows, radius 6. Groups separated by 1px hairlines; no group headings unless COPY.md has them. Active: raised fill + hairline ring + accent icon. Account at the bottom. Phones: a sideways-scrolling row with a fade at the right edge |
 | Top bar | 48h, page fill, bottom hairline. Breadcrumb 'Rank1 / [avatar] business / page' with drawn slash separators (D42). /app shows the business name only (one business). /team puts the client switcher in the breadcrumb (D20). Right side: Location select, the theme toggle (/app, /team), Account |

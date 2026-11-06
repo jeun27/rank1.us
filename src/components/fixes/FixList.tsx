@@ -2,7 +2,9 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from "react";
 import { rovingIndex } from "@/components/workspace/hooks";
 import { Banner } from "@/components/ui/Banner";
+import { FirstCheckEmpty } from "@/components/app/FirstCheckEmpty";
 import { Card } from "@/components/ui/Card";
+import type { FirstCheck } from "@/components/ui/EmptyState";
 import { Icon } from "@/components/ui/Icon";
 import { PILLAR_ORDER, type FixItem, type FixStatus, type Pillar } from "@/lib/queries/fixes";
 import type { Metric } from "@/types/metrics";
@@ -275,6 +277,7 @@ export function FixList({
   level = 2,
   baseline = null,
   baselineHref,
+  firstCheck,
 }: {
   ranked: FixView[];
   tidyUps: FixView[];
@@ -288,6 +291,8 @@ export function FixList({
   // G5 P0: the latest visibility, shown as one baseline line at the bottom (none without a run).
   baseline?: Metric | null;
   baselineHref?: string;
+  // X25: set when there's no run yet (queued/running or not), so the empty list says what happens next.
+  firstCheck?: FirstCheck;
 }) {
   const [statuses, setStatuses] = useState<Record<string, FixStatus>>({});
   const root = useRef<HTMLDivElement>(null);
@@ -327,9 +332,7 @@ export function FixList({
 
   if (!ranked.length && !tidyUps.length && !unchecked.length && !done.length)
     return (
-      <Card>
-        <p className="text-body-lg">{c.empty}</p>
-      </Card>
+      <Card>{firstCheck ? <FirstCheckEmpty state={firstCheck} /> : <p className="text-body-lg">{c.empty}</p>}</Card>
     );
 
   const stateOf = (id: string, base: FixStatus) => statuses[id] ?? base;

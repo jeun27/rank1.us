@@ -6,7 +6,7 @@ import { FixList } from "@/components/fixes/FixList";
 import { Badge } from "@/components/ui/Badge";
 import { Freshness } from "@/components/ui/Freshness";
 import { Icon } from "@/components/ui/Icon";
-import { Jelly } from "@/components/ui/Jelly";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { StatNumber } from "@/components/ui/StatNumber";
 import { Table } from "@/components/ui/Table";
 import type { LocalCompetitor } from "@/lib/onboarding/types";
@@ -160,14 +160,7 @@ function ClientsDoc({ view, now }: { view: WorkspaceView; now: Date | null }) {
   );
 }
 
-function Empty({ message }: { message: string }) {
-  return (
-    <div className="flex flex-col items-center gap-4 py-8 text-center">
-      <Jelly size={80} />
-      <p className="text-body-lg">{message}</p>
-    </div>
-  );
-}
+const Empty = ({ message }: { message: string }) => <EmptyState message={message} />;
 
 function SectionDoc({
   view,

@@ -2,8 +2,8 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { ENGINES, ENGINE_LABEL } from "@/components/audit/contract";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Icon } from "@/components/ui/Icon";
 import { locationLabel } from "@/lib/metrics";
 import type { QuestionsWithLatestAnswers, QuestionWithAnswers } from "@/lib/queries/shell";
@@ -141,10 +141,10 @@ export function QuestionsView({ data }: { data: QuestionsWithLatestAnswers }) {
     return (
       <Page title={c.questions}>
         <Card>
-          <div className="flex flex-col items-start gap-4">
-            <p className="text-body-lg">{c.noQuestions}</p>
-            <Button href="/app/onboarding">{c.useTemplate}</Button>
-          </div>
+          <EmptyState
+            message={c.noQuestions}
+            action={{ label: c.useTemplate, href: "/app/onboarding", primary: true }}
+          />
         </Card>
       </Page>
     );

@@ -44,7 +44,7 @@ describe("first-check empty states, by run state", () => {
   });
 
   it("Fix list with no run yet", () => {
-    const props = { ranked: [], tidyUps: [], unchecked: [], noDomain: false, canWrite: true } as const;
+    const props = { ranked: [], tidyUps: [], unchecked: [], noDomain: false, canWrite: true };
     const { unmount } = render(<FixList {...props} firstCheck="monday" />);
     expect(screen.getByText(MONDAY)).toBeInTheDocument();
     expect(review()).toHaveAttribute("href", "/app/questions");
