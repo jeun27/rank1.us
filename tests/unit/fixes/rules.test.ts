@@ -17,10 +17,16 @@ describe("copy", () => {
     for (const [k, v] of Object.entries(COPY)) if (k !== "R16" && k !== "R18") expect(v, k).toBe(byKey[k]);
   });
 
-  it("R16's template is migration 0025's customer_copy, verbatim", async () => {
+  it.each([
+    ["R16", "20261105000025_ai_access.sql"],
+    ["R18", "20261105000031_fix_rule_r18.sql"],
+  ] as const)("%s's template is its fix_rules row's customer_copy (migration %s), verbatim", async (key, file) => {
     const { readFileSync } = await import("node:fs");
-    const sql = readFileSync(`${process.cwd()}/supabase/migrations/20261105000025_ai_access.sql`, "utf8");
-    expect(sql.replace(/''/g, "'")).toContain(`'${COPY.R16}'`);
+    const sql = readFileSync(`${process.cwd()}/supabase/migrations/${file}`, "utf8").replace(/''/g, "'");
+    const at = sql.indexOf(`values ('${key}'`);
+    expect(at, `${key} row in ${file}`).toBeGreaterThanOrEqual(0);
+    const row = sql.slice(at, sql.indexOf(";", at));
+    expect(row).toContain(`'${COPY[key]}'`);
   });
 });
 
