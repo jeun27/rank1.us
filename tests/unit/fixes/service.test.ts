@@ -69,7 +69,7 @@ describe("checkFixesWith with the AI access check (G2, ENABLE_AI_ACCESS_CHECK)",
     expect(await checkFixesWith(d.client, () => 200_000, { ENABLE_AI_ACCESS_CHECK: "true" })).toEqual({
       checked: "run-1",
     });
-    expect(d.calls.at(-1)).toEqual(["in", "key", ["R10", "R11", "R14", "H1", "R16"]]);
+    expect(d.calls.at(-1)).toEqual(["in", "key", ["R10", "R11", "R14", "H1", "R16", "R18"]]);
     expect(evaluate).toHaveBeenCalledWith({ domain: "example-ramen-house.test" }, { rules: ["R10"] });
     expect(ai.checkAiAccess).toHaveBeenCalledWith("example-ramen-house.test");
     expect(store.recordAiAccessCheck.mock.calls[0].slice(1)).toEqual([
@@ -78,7 +78,21 @@ describe("checkFixesWith with the AI access check (G2, ENABLE_AI_ACCESS_CHECK)",
     ]);
     const recorded = q.recordFixResults.mock.calls.at(-1)![3];
     expect(recorded.map((r: { rule_key: string }) => r.rule_key)).toEqual(["R10", "R16"]);
+    // R18 only when its fix_rules row is enabled (it isn't in this stub).
     expect(recorded[1]).toMatchObject({ result: "fix", detail: expect.stringContaining("Cloudflare") });
+  });
+
+  it("R18 joins the same call when enabled: a JS-empty homepage", async () => {
+    const d = db([{ key: "R16" }, { key: "R18" }]);
+    q.listRunsNeedingFixChecks.mockResolvedValue([RUN]);
+    ai.checkAiAccess.mockResolvedValue({ ...CHECK, outcome: "js_empty", cloudflare: false, visibleWords: 4 });
+    await checkFixesWith(d.client, () => 200_000, { ENABLE_AI_ACCESS_CHECK: "true" });
+    expect(d.calls.at(-1)).toEqual(["in", "key", ["R10", "R11", "R14", "H1", "R16", "R18"]]);
+    const recorded = q.recordFixResults.mock.calls.at(-1)![3];
+    expect(recorded.map((r: { rule_key: string; result: string }) => [r.rule_key, r.result])).toEqual([
+      ["R16", "ok"],
+      ["R18", "fix"],
+    ]);
   });
 
   it("flag off: no R16, no check, no request (the live behavior)", async () => {

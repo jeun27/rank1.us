@@ -7,12 +7,13 @@ import type { Json } from "@/types/db";
 import { checkFixesForOneRun } from "./cron";
 import { AI_RULES, evaluateFixes, SITE_RULES } from "./evaluate";
 import { checkCloudflare } from "./r16-cloudflare";
+import { checkJsEmpty } from "./r18-js-empty";
 import type { RuleKey } from "./types";
 
 // The real dependencies on the service client. fix_rules is service-only, so the enabled-rule read
 // lives here (re-read every tick, so a rule disabled since deploy is never evaluated).
 // With ENABLE_AI_ACCESS_CHECK on, the same pass also runs the G2 check: it's stored for the run, and
-// R16 joins the run's single record_fix_results call (the RPC takes one call per run).
+// R16 and R18 join the run's single record_fix_results call (the RPC takes one call per run).
 export function checkFixesWith(
   db: DbClient,
   timeLeftMs: () => number,
@@ -39,7 +40,11 @@ export function checkFixesWith(
             `ai access: store failed (${typeof e === "object" && e && "code" in e ? String(e.code) : "error"})`,
           ),
         );
-      return rules.includes("R16") ? [...results, checkCloudflare(check)] : results;
+      return [
+        ...results,
+        ...(rules.includes("R16") ? [checkCloudflare(check)] : []),
+        ...(rules.includes("R18") ? [checkJsEmpty(check)] : []),
+      ];
     },
     record: (businessId, runId, results) =>
       recordFixResults(

@@ -13,8 +13,8 @@ const LD = (o: unknown) => `<script type="application/ld+json">${JSON.stringify(
 describe("copy", () => {
   it("templates are the SCHEMA.md §5b customer copy, verbatim", () => {
     const byKey = Object.fromEntries(fixRules().map((r) => [r.key, r.customer_copy]));
-    // R16 isn't seeded (migration 0025 inserts it), so it is checked against that migration below.
-    for (const [k, v] of Object.entries(COPY)) if (k !== "R16") expect(v, k).toBe(byKey[k]);
+    // R16 and R18 aren't seeded (migrations 0025 and 0031 insert them); they're checked against those below.
+    for (const [k, v] of Object.entries(COPY)) if (k !== "R16" && k !== "R18") expect(v, k).toBe(byKey[k]);
   });
 
   it("R16's template is migration 0025's customer_copy, verbatim", async () => {
