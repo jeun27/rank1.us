@@ -19,7 +19,7 @@ const G2_RULES = new Set(["R14", "R16", "R18"]);
 
 // UI.md 4b Fix list. Every self-serve member may change a status; set_fix_status checks again.
 export default async function FixesPage() {
-  const { db, business, latest } = await loadShell();
+  const { db, business, latest, firstCheck } = await loadShell();
   if (!business) redirect("/app");
   const [{ ranked, tidyUps, unchecked }, done, access, mentions] = await Promise.all([
     listFixes(db, business.id),
@@ -58,6 +58,7 @@ export default async function FixesPage() {
     <Page title={c.title}>
       <Measured {...latestMeasured(latest)} now={now} />
       <FixList
+        firstCheck={latest ? undefined : firstCheck}
         ranked={ranked.map(withEvidence)}
         tidyUps={tidyUps}
         done={done}

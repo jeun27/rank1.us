@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { formatPercent } from "@/components/ui/StatNumber";
 import { Table } from "@/components/ui/Table";
 import { floorPct } from "@/lib/metrics/compute";
@@ -83,7 +84,8 @@ export function HistoryView({ runs }: { runs: RunSummary[] }) {
     return (
       <Page title={c.history}>
         <Card>
-          <p className="text-body-lg">{c.noChecks}</p>
+          {/* X25: History lists every run status, so empty means none is queued yet. */}
+          <EmptyState message={c.noChecks} action={{ label: c.reviewQuestions, href: "/app/questions" }} />
         </Card>
       </Page>
     );

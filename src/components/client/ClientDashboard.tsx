@@ -8,11 +8,13 @@ import { VisibilityLine } from "@/components/app/VisibilityLine";
 import { FixList, Mark, statusLine, type DoneView, type FixView } from "@/components/fixes/FixList";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
-import { Jelly } from "@/components/ui/Jelly";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { seriesFromSummaries } from "@/lib/metrics";
 import { deltaTone, signedPts } from "@/lib/metrics/delta";
 import type { RunSummary } from "@/lib/queries/shell";
 
+// COPY.md "UX (lead, 2026-11-06)" X25.
+const teamFirst = "The team's first check runs Monday.";
 // COPY.md "UX (lead, 2026-11-06)" X3.
 const teamDid = "What the team did";
 // X3: /client shows the last 4 weekly checks (founder OK); there's no /client history page.
@@ -51,10 +53,7 @@ export function ClientDashboard({
     return (
       <Page title={c.dashboard}>
         <Card>
-          <div className="flex flex-col items-center gap-5 py-5 text-center">
-            <Jelly size={80} />
-            <p className="max-w-prose text-body-lg">{removed}</p>
-          </div>
+          <EmptyState message={removed} />
         </Card>
       </Page>
     );
@@ -118,7 +117,10 @@ export function ClientDashboard({
         {did}
         {notice}
         <Card>
-          <p className="text-body-lg">{c.noChecks}</p>
+          {/* X25: runs lists every status, so a queued or running one means the first check is underway. */}
+          <EmptyState
+            message={runs.some((r) => r.status === "queued" || r.status === "running") ? c.firstRunning : teamFirst}
+          />
         </Card>
         {fixList}
       </Page>

@@ -85,6 +85,10 @@ export const STATES: Record<string, () => React.ReactNode> = {
   "dashboard-first-check": () => (
     <Dashboard business={exampleBusiness} latest={null} series={none} fixes={[]} now={NOW} />
   ),
+  // X25: a first check already queued or running (nothing to do but wait).
+  "dashboard-first-running": () => (
+    <Dashboard business={exampleBusiness} latest={null} series={none} fixes={[]} now={NOW} firstCheck="running" />
+  ),
   "dashboard-success": () => (
     <Dashboard business={exampleBusiness} latest={exampleLatest} series={series} fixes={exampleFixes} now={NOW} />
   ),
@@ -363,6 +367,12 @@ export const STATES: Record<string, () => React.ReactNode> = {
   "fixes-empty": () => (
     <Page title="What to fix next">
       <FixList ranked={[]} tidyUps={[]} unchecked={[]} noDomain={false} canWrite />
+    </Page>
+  ),
+  // X25: no run yet, none queued: it runs Monday, review the questions meanwhile.
+  "fixes-first-check": () => (
+    <Page title="What to fix next">
+      <FixList ranked={[]} tidyUps={[]} unchecked={[]} noDomain={false} canWrite firstCheck="monday" />
     </Page>
   ),
   "fixes-loading": () => <Skeleton title="What to fix next" />,
