@@ -13,36 +13,39 @@ const day = (iso: string) =>
 const named = (p: SeriesPoint) => `named in ${p.metric.numerator} of ${p.metric.denominator} answers`;
 
 // The Dashboard line (UI.md Chart: lines and bars only). One series, so no legend; hover a point for its
-// n; a table carries the same numbers for screen readers. Axis labels are HTML at a fixed 10.5px (X9b).
+// n; a table carries the same numbers for screen readers. Labels and dots are HTML, so the fixed-height
+// SVG can stretch without shrinking text (X9b) or squashing dots. The axis runs from 0 to the smallest
+// 20-point step that holds the highest point (DQ5).
 export function VisibilityLine({ points }: { points: SeriesPoint[] }) {
   const [active, setActive] = useState<number | null>(null);
   const x = (i: number) => PAD.l + (i * (W - PAD.l - PAD.r)) / Math.max(1, points.length - 1);
-  const y = (v: number | null) => PAD.t + (1 - (v ?? 0)) * (H - PAD.t - PAD.b);
+  const high = Math.max(0, ...points.map((p) => p.metric.value ?? 0));
+  const top = Math.min(1, Math.max(0.2, Math.ceil(high * 5 - 1e-9) / 5));
+  const y = (v: number | null) => PAD.t + (1 - (v ?? 0) / top) * (H - PAD.t - PAD.b);
+  const left = (i: number) => `${(x(i) / W) * 100}%`;
+  const down = (v: number | null) => `${(y(v) / H) * 100}%`;
+  const last = points.at(-1);
   const path = points.map((p, i) => `${i ? "L" : "M"}${x(i)},${y(p.metric.value)}`).join(" ");
   const tip = active === null ? null : points[active];
   return (
     <div className="relative">
       <div className="flex">
         <div aria-hidden className="relative w-9 shrink-0">
-          {[0, 0.5, 1].map((v) => (
-            <span
-              key={v}
-              data-axis
-              className={`absolute right-2 -translate-y-1/2 ${axis}`}
-              style={{ top: `${(y(v) / H) * 100}%` }}
-            >
-              {`${v * 100}%`}
+          {[0, top / 2, top].map((v) => (
+            <span key={v} data-axis className={`absolute right-2 -translate-y-1/2 ${axis}`} style={{ top: down(v) }}>
+              {`${Math.round(v * 100)}%`}
             </span>
           ))}
         </div>
         <div className="relative min-w-0 flex-1">
           <svg
             viewBox={`0 0 ${W} ${H}`}
-            className="block h-auto w-full"
+            preserveAspectRatio="none"
+            className="block h-40 w-full md:h-50"
             aria-hidden
             onMouseLeave={() => setActive(null)}
           >
-            {[0, 0.5, 1].map((v) => (
+            {[0, top / 2, top].map((v) => (
               <line
                 key={v}
                 x1={PAD.l}
@@ -51,28 +54,46 @@ export function VisibilityLine({ points }: { points: SeriesPoint[] }) {
                 y2={y(v)}
                 stroke="var(--color-border)"
                 strokeWidth={1}
+                vectorEffect="non-scaling-stroke"
               />
             ))}
-            <path d={path} fill="none" stroke="var(--color-accent)" strokeWidth={2} strokeLinejoin="round" />
+            <path
+              d={path}
+              fill="none"
+              stroke="var(--color-accent)"
+              strokeWidth={2}
+              strokeLinejoin="round"
+              vectorEffect="non-scaling-stroke"
+            />
             {points.map((p, i) => (
               <g key={p.runId} onMouseEnter={() => setActive(i)}>
                 <rect x={x(i) - 18} y={PAD.t} width={36} height={H - PAD.t - PAD.b} fill="transparent" />
-                <circle
-                  cx={x(i)}
-                  cy={y(p.metric.value)}
-                  r={active === i ? 6 : 4}
-                  fill="var(--color-accent)"
-                  stroke="var(--color-white)"
-                  strokeWidth={2}
-                />
               </g>
             ))}
           </svg>
+          {points.map((p, i) => (
+            <span
+              key={p.runId}
+              aria-hidden
+              className={`pointer-events-none absolute -translate-1/2 rounded-full bg-accent ring-2 ring-white ${active === i ? "size-2.5" : "size-1.5"}`}
+              style={{ left: left(i), top: down(p.metric.value) }}
+            />
+          ))}
+          {last && (
+            <span
+              aria-hidden
+              data-end-label
+              className="pointer-events-none absolute right-0 -translate-y-[calc(100%+6px)] font-mono text-caption font-medium text-ink tabular-nums"
+              style={{ top: down(last.metric.value) }}
+            >
+              {formatPercent(last.metric)}
+            </span>
+          )}
           {tip && (
             <div
               data-computed
               className="pointer-events-none absolute top-0 rounded-card border border-border bg-white px-3 py-2 text-caption shadow-card"
-              style={{ left: `min(calc(${(x(active!) / W) * 100}% + 8px), calc(100% - 12rem))` }}
+              style={{ left: `min(calc(${left(active!)} + 8px), calc(100% - 12rem))` }}
             >
               <p className="font-semibold tabular-nums">{formatPercent(tip.metric)}</p>
               <p className="tabular-nums">{named(tip)}</p>
