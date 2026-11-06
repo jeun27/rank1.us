@@ -7,7 +7,10 @@ const STATES = ["empty", "loading", "error", "partial", "success", "form"] as co
 const isMobile = (page: Page) => page.viewportSize()!.width < 768;
 
 const axeClean = async (page: Page) => {
-  await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== "running"));
+  // Finite animations (fades) finish first; the loading skeleton's pulse loops forever, so it doesn't count.
+  await page.waitForFunction(() =>
+    document.getAnimations().every((a) => a.playState !== "running" || a.effect?.getTiming().iterations === Infinity),
+  );
   const axe = await new AxeBuilder({ page }).analyze();
   expect(axe.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(", ")}`)).toEqual([]);
 };
@@ -39,16 +42,28 @@ test("success: each card has Before / After as '% · n=', signed points, a Diffe
 }) => {
   await page.goto("/dev/app?state=experiments-success");
   const card = page.getByRole("article").first();
-  const cells = await card.getByRole("cell").allTextContents();
+  // The header row's empty corner is a cell too; the 6 data cells are 2 groups x Before / After / Change.
+  const cells = (await card.getByRole("cell").allTextContents()).filter(Boolean);
+  expect(cells).toHaveLength(6);
   for (const v of cells) expect(v).toMatch(/^(\d+% · n=\d+|[+−]?\d+ pts)$/);
   await expect(card.getByText("Directional")).toBeVisible();
   await expect(card.getByText("Difference")).toBeVisible();
   await expect(page.locator("body")).not.toContainText(/p-value|signific|confiden/i);
   // Phones: each group's numbers stack (percent over n), and the table still fits.
   if (isMobile(page)) {
-    const n = card.getByRole("cell").first().locator("[data-n]");
-    const pct = card.getByRole("cell").first().locator("[data-pct]");
+    const n = card.locator("[data-n]").first();
+    const pct = card.locator("[data-pct]").first();
     expect((await n.boundingBox())!.y).toBeGreaterThan((await pct.boundingBox())!.y);
+    // Signed points stay on one line.
+    const pts = card.getByRole("cell").filter({ hasText: "pts" }).first();
+    // The row is as tall as the stacked cells, so measure the text: one line box.
+    expect(
+      await pts.evaluate((td) => {
+        const r = document.createRange();
+        r.selectNodeContents(td);
+        return new Set([...r.getClientRects()].map((b) => Math.round(b.top))).size;
+      }),
+    ).toBe(1);
   }
 });
 
