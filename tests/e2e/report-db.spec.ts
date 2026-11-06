@@ -41,11 +41,7 @@ test("owner saves recipients and a color, they persist; a history download redir
   await page.goto("/app/report");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Reports");
   await page.getByLabel("Recipients").fill("a@example.test\nb@example.test");
-  await page.getByLabel("Brand color").evaluate((el: HTMLInputElement) => {
-    el.value = "#0a7f3c";
-    el.dispatchEvent(new Event("input", { bubbles: true }));
-    el.dispatchEvent(new Event("change", { bubbles: true }));
-  });
+  await page.getByLabel("Brand color").fill("#0a7f3c");
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByRole("status")).toHaveText("Saved.");
   await page.reload();

@@ -28,7 +28,9 @@ test("keyboard reaches the settings, the test send and every download", async ({
 
 test("the preview scales to the width", async ({ page }) => {
   await page.goto("/dev/app?state=report-success");
-  const frame = await page.getByTitle("Report preview").boundingBox();
+  const iframe = page.getByTitle("Report preview");
+  await expect(iframe).toBeVisible();
+  const frame = await iframe.boundingBox();
   const main = await page.locator("main").boundingBox();
   expect(frame!.width).toBeGreaterThan(main!.width * 0.8);
 });
