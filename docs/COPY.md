@@ -394,7 +394,7 @@ Tile helper text (the niche key in src/lib/connections/recommend.ts):
 
 C-c PR 2, Edit Business Profile (team only; v1 the three text fields, lead Q3; production also waits on Google's GBP API access):
 
-- "Edit Business Profile", "Location" (frontend; lead to confirm), "Description", "Website", "Primary phone"
+- "Edit Business Profile", "Location" (lead approved 2026-11-06), "Description", "Website", "Primary phone"
 - "Preview changes", then per field "Before" / "After"; "Apply" only after a non-empty diff
 - "No changes to apply."
 - "Google changed this profile since your preview. Here's a fresh one."

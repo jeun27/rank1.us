@@ -7,4 +7,4 @@
   - "Apply" applies exactly the previewed diff (applyGbpEdit). "stale" (Google changed it meanwhile) shows "Google changed this profile since your preview. Here's a fresh one." with the fresh diff. Success shows "Applied." and a failure "We couldn't apply that. Try again.".
 - The team actions previewTeamGbpEdit / applyTeamGbpEdit (public endpoints): the flag, a DFY client the team can read, the business's connected GBP, only the three fields as strings (≤2000), and a location. The service re-checks access and the allowlist. Errors are codes, never raw text.
 - A dfy_client never sees edit controls: the client's hub has no editor, preview or apply (tested). Editing lives only in the team document.
-- "Location" is a new label (lead to confirm).
+- "Location" is a new label, approved by the lead (2026-11-06).
