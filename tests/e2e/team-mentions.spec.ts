@@ -29,6 +29,8 @@ for (const theme of ["dark", "light"] as const)
     const first = section.locator('[data-url="https://lists.example.test/best-ramen-irvine"]');
     await expect(first).toContainText("The 12 best ramen shops in Irvine");
     await axeClean(page);
+    // The document pane scrolls inside the page, so a phone shot of the whole section needs a taller viewport.
+    if (page.viewportSize()!.width < 768) await page.setViewportSize({ width: 375, height: 1400 });
     await section.screenshot({ path: `test-results/screenshots/team-mentions-${theme}-${info.project.name}.png` });
     await first.getByRole("button", { name: "Add to fixes" }).click();
     await expect(section.getByRole("list", { name: "Added" })).toContainText("The 12 best ramen shops in Irvine");
