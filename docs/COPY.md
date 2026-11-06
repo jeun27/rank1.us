@@ -432,6 +432,22 @@ Strings from the GAS prototype report (share/gas-proto/REPORT.md, lead copy). Fi
 | G2 explainer | "We read robots.txt and load your homepage the way AI crawlers would." |
 | G2 dashboard line (/app, good only) | "AI can read your site · checked {age} ago" |
 
+## UX (lead, 2026-11-06)
+
+G7 "Lists that name your rivals but not you" (/app/sources, and the R17 fix's evidence), signed off by the lead (2026-11-06).
+
+| Where | String |
+|---|---|
+| Section title | "Lists that name your rivals but not you" |
+| Section sub | "Pages AI cites that name competitors but not you" |
+| Row | "Names {rivals}" (up to 3), then "+{n}"; "In {k} of {n} answers" + " · {engines}" |
+| Actions | "Add to fixes", "Not relevant", "Added", "View", "Remove", "Restore" |
+| Not relevant disclosure | "Not relevant ({n})" |
+| Empty, before the first run | "No lists like this yet. They show after your first run." |
+| Empty, a run with no lists | "None in your last run. We check again on every run." |
+| Save failed (inline on the row) | "We couldn't save that. Try again." |
+| R17 evidence, more than 3 | "+{n} more" |
+
 ## Landing (lead, 2026-11-06)
 
 | Where | String |
