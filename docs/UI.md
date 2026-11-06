@@ -94,6 +94,7 @@ Inter (variable, optical size 14–32; SIL OFL) for all text. JetBrains Mono (SI
 | UI body, table cells, nav | Inter 450 | 13/19 |
 | Caption, table header, freshness | Inter 400–500, muted | 12/16 |
 | Tag / badge | Inter 500 | 11/1 |
+| Form fields (input, select, textarea) | Inter 450 | 16px below md to prevent iOS focus zoom; the UI size (13/19) from md (lead R2, 2026-11-06) |
 | Hero number | Inter 600, -0.04em, tabular | 36–44 / 1.1 |
 | KPI and table numbers | JetBrains Mono 500, tabular, -0.03em | 22–24 (KPI), 12–13 (tables) |
 

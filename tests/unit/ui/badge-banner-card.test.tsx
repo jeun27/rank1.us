@@ -4,23 +4,25 @@ import { Badge } from "@/components/ui/Badge";
 import { Banner } from "@/components/ui/Banner";
 import { Card } from "@/components/ui/Card";
 
+// v3 (UI.md "Badge / tag", lead C1): radius 4, 20h, Inter 500 11px, state fill + text + a 25% state hairline.
 describe("Badge", () => {
   it.each([
     ["success", "bg-successBg", "text-moss"],
     ["error", "bg-errorBg", "text-brick"],
     ["warn", "bg-warnBg", "text-warnText"],
     ["info", "bg-infoBg", "text-jellyDeep"],
-  ] as const)("%s uses %s / %s and is a pill", (tone, bg, fg) => {
+  ] as const)("%s uses %s / %s on the v3 tag shape", (tone, bg, fg) => {
     render(<Badge tone={tone}>x</Badge>);
-    const el = screen.getByText("x");
-    expect(el.className).toContain(bg);
-    expect(el.className).toContain(fg);
-    expect(el.className).toContain("rounded-full");
+    const cls = screen.getByText("x").className.split(" ");
+    for (const c of [bg, fg, "rounded-tag", "h-5", "text-tag", "font-medium", "border", "border-current/25"])
+      expect(cls).toContain(c);
+    expect(cls).not.toContain("rounded-full");
   });
 });
 
+// v3 (UI.md "Error banner" / "Info banner", lead C2).
 describe("Banner", () => {
-  it("error: white, 1.5px brick edge, brick text, 64px Jelly, one sentence and one text-link action", () => {
+  it("error: errorBg fill, 1px error hairline at 30%, radius 8, 48px Jelly, one Inter 500 sentence, one text action", () => {
     render(
       <Banner tone="error" action={{ label: "Try again", href: "#" }}>
         We couldn&apos;t load your results. Try again.
@@ -28,38 +30,25 @@ describe("Banner", () => {
     );
     const el = screen.getByRole("alert");
     const cls = el.className.split(" ");
-    for (const c of [
-      "bg-white",
-      "border-[1.5px]",
-      "border-brick",
-      "text-brick",
-      "rounded-banner",
-      "shadow-banner-error",
-    ])
+    for (const c of ["bg-errorBg", "border", "border-brick/30", "text-brick", "rounded-banner"])
       expect(cls).toContain(c);
-    expect(el.className).not.toMatch(/bg-errorBg/);
+    expect(el.className).not.toMatch(/bg-white|border-\[1\.5px\]|shadow-banner-error/);
+    expect(screen.getByText(/We couldn.t load your results/).className.split(" ")).toContain("font-medium");
     expect(screen.getByRole("link", { name: "Try again" }).className).toMatch(/text-jellyDeep/);
     const jelly = el.querySelector("img")!;
     expect(jelly).toHaveAttribute("alt", "");
-    expect(jelly).toHaveAttribute("width", "64");
+    expect(jelly).toHaveAttribute("width", "48");
     expect(screen.getAllByRole("link")).toHaveLength(1);
   });
-  it("info: white, 1.5px jellyDeep edge, jellyDeep text, infoBg 'i' chip, status role, no Jelly", () => {
+  it("info: infoBg fill, 1px info hairline at 25%, radius 8, 28px info chip, info text, status role, no Jelly", () => {
     render(<Banner tone="info">Info</Banner>);
     const el = screen.getByRole("status");
     const cls = el.className.split(" ");
-    for (const c of [
-      "bg-white",
-      "border-[1.5px]",
-      "border-jellyDeep",
-      "text-jellyDeep",
-      "rounded-banner",
-      "shadow-field",
-    ])
+    for (const c of ["bg-infoBg", "border", "border-jellyDeep/25", "text-jellyDeep", "rounded-banner"])
       expect(cls).toContain(c);
-    expect(el.className).not.toMatch(/bg-infoBg/);
+    expect(el.className).not.toMatch(/bg-white|border-\[1\.5px\]|shadow-field/);
     const chip = el.querySelector("[data-icon=info]")!.parentElement!;
-    expect(chip.className).toContain("bg-infoBg");
+    expect(chip.className.split(" ")).toContain("size-7");
     expect(chip.className).toContain("rounded-full");
     expect(el.querySelector("img")).toBeNull();
   });
