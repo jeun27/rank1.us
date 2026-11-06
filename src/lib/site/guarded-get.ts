@@ -48,15 +48,19 @@ const bare = (h: string) => h.toLowerCase().replace(/^www\./, "");
 const hostIp = (u: URL) => u.hostname.replace(/^\[|\]$/g, "");
 const systemLookup: Lookup = (h) => dnsLookup(h, { all: true, verbatim: true });
 
+type Resolved = { address: string; family: number };
+type AllCallback = (err: null, addresses: Resolved[]) => void;
+
 // Resolves inside the socket: every record must pass, and the socket connects to the first one.
 function pinnedLookup(lookup: Lookup, allow: (ip: string) => boolean): LookupFunction {
   return (hostname, options, callback) => {
     lookup(hostname).then(
       (addrs) => {
         if (!addrs.length || addrs.some((a) => !allow(a.address))) return callback(new Blocked(), "", 4);
-        const a = { address: addrs[0].address, family: addrs[0].family ?? isIP(addrs[0].address) };
-        if ((options as { all?: boolean }).all) (callback as (e: null, a: (typeof a)[]) => void)(null, [a]);
-        else callback(null, a.address, a.family);
+        const pick: Resolved = { address: addrs[0].address, family: addrs[0].family ?? isIP(addrs[0].address) };
+        // Node asks for every address when autoSelectFamily is on; answer with only the checked one.
+        if ((options as { all?: boolean }).all) (callback as unknown as AllCallback)(null, [pick]);
+        else callback(null, pick.address, pick.family);
       },
       (e) => callback(e as NodeJS.ErrnoException, "", 4),
     );

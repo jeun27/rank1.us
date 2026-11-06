@@ -1,19 +1,20 @@
 import "server-only";
-import { lookup as dnsLookup } from "node:dns/promises";
 import { isIP } from "node:net";
+import { guardedGet } from "@/lib/site/guarded-get";
 import { CUISINES } from "./cuisines";
 import type { SiteRead } from "./types";
 
 export const USER_AGENT = "Rank1/1.0 (+https://rank1.us)";
 const TIMEOUT_MS = 10_000;
 export const MAX_BYTES = 1_000_000;
-const MAX_REDIRECTS = 3;
 
 export type ReadSiteDeps = {
+  // Tests only: a fetch-shaped fake (the guard then checks DNS before the call).
   fetch?: typeof fetch;
   lookup?: (host: string) => Promise<{ address: string }[]>;
   timeoutMs?: number;
 };
+type Deps = ReadSiteDeps & { timeoutMs: number };
 
 const bare = (h: string) => h.toLowerCase().replace(/^www\./, "");
 
@@ -37,77 +38,20 @@ export function siteHost(domain: string): string | null {
 
 export { isPrivateAddress } from "@/lib/site/address";
 
-async function publicHost(host: string, lookup: NonNullable<ReadSiteDeps["lookup"]>) {
-  try {
-    const addrs = await lookup(host);
-    return addrs.length > 0 && addrs.every((a) => !isPrivateAddress(a.address));
-  } catch {
-    return false;
-  }
-}
-
-// Reads at most MAX_BYTES: a larger Content-Length is refused unread, and a longer stream is cut off
-// (and the request aborted) as soon as it passes the cap. Either way the page counts as unreadable.
-async function readCapped(res: Response, ctrl: AbortController): Promise<string | null> {
-  if (Number(res.headers.get("content-length") ?? 0) > MAX_BYTES) {
-    ctrl.abort();
-    return null;
-  }
-  if (!res.body) return "";
-  const reader = res.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let size = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    size += value.byteLength;
-    if (size > MAX_BYTES) {
-      ctrl.abort();
-      await reader.cancel().catch(() => {});
-      return null;
-    }
-    chunks.push(value);
-  }
-  return new TextDecoder().decode(Buffer.concat(chunks));
-}
-
 export type SitePage = { url: string; status: number; type: string; body: string };
-type Page = SitePage;
-
-// GET with a timeout and a size cap. Follows same-site redirects only (www and http/https variants).
-async function get(
-  url: URL,
-  deps: Required<ReadSiteDeps>,
-  lookupOk: (h: string) => Promise<boolean>,
-): Promise<Page | null> {
-  const site = bare(url.hostname);
-  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
-    if (bare(url.hostname) !== site || !(await lookupOk(url.hostname))) return null;
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), deps.timeoutMs);
-    try {
-      const res = await deps.fetch(url, {
-        headers: { "User-Agent": USER_AGENT, Accept: "text/html,text/plain;q=0.9" },
-        redirect: "manual",
-        signal: ctrl.signal,
-      });
-      const location = res.headers.get("location");
-      if (res.status >= 300 && res.status < 400 && location) {
-        url = new URL(location, url);
-        if (url.protocol !== "https:" && url.protocol !== "http:") return null;
-        continue;
-      }
-      const body = await readCapped(res, ctrl);
-      return body === null
-        ? null
-        : { url: url.toString(), status: res.status, type: res.headers.get("content-type") ?? "", body };
-    } catch {
-      return null;
-    } finally {
-      clearTimeout(timer);
-    }
-  }
-  return null;
+// GET through the shared SSRF guard (src/lib/site/guarded-get.ts: public IPs checked at connect, no
+// rebinding window), with a timeout and a size cap. Follows same-site redirects only (www and http/https).
+async function get(url: URL, deps: Deps): Promise<SitePage | null> {
+  const r = await guardedGet(url, {
+    headers: { "User-Agent": USER_AGENT, Accept: "text/html,text/plain;q=0.9" },
+    lookup: deps.lookup,
+    timeoutMs: deps.timeoutMs,
+    maxBytes: MAX_BYTES,
+    sameSite: url.hostname,
+    transport: deps.fetch && ((u, init) => deps.fetch!(u, { ...init, redirect: "manual" })),
+  });
+  if (!r.ok) return null;
+  return { url: r.page.url, status: r.page.status, type: r.page.headers.get("content-type") ?? "", body: r.page.body };
 }
 
 // robots.txt rules for an agent (Rank1 by default): its own group if present, else '*'. Longest match
@@ -207,18 +151,10 @@ export type FetcherOptions = ReadSiteDeps & { maxRequests?: number; budgetMs?: n
 export async function createSiteFetcher(domain: string, opts: FetcherOptions = {}): Promise<SiteFetcher | null> {
   const host = siteHost(domain);
   if (!host) return null;
-  const d: Required<ReadSiteDeps> = {
-    fetch: opts.fetch ?? fetch,
-    lookup: opts.lookup ?? ((h) => dnsLookup(h, { all: true })),
-    timeoutMs: opts.timeoutMs ?? TIMEOUT_MS,
-  };
+  // fetch is a test seam only; production goes through the guard's pinned transport.
+  const d: Deps = { fetch: opts.fetch, lookup: opts.lookup, timeoutMs: opts.timeoutMs ?? TIMEOUT_MS };
   const now = opts.now ?? Date.now;
   const started = now();
-  const ok = new Map<string, Promise<boolean>>();
-  const lookupOk = (h: string) => {
-    if (!ok.has(h)) ok.set(h, publicHost(h, d.lookup));
-    return ok.get(h)!;
-  };
   let requests = 0;
   let exhausted = false;
   const spend = () => {
@@ -230,7 +166,7 @@ export async function createSiteFetcher(domain: string, opts: FetcherOptions = {
     return true;
   };
   const base = new URL(`https://${host}/`);
-  const r = spend() ? await get(new URL("/robots.txt", base), d, lookupOk) : null;
+  const r = spend() ? await get(new URL("/robots.txt", base), d) : null;
   const robots: RobotsState =
     r && r.status >= 200 && r.status < 300
       ? { status: "ok", text: r.body }
@@ -249,7 +185,7 @@ export async function createSiteFetcher(domain: string, opts: FetcherOptions = {
     url.hash = "";
     const key = url.toString();
     if (bare(url.hostname) !== bare(host) || !allowed(url.pathname + url.search)) return Promise.resolve(null);
-    if (!cache.has(key)) cache.set(key, spend() ? get(url, d, lookupOk) : Promise.resolve(null));
+    if (!cache.has(key)) cache.set(key, spend() ? get(url, d) : Promise.resolve(null));
     return cache.get(key)!;
   };
   return { host, base, robots, allowed, page, used: () => ({ requests, exhausted }) };
