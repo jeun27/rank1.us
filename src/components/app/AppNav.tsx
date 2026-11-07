@@ -121,7 +121,7 @@ function SetupSteps() {
               {n}
             </span>
             {label}
-            {n < step && <span className="sr-only">{welcome.done}</span>}
+            {n < step && <span className="sr-only"> {welcome.done}</span>}
           </li>
         );
       })}

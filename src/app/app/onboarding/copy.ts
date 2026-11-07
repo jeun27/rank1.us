@@ -48,20 +48,14 @@ export const copy = {
   saveFailed: "We couldn't save your business. Try again.",
 };
 
-// P2 pending: onboarding v2 (O1) strings, README §6 Q1–Q3. They aren't in docs/COPY.md until the founder
-// approves them (lead relays P2); a change is an edit here only.
+// Onboarding v2, O1 (founder-approved P2, 2026-11-07): README §6 Q1–Q3, in docs/COPY.md "Onboarding v2".
 export const welcome = {
-  // P2 pending (Q3): the 4 steps, in the rail and the phone bar.
   steps: ["Your site", "Your business", "Competitors", "Questions"],
   stepOf: (n: number, step: string) => `Step ${n} of 4 · ${step}`,
-  stepsLabel: "Setup steps",
-  done: ", done",
-  // P2 pending (Q1)
   label: "Your website",
   read: "Read my site",
   manual: "No website? Fill it in yourself",
   time: "About 5 minutes to set up.",
-  // P2 pending (Q2)
   nextTitle: "What happens next",
   next: [
     () => "Rank1 reads your site and fills in a card you can change.",
@@ -70,10 +64,13 @@ export const welcome = {
   ],
   exampleTitle: "What you'll see after your first check",
   footnote: "Every number shows how many answers it's based on.",
-  forQuestion: "For the question",
-  whoNames: "Who AI names",
-  namedIn: "Named in",
   // OC10: the You row in an Example never shows a real name.
   you: "Your business",
+  // Reused as they are: the leaderboard headers, the You tag, the page title (the rail's list name) and the
+  // Fix list's "Done" (a finished step, for screen readers).
+  business: "Business",
+  visibility: "Visibility",
   youTag: "You",
+  stepsLabel: "Add your business",
+  done: "Done",
 };

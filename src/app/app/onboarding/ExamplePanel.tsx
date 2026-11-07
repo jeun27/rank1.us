@@ -23,7 +23,7 @@ export function ExamplePanel() {
         <Badge tone="info">{copy.exampleData}</Badge>
       </div>
       <p className="mt-2 text-caption text-text2">
-        {w.forQuestion} <span className="font-mono">{demoQuestion}</span>
+        <span className="font-mono">{demoQuestion}</span>
       </p>
       {/* The panel's dense size: cells inherit text-ui, with shorter rows than a full page table. */}
       <div className="mt-3 text-ui [&_td]:py-2.5">
@@ -32,8 +32,8 @@ export function ExamplePanel() {
           stack
           pin={(i) => board[i].you}
           columns={[
-            { key: "brand", header: w.whoNames },
-            { key: "named", header: w.namedIn, numeric: true },
+            { key: "brand", header: w.business },
+            { key: "named", header: w.visibility, numeric: true },
           ]}
           rows={board.map((r) => ({
             brand: r.you ? (

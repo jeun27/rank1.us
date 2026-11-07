@@ -13,7 +13,7 @@ const next = (page: Page) => page.getByRole("button", { name: "Next" });
 const STEPS = ["Your site", "Your business", "Competitors", "Questions"];
 const onStep = async (page: Page, n: number) =>
   page.viewportSize()!.width >= 768
-    ? expect(page.getByRole("list", { name: "Setup steps" }).locator('[aria-current="step"]')).toContainText(
+    ? expect(page.getByRole("list", { name: "Add your business" }).locator('[aria-current="step"]')).toContainText(
         STEPS[n - 1],
       )
     : expect(page.getByText(`Step ${n} of 4 · ${STEPS[n - 1]}`)).toBeVisible();

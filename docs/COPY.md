@@ -565,6 +565,17 @@ The Supabase auth emails in supabase/templates/ (#193). Magic link = magic_link.
 | Ignore line (both) | "Didn’t ask for this? You can ignore this email." |
 | Footer (both) | "Rank1 · rank1.us" (rank1.us links to https://rank1.us) |
 
+## Onboarding v2 (founder-approved P2, 2026-11-07)
+
+O1 only (share/ux-plan/onboarding-welcome/README.md §6). Each string lands here in the PR that first uses it.
+
+| Where | Copy |
+|---|---|
+| Welcome (Q1) | Field label "Your website" · button "Read my site" · "No website? Fill it in yourself" · "About 5 minutes to set up." |
+| Welcome (Q2) | "What happens next" · "Rank1 reads your site and fills in a card you can change." · "Pick 3 to 5 businesses to compare against." · "Rank1 writes up to {total} questions people ask AI about businesses like yours." · Example panel title "What you'll see after your first check" · footnote "Every number shows how many answers it's based on." |
+| Example panel | You row "Your business" with the "You" tag (never the real name) · headers "Business", "Visibility" · label "Example data" |
+| Rail (Q3) | Steps "Your site" · "Your business" · "Competitors" · "Questions" (list name "Add your business"; a finished step reads "Done" to screen readers) · phones "Step {n} of 4 · {step}" |
+
 ## Engine location tooltip
 
 Greyed tooltip copy: "{Engine} can't target a city yet, so we check it for the whole country."

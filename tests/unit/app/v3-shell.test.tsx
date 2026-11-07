@@ -73,11 +73,11 @@ describe("v3 /app shell", () => {
     path.current = "/app/onboarding";
     search.current = "step=3";
     render(<AppShell business={null}>{null}</AppShell>);
-    const steps = screen.getByRole("list", { name: "Setup steps" });
+    const steps = screen.getByRole("list", { name: "Add your business" });
     const items = within(steps).getAllByRole("listitem");
     expect(items.map((li) => li.textContent)).toEqual([
-      "1Your site, done",
-      "2Your business, done",
+      "1Your site Done",
+      "2Your business Done",
       "3Competitors",
       "4Questions",
     ]);
@@ -89,7 +89,7 @@ describe("v3 /app shell", () => {
   it("onboarding without ?step= starts at Your site", () => {
     path.current = "/app/onboarding";
     render(<AppShell business={null}>{null}</AppShell>);
-    expect(within(screen.getByRole("list", { name: "Setup steps" })).getAllByRole("listitem")[0]).toHaveAttribute(
+    expect(within(screen.getByRole("list", { name: "Add your business" })).getAllByRole("listitem")[0]).toHaveAttribute(
       "aria-current",
       "step",
     );
