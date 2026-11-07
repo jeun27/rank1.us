@@ -104,14 +104,14 @@ isOneToOne: false
                   ]
                 },"businesses": {
                   Row: {
-                    "address": string | null,"aliases": (string)[],"archive_at": string | null,"archived_at": string | null,"brand_color": string | null,"category": string | null,"city": string,"country": string,"created_at": string,"cuisine": string | null,"domain": string | null,"fix_list_visible": boolean,"ga4_property_id": string | null,"gas_ready_at": string | null,"gas_ready_dismissed_at": string | null,"id": string,"logo_path": string | null,"name": string,"narrative_avoid": (string)[],"narrative_want": (string)[],"phone": string | null,"profile_links": (string)[],"profile_sources": Json,"report_recipients": (string)[],"service": string,"service_area": string | null,"services": (string)[],"state": string,"vertical": string,"workspace_id": string
+                    "address": string | null,"aliases": (string)[],"archive_at": string | null,"archived_at": string | null,"brand_color": string | null,"category": string | null,"city": string,"country": string,"created_at": string,"cuisine": string | null,"domain": string | null,"fix_list_visible": boolean,"ga4_property_id": string | null,"gas_ready_at": string | null,"gas_ready_dismissed_at": string | null,"id": string,"logo_path": string | null,"name": string,"narrative_avoid": (string)[],"narrative_want": (string)[],"phone": string | null,"profile_links": (string)[],"profile_sources": Json,"question_picks": Json,"report_recipients": (string)[],"service": string,"service_area": string | null,"services": (string)[],"state": string,"vertical": string,"workspace_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "address"?: string | null,"aliases"?: (string)[],"archive_at"?: string | null,"archived_at"?: string | null,"brand_color"?: string | null,"category"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"ga4_property_id"?: string | null,"gas_ready_at"?: string | null,"gas_ready_dismissed_at"?: string | null,"id"?: string,"logo_path"?: string | null,"name": string,"narrative_avoid"?: (string)[],"narrative_want"?: (string)[],"phone"?: string | null,"profile_links"?: (string)[],"profile_sources"?: Json,"report_recipients"?: (string)[],"service"?: string,"service_area"?: string | null,"services"?: (string)[],"state"?: string,"vertical"?: string,"workspace_id": string
+                    "address"?: string | null,"aliases"?: (string)[],"archive_at"?: string | null,"archived_at"?: string | null,"brand_color"?: string | null,"category"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"ga4_property_id"?: string | null,"gas_ready_at"?: string | null,"gas_ready_dismissed_at"?: string | null,"id"?: string,"logo_path"?: string | null,"name": string,"narrative_avoid"?: (string)[],"narrative_want"?: (string)[],"phone"?: string | null,"profile_links"?: (string)[],"profile_sources"?: Json,"question_picks"?: Json,"report_recipients"?: (string)[],"service"?: string,"service_area"?: string | null,"services"?: (string)[],"state"?: string,"vertical"?: string,"workspace_id": string
                   }
                   Update: {
-                    "address"?: string | null,"aliases"?: (string)[],"archive_at"?: string | null,"archived_at"?: string | null,"brand_color"?: string | null,"category"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"ga4_property_id"?: string | null,"gas_ready_at"?: string | null,"gas_ready_dismissed_at"?: string | null,"id"?: string,"logo_path"?: string | null,"name"?: string,"narrative_avoid"?: (string)[],"narrative_want"?: (string)[],"phone"?: string | null,"profile_links"?: (string)[],"profile_sources"?: Json,"report_recipients"?: (string)[],"service"?: string,"service_area"?: string | null,"services"?: (string)[],"state"?: string,"vertical"?: string,"workspace_id"?: string
+                    "address"?: string | null,"aliases"?: (string)[],"archive_at"?: string | null,"archived_at"?: string | null,"brand_color"?: string | null,"category"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"ga4_property_id"?: string | null,"gas_ready_at"?: string | null,"gas_ready_dismissed_at"?: string | null,"id"?: string,"logo_path"?: string | null,"name"?: string,"narrative_avoid"?: (string)[],"narrative_want"?: (string)[],"phone"?: string | null,"profile_links"?: (string)[],"profile_sources"?: Json,"question_picks"?: Json,"report_recipients"?: (string)[],"service"?: string,"service_area"?: string | null,"services"?: (string)[],"state"?: string,"vertical"?: string,"workspace_id"?: string
                   }
                   Relationships: [
                     {
@@ -568,14 +568,14 @@ isOneToOne: false
                   ]
                 },"questions": {
                   Row: {
-                    "active": boolean,"active_form": string,"business_id": string,"city": string | null,"country": string | null,"dfs_location_code": number | null,"id": string,"location_level": string,"long_text": string | null,"short_text": string,"state": string | null,"template_key": string | null
+                    "active": boolean,"active_form": string,"business_id": string,"city": string | null,"country": string | null,"dfs_location_code": number | null,"id": string,"location_level": string,"owner_off": boolean,"long_text": string | null,"short_text": string,"state": string | null,"template_key": string | null,"template_long": string | null,"template_short": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "active"?: boolean,"active_form"?: string,"business_id": string,"city"?: string | null,"country"?: string | null,"dfs_location_code"?: number | null,"id"?: string,"location_level": string,"long_text"?: string | null,"short_text": string,"state"?: string | null,"template_key"?: string | null
+                    "active"?: boolean,"active_form"?: string,"business_id": string,"city"?: string | null,"country"?: string | null,"dfs_location_code"?: number | null,"id"?: string,"location_level": string,"owner_off"?: boolean,"long_text"?: string | null,"short_text": string,"state"?: string | null,"template_key"?: string | null,"template_long"?: string | null,"template_short"?: string | null
                   }
                   Update: {
-                    "active"?: boolean,"active_form"?: string,"business_id"?: string,"city"?: string | null,"country"?: string | null,"dfs_location_code"?: number | null,"id"?: string,"location_level"?: string,"long_text"?: string | null,"short_text"?: string,"state"?: string | null,"template_key"?: string | null
+                    "active"?: boolean,"active_form"?: string,"business_id"?: string,"city"?: string | null,"country"?: string | null,"dfs_location_code"?: number | null,"id"?: string,"location_level"?: string,"owner_off"?: boolean,"long_text"?: string | null,"short_text"?: string,"state"?: string | null,"template_key"?: string | null,"template_long"?: string | null,"template_short"?: string | null
                   }
                   Relationships: [
                     {
@@ -894,6 +894,9 @@ isOneToOne: false
                            },
 "runs_needing_fix_checks":
 { Args: { "p_limit"?: number }; Returns: { "business_id": string,"domain": string | null,"run_id": string }[]
+                           },
+"save_business_card":
+{ Args: { "p_business_id": string,"p_card": Json,"p_questions": Json }; Returns: undefined
                            },
 "save_connection":
 { Args: { "p_business_id": string,"p_connected_by": string,"p_enc_access": string,"p_enc_refresh": string,"p_expires_at": string,"p_external_account_id": string,"p_provider": string,"p_scopes": string[] }; Returns: string
