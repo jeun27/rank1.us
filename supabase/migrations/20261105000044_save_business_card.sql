@@ -119,7 +119,8 @@ begin
                                 active_form, active, owner_off, location_level, country, state, city)
   select p_business_id, n.short, n.long, n.short, n.long, n.key, 'long', false, n.key = any (off_keys), 'city',
          b.country, b.state, b.city
-  from jsonb_to_recordset(p_questions) with ordinality as n(key text, short text, long text, ord bigint)
+  from (select e.v ->> 'key' as key, e.v ->> 'short' as short, e.v ->> 'long' as long, e.ord
+        from jsonb_array_elements(p_questions) with ordinality as e(v, ord)) as n
   where not exists (select 1 from public.questions q
                     where q.business_id = p_business_id and lower(q.short_text) = lower(n.short))
   order by n.ord;
@@ -133,14 +134,16 @@ begin
   update public.questions q set active = false
   from (select q.id, row_number() over (order by n.ord, q.id) as rk
      from public.questions q
-     join jsonb_to_recordset(p_questions) with ordinality as n(key text, short text, long text, ord bigint)
+     join (select e.v ->> 'key' as key, e.v ->> 'short' as short, e.v ->> 'long' as long, e.ord
+        from jsonb_array_elements(p_questions) with ordinality as e(v, ord)) as n
        on q.short_text = n.short and q.long_text is not distinct from n.long
      where q.business_id = p_business_id and q.template_short is not null and q.short_text = q.template_short and q.long_text is not distinct from q.template_long and not q.owner_off) r
   where q.id = r.id and r.rk > free and q.active;
   update public.questions q set active = true
   from (select q.id, row_number() over (order by n.ord, q.id) as rk
      from public.questions q
-     join jsonb_to_recordset(p_questions) with ordinality as n(key text, short text, long text, ord bigint)
+     join (select e.v ->> 'key' as key, e.v ->> 'short' as short, e.v ->> 'long' as long, e.ord
+        from jsonb_array_elements(p_questions) with ordinality as e(v, ord)) as n
        on q.short_text = n.short and q.long_text is not distinct from n.long
      where q.business_id = p_business_id and q.template_short is not null and q.short_text = q.template_short and q.long_text is not distinct from q.template_long and not q.owner_off) r
   where q.id = r.id and r.rk <= free and not q.active;
