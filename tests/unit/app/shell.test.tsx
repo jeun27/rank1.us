@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 const path = { current: "/app" };
-vi.mock("next/navigation", () => ({ usePathname: () => path.current }));
+vi.mock("next/navigation", () => ({ usePathname: () => path.current, useSearchParams: () => new URLSearchParams() }));
 
 import { AppNav } from "@/components/app/AppNav";
 import { appCopy } from "@/components/app/copy";

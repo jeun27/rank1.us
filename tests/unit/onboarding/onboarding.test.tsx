@@ -150,7 +150,7 @@ describe("Onboarding 1: Your site (UI1 welcome)", () => {
 
   it("the Example panel: labelled Example data, the You row says Your business, and every % has its n", () => {
     setup();
-    const panel = screen.getByRole("region", { name: "What you'll see after your first check" });
+    const panel = screen.getByRole("figure", { name: "What you'll see after your first check" });
     expect(within(panel).getByText("Example data")).toBeInTheDocument();
     expect(within(panel).getByText("Every number shows how many answers it's based on.")).toBeInTheDocument();
     const rows = within(within(panel).getByRole("table")).getAllByRole("row").slice(1);

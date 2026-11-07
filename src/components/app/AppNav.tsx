@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { welcome } from "@/app/app/onboarding/copy";
 import { useEffect, useRef, type ReactNode } from "react";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { appCopy as c } from "./copy";
@@ -48,6 +49,7 @@ export function AppNav({
   return (
     <nav aria-label={c.nav} className="flex min-w-0 flex-1 items-center md:flex-col md:items-stretch">
       {header}
+      {onboarding && <SetupSteps />}
       {!onboarding && <BottomBar groups={groups} path={path} footer={footer} />}
       {!onboarding && (
         <div
@@ -91,6 +93,39 @@ export function AppNav({
         {footer}
       </div>
     </nav>
+  );
+}
+
+// UI1 (absorbs v1 OB3): while onboarding, the rail lists the 4 setup steps (md+; phones see the step in the
+// onboarding bar). Read from ?step=, which Onboarding keeps in sync. Not links: the steps go in order.
+function SetupSteps() {
+  const step = Math.min(4, Math.max(1, Number(useSearchParams().get("step")) || 1));
+  return (
+    <ol aria-label={welcome.stepsLabel} className="flex flex-col gap-0.5 px-2 py-1 max-md:hidden">
+      {welcome.steps.map((label, i) => {
+        const n = i + 1;
+        const on = n === step;
+        return (
+          <li
+            key={label}
+            aria-current={on ? "step" : undefined}
+            className={`flex h-8 items-center gap-2.5 rounded-control px-2.5 text-ui ${
+              on ? "bg-raised text-ink ring-1 ring-border" : n < step ? "text-ink" : "text-text2"
+            }`}
+          >
+            <span
+              className={`flex size-4.5 items-center justify-center rounded-full border font-mono text-[11px] ${
+                on || n < step ? "border-current" : "border-inkMuted text-inkMuted"
+              }`}
+            >
+              {n}
+            </span>
+            {label}
+            {n < step && <span className="sr-only">{welcome.done}</span>}
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 
