@@ -192,3 +192,29 @@ test("the welcome step: one primary in the first viewport, and the Example panel
   await expect(page.getByText(/^Step \d of/).locator("visible=true")).toHaveCount(phone ? 1 : 0);
   await axeClean(page);
 });
+
+// #203 review B1: "No website? Fill it in yourself" must reach /app. The owner has no domain, so the
+// business is saved with domain null (never "" or a made-up placeholder).
+test("no website: fill the card, finish, and the business is saved without a domain", async ({ page }) => {
+  test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
+  test.setTimeout(90_000);
+  const user = await newUser("onboarding-nosite");
+  await openMagicLink(page, user.email);
+  await page.getByRole("button", { name: "No website? Fill it in yourself" }).click();
+  await page.getByLabel("Business name").fill("Example Ramen House");
+  await page.getByLabel("Cuisine").selectOption("ramen");
+  await next(page).click();
+  await expect(page.getByText("Couldn't load nearby places. Add competitors by name.")).toBeVisible({
+    timeout: 20_000,
+  });
+  await page.getByLabel("Name").fill("Example Noodle Bar");
+  await page.getByRole("button", { name: "Add competitor" }).click();
+  await next(page).click();
+  await page.getByRole("button", { name: "Finish setup" }).click();
+  await page.waitForURL("**/app", { timeout: 20_000 });
+
+  const db = admin();
+  const { data: member } = await db.from("workspace_members").select("workspace_id").eq("user_id", user.id).single();
+  const { data: biz } = await db.from("businesses").select("name, domain").eq("workspace_id", member!.workspace_id);
+  expect(biz).toEqual([{ name: "Example Ramen House", domain: null }]);
+});

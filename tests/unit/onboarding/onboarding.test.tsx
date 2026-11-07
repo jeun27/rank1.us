@@ -139,6 +139,19 @@ describe("Onboarding 1: Your site (UI1 welcome)", () => {
     expect(await screen.findByText("Step 2 of 4 · Your business")).toBeInTheDocument();
   });
 
+  // #203 review B1: with no website, Finish sends domain null (the RPC rejects "").
+  it("No website? then Finish sends the business with domain null", async () => {
+    const s = setup();
+    await s.user.click(screen.getByRole("button", { name: "No website? Fill it in yourself" }));
+    await s.user.type(await screen.findByLabelText("Business name"), "Example Ramen House");
+    await s.user.selectOptions(screen.getByLabelText("Cuisine"), "ramen");
+    await toStepTwoFromBusiness(s);
+    await screen.findAllByRole("checkbox", { name: /Example/ });
+    await s.user.click(screen.getByRole("button", { name: "Next" }));
+    await s.user.click(await screen.findByRole("button", { name: "Finish setup" }));
+    expect(vi.mocked(s.actions.finish).mock.calls[0][0].business.domain).toBeNull();
+  });
+
   it("No website? opens an empty business card without reading anything", async () => {
     const { actions, user } = setup();
     await user.click(screen.getByRole("button", { name: "No website? Fill it in yourself" }));
