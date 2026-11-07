@@ -481,8 +481,8 @@ describe("G1 YouTube checklist", () => {
         return json(u.searchParams.get("pageToken") ? fx.ytPlaylistPage2 : fx.ytPlaylistPage1);
       return json(fx.ytVideos);
     });
-  // The caller's client: the youtube connection row, then the business's cuisine (the keyword).
-  const ytDb = (cuisine: string | null = "ramen") => {
+  // The caller's client: the youtube connection row, then the business row the keyword is built from.
+  const ytDb = (cuisine: string | null = "ramen", business: Record<string, unknown> = { cuisine }) => {
     let n = 0;
     return {
       auth: { getUser: async () => ({ data: { user: { id: "user-1" } } }) },
@@ -492,7 +492,7 @@ describe("G1 YouTube checklist", () => {
             maybeSingle: async () =>
               n++ === 0
                 ? { data: conn({ provider: "youtube", selected_entities: [] }), error: null }
-                : { data: { cuisine }, error: null },
+                : { data: business, error: null },
           }),
         }),
       }),
@@ -516,6 +516,19 @@ describe("G1 YouTube checklist", () => {
   it("no cuisine → no keyword, never a guess", async () => {
     const r = await svc.loadYoutubeChecklist(ctx(ytFetch(), ytDb(null)), "conn-1");
     expect((r as { keyword: string | null }).keyword).toBeNull();
+  });
+
+  it("the keyword is DP3's youtubeKeyword: a local business's first service + city", async () => {
+    const plumber = {
+      vertical: "plumbing",
+      cuisine: null,
+      category: "plumber",
+      services: ["water heater repair"],
+      city: "Irvine",
+      state: "CA",
+    };
+    const r = await svc.loadYoutubeChecklist(ctx(ytFetch(), ytDb(null, plumber)), "conn-1");
+    expect((r as { keyword: string | null }).keyword).toBe("water heater repair Irvine");
   });
 
   it("not a YouTube connection, or no access → not_allowed; flag off → disabled", async () => {
