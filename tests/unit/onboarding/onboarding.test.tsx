@@ -705,6 +705,34 @@ describe("Onboarding 2: the business card (UI3)", () => {
     expect(screen.getByRole("group", { name: "Services" })).toHaveTextContent("2 found in your menu");
   });
 
+  // #214 review: each source tag describes its field, so screen readers hear it with the field.
+  it("source tags are tied to their fields with aria-describedby", async () => {
+    const s = setup({
+      site: plumber,
+      services: { status: "ok", services: ["Drain cleaning", "Leak repair"], source: "nav" },
+    });
+    await stepOne(s.user);
+    expect(await screen.findByLabelText("Area you serve")).toHaveAccessibleDescription(
+      "Not on your site We picked this from your city. Change it if you travel further.",
+    );
+    expect(screen.getByRole("radiogroup", { name: "Business type" })).toHaveAccessibleDescription(
+      expect.stringContaining("Detected from your website"),
+    );
+    expect(screen.getByRole("group", { name: "Services" })).toHaveAccessibleDescription("2 found in your menu");
+  });
+
+  it("restaurant: the dietary and landmark tags describe their groups", async () => {
+    const s = setup();
+    await stepOne(s.user);
+    await screen.findByText("Landmarks near you");
+    expect(screen.getByRole("group", { name: "Dietary options you serve" })).toHaveAccessibleDescription(
+      "Not on your site Pick any that apply. Rank1 doesn't guess these.",
+    );
+    expect(screen.getByRole("group", { name: "Landmarks near you" })).toHaveAccessibleDescription(
+      "Places in Irvine Pick up to 3. Shown only when Rank1 knows places in your city.",
+    );
+  });
+
   it("an edit clears its tag: Area you serve, and the detected type", async () => {
     const s = setup({ site: plumber });
     await stepOne(s.user);
