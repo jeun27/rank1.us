@@ -105,6 +105,15 @@ describe("listbox (JS)", () => {
     expect(screen.queryByRole("listbox")).toBeNull();
   });
 
+  // DQ8/DQ9 (design-quality audit): one icon set and one accent. The caret is the drawn chevron, not a
+  // "▾" text glyph, and the avatar is neutral (amber is a state colour).
+  it("the caret is the drawn chevron icon and the avatar is neutral", () => {
+    const { trigger } = setup();
+    expect(trigger.textContent).not.toContain("▾");
+    expect(trigger.querySelector('svg[data-icon="chevronDown"]')).not.toBeNull();
+    expect(trigger.innerHTML).not.toMatch(/warnBg|warnText|amber/);
+  });
+
   it("opens a listbox of clients only, current selected and active, focus in the list", async () => {
     const { user, trigger } = setup();
     await user.click(trigger);

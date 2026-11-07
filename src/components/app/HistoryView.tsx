@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { formatPercent } from "@/components/ui/StatNumber";
+import { VisibilityCell } from "@/components/ui/StatNumber";
 import { Table } from "@/components/ui/Table";
 import { floorPct } from "@/lib/metrics/compute";
 import type { RunSummary } from "@/lib/queries/shell";
@@ -65,13 +65,7 @@ export function HistoryTable({ runs, linked = true }: { runs: RunSummary[]; link
             )}
           </span>
         ),
-        v: (
-          <span data-computed>
-            {r.visibility.denominator
-              ? `${formatPercent(r.visibility)} (named in ${r.visibility.numerator} of ${r.visibility.denominator} answers)`
-              : "–"}
-          </span>
-        ),
+        v: r.visibility.denominator ? <VisibilityCell metric={r.visibility} /> : <span data-computed>–</span>,
         c: <span data-computed>{change(i)}</span>,
       }))}
     />

@@ -94,7 +94,7 @@ export function DocPane(props: {
                   on ? "border-border bg-raised text-ink" : "border-transparent text-inkMuted hover:text-ink"
                 }`}
               >
-                <Icon name="file" className="size-4 text-amber" />
+                <Icon name="file" className="size-4 text-inkMuted" />
                 <span data-computed className="truncate">
                   {t.title}
                 </span>
