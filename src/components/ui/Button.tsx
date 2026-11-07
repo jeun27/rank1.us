@@ -5,7 +5,7 @@ import { Icon, Spinner } from "./Icon";
 export type Action = { label: string; href?: string; onClick?: () => void };
 
 const base =
-  "inline-flex items-center justify-center gap-2 font-sans text-ui font-medium transition-transform duration-100 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep disabled:cursor-not-allowed";
+  "inline-flex items-center justify-center gap-2 font-sans text-ui font-medium transition-transform motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep disabled:cursor-not-allowed";
 
 // v3 (D35): 6px controls, 32px tall from md (40px for size lg) and 44px below md (lead O2), press =
 // translateY(1px) (D24 feedback kept).
@@ -55,7 +55,7 @@ export function Button({
         {children}
         <Icon
           name="arrowRight"
-          className="size-4 transition-transform duration-150 group-hover:translate-x-0.5 motion-reduce:transition-none"
+          className="size-3.5 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
         />
       </>
     ) : look === "disabled" ? (

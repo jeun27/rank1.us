@@ -134,7 +134,7 @@ export function BusinessSwitcher({
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="h-11 rounded-full border border-fieldBorder bg-white px-4 text-ui font-normal focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep"
+                className="h-11 rounded-control border border-fieldBorder bg-white px-4 text-ui font-normal focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep"
               />
             </label>
           )}

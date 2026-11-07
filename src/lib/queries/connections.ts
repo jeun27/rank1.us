@@ -48,12 +48,17 @@ export type ConnectionRow = {
   scopes: string[];
   connected_at: string;
   last_checked_at: string | null;
+  // How many locations/sites/properties the account offers (null until the picker list was loaded):
+  // show "Choose …" only when it is more than 1.
+  entity_count: number | null;
 };
 
 export async function listConnections(db: DbClient, businessId: string): Promise<ConnectionRow[]> {
   const { data, error } = await db
     .from("connections")
-    .select("id, provider, status, external_account_id, selected_entities, scopes, connected_at, last_checked_at")
+    .select(
+      "id, provider, status, external_account_id, selected_entities, scopes, connected_at, last_checked_at, entity_count",
+    )
     .eq("business_id", businessId)
     .order("provider");
   if (error) throw error;
@@ -260,4 +265,18 @@ export async function listConnectionChangeActors(
   const { data, error } = await db.rpc("connection_change_actors", { p_business_id: businessId });
   if (error) throw error;
   return data;
+}
+
+// Service client only. Stores how many entities the connection's account offers, after loading the
+// picker list (per connection, not grant-wide). Errors: 22023 bad count or unknown connection, 42501.
+export async function setConnectionEntityCount(
+  serviceDb: DbClient,
+  connectionId: string,
+  count: number,
+): Promise<void> {
+  const { error } = await serviceDb.rpc("set_connection_entity_count", {
+    p_connection_id: connectionId,
+    p_count: count,
+  });
+  if (error) throw error;
 }

@@ -31,7 +31,7 @@ const c = {
 };
 
 const ghost =
-  "inline-flex min-h-11 items-center rounded-full border border-fieldBorder bg-white px-4 text-ui font-semibold hover:bg-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
+  "inline-flex min-h-11 items-center rounded-control border border-fieldBorder bg-white px-4 text-ui font-semibold hover:bg-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
 
 // The team's Clients tab for one DFY client: its client users, Invite client, Remove access and the
 // fix-list toggle. Emails show here only (team UI); nothing logs them.

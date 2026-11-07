@@ -10,7 +10,7 @@ import { Jelly } from "@/components/ui/Jelly";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { Logo } from "@/components/ui/Logo";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { StatNumber, formatPercent } from "@/components/ui/StatNumber";
+import { StatNumber, VisibilityCell } from "@/components/ui/StatNumber";
 import { Table } from "@/components/ui/Table";
 import type { AiAccessCheck } from "@/lib/queries/ai-access";
 import type { Metric } from "@/types/metrics";
@@ -50,7 +50,7 @@ export function AuditView({
       className="flex flex-col items-start gap-4 rounded-surface bg-white p-4 shadow-card md:flex-row md:items-center md:justify-between md:p-6"
     >
       <p id="audit-cta" className="text-ui font-medium">
-        {c.ctaLead}
+        {c.ctaLead(ENGINES.length)}
       </p>
       <Button href={`/signin?next=${encodeURIComponent("/app/billing")}`}>{c.paywall}</Button>
     </section>
@@ -271,7 +271,7 @@ export function Leaderboard({ metrics, top, change = true }: { metrics: Metrics;
             {b.kind === "business" && <Badge tone="info">{c.you}</Badge>}
           </span>
         ),
-        v: b.tooFew ? c.tooFew : <D>{`${formatPercent(b.metric)} (${namedText(b.metric)})`}</D>,
+        v: b.tooFew ? c.tooFew : <VisibilityCell metric={b.metric} />,
         c: <D>{points(b.change)}</D>,
       }))}
     />

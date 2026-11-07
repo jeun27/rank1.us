@@ -145,7 +145,7 @@ export function ContextPane({
                     same(it.sel, selection) ? "bg-raised" : ""
                   }`}
                 >
-                  <Icon name="file" className="size-4 text-amber" />
+                  <Icon name="file" className="size-4 text-inkMuted" />
                   <span className="min-w-0 flex-1">
                     <span data-computed className="block truncate text-caption font-semibold">
                       {it.title}

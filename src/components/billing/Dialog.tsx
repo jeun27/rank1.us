@@ -61,7 +61,7 @@ export function Dialog({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex min-h-11 items-center rounded-full border border-fieldBorder bg-white px-5 text-ui font-semibold hover:bg-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+            className="inline-flex min-h-11 items-center rounded-control border border-fieldBorder bg-white px-5 text-ui font-semibold hover:bg-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
           >
             {c.cancel}
           </button>
