@@ -5,7 +5,7 @@ import { listLocalPlaces } from "@/lib/queries/places";
 import { CUISINES } from "@/lib/onboarding/cuisines";
 import { createClient } from "@/lib/supabase/server";
 import { Onboarding } from "./Onboarding";
-import { findCompetitorsAction, finishAction, readSiteAction } from "./actions";
+import { findCompetitorsAction, finishAction, readHomeAction, readServicesAction } from "./actions";
 
 export const metadata: Metadata = { title: "Add your business - Rank1", robots: { index: false } };
 
@@ -26,7 +26,12 @@ export default async function OnboardingPage() {
       <Onboarding
         places={places}
         cuisines={CUISINES}
-        actions={{ readSite: readSiteAction, findCompetitors: findCompetitorsAction, finish: finishAction }}
+        actions={{
+          readHome: readHomeAction,
+          readServices: readServicesAction,
+          findCompetitors: findCompetitorsAction,
+          finish: finishAction,
+        }}
         verticals={process.env.ENABLE_CONNECTIONS === "true"}
       />
     </main>

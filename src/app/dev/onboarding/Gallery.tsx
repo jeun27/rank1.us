@@ -26,7 +26,12 @@ const items = [
   cid: `example-cid-${i + 1}`,
 }));
 const pending = () => new Promise<never>(() => {});
-const actions: OnboardingActions = { readSite: pending, findCompetitors: pending, finish: pending };
+const actions: OnboardingActions = {
+  readHome: pending,
+  readServices: pending,
+  findCompetitors: pending,
+  finish: pending,
+};
 
 const business = { ...emptyDraft.business, domain: "exampleramen.test", name: "Example Ramen House", cuisine: "ramen" };
 const picks = {
@@ -53,6 +58,24 @@ const found = (result: CompetitorSearch): Partial<Draft> => ({
 
 const STATES: [string, Partial<Draft>, Partial<OnboardingActions>?][] = [
   ["1 empty", {}],
+  // UI2: press Read my site here to see the log mid-read (stages 1–3 back, Services still reading).
+  [
+    "1 reading",
+    { business: { ...emptyDraft.business, domain: "exampleramen.test" } },
+    {
+      readHome: async () => ({
+        status: "ok",
+        name: "Example Ramen House",
+        cuisine: "ramen",
+        city: "Irvine",
+        state: "CA",
+        phone: "+1 949 555 0100",
+        areaServed: [],
+        sameAs: [],
+        sources: { name: "schema", cuisine: "meta", city: "schema", phone: "schema" },
+      }),
+    },
+  ],
   ["1 loading", { site: "loading", business: { ...emptyDraft.business, domain: "exampleramen.test" } }],
   ["2 error", { step: 2, site: "unreadable", business: { ...emptyDraft.business, domain: "exampleramen.test" } }],
   ["2 partial", { step: 2, site: "ok", business: { ...business, cuisine: "" } }],

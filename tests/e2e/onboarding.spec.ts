@@ -32,7 +32,7 @@ test("a new owner sets up a business in 3 steps and lands on /app", async ({ pag
   // A .test domain never resolves, so the site read fails the way a real unreadable site does.
   await page.getByLabel("Your website").fill("exampleramen.test");
   await page.getByLabel("Your website").press("Enter");
-  await expect(page.getByRole("group", { name: "We couldn't read that site. Type 3 things you sell." })).toBeVisible({
+  await expect(page.getByText("We couldn't read that site. Fill in your business below.")).toBeVisible({
     timeout: 20_000,
   });
   await page.getByLabel("Business name").fill("Example Ramen House");

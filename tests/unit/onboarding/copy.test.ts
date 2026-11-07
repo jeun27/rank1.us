@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { copy, welcome } from "@/app/app/onboarding/copy";
+import { copy, reading, welcome } from "@/app/app/onboarding/copy";
 
 const copyMd = readFileSync("docs/COPY.md", "utf8");
 // Each templated string, filled the way COPY.md writes it ({cuisine}, {city}, question 7, {Engine}).
@@ -48,6 +48,20 @@ describe("onboarding copy", () => {
       welcome.youTag,
       welcome.stepsLabel,
       welcome.done,
+      reading.title("{domain}"),
+      reading.count("{n}" as unknown as number),
+      reading.opened("{domain}"),
+      reading.details,
+      reading.foundSchema("{fields}"),
+      reading.notOnSite,
+      reading.head,
+      reading.foundHead,
+      reading.services,
+      reading.readingServices,
+      reading.servicesFound("{n}" as unknown as number),
+      reading.note,
+      reading.button,
+      reading.unreadable,
     ];
     for (const s of strings) expect(copyMd, s).toContain(s);
   });

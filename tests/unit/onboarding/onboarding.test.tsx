@@ -2,7 +2,13 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { Onboarding } from "@/app/app/onboarding/Onboarding";
-import type { CompetitorSearch, OnboardingActions, OnboardingInput, SiteRead } from "@/app/app/onboarding/contract";
+import type {
+  CompetitorSearch,
+  OnboardingActions,
+  OnboardingInput,
+  SiteProfile,
+  SiteServices,
+} from "@/app/app/onboarding/contract";
 import { connectionsCopy as c } from "@/components/connections/copy";
 import { VERTICALS } from "@/lib/queries/onboarding";
 import { MAX_ACTIVE_QUESTIONS, buildQuestions } from "@/lib/questions/templates";
@@ -26,15 +32,24 @@ const five = [
 
 function setup(
   over: Partial<{
-    site: SiteRead;
+    site: Partial<SiteProfile> & Pick<SiteProfile, "status">;
+    services: SiteServices;
     search: CompetitorSearch;
     finish: OnboardingActions["finish"];
     verticals: boolean;
   }> = {},
 ) {
   const actions: OnboardingActions = {
-    readSite: vi.fn(
-      async (): Promise<SiteRead> => over.site ?? { status: "ok", name: "Example Ramen House", cuisine: "ramen" },
+    // UI2: the two real reading stages. readHome = stages 1–3, readServices = stage 4.
+    readHome: vi.fn(async (): Promise<SiteProfile> => ({
+      areaServed: [],
+      sameAs: [],
+      sources: {},
+      ...(over.site ?? { status: "ok", name: "Example Ramen House", cuisine: "ramen", sources: { name: "schema" } }),
+    })),
+    readServices: vi.fn(
+      async (): Promise<SiteServices> =>
+        over.services ?? { status: "ok", services: ["Tonkotsu", "Shoyu"], source: "nav" },
     ),
     findCompetitors: vi.fn(async (): Promise<CompetitorSearch> => over.search ?? { status: "ok", items: five }),
     finish: vi.fn(over.finish ?? (async () => undefined)),
@@ -135,7 +150,7 @@ describe("Onboarding 1: Your site (UI1 welcome)", () => {
     const { actions, user } = setup();
     await user.type(screen.getByLabelText("Your website"), "exampleramen.test");
     await user.click(screen.getAllByRole("button", { name: "Read my site" })[1]);
-    expect(actions.readSite).toHaveBeenCalledWith("exampleramen.test");
+    expect(actions.readHome).toHaveBeenCalledWith("exampleramen.test");
     expect(await screen.findByText("Step 2 of 4 · Your business")).toBeInTheDocument();
   });
 
@@ -157,7 +172,7 @@ describe("Onboarding 1: Your site (UI1 welcome)", () => {
     await user.click(screen.getByRole("button", { name: "No website? Fill it in yourself" }));
     expect(await screen.findByLabelText("Business name")).toHaveValue("");
     expect(screen.getByText("Step 2 of 4 · Your business")).toBeInTheDocument();
-    expect(actions.readSite).not.toHaveBeenCalled();
+    expect(actions.readHome).not.toHaveBeenCalled();
     expect(screen.queryByText(/We couldn't read that site/)).toBeNull();
   });
 
@@ -198,29 +213,93 @@ describe("Onboarding 2: Business", () => {
     expect(screen.getByText("Step 1 of 4 · Your site")).toBeInTheDocument();
     await stepOne(user, "exampleramen");
     expect(screen.getByText("Add the ending, like ramenhouse.com")).toBeInTheDocument();
-    expect(actions.readSite).not.toHaveBeenCalled();
+    expect(actions.readHome).not.toHaveBeenCalled();
     await user.clear(screen.getByLabelText("Your website"));
     await stepOne(user, "https://www.ExampleRamen.test/menu");
-    expect(actions.readSite).toHaveBeenCalledWith("exampleramen.test");
+    expect(actions.readHome).toHaveBeenCalledWith("exampleramen.test");
     expect(await screen.findByLabelText("Business name")).toHaveValue("Example Ramen House");
     expect(screen.getByLabelText("Cuisine")).toHaveValue("ramen");
     expect(screen.getByLabelText("City")).toHaveValue("Irvine");
     expect(screen.getByLabelText("State")).toHaveValue("CA");
   });
 
-  it("shows 'Reading your site…' while the site loads", async () => {
-    const { actions, user } = setup();
-    vi.mocked(actions.readSite).mockReturnValue(new Promise(() => {}));
+  // UI2 (O1, README §10): the right panel becomes the live reading log. It ticks only when a server action
+  // really finishes: readHome = stages 1–3, then readServices = stage 4. Polite live region.
+  it("the reading log ticks the real stages in order, then opens the card", async () => {
+    const { actions, user } = setup({
+      site: {
+        status: "ok",
+        name: "Example Ramen House",
+        cuisine: "ramen",
+        phone: "+1 949 555 0100",
+        sources: { name: "schema", cuisine: "meta", phone: "schema" },
+      },
+    });
+    let home!: (p: SiteProfile) => void;
+    let services!: (s: SiteServices) => void;
+    vi.mocked(actions.readHome).mockReturnValue(new Promise((r) => (home = r)));
+    vi.mocked(actions.readServices).mockReturnValue(new Promise((r) => (services = r)));
     await stepOne(user);
-    expect(screen.getByText("Reading your site…")).toBeInTheDocument();
+    const log = screen.getByRole("group", { name: "Reading exampleramen.test" });
+    expect(within(log).getByRole("list")).toHaveAttribute("aria-live", "polite");
+    expect(within(log).getByText("0 of 4")).toBeInTheDocument();
+    expect(within(log).queryByText("Opened exampleramen.test")).toBeNull();
+    expect(screen.getAllByRole("button", { name: "Reading…" })[0]).toBeInTheDocument();
+    expect(actions.readServices).not.toHaveBeenCalled();
+    expect(screen.queryByText("Example data")).toBeNull();
+
+    home({
+      status: "ok",
+      name: "Example Ramen House",
+      cuisine: "ramen",
+      phone: "+1 949 555 0100",
+      areaServed: [],
+      sameAs: [],
+      sources: { name: "schema", cuisine: "meta", phone: "schema" },
+    });
+    expect(await within(log).findByText("3 of 4")).toBeInTheDocument();
+    const rows = within(log).getAllByRole("listitem");
+    expect(rows.map((r) => r.textContent)).toEqual([
+      "Opened exampleramen.test",
+      "Business detailsFound name, phone in schema.org",
+      "Title and descriptionFound in the page head",
+      "ServicesReading your menu links…",
+    ]);
+    expect(rows.slice(0, 3).every((r) => r.querySelector("[data-icon=check]"))).toBe(true);
+    expect(rows[3].querySelector("[data-stage-spinner]")).not.toBeNull();
+    expect(actions.readServices).toHaveBeenCalledWith("exampleramen.test");
+
+    services({ status: "ok", services: ["Tonkotsu", "Shoyu"], source: "nav" });
+    expect(await screen.findByLabelText("Business name")).toHaveValue("Example Ramen House");
+    expect(screen.getByText("Step 2 of 4 · Your business")).toBeInTheDocument();
   });
 
-  it("unreadable site: asks for 3 things you sell", async () => {
-    const { user } = setup({ site: { status: "unreadable" } });
+  it("nothing in schema.org or the page head reads 'Not on your site'", async () => {
+    const { actions, user } = setup({ site: { status: "ok", sources: {} } });
+    vi.mocked(actions.readServices).mockReturnValue(new Promise(() => {}));
     await stepOne(user);
-    const group = await screen.findByRole("group", { name: "We couldn't read that site. Type 3 things you sell." });
-    expect(within(group).getAllByRole("textbox")).toHaveLength(3);
+    const log = screen.getByRole("group", { name: "Reading exampleramen.test" });
+    expect(await within(log).findByText("3 of 4")).toBeInTheDocument();
+    expect(within(log).getAllByText("Not on your site")).toHaveLength(2);
+  });
+
+  it("reduced motion: the spinner is a static dot", async () => {
+    const { actions, user } = setup();
+    vi.mocked(actions.readServices).mockReturnValue(new Promise(() => {}));
+    await stepOne(user);
+    const spinner = await screen.findByTestId("stage-spinner");
+    expect(spinner.querySelector("svg")!.getAttribute("class")).toContain("motion-reduce:hidden");
+    expect(spinner.querySelector("[data-static-dot]")!.className).toContain("motion-reduce:block");
+  });
+
+  // Q8: an unreadable site goes straight to the empty card with one line. Services aren't read.
+  it("unreadable site: the empty card with 'We couldn't read that site. Fill in your business below.'", async () => {
+    const { actions, user } = setup({ site: { status: "unreadable" } });
+    await stepOne(user);
+    expect(await screen.findByText("We couldn't read that site. Fill in your business below.")).toBeInTheDocument();
     expect(screen.getByLabelText("Business name")).toHaveValue("");
+    expect(actions.readServices).not.toHaveBeenCalled();
+    expect(screen.queryByText(/Type 3 things you sell/)).toBeNull();
   });
 
   it("site read but no cuisine: highlights the cuisine select, Next stays off until it's picked", async () => {

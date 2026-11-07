@@ -15,8 +15,6 @@ export const copy = {
   sub: "See how often ChatGPT, Gemini, Google AI Overview and Perplexity name your business, how you stack up against competitors, and what to fix next.",
   exampleData: "Example data",
   domain: { placeholder: "yoursite.com", noEnding: "Add the ending, like ramenhouse.com" },
-  readingSite: "Reading your site…",
-  unreadable: "We couldn't read that site. Type 3 things you sell.",
   name: "Business name",
   cuisine: "Cuisine",
   city: "City",
@@ -73,4 +71,23 @@ export const welcome = {
   youTag: "You",
   stepsLabel: "Add your business",
   done: "Done",
+};
+
+// Onboarding v2, O1 (founder-approved P2): README §6 Q4 (the reading log) and Q8 (unreadable).
+export const reading = {
+  title: (domain: string) => `Reading ${domain}`,
+  count: (n: number) => `${n} of 4`,
+  opened: (domain: string) => `Opened ${domain}`,
+  details: "Business details",
+  foundSchema: (fields: string) => `Found ${fields} in schema.org`,
+  notOnSite: "Not on your site",
+  head: "Title and description",
+  foundHead: "Found in the page head",
+  services: "Services",
+  readingServices: "Reading your menu links…",
+  // Q5's tag, reused for the finished Services stage.
+  servicesFound: (n: number) => `${n} found in your menu`,
+  note: "No AI reads your site. Rank1 only looks at what your pages already say.",
+  button: "Reading…",
+  unreadable: "We couldn't read that site. Fill in your business below.",
 };

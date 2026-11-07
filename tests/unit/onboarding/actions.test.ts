@@ -19,8 +19,13 @@ vi.mock("@/lib/queries/rate-limits", () => ({ takeRateToken: vi.fn(async () => t
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({ auth: { getUser: async () => ({ data: { user: user.current } }) } }),
 }));
+// UI2: the reading log's two stages.
+const home = { status: "ok", name: "Example Ramen House", cuisine: "ramen", areaServed: [], sameAs: [], sources: {} };
+vi.mock("@/lib/onboarding/site-profile", () => ({
+  readHome: vi.fn(async () => home),
+  readServices: vi.fn(async () => ({ status: "ok", services: ["Tonkotsu"], source: "nav" })),
+}));
 vi.mock("@/lib/onboarding", () => ({
-  readSite: vi.fn(async () => ({ status: "ok", name: "Example Ramen House", cuisine: "ramen" })),
   findLocalCompetitors: vi.fn(async () => ({
     status: "error",
     items: [],
@@ -37,9 +42,11 @@ vi.mock("next/navigation", () => ({
   },
 }));
 
-const { readSite, findLocalCompetitors } = await import("@/lib/onboarding");
+const { findLocalCompetitors } = await import("@/lib/onboarding");
+const { readHome, readServices } = await import("@/lib/onboarding/site-profile");
 const { createBusinessOnboarding } = await import("@/lib/queries/onboarding");
-const { readSiteAction, findCompetitorsAction, finishAction } = await import("@/app/app/onboarding/actions");
+const { readHomeAction, readServicesAction, findCompetitorsAction, finishAction } =
+  await import("@/app/app/onboarding/actions");
 
 const q = { cuisine: "ramen", city: "Irvine", state: "CA", domain: "exampleramen.test" };
 const input = {
@@ -78,20 +85,29 @@ beforeEach(() => {
 
 describe("onboarding server actions", () => {
   it("signed out: no outbound fetch, no paid Maps call, no save", async () => {
-    expect(await readSiteAction("exampleramen.test")).toEqual({ status: "unreadable" });
+    expect(await readHomeAction("exampleramen.test")).toEqual({
+      status: "unreadable",
+      areaServed: [],
+      sameAs: [],
+      sources: {},
+    });
+    expect(await readServicesAction("exampleramen.test")).toEqual({ status: "unreadable", services: [], source: null });
     expect(await findCompetitorsAction(q)).toEqual({ status: "error", items: [] });
-    expect(readSite).not.toHaveBeenCalled();
+    expect(readHome).not.toHaveBeenCalled();
+    expect(readServices).not.toHaveBeenCalled();
     expect(findLocalCompetitors).not.toHaveBeenCalled();
   });
 
   it("signed in: reads the site and looks up competitors, without passing raw upstream errors to the browser", async () => {
     user.current = { id: "u1" };
-    expect(await readSiteAction("exampleramen.test")).toEqual({
+    expect(await readHomeAction("exampleramen.test")).toEqual(home);
+    expect(readHome).toHaveBeenCalledWith("exampleramen.test");
+    expect(await readServicesAction("exampleramen.test")).toEqual({
       status: "ok",
-      name: "Example Ramen House",
-      cuisine: "ramen",
+      services: ["Tonkotsu"],
+      source: "nav",
     });
-    expect(readSite).toHaveBeenCalledWith("exampleramen.test");
+    expect(readServices).toHaveBeenCalledWith("exampleramen.test");
     expect(await findCompetitorsAction(q)).toEqual({ status: "error", items: [] });
     // One lookup fills the shared cache with the full Maps list (≤20); onboarding shows the first 5.
     expect(findLocalCompetitors).toHaveBeenCalledWith({ ...q, limit: 20 });
@@ -145,21 +161,35 @@ describe("onboarding server actions", () => {
   it.each(["team", "dfy_client", "dashboard"])("a %s user gets the fallbacks: no fetch, no Maps call", async (l) => {
     user.current = { id: "u1" };
     landing.current = l;
-    expect(await readSiteAction("exampleramen.test")).toEqual({ status: "unreadable" });
+    expect(await readHomeAction("exampleramen.test")).toEqual({
+      status: "unreadable",
+      areaServed: [],
+      sameAs: [],
+      sources: {},
+    });
+    expect(await readServicesAction("exampleramen.test")).toEqual({ status: "unreadable", services: [], source: null });
     expect(await findCompetitorsAction(q)).toEqual({ status: "error", items: [] });
-    expect(readSite).not.toHaveBeenCalled();
+    expect(readHome).not.toHaveBeenCalled();
+    expect(readServices).not.toHaveBeenCalled();
     expect(findLocalCompetitors).not.toHaveBeenCalled();
   });
 
   it("over the limit: the same fallbacks, and no fetch or Maps call", async () => {
     user.current = { id: "u1" };
     tokens.left = 0;
-    expect(await readSiteAction("exampleramen.test")).toEqual({ status: "unreadable" });
+    expect(await readHomeAction("exampleramen.test")).toEqual({
+      status: "unreadable",
+      areaServed: [],
+      sameAs: [],
+      sources: {},
+    });
+    expect(await readServicesAction("exampleramen.test")).toEqual({ status: "unreadable", services: [], source: null });
     expect(await findCompetitorsAction(q)).toEqual({ status: "error", items: [] });
-    expect(readSite).not.toHaveBeenCalled();
+    expect(readHome).not.toHaveBeenCalled();
+    expect(readServices).not.toHaveBeenCalled();
     expect(findLocalCompetitors).not.toHaveBeenCalled();
     const { takeRateToken } = await import("@/lib/queries/rate-limits");
-    expect(vi.mocked(takeRateToken).mock.calls.map((c) => c[1])).toEqual(["read_site", "maps_lookup"]);
+    expect(vi.mocked(takeRateToken).mock.calls.map((c) => c[1])).toEqual(["read_site", "read_site", "maps_lookup"]);
   });
 
   it("an identical Maps lookup within 24 h is served from the cache: no token, no paid call", async () => {
