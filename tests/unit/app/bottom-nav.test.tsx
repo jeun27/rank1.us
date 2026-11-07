@@ -2,7 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 const path = { current: "/app/fixes" };
-vi.mock("next/navigation", () => ({ usePathname: () => path.current }));
+vi.mock("next/navigation", () => ({ usePathname: () => path.current, useSearchParams: () => new URLSearchParams() }));
 
 import { AppNav } from "@/components/app/AppNav";
 

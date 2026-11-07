@@ -9,6 +9,14 @@ const axeClean = async (page: Page) => {
 
 // Next is the one primary button on each screen; on phones it sits in the sticky bar.
 const next = (page: Page) => page.getByRole("button", { name: "Next" });
+// UI1: the step shows in the rail at md+, and in the phone line/bar below md.
+const STEPS = ["Your site", "Your business", "Competitors", "Questions"];
+const onStep = async (page: Page, n: number) =>
+  page.viewportSize()!.width >= 768
+    ? expect(page.getByRole("list", { name: "Add your business" }).locator('[aria-current="step"]')).toContainText(
+        STEPS[n - 1],
+      )
+    : expect(page.getByText(`Step ${n} of 4 · ${STEPS[n - 1]}`)).toBeVisible();
 
 test("a new owner sets up a business in 3 steps and lands on /app", async ({ page }, info) => {
   test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
@@ -17,13 +25,13 @@ test("a new owner sets up a business in 3 steps and lands on /app", async ({ pag
   await openMagicLink(page, user.email);
   expect(new URL(page.url()).pathname).toBe("/app/onboarding");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Add your business");
-  await expect(page.getByText("Step 1 of 3")).toBeVisible();
+  await onStep(page, 1);
   await axeClean(page);
   await page.screenshot({ path: `test-results/screenshots/onboarding-1-empty-${info.project.name}.png` });
 
   // A .test domain never resolves, so the site read fails the way a real unreadable site does.
-  await page.getByLabel("Your domain").fill("exampleramen.test");
-  await page.getByLabel("Your domain").press("Enter");
+  await page.getByLabel("Your website").fill("exampleramen.test");
+  await page.getByLabel("Your website").press("Enter");
   await expect(page.getByRole("group", { name: "We couldn't read that site. Type 3 things you sell." })).toBeVisible({
     timeout: 20_000,
   });
@@ -47,7 +55,7 @@ test("a new owner sets up a business in 3 steps and lands on /app", async ({ pag
   await next(page).click();
 
   // No DataForSEO keys in CI: the lookup reports missing keys and the manual form takes over.
-  await expect(page.getByText("Step 2 of 3")).toBeVisible();
+  await onStep(page, 3);
   await expect(page.getByText("Couldn't load nearby places. Add competitors by name.")).toBeVisible({
     timeout: 20_000,
   });
@@ -58,7 +66,7 @@ test("a new owner sets up a business in 3 steps and lands on /app", async ({ pag
   await axeClean(page);
   await next(page).click();
 
-  await expect(page.getByText("Step 3 of 3")).toBeVisible();
+  await onStep(page, 4);
   await expect(page.getByRole("group", { name: /^\d+$/ })).toHaveCount(25);
   await axeClean(page);
   await page.getByRole("button", { name: "Finish setup" }).click();
@@ -96,11 +104,11 @@ test("keyboard only: the domain step submits with Enter and focus lands on the n
   await openMagicLink(page, user.email);
   // Typing before hydration would submit the plain form and reload; wait for the client form.
   await page.waitForLoadState("networkidle");
-  await page.getByLabel("Your domain").focus();
+  await page.getByLabel("Your website").focus();
   await page.keyboard.type("exampleramen");
   await page.keyboard.press("Enter");
   await expect(page.getByText("Add the ending, like ramenhouse.com")).toBeVisible();
-  await expect(page.getByLabel("Your domain")).toBeFocused();
+  await expect(page.getByLabel("Your website")).toBeFocused();
   await page.keyboard.type(".test");
   await page.keyboard.press("Enter");
   await expect(page.getByLabel("Business name")).toBeFocused({ timeout: 20_000 });
@@ -125,8 +133,8 @@ test("tap targets are at least 44px on every step", async ({ page }) => {
           .map((x) => `${x.t} ${Math.round(x.r.width)}x${Math.round(x.r.height)}`),
       );
   expect(await small()).toEqual([]);
-  await page.getByLabel("Your domain").fill("exampleramen.test");
-  await page.getByLabel("Your domain").press("Enter");
+  await page.getByLabel("Your website").fill("exampleramen.test");
+  await page.getByLabel("Your website").press("Enter");
   await page.getByLabel("Business name").fill("Example Ramen House", { timeout: 20_000 });
   await page.getByLabel("Cuisine").selectOption("ramen");
   expect(await small()).toEqual([]);
@@ -136,7 +144,7 @@ test("tap targets are at least 44px on every step", async ({ page }) => {
 // stays at the bottom of the screen while the list scrolls.
 test("step 3: one-line rows and a sticky count + Finish bar", async ({ page }) => {
   await page.goto("/dev/onboarding");
-  const step3 = page.locator('[data-state="3 success"]');
+  const step3 = page.locator('[data-state="4 success"]');
   await expect(step3.getByRole("group", { name: /^\d+$/ })).toHaveCount(25);
   const list = (await step3.locator("ol").boundingBox())!;
   expect(list.height).toBeLessThan(page.viewportSize()!.width < 768 ? 2600 : 1800);
@@ -163,7 +171,52 @@ test("onboarding has one app-sized H1 and no 'Business' H2", async ({ page }) =>
   await expect(h1).toHaveText("Add your business");
   expect(await h1.evaluate((e) => getComputedStyle(e).fontSize)).toBe("22px");
   await expect(page.getByRole("heading", { level: 2, name: "Business" })).toHaveCount(0);
-  await expect(page.getByText("Step 1 of 3")).toBeVisible();
+  await onStep(page, 1);
+});
+
+// UI1 (O1 welcome): one visible "Read my site" in the first viewport (the field's at md+, the sticky bar's
+// on phones), the Example panel beside or below the task, no "Step n" eyebrow above the H1.
+test("the welcome step: one primary in the first viewport, and the Example panel", async ({ page }) => {
+  test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
+  const user = await newUser("onboarding-welcome");
+  await openMagicLink(page, user.email);
+  await page.goto("/app/onboarding");
+  const read = page.getByRole("button", { name: "Read my site" }).locator("visible=true");
+  await expect(read).toHaveCount(1);
+  await expect(read).toBeInViewport();
+  await expect(page.getByLabel("Your website")).toBeInViewport();
+  const phone = page.viewportSize()!.width < 768;
+  if (phone) expect((await read.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await expect(page.getByRole("figure", { name: "What you'll see after your first check" })).toBeVisible();
+  await expect(page.getByText("Example data")).toBeVisible();
+  await expect(page.getByText(/^Step \d of/).locator("visible=true")).toHaveCount(phone ? 1 : 0);
+  await axeClean(page);
+});
+
+// #203 review B1: "No website? Fill it in yourself" must reach /app. The owner has no domain, so the
+// business is saved with domain null (never "" or a made-up placeholder).
+test("no website: fill the card, finish, and the business is saved without a domain", async ({ page }) => {
+  test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
+  test.setTimeout(90_000);
+  const user = await newUser("onboarding-nosite");
+  await openMagicLink(page, user.email);
+  await page.getByRole("button", { name: "No website? Fill it in yourself" }).click();
+  await page.getByLabel("Business name").fill("Example Ramen House");
+  await page.getByLabel("Cuisine").selectOption("ramen");
+  await next(page).click();
+  await expect(page.getByText("Couldn't load nearby places. Add competitors by name.")).toBeVisible({
+    timeout: 20_000,
+  });
+  await page.getByLabel("Name").fill("Example Noodle Bar");
+  await page.getByRole("button", { name: "Add competitor" }).click();
+  await next(page).click();
+  await page.getByRole("button", { name: "Finish setup" }).click();
+  await page.waitForURL("**/app", { timeout: 20_000 });
+
+  const db = admin();
+  const { data: member } = await db.from("workspace_members").select("workspace_id").eq("user_id", user.id).single();
+  const { data: biz } = await db.from("businesses").select("name, domain").eq("workspace_id", member!.workspace_id);
+  expect(biz).toEqual([{ name: "Example Ramen House", domain: null }]);
 });
 
 // OB1: the onboarding breadcrumb reads "Rank1 / Add your business" (one separator), never "Rank1 / /".
