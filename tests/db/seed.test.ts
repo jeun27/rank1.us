@@ -86,21 +86,6 @@ describe("supabase/seed.sql on a fresh db reset", () => {
     expect(db).toEqual(TEMPLATES.map((t) => ({ ...t, slots: [...t.slots] })));
   });
 
-  // 0045 (DP3): the 12 Onboarding v2 Q10 rows, sort 21-32, by family. data-pipeline's #209 widens the
-  // verbatim check above to all 32 once TEMPLATES has them.
-  it("question_templates: the 12 Q10 rows from 0045, by family", async () => {
-    const db = await rows<{ vertical: string; sort: number; origin: string }>(
-      `select vertical, sort, origin from public.question_templates where vertical <> 'restaurant' order by sort`,
-    );
-    expect(db.map((r) => r.sort)).toEqual(Array.from({ length: 12 }, (_, i) => i + 21));
-    expect(db.map((r) => r.vertical)).toEqual([
-      ...Array(6).fill("local"),
-      ...Array(3).fill("dtc"),
-      ...Array(3).fill("saas"),
-    ]);
-    expect(db.filter((r) => r.origin === "Onboarding v2 Q10, trades only").map((r) => r.sort)).toEqual([23]);
-  });
-
   // Step 10 (lead): migration 0014 adds A1-A6 as disabled placeholders (Build Pack text unavailable).
   // GAS G2 (lead): 0025 adds R16 (Cloudflare) and 0031 R18 (JS-empty); G7: 0030 adds R17 (lists); G1: 0035 adds R19-R21 (YouTube); all enabled.
   it("fix_rules: R1-R21 + H1, A1-A6 disabled, only R10, R11, R14, R16-R21, H1 enabled", async () => {
