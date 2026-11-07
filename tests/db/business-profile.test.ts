@@ -30,6 +30,8 @@ async function onboard(tag: string, extra: Partial<OnboardingInput["business"]> 
 }
 const row = async (id: string) => must(await serviceClient().from("businesses").select(PROFILE).eq("id", id).single());
 
+const CHECK = "23514";
+
 describe("business profile fields", () => {
   it("stores every profile field when given", async () => {
     const fields: Partial<OnboardingInput["business"]> = {
@@ -58,27 +60,51 @@ describe("business profile fields", () => {
     });
   });
 
-  const BAD: [string, Record<string, unknown>][] = [
-    ["address over 200", { address: "x".repeat(201) }],
-    ["phone over 40", { phone: "1".repeat(41) }],
-    ["category over 100", { category: "x".repeat(101) }],
-    ["service_area over 200", { service_area: "x".repeat(201) }],
-    ["services not an array", { services: "Drain cleaning" }],
-    ["a blank service", { services: ["Drain cleaning", " "] }],
-    ["a service over 100", { services: ["x".repeat(101)] }],
-    ["more than 30 services", { services: Array.from({ length: 31 }, (_, i) => `Service ${i}`) }],
-    ["profile_sources not an object", { profile_sources: ["schema"] }],
-    ["an unknown source", { profile_sources: { phone: "llm" } }],
-    ["a link that isn't http(s)", { profile_links: ["javascript:alert(1)"] }],
-    ["more than 20 links", { profile_links: Array.from({ length: 21 }, (_, i) => `https://example.test/${i}`) }],
+  // The table's CHECK refuses values outside the rules (23514); a non-array services fails to parse (22023).
+  const BAD: [string, Record<string, unknown>, string][] = [
+    ["address over 200", { address: "x".repeat(201) }, CHECK],
+    ["phone over 40", { phone: "1".repeat(41) }, CHECK],
+    ["category over 100", { category: "x".repeat(101) }, CHECK],
+    ["service_area over 200", { service_area: "x".repeat(201) }, CHECK],
+    ["services not an array", { services: "Drain cleaning" }, "22023"],
+    ["a blank service", { services: ["Drain cleaning", " "] }, CHECK],
+    ["a service over 100", { services: ["x".repeat(101)] }, CHECK],
+    ["more than 30 services", { services: Array.from({ length: 31 }, (_, i) => `Service ${i}`) }, CHECK],
+    ["profile_sources not an object", { profile_sources: ["schema"] }, CHECK],
+    ["an unknown source", { profile_sources: { phone: "llm" } }, CHECK],
+    ["a javascript: link", { profile_links: ["javascript:alert(1)"] }, CHECK],
+    ["an http (not https) link", { profile_links: ["http://www.yelp.com/biz/example"] }, CHECK],
+    ["more than 20 links", { profile_links: Array.from({ length: 21 }, (_, i) => `https://example.test/${i}`) }, CHECK],
   ];
-  for (const [label, patch] of BAD) {
-    it(`rejects ${label} (22023) and stores nothing`, async () => {
+  for (const [label, patch, code] of BAD) {
+    it(`rejects ${label} (${code}) and stores nothing`, async () => {
       const { workspaceId, call } = await onboard("bp-bad", patch as Partial<OnboardingInput["business"]>);
-      await expect(call()).rejects.toMatchObject({ code: "22023" });
+      await expect(call()).rejects.toMatchObject({ code });
       expect(must(await serviceClient().from("businesses").select("id").eq("workspace_id", workspaceId))).toEqual([]);
     });
   }
+
+  it("a member's direct UPDATE gets the same rules: a bad value is refused, a good one is stored", async () => {
+    const { user, call } = await onboard("bp-update");
+    const id = await call();
+    for (const bad of [
+      { profile_links: ["javascript:alert(1)"] },
+      { profile_sources: { phone: "llm" } },
+      { services: Array.from({ length: 31 }, (_, i) => `Service ${i}`) },
+      { phone: "1".repeat(41) },
+    ]) {
+      const res = await user.db.from("businesses").update(bad).eq("id", id);
+      expect(res.error?.code, JSON.stringify(bad)).toBe(CHECK);
+    }
+    const good = {
+      profile_links: ["https://www.yelp.com/biz/example"],
+      profile_sources: { phone: "user" },
+      services: ["Drain cleaning"],
+      phone: "+1 949 555 0100",
+    };
+    must(await user.db.from("businesses").update(good).eq("id", id));
+    expect(await row(id)).toMatchObject(good);
+  });
 
   it("accepts the limits at the boundary", async () => {
     const { call } = await onboard("bp-edge", {
@@ -87,7 +113,7 @@ describe("business profile fields", () => {
       category: "x".repeat(100),
       service_area: "x".repeat(200),
       services: Array.from({ length: 30 }, () => "x".repeat(100)),
-      profile_links: Array.from({ length: 20 }, (_, i) => `http://example.test/${i}`),
+      profile_links: Array.from({ length: 20 }, (_, i) => `https://example.test/${i}`),
     });
     expect((await row(await call())).services).toHaveLength(30);
   });

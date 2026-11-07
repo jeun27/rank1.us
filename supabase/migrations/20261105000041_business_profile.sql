@@ -2,8 +2,30 @@
 -- existing vertical; dietary and occasion stay question picks. Additive: the live build sends none of
 -- these and gets the defaults. Re-runnable. Rollback: supabase/rollbacks/20261105000041_business_profile.down.sql
 
--- profile_sources maps a field to where its value came from (schema | meta | title | nav | sitemap |
--- default | user); profile_links are the site's sameAs profiles (GBP, Yelp, YouTube…).
+-- The element rules for the CHECKs below (a CHECK can't hold a subquery).
+create or replace function private.profile_services_ok(a text[]) returns boolean
+language sql immutable set search_path = '' as $$
+  select cardinality(a) <= 30 and not exists (select 1 from unnest(a) x where x is null or btrim(x) = '' or char_length(x) > 100);
+$$;
+create or replace function private.profile_links_ok(a text[]) returns boolean
+language sql immutable set search_path = '' as $$
+  select cardinality(a) <= 20 and not exists (select 1 from unnest(a) x where x is null or x !~ '^https://\S+$' or char_length(x) > 500);
+$$;
+create or replace function private.profile_sources_ok(j jsonb) returns boolean
+language sql immutable set search_path = '' as $$
+  select jsonb_typeof(j) = 'object' and not exists (
+    select 1 from jsonb_each(case when jsonb_typeof(j) = 'object' then j else '{}' end) e
+    where jsonb_typeof(e.value) <> 'string'
+       or e.value #>> '{}' not in ('schema', 'meta', 'title', 'nav', 'sitemap', 'default', 'user'));
+$$;
+revoke all on function private.profile_services_ok(text[]), private.profile_links_ok(text[]),
+  private.profile_sources_ok(jsonb) from public;
+grant execute on function private.profile_services_ok(text[]), private.profile_links_ok(text[]),
+  private.profile_sources_ok(jsonb) to authenticated, service_role;
+
+-- The rules live on the table (members can update businesses directly), so every write path gets them:
+-- 23514 for a value outside them. profile_sources maps a field to where its value came from; a user
+-- edit makes it 'user'. profile_links are the site's sameAs profiles (GBP, Yelp, YouTube…), https only.
 alter table public.businesses
   add column if not exists address text,
   add column if not exists phone text,
@@ -12,60 +34,14 @@ alter table public.businesses
   add column if not exists service_area text,
   add column if not exists profile_sources jsonb not null default '{}',
   add column if not exists profile_links text[] not null default '{}';
+alter table public.businesses drop constraint if exists businesses_profile_check;
+alter table public.businesses add constraint businesses_profile_check check (
+  char_length(address) <= 200 and char_length(service_area) <= 200
+  and char_length(phone) <= 40 and char_length(category) <= 100
+  and private.profile_services_ok(services) and private.profile_links_ok(profile_links)
+  and private.profile_sources_ok(profile_sources));
 
-create or replace function private.check_business_input(b jsonb) returns void
-language plpgsql immutable set search_path = '' as $$
-declare
-  f text;
-begin
-  foreach f in array array['name', 'domain', 'city', 'state', 'country'] loop
-    if coalesce(btrim(b ->> f), '') = '' then
-      raise exception 'business.% is required', f using errcode = 'invalid_parameter_value';
-    end if;
-  end loop;
-  if char_length(b ->> 'name') > 200 then
-    raise exception 'business.name must be at most 200 characters' using errcode = 'invalid_parameter_value';
-  end if;
-  if not private.is_hostname(b ->> 'domain') then
-    raise exception 'business.domain must be a valid hostname' using errcode = 'invalid_parameter_value';
-  end if;
-  if char_length(b ->> 'city') > 100 or char_length(b ->> 'state') > 100 or char_length(b ->> 'country') > 100 then
-    raise exception 'business.city, state and country must be at most 100 characters' using errcode = 'invalid_parameter_value';
-  end if;
-  if b ? 'vertical' and jsonb_typeof(b -> 'vertical') <> 'null' and not private.is_vertical(b ->> 'vertical') then
-    raise exception 'business.vertical is not a known vertical' using errcode = 'invalid_parameter_value';
-  end if;
-  if char_length(b ->> 'cuisine') > 60 then
-    raise exception 'business.cuisine must be at most 60 characters' using errcode = 'invalid_parameter_value';
-  end if;
-  if char_length(b ->> 'address') > 200 or char_length(b ->> 'service_area') > 200
-     or char_length(b ->> 'phone') > 40 or char_length(b ->> 'category') > 100 then
-    raise exception 'business.address and service_area must be at most 200 characters, phone 40, category 100'
-      using errcode = 'invalid_parameter_value';
-  end if;
-  if coalesce(jsonb_typeof(b -> 'services'), 'null') not in ('null', 'array')
-     or jsonb_array_length(case when jsonb_typeof(b -> 'services') = 'array' then b -> 'services' else '[]' end) > 30
-     or exists (select 1 from jsonb_array_elements(case when jsonb_typeof(b -> 'services') = 'array' then b -> 'services' else '[]' end) s
-                where jsonb_typeof(s) <> 'string' or btrim(s #>> '{}') = '' or char_length(s #>> '{}') > 100) then
-    raise exception 'business.services must be at most 30 non-empty names of at most 100 characters' using errcode = 'invalid_parameter_value';
-  end if;
-  if coalesce(jsonb_typeof(b -> 'profile_links'), 'null') not in ('null', 'array')
-     or jsonb_array_length(case when jsonb_typeof(b -> 'profile_links') = 'array' then b -> 'profile_links' else '[]' end) > 20
-     or exists (select 1 from jsonb_array_elements(case when jsonb_typeof(b -> 'profile_links') = 'array' then b -> 'profile_links' else '[]' end) s
-                where jsonb_typeof(s) <> 'string' or (s #>> '{}') !~ '^https?://\S+$' or char_length(s #>> '{}') > 500) then
-    raise exception 'business.profile_links must be at most 20 http(s) URLs' using errcode = 'invalid_parameter_value';
-  end if;
-  if coalesce(jsonb_typeof(b -> 'profile_sources'), 'null') not in ('null', 'object')
-     or exists (select 1 from jsonb_each(case when jsonb_typeof(b -> 'profile_sources') = 'object'
-                                              then b -> 'profile_sources' else '{}' end) e
-                where coalesce(e.value #>> '{}', '') not in ('schema', 'meta', 'title', 'nav', 'sitemap', 'default', 'user')) then
-    raise exception 'business.profile_sources values must be schema, meta, title, nav, sitemap, default or user'
-      using errcode = 'invalid_parameter_value';
-  end if;
-end;
-$$;
-
--- Stores the profile fields too (create_dfy_client still ignores them).
+-- Stores the profile fields too; the CHECK above validates them (create_dfy_client still ignores them).
 create or replace function public.create_business_onboarding(p jsonb) returns uuid
 language plpgsql security invoker set search_path = '' as $$
 declare
@@ -108,7 +84,7 @@ begin
           nullif(btrim(b ->> 'address'), ''), nullif(btrim(b ->> 'phone'), ''), nullif(btrim(b ->> 'category'), ''),
           coalesce(array(select btrim(jsonb_array_elements_text(b -> 'services'))), '{}'),
           nullif(btrim(b ->> 'service_area'), ''),
-          case when jsonb_typeof(b -> 'profile_sources') = 'object' then b -> 'profile_sources' else '{}' end,
+          coalesce(nullif(b -> 'profile_sources', 'null'::jsonb), '{}'),
           coalesce(array(select jsonb_array_elements_text(b -> 'profile_links')), '{}'))
   returning id into biz;
 
