@@ -85,8 +85,17 @@ describe("save_business_card", () => {
         .single(),
     ).id;
 
+    const declined = (await rows(id)).find((r) => r.active && r.id !== q.id && kept.includes(r.template_key!))!;
+    must(await user.db.from("questions").update({ active: false }).eq("id", declined.id));
+
     await saveBusinessCard(user.db, id, card({ city: "Tustin" }));
     let after = await rows(id);
+    // A question the owner switched off stays declined in the new city: its new row starts off, owner_off.
+    expect(after.find((r) => r.template_key === declined.template_key && r.id !== declined.id)).toMatchObject({
+      active: false,
+      owner_off: true,
+      city: "Tustin",
+    });
     expect(after.find((r) => r.id === q.id)).toMatchObject({
       short_text: q.short_text,
       active: false,
@@ -203,10 +212,10 @@ describe("save_business_card", () => {
       owner_off: true,
       short_text: "best pho 1 in Irvine",
     });
-    // The Tustin question is a new question (new row), not the one the owner switched off.
+    // Its Tustin version is a new row that inherits the owner's no (lead): off and owner_off.
     expect(tustin.find((r) => r.short_text === "best pho 1 in Tustin")).toMatchObject({
-      active: true,
-      owner_off: false,
+      active: false,
+      owner_off: true,
     });
 
     await saveBusinessCard(user.db, id, card({ vertical: "plumbing", cuisine: null }), fixture);

@@ -49,7 +49,8 @@ grant insert (question_picks), update (question_picks) on table public.businesse
 -- p_questions is the builder's output for the new card, in template order: [{ key, short, long }].
 -- Hand-added (no template_key) and edited rows are untouched. A row's text never changes: an unedited
 -- generated row whose text is no longer produced is switched off, and its replacement is this
--- business's row with exactly the new text (reused, so a round trip restores ids) or a new row. Owner
+-- business's row with exactly the new text (reused, so a round trip restores ids) or a new row (owner_off
+-- when its key's current row is owner_off). Owner
 -- rows keep their active flag and owner_off rows stay off; the other matching rows fill the free slots
 -- of the 25 cap in output order, so rows a save switched off come back when their text applies again.
 -- Errors: 42501, 22023 bad input, 23514 a CHECK.
@@ -60,6 +61,7 @@ declare
   b public.businesses;
   m jsonb;
   free bigint;
+  off_keys text[];
 begin
   select * into b from public.businesses where id = p_business_id for update;
   perform set_config('rank1.card_save', 'on', true);
@@ -92,6 +94,13 @@ begin
   where id = p_business_id
   returning * into b;
 
+  -- Keys whose current row the owner switched off (none of its rows active): a new row for such a key
+  -- starts owner_off too (lead: the owner said no to the question, not to the city).
+  select coalesce(array_agg(distinct q.template_key), '{}') into off_keys from public.questions q
+  where q.business_id = p_business_id and q.owner_off and q.template_key is not null
+    and not exists (select 1 from public.questions a
+                    where a.business_id = p_business_id and a.template_key = q.template_key and a.active);
+
   -- A row's text never changes (its history measures that exact question). Unedited generated rows whose
   -- text the new card no longer produces are switched off (system-off, history kept).
   update public.questions q set active = false
@@ -107,8 +116,9 @@ begin
   where q.business_id = p_business_id and q.template_short is not null and q.short_text = q.template_short and q.long_text is not distinct from q.template_long
     and q.short_text = n.short and q.long_text is not distinct from n.long and q.template_key <> n.key;
   insert into public.questions (business_id, short_text, long_text, template_short, template_long, template_key,
-                                active_form, active, location_level, country, state, city)
-  select p_business_id, n.short, n.long, n.short, n.long, n.key, 'long', false, 'city', b.country, b.state, b.city
+                                active_form, active, owner_off, location_level, country, state, city)
+  select p_business_id, n.short, n.long, n.short, n.long, n.key, 'long', false, n.key = any (off_keys), 'city',
+         b.country, b.state, b.city
   from jsonb_to_recordset(p_questions) with ordinality as n(key text, short text, long text, ord bigint)
   where not exists (select 1 from public.questions q
                     where q.business_id = p_business_id and lower(q.short_text) = lower(n.short))
