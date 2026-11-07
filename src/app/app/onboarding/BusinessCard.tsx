@@ -55,9 +55,9 @@ const chip =
   "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-control border border-fieldBorder bg-white px-4 text-ui has-checked:border-jellyDeep has-checked:bg-infoBg has-disabled:cursor-not-allowed has-disabled:opacity-60 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-jellyDeep";
 
 // OC2: only exceptions carry a tag, amber "Not on your site".
-function Tag({ children, warn = false }: { children: ReactNode; warn?: boolean }) {
+function Tag({ id, children, warn = false }: { id?: string; children: ReactNode; warn?: boolean }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 text-caption ${warn ? "text-warnText" : "text-text2"}`}>
+    <span id={id} className={`inline-flex items-center gap-1.5 text-caption ${warn ? "text-warnText" : "text-text2"}`}>
       {warn && <span aria-hidden className="size-1.5 rounded-full bg-amber" />}
       {children}
     </span>
@@ -96,6 +96,11 @@ export function BusinessCard({
   attention?: boolean;
 }) {
   const typeId = useId();
+  // #214 review: each source tag (and hint) describes its field.
+  const typeTagId = useId();
+  const typeHintId = useId();
+  const areaTagId = useId();
+  const areaHintId = useId();
   const cuisineId = useId();
   const whatId = useId();
   const kind = b.kind;
@@ -117,11 +122,12 @@ export function BusinessCard({
           <p id={typeId} className="text-caption font-semibold">
             {c.type}
           </p>
-          {showSources && fromSite("vertical") && <Tag>{c.detected}</Tag>}
+          {showSources && fromSite("vertical") && <Tag id={typeTagId}>{c.detected}</Tag>}
         </div>
         <div
           role="radiogroup"
           aria-labelledby={typeId}
+          aria-describedby={showSources && fromSite("vertical") ? `${typeTagId} ${typeHintId}` : typeHintId}
           className="inline-flex max-w-full flex-wrap gap-1 rounded-nested border border-border bg-white p-1"
         >
           {KINDS.map((k) => (
@@ -145,7 +151,9 @@ export function BusinessCard({
             </label>
           ))}
         </div>
-        <p className="mt-1.5 text-caption text-text2">{c.typeHint}</p>
+        <p id={typeHintId} className="mt-1.5 text-caption text-text2">
+          {c.typeHint}
+        </p>
       </div>
 
       <div className="grid gap-x-4 gap-y-5 md:grid-cols-2">
@@ -232,14 +240,28 @@ export function BusinessCard({
           onChange={(e) => edit("phone", { phone: e.target.value })}
         />
         {kind && kind !== "restaurant" && (
-          <Tagged tag={showSources && areaDefault && <Tag warn>{c.notOnSite}</Tag>}>
+          <Tagged
+            tag={
+              showSources &&
+              areaDefault && (
+                <Tag id={areaTagId} warn>
+                  {c.notOnSite}
+                </Tag>
+              )
+            }
+          >
             <PillField
               label={c.areaServed}
               name="serviceArea"
               value={serviceAreaOf(b)}
               onChange={(e) => edit("areaServed", { serviceArea: e.target.value })}
+              aria-describedby={showSources && areaDefault ? `${areaTagId} ${areaHintId}` : undefined}
             />
-            {showSources && areaDefault && <p className="mt-1.5 text-caption text-text2">{c.areaHint}</p>}
+            {showSources && areaDefault && (
+              <p id={areaHintId} className="mt-1.5 text-caption text-text2">
+                {c.areaHint}
+              </p>
+            )}
           </Tagged>
         )}
       </div>
@@ -304,12 +326,21 @@ function Checks({
   onChange: (v: string[]) => void;
   max?: number;
 }) {
+  const legendId = useId();
+  const tagId = useId();
+  const hintId = useId();
   if (!options.length) return null;
   return (
-    <fieldset>
+    <fieldset
+      // The legend sits in a row with its tag, so the group is named explicitly.
+      aria-labelledby={legendId}
+      aria-describedby={[tag && tagId, hint && hintId].filter(Boolean).join(" ") || undefined}
+    >
       <div className="mb-1.5 flex items-baseline justify-between gap-3">
-        <legend className="text-caption font-semibold">{legend}</legend>
-        {tag}
+        <legend id={legendId} className="text-caption font-semibold">
+          {legend}
+        </legend>
+        {tag && <span id={tagId}>{tag}</span>}
       </div>
       <div className="flex flex-wrap gap-2">
         {options.map((o) => {
@@ -328,7 +359,11 @@ function Checks({
           );
         })}
       </div>
-      {hint && <p className="mt-1.5 text-caption text-text2">{hint}</p>}
+      {hint && (
+        <p id={hintId} className="mt-1.5 text-caption text-text2">
+          {hint}
+        </p>
+      )}
     </fieldset>
   );
 }
@@ -348,6 +383,7 @@ function Chips({
   onChange: (v: string[]) => void;
 }) {
   const id = useId();
+  const tagId = useId();
   const [draft, setDraft] = useState("");
   const commit = () => {
     const v = draft.trim();
@@ -355,12 +391,12 @@ function Chips({
     setDraft("");
   };
   return (
-    <div role="group" aria-labelledby={id}>
+    <div role="group" aria-labelledby={id} aria-describedby={tag ? tagId : undefined}>
       <div className="mb-1.5 flex items-baseline justify-between gap-3">
         <p id={id} className="text-caption font-semibold">
           {label}
         </p>
-        {tag}
+        {tag && <span id={tagId}>{tag}</span>}
       </div>
       <ul className="flex flex-wrap gap-2">
         {items.map((s) => (
