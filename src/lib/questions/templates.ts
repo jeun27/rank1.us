@@ -276,6 +276,13 @@ export const familyOf = (vertical: Vertical | undefined): Family =>
       ? vertical
       : "local";
 const text = (v: string | null | undefined) => v?.trim() || undefined;
+// In question text the category reads in lower case ("best plumber in Irvine"); all-caps words (HVAC,
+// CRM) stay as written. Keys don't include it, so a case change only moves text (UI3 F2).
+const categoryText = (v: string | null | undefined) =>
+  text(v)
+    ?.split(/\s+/)
+    .map((w) => (/^[A-Z0-9]{2,}$/.test(w) ? w : w.toLowerCase()))
+    .join(" ");
 
 // G1's YouTube keyword (§4): local = the first service + city (no services: category + city);
 // restaurant = "{cuisine} {city}"; saas/dtc = the category, no city. Null when there's nothing to use.
@@ -297,7 +304,7 @@ export function fillTemplate(t: QuestionTemplate, business: Business, choice: Ch
     cuisine: text(business.cuisine),
     city: text(business.city),
     state: text(business.state),
-    category: text(business.category),
+    category: categoryText(business.category),
     ...choice,
   };
   const fill = (text: string) =>

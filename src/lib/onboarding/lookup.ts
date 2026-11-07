@@ -12,9 +12,12 @@ export type CompetitorLookup = Omit<FindLocalCompetitorsInput, "limit" | "domain
   domain?: string | null;
 };
 
+// Restaurants keep their pre-v2 keys (cuisine first); other types key on vertical:category.
 export const competitorCacheKey = (q: CompetitorLookup) =>
   [
-    (q.cuisine ?? "").trim().toLowerCase(),
+    !q.vertical || q.vertical === "restaurant"
+      ? (q.cuisine ?? "").trim().toLowerCase()
+      : `${q.vertical}:${(q.category ?? "").trim().toLowerCase()}`,
     q.city.trim().toLowerCase(),
     q.state.trim().toUpperCase(),
     q.domain ?? "",
@@ -34,6 +37,8 @@ export function lookupCompetitors(
     async (): Promise<CompetitorList> => {
       const { status, items } = await find({
         cuisine: q.cuisine ?? "",
+        ...(q.vertical ? { vertical: q.vertical } : {}),
+        ...(q.category ? { category: q.category } : {}),
         city: q.city,
         state: q.state,
         ...(q.domain ? { domain: q.domain } : {}),

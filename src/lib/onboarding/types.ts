@@ -32,8 +32,12 @@ export type LocalCompetitorsResult = {
 };
 
 // limit: how many Maps results to keep (default 5); the shared cache keeps up to 20.
+// vertical/category (onboarding v2): restaurants (or no vertical) search "{cuisine} restaurant",
+// local services their category; software and shops have no local search.
 export type FindLocalCompetitorsInput = {
   cuisine: string;
+  vertical?: Vertical;
+  category?: string | null;
   city: string;
   state: string;
   domain?: string;
