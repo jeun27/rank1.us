@@ -170,3 +170,107 @@ export async function readHome(domain: string, deps: ReadSiteDeps = {}): Promise
     return unreadable;
   }
 }
+
+// DP2: services, stage 4 of the reading log. JSON-LD offers → <nav> link labels minus the stoplist →
+// sitemap paths one level under /services/, /menu/ or /treatments/. At most one sitemap fetch (robots'
+// Sitemap: line on this site, else /sitemap.xml), robots respected, an index never followed.
+export type SiteServices = {
+  status: "ok" | "unreadable";
+  services: string[];
+  source: Extract<ProfileSource, "schema" | "nav" | "sitemap"> | null;
+};
+const MAX_SERVICES = 12;
+const STOP = new Set([
+  "home",
+  "about",
+  "about us",
+  "contact",
+  "contact us",
+  "blog",
+  "news",
+  "careers",
+  "jobs",
+  "login",
+  "log in",
+  "sign in",
+  "sign up",
+  "account",
+  "cart",
+  "checkout",
+  "faq",
+  "faqs",
+  "menu",
+  "services",
+  "our services",
+  "gallery",
+  "reviews",
+  "testimonials",
+  "locations",
+  "book",
+  "book now",
+  "order online",
+  "shop",
+  "privacy",
+  "privacy policy",
+  "terms",
+  "search",
+]);
+const uniq = (xs: string[]) => [...new Map(xs.map((x) => [x.toLowerCase(), x])).values()].slice(0, MAX_SERVICES);
+
+// An Offer's name: itemOffered.name, else its own name.
+const offerName = (o: unknown) => {
+  const n = (o ?? {}) as Node;
+  return str((n.itemOffered as Node | undefined)?.name) ?? str(n.name);
+};
+const schemaServices = (html: string) =>
+  uniq(
+    nodes(html)
+      .flatMap((n) => [...list(n.makesOffer), ...list((n.hasOfferCatalog as Node | undefined)?.itemListElement)])
+      .map(offerName)
+      .filter((s): s is string => !!s),
+  );
+
+export function navServices(html: string): string[] {
+  const labels = [...html.matchAll(/<nav[\s>][\s\S]*?<\/nav>/gi)].flatMap((nav) =>
+    [...nav[0].matchAll(/<a\b[^>]*>([\s\S]*?)<\/a>/gi)].map((a) => decode(a[1].replace(/<[^>]+>/g, " "))),
+  );
+  return uniq(labels.filter((l) => l && l.length <= 60 && !STOP.has(l.toLowerCase())));
+}
+
+export function sitemapServices(xml: string, host: string): string[] {
+  const out: string[] = [];
+  for (const m of xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)) {
+    let u: URL;
+    try {
+      u = new URL(decode(m[1]));
+    } catch {
+      continue;
+    }
+    const slug = u.pathname.match(/^\/(?:services|menu|treatments)\/([^/]+)\/?$/i)?.[1];
+    if (!slug || u.hostname.replace(/^www\./, "") !== host) continue;
+    const words = decodeURIComponent(slug).replace(/[-_]+/g, " ").trim();
+    if (words) out.push(words[0].toUpperCase() + words.slice(1));
+  }
+  return uniq(out);
+}
+
+export async function readServices(domain: string, deps: ReadSiteDeps = {}): Promise<SiteServices> {
+  const unreadable: SiteServices = { status: "unreadable", services: [], source: null };
+  try {
+    const f = await createSiteFetcher(domain, deps);
+    if (!f || !f.allowed("/")) return unreadable;
+    const home = await f.page("/");
+    if (!isHtmlPage(home)) return unreadable;
+    for (const [source, services] of [
+      ["schema", schemaServices(home.body)],
+      ["nav", navServices(home.body)],
+    ] as const)
+      if (services.length) return { status: "ok", services, source };
+    const listed = f.robots.text.match(/^\s*sitemap\s*:\s*(\S+)/im)?.[1];
+    const sitemap = await f.page(listed ?? "/sitemap.xml");
+    const services = sitemap && sitemap.status < 300 ? sitemapServices(sitemap.body, f.host) : [];
+    return { status: "ok", services, source: services.length ? "sitemap" : null };
+  } catch {
+    return unreadable;
+  }
+}
