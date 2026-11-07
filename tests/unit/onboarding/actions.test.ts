@@ -20,10 +20,12 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({ auth: { getUser: async () => ({ data: { user: user.current } }) } }),
 }));
 // UI2: the reading log's two stages.
+const homeServices = { current: { status: "ok", services: ["Tonkotsu"], source: "nav" } as unknown };
 const home = { status: "ok", name: "Example Ramen House", cuisine: "ramen", areaServed: [], sameAs: [], sources: {} };
 vi.mock("@/lib/onboarding/site-profile", () => ({
-  readHome: vi.fn(async () => home),
-  readServices: vi.fn(async () => ({ status: "ok", services: ["Tonkotsu"], source: "nav" })),
+  // #213 review: stages 1–3 return the home page's own services too; stage 4 reads only the sitemap.
+  readHomeStage: vi.fn(async () => ({ profile: home, services: homeServices.current })),
+  readSitemapServices: vi.fn(async () => ({ status: "ok", services: ["Drain cleaning"], source: "sitemap" })),
 }));
 vi.mock("@/lib/onboarding", () => ({
   findLocalCompetitors: vi.fn(async () => ({
@@ -43,7 +45,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 const { findLocalCompetitors } = await import("@/lib/onboarding");
-const { readHome, readServices } = await import("@/lib/onboarding/site-profile");
+const { readHomeStage, readSitemapServices } = await import("@/lib/onboarding/site-profile");
 const { createBusinessOnboarding } = await import("@/lib/queries/onboarding");
 const { readHomeAction, readServicesAction, findCompetitorsAction, finishAction } =
   await import("@/app/app/onboarding/actions");
@@ -93,21 +95,20 @@ describe("onboarding server actions", () => {
     });
     expect(await readServicesAction("exampleramen.test")).toEqual({ status: "unreadable", services: [], source: null });
     expect(await findCompetitorsAction(q)).toEqual({ status: "error", items: [] });
-    expect(readHome).not.toHaveBeenCalled();
-    expect(readServices).not.toHaveBeenCalled();
+    expect(readHomeStage).not.toHaveBeenCalled();
+    expect(readSitemapServices).not.toHaveBeenCalled();
     expect(findLocalCompetitors).not.toHaveBeenCalled();
   });
 
   it("signed in: reads the site and looks up competitors, without passing raw upstream errors to the browser", async () => {
     user.current = { id: "u1" };
     expect(await readHomeAction("exampleramen.test")).toEqual(home);
-    expect(readHome).toHaveBeenCalledWith("exampleramen.test");
+    expect(readHomeStage).toHaveBeenCalledWith("exampleramen.test");
     expect(await readServicesAction("exampleramen.test")).toEqual({
       status: "ok",
       services: ["Tonkotsu"],
       source: "nav",
     });
-    expect(readServices).toHaveBeenCalledWith("exampleramen.test");
     expect(await findCompetitorsAction(q)).toEqual({ status: "error", items: [] });
     // One lookup fills the shared cache with the full Maps list (≤20); onboarding shows the first 5.
     expect(findLocalCompetitors).toHaveBeenCalledWith({ ...q, limit: 20 });
@@ -169,8 +170,8 @@ describe("onboarding server actions", () => {
     });
     expect(await readServicesAction("exampleramen.test")).toEqual({ status: "unreadable", services: [], source: null });
     expect(await findCompetitorsAction(q)).toEqual({ status: "error", items: [] });
-    expect(readHome).not.toHaveBeenCalled();
-    expect(readServices).not.toHaveBeenCalled();
+    expect(readHomeStage).not.toHaveBeenCalled();
+    expect(readSitemapServices).not.toHaveBeenCalled();
     expect(findLocalCompetitors).not.toHaveBeenCalled();
   });
 
@@ -185,11 +186,11 @@ describe("onboarding server actions", () => {
     });
     expect(await readServicesAction("exampleramen.test")).toEqual({ status: "unreadable", services: [], source: null });
     expect(await findCompetitorsAction(q)).toEqual({ status: "error", items: [] });
-    expect(readHome).not.toHaveBeenCalled();
-    expect(readServices).not.toHaveBeenCalled();
+    expect(readHomeStage).not.toHaveBeenCalled();
+    expect(readSitemapServices).not.toHaveBeenCalled();
     expect(findLocalCompetitors).not.toHaveBeenCalled();
     const { takeRateToken } = await import("@/lib/queries/rate-limits");
-    expect(vi.mocked(takeRateToken).mock.calls.map((c) => c[1])).toEqual(["read_site", "read_site", "maps_lookup"]);
+    expect(vi.mocked(takeRateToken).mock.calls.map((c) => c[1])).toEqual(["read_site", "maps_lookup"]);
   });
 
   it("an identical Maps lookup within 24 h is served from the cache: no token, no paid call", async () => {
@@ -214,5 +215,50 @@ describe("onboarding server actions", () => {
     vi.mocked(findLocalCompetitors).mockResolvedValue({ status: "ok", items } as never);
     expect(await findCompetitorsAction(q)).toEqual({ status: "ok", items: items.slice(0, 5) });
     expect([...cache.values()]).toEqual([{ status: "ok", items }]);
+  });
+
+  // #213 review: one "Read my site" press costs one read_site token, and stage 4 reuses the home page.
+  describe("one press, one token", () => {
+    beforeEach(() => {
+      user.current = { id: "u1" };
+      homeServices.current = { status: "ok", services: ["Tonkotsu"], source: "nav" };
+    });
+    const tokenCalls = async () => {
+      const { takeRateToken } = await import("@/lib/queries/rate-limits");
+      return vi.mocked(takeRateToken).mock.calls.length;
+    };
+
+    it("home page lists services: both stages, one token, no second fetch", async () => {
+      await readHomeAction("exampleramen.test");
+      expect(await readServicesAction("exampleramen.test")).toEqual({
+        status: "ok",
+        services: ["Tonkotsu"],
+        source: "nav",
+      });
+      expect(await tokenCalls()).toBe(1);
+      expect(readSitemapServices).not.toHaveBeenCalled();
+    });
+
+    it("no services on the home page: stage 4 reads the sitemap, still one token", async () => {
+      homeServices.current = null;
+      await readHomeAction("exampleramen.test");
+      expect(await readServicesAction("exampleramen.test")).toEqual({
+        status: "ok",
+        services: ["Drain cleaning"],
+        source: "sitemap",
+      });
+      expect(readSitemapServices).toHaveBeenCalledWith("exampleramen.test");
+      expect(await tokenCalls()).toBe(1);
+    });
+
+    it("stage 4 without stages 1–3 for that domain: unreadable, no fetch, no token", async () => {
+      expect(await readServicesAction("example-other.test")).toEqual({
+        status: "unreadable",
+        services: [],
+        source: null,
+      });
+      expect(readSitemapServices).not.toHaveBeenCalled();
+      expect(await tokenCalls()).toBe(0);
+    });
   });
 });

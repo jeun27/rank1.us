@@ -1,6 +1,12 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
-import { navServices, readServices, sitemapServices } from "@/lib/onboarding/site-profile";
+import {
+  navServices,
+  readHomeStage,
+  readServices,
+  readSitemapServices,
+  sitemapServices,
+} from "@/lib/onboarding/site-profile";
 
 // Onboarding v2 DP2 (share/ux-plan/onboarding-welcome §4): fixtures only, no network.
 const fx = (name: string) => readFileSync(`tests/fixtures/sites/${name}`, "utf8");
@@ -114,5 +120,41 @@ describe("readServices", () => {
       source: null,
     });
     expect((await readServices("localhost", deps({}))).status).toBe("unreadable");
+  });
+});
+
+// #213 review: one "Read my site" fetches the home page once. Stages 1–3 also take the services the home page
+// lists (JSON-LD, nav); stage 4 then fetches only the sitemap, never the home page again.
+describe("one home fetch across the reading stages", () => {
+  it("readHomeStage: the profile plus the nav services, from robots + home only", async () => {
+    const d = deps({ [`${H}/`]: NAV });
+    const r = await readHomeStage("example-plumbing.test", d);
+    expect(r.profile.status).toBe("ok");
+    expect(r.services).toEqual({
+      status: "ok",
+      services: ["Drain cleaning", "Water heater repair", "Leak detection"],
+      source: "nav",
+    });
+    expect(urls(d)).toEqual([`${H}/robots.txt`, `${H}/`]);
+  });
+
+  it("readHomeStage: no services on the home page leaves stage 4 to the sitemap (services null)", async () => {
+    const r = await readHomeStage("example-plumbing.test", deps({ [`${H}/`]: NONE }));
+    expect(r.profile.status).toBe("ok");
+    expect(r.services).toBeNull();
+  });
+
+  it("readSitemapServices: robots + the sitemap, never the home page", async () => {
+    const d = deps({
+      [`${H}/robots.txt`]: `User-agent: *\nAllow: /\nSitemap: ${H}/sitemap_index.xml`,
+      [`${H}/`]: NONE,
+      [`${H}/sitemap_index.xml`]: SITEMAP,
+    });
+    expect(await readSitemapServices("example-plumbing.test", d)).toEqual({
+      status: "ok",
+      services: ["Drain cleaning", "Water heater repair"],
+      source: "sitemap",
+    });
+    expect(urls(d)).toEqual([`${H}/robots.txt`, `${H}/sitemap_index.xml`]);
   });
 });
