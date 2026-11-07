@@ -367,7 +367,6 @@ describe("input validation (22023)", () => {
     ["blank city", { city: "  " }],
     ["missing state", { state: null as never }],
     ["missing country", { country: "" }],
-    ["an empty domain (send null for no website)", { domain: "" }],
     ["name over 200", { name: "x".repeat(201) }],
     ["domain not a hostname", { domain: "not a domain" }],
     ["domain with a scheme", { domain: "https://example-ramen.test" }],
@@ -396,8 +395,8 @@ describe("input validation (22023)", () => {
     });
   }
 
-  it("a business with no website (domain null or absent) is saved without a domain", async () => {
-    for (const domain of [null, undefined]) {
+  it("a business with no website (domain null, absent, empty or blank) is saved without a domain", async () => {
+    for (const domain of [null, undefined, "", "  "]) {
       const { user } = await selfServe("no-website");
       const id = await createBusinessOnboarding(
         user.db,

@@ -1,4 +1,6 @@
 -- Reverts 20261105000043_optional_domain.sql: the domain is required again (0021's check).
+drop trigger if exists businesses_blank_domain on public.businesses;
+drop function if exists private.blank_domain_to_null();
 create or replace function private.check_business_input(b jsonb) returns void
 language plpgsql immutable set search_path = '' as $$
 declare
