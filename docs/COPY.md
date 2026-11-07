@@ -591,6 +591,8 @@ O1 only (share/ux-plan/onboarding-welcome/README.md §6). Each string lands here
 | Welcome (Q1) | Field label "Your website" · button "Read my site" · "No website? Fill it in yourself" · "About 5 minutes to set up." |
 | Welcome (Q2) | "What happens next" · "Rank1 reads your site and fills in a card you can change." · "Pick 3 to 5 businesses to compare against." · "Rank1 writes up to {total} questions people ask AI about businesses like yours." · Example panel title "What you'll see after your first check" · footnote "Every number shows how many answers it's based on." |
 | Example panel | You row "Your business" with the "You" tag (never the real name) · headers "Business", "Visibility" · label "Example data" |
+| Reading log (Q4) | Title "Reading {domain}" · count "{n} of 4" · stages "Opened {domain}"; "Business details": "Found {fields} in schema.org" / "Not on your site"; "Title and description": "Found in the page head" / "Not on your site"; "Services": "Reading your menu links…", then "{n} found in your menu" / "Not on your site" · note "No AI reads your site. Rank1 only looks at what your pages already say." · button while reading "Reading…" |
+| Unreadable (Q8) | "We couldn't read that site. Fill in your business below." (the empty card follows) |
 | Rail (Q3) | Steps "Your site" · "Your business" · "Competitors" · "Questions" (list name "Add your business"; a finished step reads "Done" to screen readers) · phones "Step {n} of 4 · {step}" |
 
 ## Engine location tooltip

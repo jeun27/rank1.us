@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Onboarding states", robots: { index:
 export default function DevOnboardingPage() {
   if (process.env.VERCEL_ENV === "production") notFound();
   return (
-    <main className="mx-auto max-w-2xl px-5 py-12 md:px-8">
+    <main className="mx-auto w-full max-w-5xl px-5 py-12 md:px-8">
       <h1 className="font-display text-display font-semibold">Onboarding states</h1>
       <Gallery />
     </main>

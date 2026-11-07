@@ -4,6 +4,7 @@ import { CUISINES } from "@/lib/onboarding/cuisines";
 
 const STATES = [
   "1 empty",
+  "1 reading",
   "1 loading",
   "2 error",
   "2 partial",
@@ -22,10 +23,16 @@ test("/dev/onboarding shows every 4b onboarding state, accessibly", async ({ pag
   const state = (name: string) => page.locator(`[data-state="${name}"]`);
   await expect(page.locator("[data-state]")).toHaveCount(STATES.length);
 
-  await expect(state("1 loading").getByText("Reading your site…")).toBeVisible();
-  await expect(
-    state("2 error").getByRole("group", { name: "We couldn't read that site. Type 3 things you sell." }),
-  ).toBeVisible();
+  await expect(state("1 loading").getByRole("group", { name: "Reading exampleramen.test" })).toBeVisible();
+  // UI2: submitting "1 reading" returns stages 1–3 at once and leaves Services reading.
+  await state("1 reading")
+    .locator("form")
+    .evaluate((f: HTMLFormElement) => f.requestSubmit());
+  const log = state("1 reading").getByRole("group", { name: "Reading exampleramen.test" });
+  await expect(log.getByText("3 of 4")).toBeVisible();
+  await expect(log.getByText("Found name, phone, city in schema.org")).toBeVisible();
+  await expect(log.getByText("Reading your menu links…")).toBeVisible();
+  await expect(state("2 error").getByText("We couldn't read that site. Fill in your business below.")).toBeVisible();
   await expect(state("2 partial").getByLabel("Cuisine")).toHaveAttribute("data-attention", "true");
   // The select lists CUISINES (#23), the same list the real page passes.
   const options = await state("2 success").getByLabel("Cuisine").locator("option").allTextContents();

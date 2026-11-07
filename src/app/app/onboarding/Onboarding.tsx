@@ -10,9 +10,17 @@ import { connectionsCopy } from "@/components/connections/copy";
 import { VERTICALS, type Vertical } from "@/lib/queries/onboarding";
 import { MAX_ACTIVE_QUESTIONS, buildQuestions, type Picks } from "@/lib/questions/templates";
 import { normalizeDomain } from "@/lib/spam/validate";
-import type { CompetitorSearch, LocalPlace, OnboardingActions, OnboardingInput } from "./contract";
-import { copy, welcome as w } from "./copy";
+import type {
+  CompetitorSearch,
+  LocalPlace,
+  OnboardingActions,
+  OnboardingInput,
+  SiteProfile,
+  SiteServices,
+} from "./contract";
+import { copy, reading, welcome as w } from "./copy";
 import { ExamplePanel } from "./ExamplePanel";
+import { ReadingLog } from "./ReadingLog";
 import { Select } from "@/components/ui/Select";
 
 // docs/UI.md Question templates: {dietary} and {occasion} lists; landmarks and areas max 3 each.
@@ -28,7 +36,8 @@ export type Business = {
   cuisine: string;
   city: string;
   state: string;
-  sells: string[];
+  // Read in stage 4 of the reading log; the card shows them as chips (UI3).
+  services: string[];
   // C-b: only with ENABLE_CONNECTIONS (the page passes verticals); Restaurant until picked.
   vertical?: Vertical;
 };
@@ -64,7 +73,7 @@ export const emptyDraft: Draft = {
   step: 1,
   site: "idle",
   siteCuisine: false,
-  business: { domain: "", name: "", cuisine: "", city: "Irvine", state: "CA", sells: ["", "", ""] },
+  business: { domain: "", name: "", cuisine: "", city: "Irvine", state: "CA", services: [] },
   picks: { landmarks: [], areas: [], dietary: [], occasion: [] },
   search: null,
   competitors: [],
@@ -258,6 +267,11 @@ function WelcomeStep({
   onNext,
 }: StepProps & { cuisines: readonly string[]; actions: OnboardingActions; onNext: () => void }) {
   const [domainError, setDomainError] = useState(false);
+  // UI2: what each real reading stage returned, for the live log.
+  const [read, setRead] = useState<{ home: SiteProfile | null; services: SiteServices | null }>({
+    home: null,
+    services: null,
+  });
   const field = useRef<HTMLDivElement>(null);
   const nextId = useId();
   const b = d.business;
@@ -267,14 +281,34 @@ function WelcomeStep({
     const domain = normalizeDomain(raw);
     setDomainError(!domain);
     if (!domain) return;
+    setRead({ home: null, services: null });
     set({ site: "loading", business: { ...b, domain } });
-    const r = await actions.readSite(domain).catch(() => ({ status: "unreadable" as const }));
-    const name = "name" in r ? r.name : undefined;
-    const cuisine = "cuisine" in r && r.cuisine && cuisines.includes(r.cuisine) ? r.cuisine : "";
+    // Stages 1–3, then 4: two server actions, so the log only ticks on real progress.
+    const home = await actions
+      .readHome(domain)
+      .catch((): SiteProfile => ({ status: "unreadable", areaServed: [], sameAs: [], sources: {} }));
+    if (home.status !== "ok") {
+      set({ site: "unreadable", siteCuisine: false, business: { ...b, domain, name: "", cuisine: "", services: [] } });
+      return onNext();
+    }
+    setRead({ home, services: null });
+    const services = await actions
+      .readServices(domain)
+      .catch((): SiteServices => ({ status: "unreadable", services: [], source: null }));
+    setRead({ home, services });
+    const cuisine = home.cuisine && cuisines.includes(home.cuisine) ? home.cuisine : "";
     set({
-      site: r.status,
+      site: "ok",
       siteCuisine: Boolean(cuisine),
-      business: { ...b, domain, name: r.status === "ok" ? (name ?? "") : "", cuisine },
+      business: {
+        ...b,
+        domain,
+        name: home.name ?? "",
+        cuisine,
+        city: home.city ?? b.city,
+        state: home.state ?? b.state,
+        services: services.services,
+      },
     });
     onNext();
   };
@@ -293,6 +327,7 @@ function WelcomeStep({
               label={w.label}
               placeholder={copy.domain.placeholder}
               buttonLabel={w.read}
+              loadingLabel={reading.button}
               state={loading ? "loading" : domainError ? "error" : "default"}
               errorText={copy.domain.noEnding}
               defaultValue={b.domain}
@@ -312,19 +347,9 @@ function WelcomeStep({
               {w.manual}
             </button>
           </p>
-          {loading && (
-            <div role="status" className="mt-2 flex flex-col gap-3">
-              <p className="text-caption text-inkMuted">{copy.readingSite}</p>
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="h-11 animate-pulse rounded-control bg-white motion-reduce:animate-none md:h-9"
-                />
-              ))}
-            </div>
-          )}
         </div>
-        <div>
+        {/* While reading, the left column is just the field (the log on the right is the feedback). */}
+        <div hidden={loading}>
           <p id={nextId} className="text-ui font-medium text-ink">
             {w.nextTitle}
           </p>
@@ -343,7 +368,7 @@ function WelcomeStep({
           </ol>
         </div>
       </div>
-      <ExamplePanel />
+      {loading ? <ReadingLog domain={b.domain} home={read.home} services={read.services} /> : <ExamplePanel />}
       {/* OC3/OC6: below md the step and the one primary sit in a sticky bar (44px, over the home indicator). */}
       <div
         data-step-bar
@@ -356,7 +381,7 @@ function WelcomeStep({
           className="min-h-11 shrink-0"
           onClick={() => field.current?.querySelector("form")?.requestSubmit()}
         >
-          {w.read}
+          {loading ? reading.button : w.read}
         </Button>
       </div>
     </div>
@@ -380,7 +405,6 @@ function BusinessStep({
 }) {
   const cuisineId = useId();
   const verticalId = useId();
-  const sellsId = useId();
   const reasonId = useId();
   const [said, nudge] = useNudge();
   const b = d.business;
@@ -420,22 +444,9 @@ function BusinessStep({
       }}
     >
       {b.domain && <PillField label={w.label} name="domain" value={b.domain} readOnly icon="globe" />}
-      {d.site === "unreadable" && (
-        <fieldset className="flex flex-col gap-2">
-          <legend id={sellsId} className="mb-1.5 text-ui font-semibold text-brick">
-            {copy.unreadable}
-          </legend>
-          {b.sells.map((v, i) => (
-            <input
-              key={i}
-              aria-labelledby={sellsId}
-              value={v}
-              onChange={(e) => setB({ sells: b.sells.map((x, j) => (j === i ? e.target.value : x)) })}
-              className="h-11 rounded-control border border-fieldBorder bg-paper px-3 text-ui focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep md:h-9"
-            />
-          ))}
-        </fieldset>
-      )}
+      {/* Q8: an unreadable site opens the same card, empty, with one line. (The three "things you sell"
+          inputs it replaces were never sent anywhere.) */}
+      {d.site === "unreadable" && <p className="text-ui font-medium text-ink">{reading.unreadable}</p>}
       {verticals && (
         <div>
           <label htmlFor={verticalId} className="mb-1.5 block text-caption font-semibold">
