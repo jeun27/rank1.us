@@ -41,6 +41,11 @@ alter table public.businesses add constraint businesses_profile_check check (
   and private.profile_services_ok(services) and private.profile_links_ok(profile_links)
   and private.profile_sources_ok(profile_sources));
 
+-- Member-writable like the other profile columns (0007 grants columns one by one); the CHECK guards them.
+grant insert (address, phone, category, services, service_area, profile_sources, profile_links),
+      update (address, phone, category, services, service_area, profile_sources, profile_links)
+  on table public.businesses to authenticated;
+
 -- Stores the profile fields too; the CHECK above validates them (create_dfy_client still ignores them).
 create or replace function public.create_business_onboarding(p jsonb) returns uuid
 language plpgsql security invoker set search_path = '' as $$
