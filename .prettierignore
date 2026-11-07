@@ -9,3 +9,5 @@ tests/fixtures/engines/**/*.json
 *.md
 # Must match docs/UI.md tokens text exactly (tokens.test.ts); Prettier lowercases hex.
 src/app/globals.css
+# Email HTML is hand-tuned for Outlook/Gmail (conditional comments, inline styles); keep it byte-stable.
+supabase/templates/*.html

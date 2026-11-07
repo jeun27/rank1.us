@@ -17,6 +17,8 @@ export type HubConnection = {
   provider: ConnectionProvider;
   status: ConnectionStatus;
   selected: ConnectionEntity[];
+  // How many locations/sites/properties the account offers; null (or absent) until the list was loaded.
+  entityCount?: number | null;
 };
 // Clients see the field and when; values stay in the team pane (C-c).
 export type HubChange = { id: string; connectionId: string; field: string; at: string };
@@ -91,7 +93,7 @@ function Picker({
   );
 }
 
-// UI.md: one primary per screen. Only a Recommended tile's Connect / Reconnect is filled; the rest are alt.
+// UI.md: one primary per screen (X30). Only the next unconnected Recommended tile's Connect is filled.
 function TileCard({
   tile,
   primary,
@@ -141,24 +143,29 @@ function TileCard({
       </Button>
     );
   else if (write && conn?.status === "needs_reauth")
+    // The banner at the top holds the filled Reconnect (X12/X30); the tile's copy stays secondary.
     actions = (
-      <Button variant={primary ? "primary" : "alt"} onClick={() => onConsent(k)}>
+      <Button variant="alt" onClick={() => onConsent(k)}>
         {c.reconnect}
       </Button>
     );
   else if (write && conn)
     actions = (
       <>
-        <Button
-          variant="alt"
-          onClick={async () => {
-            const r = await props.actions.entities(conn.id).catch(() => ({ error: "failed" }));
-            if ("error" in r) return onFailed();
-            setOptions(r);
-          }}
-        >
-          {c.pick[k]}
-        </Button>
+        {/* X30: "Choose …" only when there's a choice. Unknown (null) still offers it: loading the list is
+            what records the count (#183). */}
+        {(conn.entityCount ?? 2) > 1 && (
+          <Button
+            variant="alt"
+            onClick={async () => {
+              const r = await props.actions.entities(conn.id).catch(() => ({ error: "failed" }));
+              if ("error" in r) return onFailed();
+              setOptions(r);
+            }}
+          >
+            {c.pick[k]}
+          </Button>
+        )}
         <Button variant="alt" onClick={() => onRevoke(conn.id)}>
           {c.disconnect}
         </Button>
@@ -230,6 +237,53 @@ function TileCard({
   );
 }
 
+// X12: the Coming soon connectors as one line of names and one Notify me that registers each one not yet
+// noted, then "We'll let you know." Read-only viewers see the names (and the note once everything is noted).
+function ComingSoon({
+  connectors,
+  props,
+  onFailed,
+}: {
+  connectors: ConnectorKey[];
+  props: HubProps;
+  onFailed: () => void;
+}) {
+  const [noted, setNoted] = useState(connectors.every((k) => props.interest.includes(k)));
+  return (
+    <section aria-labelledby="tier-later" className="flex flex-col gap-3">
+      <h2 id="tier-later" className="text-ui font-semibold">
+        {c.tiers.later}
+      </h2>
+      <p data-computed className="text-caption text-text2">
+        {connectors.map((k) => c.names[k]).join(" · ")}
+      </p>
+      {noted ? (
+        <p role="status" className="text-caption text-text2">
+          {c.noted}
+        </p>
+      ) : (
+        props.canConnect && (
+          <div>
+            <Button
+              variant="alt"
+              onClick={async () => {
+                const rest = connectors.filter((k) => !props.interest.includes(k));
+                const r = await Promise.all(rest.map((k) => props.actions.notify(k))).catch(() => [
+                  { error: "failed" },
+                ]);
+                if (r.some((x) => x && "error" in x)) return onFailed();
+                setNoted(true);
+              }}
+            >
+              {c.notify}
+            </Button>
+          </div>
+        )
+      )}
+    </section>
+  );
+}
+
 // Settings → Connections (C-a): tiles by industry from recommend(), in Recommended / Optional / Coming
 // soon. Only the live Google connectors connect; the rest are Coming soon + Notify me (no fake buttons).
 export function ConnectionsHub(props: HubProps) {
@@ -238,6 +292,20 @@ export function ConnectionsHub(props: HubProps) {
   const [failed, setFailed] = useState(false);
   const r = recommend(props.industry);
   const o = props.outcome;
+  const conn = (k: string) => props.connections.find((x) => x.provider === k);
+  // X12: live tiles stay as cards; every Coming soon connector (any tier) folds into the one line below.
+  const live = {
+    recommended: r.recommended.filter((t) => t.available === "live"),
+    optional: r.optional.filter((t) => t.available === "live"),
+  };
+  const soon = [...r.recommended, ...r.optional, ...r.later]
+    .filter((t) => t.available === "coming_soon")
+    .map((t) => t.connector);
+  const attention = props.connections.filter((x) => x.status === "needs_reauth");
+  // X30: the next unconnected Recommended tile, unless a reconnect banner already holds the primary.
+  const next = attention.length
+    ? null
+    : (live.recommended.find((t) => !conn(t.connector) || conn(t.connector)!.status === "revoked")?.connector ?? null);
 
   return (
     <div className="flex flex-col gap-8">
@@ -252,19 +320,34 @@ export function ConnectionsHub(props: HubProps) {
           <Banner tone="error">{c.outcomes.error}</Banner>
         ))}
       {failed && <Banner tone="error">{c.failed}</Banner>}
-      {(["recommended", "optional", "later"] as const).map(
+      {/* X12: what needs attention comes first, as a warn banner; its Reconnect is the one primary. */}
+      {attention.map((conn) => (
+        <Banner
+          key={conn.id}
+          tone="warn"
+          primary
+          action={
+            props.canConnect
+              ? { label: c.reconnect, onClick: () => setConsent(conn.provider as GoogleConnector) }
+              : undefined
+          }
+        >
+          {`${c.names[conn.provider as GoogleConnector]}: ${c.statuses.needs_reauth}`}
+        </Banner>
+      ))}
+      {(["recommended", "optional"] as const).map(
         (tier) =>
-          r[tier].length > 0 && (
+          live[tier].length > 0 && (
             <section key={tier} aria-labelledby={`tier-${tier}`} className="flex flex-col gap-3">
               <h2 id={`tier-${tier}`} className="text-ui font-semibold">
                 {c.tiers[tier]}
               </h2>
               <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                {r[tier].map((t) => (
+                {live[tier].map((t) => (
                   <TileCard
                     key={t.connector}
                     tile={t}
-                    primary={tier === "recommended"}
+                    primary={t.connector === next}
                     props={props}
                     onConsent={setConsent}
                     onRevoke={setRevoke}
@@ -275,6 +358,7 @@ export function ConnectionsHub(props: HubProps) {
             </section>
           ),
       )}
+      {soon.length > 0 && <ComingSoon connectors={soon} props={props} onFailed={() => setFailed(true)} />}
       {consent && (
         <Consent
           connector={consent}

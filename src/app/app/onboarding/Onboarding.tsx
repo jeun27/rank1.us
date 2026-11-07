@@ -120,7 +120,8 @@ export function Onboarding({
     <div className="flex flex-col gap-6">
       <div>
         <p className="text-caption text-inkMuted">{copy.step(d.step)}</p>
-        <h2 className="font-display text-h2 font-semibold md:text-h2-md">{copy.titles[d.step - 1]}</h2>
+        {/* OB2: one heading per step. Step 1 is the page's own H1 ("Add your business"). */}
+        {d.step > 1 && <h2 className="font-display text-h2 font-semibold md:text-h2-md">{copy.titles[d.step - 1]}</h2>}
       </div>
       {d.step === 1 && (
         <BusinessStep

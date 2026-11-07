@@ -544,6 +544,26 @@ Strings the lead approved for the UX plan (share/ux-plan §C; founder OK 2026-11
 | Onboarding step 2, beside Next while the place search runs (X24; §C) | "Finding places near you…" |
 | Onboarding step 3, sticky bar beside Finish setup (X23; §C, lead edit a) | "{n} of {total} questions tracked" ({total} is the plan limit, MAX_ACTIVE_QUESTIONS) |
 
+## Sign-in emails (founder-approved 2026-11-07)
+
+The Supabase auth emails in supabase/templates/ (#193). Magic link = magic_link.html (type=magiclink), Confirm signup = confirmation.html (type=signup). Both emails share every line unless the row says otherwise.
+
+| Where | String |
+|---|---|
+| Subject (both) | "Sign in to Rank1" |
+| HTML title (both) | "Sign in to Rank1" |
+| Inbox preview text (both) | "Your Rank1 sign-in link. It works once and expires in 1 hour." |
+| Logo alt (both) | "Rank1" |
+| Heading, Magic link | "Here’s your sign-in link" |
+| Heading, Confirm signup | "Welcome to Rank1" |
+| Reason line, Magic link | "You asked to sign in to Rank1 with this email address." |
+| Reason line, Confirm signup | "You asked to sign in to Rank1 for the first time with this email address." |
+| Button (both) | "Sign in to Rank1" |
+| Under the button, Confirm signup only | "Next: add your business and see how often AI names you." |
+| Expiry line (both) | "This link works once and expires in 1 hour." |
+| Fallback line (both) | "Button not working? Copy this link into your browser:" (then the plain link URL) |
+| Ignore line (both) | "Didn’t ask for this? You can ignore this email." |
+| Footer (both) | "Rank1 · rank1.us" (rank1.us links to https://rank1.us) |
 ## Privacy: Google user data (founder-approved 2026-11-07)
 
 The /privacy section Google OAuth verification needs. The Limited Use sentence is Google's wording, word for word; "Google API Services User Data Policy" links to https://developers.google.com/terms/api-services-user-data-policy and "Google Account permissions" to https://myaccount.google.com/permissions. Last updated 2026-11-07.
