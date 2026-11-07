@@ -12,8 +12,8 @@ export function Breadcrumb({ business, page }: { business: ReactNode; page: Reac
     // ends in an ellipsis.
     <nav aria-label="Breadcrumb" className="min-w-0 flex-1">
       {/* "/" separators come from CSS (::before on every crumb after the first), never extra list items.
-          OB1: a crumb with nothing in it is left out (or hidden, when an async switcher renders nothing), so
-          there's never an empty "/". */}
+          OB1: a crumb with nothing in it is left out (or hidden, when an async switcher renders nothing or is
+          still streaming in, holding only React's <template> placeholder), so there's never an empty "/". */}
       <ol className="flex min-w-0 items-center gap-2 whitespace-nowrap text-ui [&>li:empty]:hidden [&>li+li]:before:mr-2 [&>li+li]:before:text-inkMuted [&>li+li]:before:content-['/']">
         {/* Phones (X9a): the page name only. A real switcher (several businesses, /team) stays. */}
         <li className="shrink-0 text-text2 max-md:hidden">
@@ -25,7 +25,7 @@ export function Breadcrumb({ business, page }: { business: ReactNode; page: Reac
           </Link>
         </li>
         {business != null && business !== false && business !== "" && (
-          <li className="flex min-w-0 items-center font-medium text-ink max-md:before:hidden max-md:has-[[data-crumb-static]]:hidden">
+          <li className="flex min-w-0 items-center font-medium text-ink max-md:before:hidden max-md:has-[[data-crumb-static]]:hidden [&:not(:has(>:not(template)))]:hidden">
             {typeof business === "string" ? (
               <span data-crumb-name data-crumb-static className="min-w-0 truncate">
                 {business}

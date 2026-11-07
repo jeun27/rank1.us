@@ -89,6 +89,8 @@ describe("v3 /app shell", () => {
     const ol = screen.getByRole("navigation", { name: "Breadcrumb" }).querySelector("ol")!;
     // Hidden when empty, and the next crumb drops its "/" on phones when the crumb before it is empty.
     expect(ol.className.split(" ")).toContain("[&>li:empty]:hidden");
+    // While the switcher streams in, its crumb holds only React's <template> placeholder: hidden too.
+    expect(within(ol).getAllByRole("listitem")[1].className).toContain("[&:not(:has(>:not(template)))]:hidden");
     expect(within(ol).getAllByRole("listitem").at(-1)!.className).toContain("max-md:[li:empty+&]:before:hidden");
   });
 });
