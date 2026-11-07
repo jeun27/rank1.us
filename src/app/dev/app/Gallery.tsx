@@ -32,7 +32,7 @@ import { FixList } from "@/components/fixes/FixList";
 import { ReportView } from "@/components/report/ReportView";
 import type { ReportRow } from "@/lib/queries/reports";
 import { exampleDone, exampleFixes as fixes, exampleTidyUps, exampleUnchecked } from "@/components/fixes/example-data";
-import { ErrorState, Skeleton } from "@/components/app/states";
+import { DashboardSkeleton, ErrorState, Skeleton } from "@/components/app/states";
 import {
   exampleBusiness,
   exampleFailedRun,
@@ -62,7 +62,7 @@ const experiment = { end: noop, remove: noop };
 const pillarFixes = fixes.map((f) => ({ ...f, pillar: f.rule_key === "R14" ? ("p5" as const) : ("p2" as const) }));
 const pillarTidyUps = exampleTidyUps.map((f) => ({ ...f, pillar: "p2" as const }));
 const pillarDone = exampleDone.map((f) => ({ ...f, pillar: "p2" as const }));
-const results = "We couldn't load your results. Try again.";
+const results = "We couldn't load your results.";
 const fresh = { checkedAt: exampleQuestions.run!.finished_at, answers: 38, now: NOW };
 // Success = everything answered; partial = the 4b partial state of the same page.
 const allOk = {
@@ -163,7 +163,7 @@ export const STATES: Record<string, () => React.ReactNode> = {
       now={NOW}
     />
   ),
-  "dashboard-loading": () => <Skeleton title="Dashboard" />,
+  "dashboard-loading": () => <DashboardSkeleton />,
   "dashboard-error": () => <ErrorState title="Dashboard" message={results} reset={() => {}} />,
   "competitors-success": () => (
     <CompetitorsView
@@ -389,9 +389,7 @@ export const STATES: Record<string, () => React.ReactNode> = {
   "history-partial": () => <HistoryView runs={[exampleFailedRun, ...exampleRuns]} />,
   "history-loading": () => <Skeleton title="History" />,
   "history-empty": () => <HistoryView runs={[]} />,
-  "history-error": () => (
-    <ErrorState title="History" message="We couldn't load your history. Try again." reset={() => {}} />
-  ),
+  "history-error": () => <ErrorState title="History" message="We couldn't load your history." reset={() => {}} />,
   "billing-unpaid": () => <BillingView billing={{ status: null, seats: 0, nextInvoiceAt: null }} actions={billing} />,
   "billing-paid": () => <BillingView billing={paidPlan} actions={billing} />,
   "billing-past-due": () => <BillingView billing={{ ...paidPlan, status: "past_due" }} actions={billing} />,
