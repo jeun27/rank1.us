@@ -611,7 +611,7 @@ function QuestionsStep({
       : buildQuestions({ cuisine: b.cuisine, city: b.city, state: b.state }, d.picks).map((q): Question => ({
           short: q.short_text,
           long: q.long_text,
-          template: { short: q.short_text, long: q.long_text, key: String(q.template_sort) },
+          template: { short: q.short_text, long: q.long_text, key: q.key },
           active: true,
           level: "city",
         }));
@@ -653,7 +653,10 @@ function QuestionsStep({
         state: q.level === "country" ? null : b.state.trim(),
         city: q.level === "city" ? b.city.trim() : null,
         template_key: q.template.key,
+        template_short: q.template.short,
+        template_long: q.template.long,
       })),
+      question_picks: d.picks,
     };
     setSaving(true);
     setFailed(false);

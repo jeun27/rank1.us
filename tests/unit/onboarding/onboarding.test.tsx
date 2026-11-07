@@ -395,7 +395,15 @@ describe("Onboarding 3: Questions + location", () => {
       country: "US",
       state: "CA",
       city: null,
-      template_key: String(expected[0].template_sort),
+      template_key: expected[0].key,
+      template_short: expected[0].short_text,
+      template_long: expected[0].long_text,
+    });
+    expect(input.question_picks).toEqual({
+      landmarks: ["Diamond Jamboree", "Irvine Spectrum Center", "UC Irvine"],
+      areas: ["Northwood", "Turtle Rock", "Woodbridge"],
+      dietary: ["vegan", "vegetarian"],
+      occasion: ["date night"],
     });
     expect(input.questions[1]).toMatchObject({ active: false, location_level: "city", city: "Irvine", state: "CA" });
   });

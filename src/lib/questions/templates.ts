@@ -15,7 +15,10 @@ export type Business = { cuisine: string; city: string; state: string };
 export type Picks = { landmarks: string[]; areas: string[]; dietary: string[]; occasion: string[] };
 export type Choice = Partial<Record<"landmark" | "area" | "dietary" | "occasion", string>>;
 export type FilledQuestion = { short_text: string; long_text: string };
-export type BuiltQuestion = FilledQuestion & { template_sort: number };
+// key is the row's template_key: "{sort}", plus "|{slot}={value}" for each pick it used. Stable across
+// city and cuisine changes, so a saved card can rewrite the same row (save_business_card).
+export type KeyedQuestion = FilledQuestion & { key: string };
+export type BuiltQuestion = KeyedQuestion & { template_sort: number };
 
 export const MAX_ACTIVE_QUESTIONS = 25;
 
@@ -172,7 +175,7 @@ const pickLists = (picks: Picks) =>
 const same = (a: string | null, b: string) => a === null || a.toLowerCase() === b.toLowerCase();
 
 // One question per combination of picks for the template's slots, in slot order. Empty if a slot has no picks.
-export function expandTemplate(t: QuestionTemplate, business: Business, picks: Picks): FilledQuestion[] {
+export function expandTemplate(t: QuestionTemplate, business: Business, picks: Picks): KeyedQuestion[] {
   if (!same(t.fixed_cuisine, business.cuisine) || !same(t.fixed_city, business.city)) return [];
   const lists = pickLists(picks);
   let choices: Choice[] = [{}];
@@ -181,7 +184,10 @@ export function expandTemplate(t: QuestionTemplate, business: Business, picks: P
     const key = slot as keyof Choice;
     choices = choices.flatMap((c) => lists[key].map((value) => ({ ...c, [key]: value })));
   }
-  return choices.map((c) => fillTemplate(t, business, c));
+  return choices.map((c) => ({
+    ...fillTemplate(t, business, c),
+    key: [String(t.sort), ...Object.entries(c).map(([slot, value]) => `${slot}=${value}`)].join("|"),
+  }));
 }
 
 // A business's active questions: dedupe by short text (first template wins), then take round-robin

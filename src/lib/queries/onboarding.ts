@@ -1,3 +1,4 @@
+import type { Picks } from "@/lib/questions/templates";
 import type { Tables } from "@/types/db";
 import type { DbClient } from "./client";
 import type { Industry } from "./contactRequests";
@@ -52,10 +53,14 @@ export type OnboardingInput = {
     >;
   competitors: (Pick<Competitor, "name"> &
     Partial<Pick<Competitor, "domain" | "rating" | "maps_cid">> & { source: "maps" | "manual" })[];
-  questions: (Pick<Question, "short_text" | "long_text" | "active" | "template_key"> & {
-    active_form: "short" | "long";
-    location_level: "country" | "state" | "city";
-  } & Partial<Pick<Question, "country" | "state" | "city">>)[];
+  // The card's question picks (stored for Settings), and each generated row's template output
+  // (template_short/template_long, from the builder) so a later card save can tell edited rows apart.
+  question_picks?: Picks;
+  questions: (Pick<Question, "short_text" | "long_text" | "active" | "template_key"> &
+    Partial<Pick<Question, "template_short" | "template_long">> & {
+      active_form: "short" | "long";
+      location_level: "country" | "state" | "city";
+    } & Partial<Pick<Question, "country" | "state" | "city">>)[];
 };
 
 export type DfyClientInput = { workspace_name: string; business: OnboardingInput["business"] };
