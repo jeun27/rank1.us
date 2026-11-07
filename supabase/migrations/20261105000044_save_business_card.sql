@@ -47,11 +47,11 @@ grant insert (question_picks), update (question_picks) on table public.businesse
 
 -- Invoker (RLS applies): only someone who can write the business. p_card holds the card fields to change;
 -- p_questions is the builder's output for the new card, in template order: [{ key, short, long }].
--- Hand-added (no template_key) and edited rows are untouched. Unedited rows whose key is still produced
--- are rewritten in place (same id); the others are deactivated, never deleted. New keys (and texts) are
--- inserted. Owner rows keep their active flag, and a row the owner switched off (owner_off) stays off;
--- the other template rows fill the free slots of the 25 cap in template order, so rows a save switched
--- off come back when their template applies again.
+-- Hand-added (no template_key) and edited rows are untouched. A row's text never changes: an unedited
+-- generated row whose text is no longer produced is switched off, and its replacement is this
+-- business's row with exactly the new text (reused, so a round trip restores ids) or a new row. Owner
+-- rows keep their active flag and owner_off rows stay off; the other matching rows fill the free slots
+-- of the 25 cap in output order, so rows a save switched off come back when their text applies again.
 -- Errors: 42501, 22023 bad input, 23514 a CHECK.
 create or replace function public.save_business_card(p_business_id uuid, p_card jsonb, p_questions jsonb)
 returns void
@@ -92,34 +92,30 @@ begin
   where id = p_business_id
   returning * into b;
 
-  -- Unedited generated rows whose key is still produced: new text in place, located in the new city.
-  update public.questions q set
-    short_text = n.short, long_text = n.long, template_short = n.short, template_long = n.long,
-    state = case when q.location_level = 'country' then q.state else b.state end,
-    city = case when q.location_level = 'city' then b.city else q.city end
-  from jsonb_to_recordset(p_questions) as n(key text, short text, long text)
-  where q.business_id = p_business_id and q.template_key = n.key
-    and q.template_short is not null and q.short_text = q.template_short
-    and q.long_text is not distinct from q.template_long;
-
-  -- Unedited generated rows whose template no longer applies: off, never deleted (history keeps its ids).
+  -- A row's text never changes (its history measures that exact question). Unedited generated rows whose
+  -- text the new card no longer produces are switched off (system-off, history kept).
   update public.questions q set active = false
-  where q.business_id = p_business_id and q.active and q.template_key is not null
-    and q.template_short is not null and q.short_text = q.template_short
-    and q.long_text is not distinct from q.template_long
-    and not exists (select 1 from jsonb_to_recordset(p_questions) as n(key text) where n.key = q.template_key);
+  where q.business_id = p_business_id and q.active and q.template_short is not null and q.short_text = q.template_short and q.long_text is not distinct from q.template_long
+    and not exists (select 1 from jsonb_to_recordset(p_questions) as n(short text, long text)
+                    where n.short = q.short_text and n.long is not distinct from q.long_text);
 
+  -- Each new output reuses this business's row with exactly that text (a round trip gets its ids back),
+  -- else a new row, located in the card's city. A text the business already has in another case or as
+  -- an owner row is not added again.
+  update public.questions q set template_key = n.key
+  from jsonb_to_recordset(p_questions) as n(key text, short text, long text)
+  where q.business_id = p_business_id and q.template_short is not null and q.short_text = q.template_short and q.long_text is not distinct from q.template_long
+    and q.short_text = n.short and q.long_text is not distinct from n.long and q.template_key <> n.key;
   insert into public.questions (business_id, short_text, long_text, template_short, template_long, template_key,
                                 active_form, active, location_level, country, state, city)
   select p_business_id, n.short, n.long, n.short, n.long, n.key, 'long', false, 'city', b.country, b.state, b.city
   from jsonb_to_recordset(p_questions) with ordinality as n(key text, short text, long text, ord bigint)
   where not exists (select 1 from public.questions q
-                    where q.business_id = p_business_id
-                      and (q.template_key = n.key or lower(q.short_text) = lower(n.short)))
+                    where q.business_id = p_business_id and lower(q.short_text) = lower(n.short))
   order by n.ord;
 
-  -- Owner rows (hand-added or edited) keep their flag and owner_off rows stay off; the other template
-  -- rows fill the rest of the 25 slots in template order. Off before on, so the cap trigger never sees 26.
+  -- Owner rows (hand-added or edited) keep their flag and owner_off rows stay off; the matching template
+  -- rows fill the rest of the 25 slots in output order. Off before on, so the cap trigger never sees 26.
   select 25 - count(*) into free from public.questions q
   where q.business_id = p_business_id and q.active
     and (q.template_key is null or q.template_short is null or q.short_text <> q.template_short
@@ -128,17 +124,15 @@ begin
   from (select q.id, row_number() over (order by n.ord, q.id) as rk
      from public.questions q
      join jsonb_to_recordset(p_questions) with ordinality as n(key text, short text, long text, ord bigint)
-       on n.key = q.template_key
-     where q.business_id = p_business_id and q.template_short is not null and q.short_text = q.template_short
-       and q.long_text is not distinct from q.template_long and not q.owner_off) r
+       on q.short_text = n.short and q.long_text is not distinct from n.long
+     where q.business_id = p_business_id and q.template_short is not null and q.short_text = q.template_short and q.long_text is not distinct from q.template_long and not q.owner_off) r
   where q.id = r.id and r.rk > free and q.active;
   update public.questions q set active = true
   from (select q.id, row_number() over (order by n.ord, q.id) as rk
      from public.questions q
      join jsonb_to_recordset(p_questions) with ordinality as n(key text, short text, long text, ord bigint)
-       on n.key = q.template_key
-     where q.business_id = p_business_id and q.template_short is not null and q.short_text = q.template_short
-       and q.long_text is not distinct from q.template_long and not q.owner_off) r
+       on q.short_text = n.short and q.long_text is not distinct from n.long
+     where q.business_id = p_business_id and q.template_short is not null and q.short_text = q.template_short and q.long_text is not distinct from q.template_long and not q.owner_off) r
   where q.id = r.id and r.rk <= free and not q.active;
   perform set_config('rank1.card_save', 'off', true);
 end;

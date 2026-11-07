@@ -61,12 +61,11 @@ describe("save_business_card", () => {
     expect(b.question_picks).toEqual(PICKS);
   });
 
-  it("a city change rewrites unedited rows in place: same ids, so history keeps its question ids", async () => {
+  it("a city change never rewrites text: a new row (new id) takes over, the old id keeps its answers, and the way back reuses it", async () => {
     const { user, id } = await business("bc-city");
     await saveBusinessCard(user.db, id, card());
-    const before = await rows(id);
     const kept = keysOf(card({ city: "Tustin" }));
-    const q = before.find((r) => r.active && kept.includes(r.template_key!))!;
+    const q = (await rows(id)).find((r) => r.active && kept.includes(r.template_key!))!;
     const run = must(
       await s().from("runs").insert({ business_id: id, kind: "audit", status: "complete" }).select("id").single(),
     ).id;
@@ -87,13 +86,22 @@ describe("save_business_card", () => {
     ).id;
 
     await saveBusinessCard(user.db, id, card({ city: "Tustin" }));
-    const after = await rows(id);
-    const moved = after.find((r) => r.id === q.id)!;
-    expect(moved.template_key).toBe(q.template_key);
-    expect(moved.short_text).toContain("Tustin");
-    expect(moved.template_short).toBe(moved.short_text);
+    let after = await rows(id);
+    expect(after.find((r) => r.id === q.id)).toMatchObject({
+      short_text: q.short_text,
+      active: false,
+      owner_off: false,
+    });
+    const replacement = after.find((r) => r.template_key === q.template_key && r.id !== q.id)!;
+    expect(replacement).toMatchObject({ active: true, city: "Tustin" });
+    expect(replacement.short_text).toContain("Tustin");
     expect(must(await s().from("answers").select("question_id").eq("id", answer).single()).question_id).toBe(q.id);
-    expect(after.length).toBeGreaterThanOrEqual(before.length);
+
+    await saveBusinessCard(user.db, id, card());
+    after = await rows(id);
+    expect(after.find((r) => r.id === q.id)).toMatchObject({ short_text: q.short_text, active: true });
+    expect(after.find((r) => r.id === replacement.id)).toMatchObject({ active: false });
+    expect(after.filter((r) => r.short_text === q.short_text)).toHaveLength(1);
   });
 
   it("edited and hand-added rows are byte-identical after a save", async () => {
@@ -114,7 +122,7 @@ describe("save_business_card", () => {
     expect((await rows(id)).filter((r) => r.id === target.id || r.id === hand)).toEqual(owned);
   });
 
-  it("a cuisine change deactivates unedited rows that no longer apply, never deletes, and inserts the new keys", async () => {
+  it("a cuisine change switches off rows whose text no longer applies, never deletes, and adds one row per new text", async () => {
     const { user, id } = await business("bc-cuisine");
     await saveBusinessCard(user.db, id, card());
     const before = await rows(id);
@@ -124,8 +132,12 @@ describe("save_business_card", () => {
     const keys = new Set(keysOf(next));
 
     expect(after.map((r) => r.id)).toEqual(expect.arrayContaining(before.map((r) => r.id)));
-    for (const r of after) if (!keys.has(r.template_key!)) expect(r.active, r.short_text).toBe(false);
-    for (const k of keys) expect(after.filter((r) => r.template_key === k)).toHaveLength(1);
+    const texts = new Set(
+      buildQuestions({ cuisine: "ramen", city: "Tustin", state: "CA" }, PICKS).map((q) => q.short_text),
+    );
+    for (const r of after) if (!texts.has(r.short_text)) expect(r.active, r.short_text).toBe(false);
+    for (const t of texts) expect(after.filter((r) => r.short_text === t)).toHaveLength(1);
+    expect(after.filter((r) => r.active).every((r) => keys.has(r.template_key!))).toBe(true);
     const active = after.filter((r) => r.active).length;
     expect(active).toBeGreaterThan(0);
     expect(active).toBeLessThanOrEqual(25);
@@ -185,16 +197,23 @@ describe("save_business_card", () => {
     expect((await rows(id)).find((r) => r.id === two.id)).toMatchObject({ active: false, owner_off: true });
 
     await saveBusinessCard(user.db, id, card({ city: "Tustin" }), fixture);
-    expect((await rows(id)).find((r) => r.id === two.id)).toMatchObject({
+    const tustin = await rows(id);
+    expect(tustin.find((r) => r.id === two.id)).toMatchObject({
       active: false,
       owner_off: true,
-      short_text: "best pho 1 in Tustin",
+      short_text: "best pho 1 in Irvine",
+    });
+    // The Tustin question is a new question (new row), not the one the owner switched off.
+    expect(tustin.find((r) => r.short_text === "best pho 1 in Tustin")).toMatchObject({
+      active: true,
+      owner_off: false,
     });
 
     await saveBusinessCard(user.db, id, card({ vertical: "plumbing", cuisine: null }), fixture);
     await saveBusinessCard(user.db, id, card(), fixture);
     const back = await rows(id);
-    const restaurant = back.filter((r) => /^\d+$/.test(r.template_key ?? ""));
+    const restaurant = back.filter((r) => /^\d+$/.test(r.template_key ?? "") && r.short_text.endsWith("Irvine"));
+    expect(back.filter((r) => r.short_text.endsWith("Tustin")).every((r) => !r.active)).toBe(true);
     expect(
       restaurant
         .filter((r) => r.active)

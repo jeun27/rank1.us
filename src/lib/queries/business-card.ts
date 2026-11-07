@@ -19,8 +19,9 @@ export const cardQuestions = (card: BusinessCard) =>
     : [];
 
 // Saves the card and reconciles its questions in one transaction (save_business_card): edited and
-// hand-added rows are untouched, unedited ones are rewritten in place or switched off, new ones are
-// added into the free slots of the 25 cap. Errors: 42501 not allowed, 22023 bad input, 23514 a CHECK.
+// hand-added rows are untouched; a row's text never changes, so an unedited row whose text is no longer
+// produced is switched off and the new text reuses or adds a row; owner-off rows stay off; the rest
+// fill the free slots of the 25 cap. Errors: 42501 not allowed, 22023 bad input, 23514 a CHECK.
 // `build` is the template builder (tests inject a fixture set; DP3 extends cardQuestions).
 export async function saveBusinessCard(
   db: DbClient,
