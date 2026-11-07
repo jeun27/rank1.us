@@ -63,7 +63,7 @@ describe("supabase/seed.sql on a fresh db reset", () => {
       ),
     );
     expect(counts).toMatchObject({
-      question_templates: 20,
+      question_templates: 32,
       fix_rules: 28,
       domain_categories: 5,
       workspaces: 1,
@@ -78,11 +78,27 @@ describe("supabase/seed.sql on a fresh db reset", () => {
     expect(counts.citations).toBeGreaterThan(0);
   });
 
-  it("question_templates match TEMPLATES verbatim", async () => {
+  it("question_templates match TEMPLATES verbatim (the seed's restaurant rows)", async () => {
     const db = await rows(
-      `select short_form, long_form, slots, fixed_cuisine, fixed_city, origin, sort from public.question_templates order by sort`,
+      `select short_form, long_form, slots, fixed_cuisine, fixed_city, origin, sort from public.question_templates
+       where vertical = 'restaurant' order by sort`,
     );
     expect(db).toEqual(TEMPLATES.map((t) => ({ ...t, slots: [...t.slots] })));
+  });
+
+  // 0045 (DP3): the 12 Onboarding v2 Q10 rows, sort 21-32, by family. data-pipeline's #209 widens the
+  // verbatim check above to all 32 once TEMPLATES has them.
+  it("question_templates: the 12 Q10 rows from 0045, by family", async () => {
+    const db = await rows<{ vertical: string; sort: number; origin: string }>(
+      `select vertical, sort, origin from public.question_templates where vertical <> 'restaurant' order by sort`,
+    );
+    expect(db.map((r) => r.sort)).toEqual(Array.from({ length: 12 }, (_, i) => i + 21));
+    expect(db.map((r) => r.vertical)).toEqual([
+      ...Array(6).fill("local"),
+      ...Array(3).fill("dtc"),
+      ...Array(3).fill("saas"),
+    ]);
+    expect(db.filter((r) => r.origin === "Onboarding v2 Q10, trades only").map((r) => r.sort)).toEqual([23]);
   });
 
   // Step 10 (lead): migration 0014 adds A1-A6 as disabled placeholders (Build Pack text unavailable).
