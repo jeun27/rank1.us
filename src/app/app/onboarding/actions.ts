@@ -7,7 +7,15 @@ import { MAX_ACTIVE_QUESTIONS } from "@/lib/questions/templates";
 import { getLanding } from "@/lib/queries/auth";
 import { createBusinessOnboarding } from "@/lib/queries/onboarding";
 import { createClient } from "@/lib/supabase/server";
-import type { CompetitorQuery, CompetitorSearch, OnboardingInput, SiteProfile, SiteServices } from "./contract";
+import { listLocalPlaces } from "@/lib/queries/places";
+import type {
+  CompetitorQuery,
+  CompetitorSearch,
+  LocalPlace,
+  OnboardingInput,
+  SiteProfile,
+  SiteServices,
+} from "./contract";
 import { withLimits } from "@/lib/onboarding/limits";
 import { storeFor } from "../lookup-store";
 import { lookupCompetitors } from "@/lib/onboarding/lookup";
@@ -41,6 +49,13 @@ export async function readServicesAction(domain: string): Promise<SiteServices> 
 }
 const ok = (x: { status: string }) => x.status === "ok";
 
+// UI3: the places for the card's city (no more hard-coded Irvine). Reads Rank1's own table, no outbound call.
+export async function placesAction(city: string, state: string): Promise<LocalPlace[]> {
+  const caller = await onboardingClient();
+  if (!caller || !city.trim() || !state.trim()) return [];
+  return listLocalPlaces(caller.db, city.trim(), state.trim()).catch(() => []);
+}
+
 // The UI shows only the COPY.md message, so the raw upstream error never leaves the server.
 export async function findCompetitorsAction(q: CompetitorQuery): Promise<CompetitorSearch> {
   const caller = await onboardingClient();
@@ -61,11 +76,12 @@ export async function finishAction(input: OnboardingInput): Promise<{ error: str
     active.some((q) => !q.short_text.trim() || !q.long_text?.trim())
   )
     return { error: "invalid" };
-  // C-b: the vertical select and the connect step are behind ENABLE_CONNECTIONS (lead Q4).
+  // C-b: the connect step is behind ENABLE_CONNECTIONS (lead Q4). UI3: the vertical is always saved, since the
+  // card's business type picks the questions.
   const connections = process.env.ENABLE_CONNECTIONS === "true";
-  const { vertical, ...business } = input.business;
+  const vertical = input.business.vertical;
   try {
-    await createBusinessOnboarding(await createClient(), connections ? input : { ...input, business });
+    await createBusinessOnboarding(await createClient(), input);
   } catch (e) {
     return { error: (e as { code?: string }).code ?? "save_failed" };
   }

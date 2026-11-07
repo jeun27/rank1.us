@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { copy, reading, welcome } from "@/app/app/onboarding/copy";
+import { card, copy, reading, welcome } from "@/app/app/onboarding/copy";
 
 const copyMd = readFileSync("docs/COPY.md", "utf8");
 // Each templated string, filled the way COPY.md writes it ({cuisine}, {city}, question 7, {Engine}).
@@ -62,6 +62,16 @@ describe("onboarding copy", () => {
       reading.note,
       reading.button,
       reading.unreadable,
+      // UI3: the card (Q5, Q5b, Q6, Q7).
+      ...Object.values(card).flatMap((v) =>
+        typeof v === "string" ? [v] : typeof v === "object" ? Object.values(v) : [],
+      ),
+      card.filled("{domain}"),
+      card.nearby("{city}"),
+      card.found("{n}" as unknown as number),
+      card.places("{city}"),
+      card.shown("{n}" as unknown as number, "{total}" as unknown as number),
+      card.phonePreview("{question}", "{n}" as unknown as number),
     ];
     for (const s of strings) expect(copyMd, s).toContain(s);
   });

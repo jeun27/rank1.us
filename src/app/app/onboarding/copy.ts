@@ -1,5 +1,6 @@
 // Onboarding strings, all from docs/COPY.md (4b Onboarding 1-3, "Onboarding (lead, 2026-11-05)", Final set).
 export const copy = {
+  title: "Add your business",
   next: "Next",
   // COPY.md "UX (lead, 2026-11-06)" X24: beside a disabled Next.
   missing: {
@@ -90,4 +91,44 @@ export const reading = {
   note: "No AI reads your site. Rank1 only looks at what your pages already say.",
   button: "Reading…",
   unreadable: "We couldn't read that site. Fill in your business below.",
+};
+
+// Onboarding v2, O1 (founder-approved P2): README §6 Q5/Q6/Q7 and §8 Q5b, the business card (UI3).
+export const card = {
+  title: "Check your business",
+  filled: (domain: string) => `We filled this in from ${domain}.`,
+  change: "Change anything that's wrong.",
+  type: "Business type",
+  kinds: { restaurant: "Restaurant", local: "Local service", dtc: "Shop or brand", saas: "Software", other: "Other" },
+  pickOne: "Pick one",
+  typeHint:
+    "This decides which details we ask for and which questions Rank1 writes. Restaurants also pick a cuisine, dietary options and occasions.",
+  detected: "Detected from your website",
+  notOnSite: "Not on your site",
+  whatYouDo: "What you do",
+  address: "Address",
+  phone: "Phone",
+  areaServed: "Area you serve",
+  nearby: (city: string) => `${city} and nearby cities`,
+  areaHint: "We picked this from your city. Change it if you travel further.",
+  services: "Services",
+  addService: "+ Add a service",
+  menu: "Menu highlights",
+  addDish: "+ Add a dish",
+  found: (n: number) => `${n} found in your menu`,
+  dietary: "Dietary options you serve",
+  dietaryHint: "Pick any that apply. Rank1 doesn't guess these.",
+  landmarks: "Landmarks near you",
+  places: (city: string) => `Places in ${city}`,
+  landmarksHint: "Pick up to 3. Shown only when Rank1 knows places in your city.",
+  next: "Looks right, next",
+  later: "You can change all of this later in Settings.",
+  // Q7: the question preview.
+  preview: "Questions Rank1 will ask AI",
+  previewHint: "Built from your card. They change as you edit it.",
+  previewLater: "You'll see and edit all of them in step 4.",
+  shown: (n: number, total: number) => `${n} of ${total}`,
+  phonePreview: (question: string, n: number) => `Rank1 will ask AI: “${question}” and ${n} more`,
+  // Pending founder copy (one line): the X24 reason when no type is picked.
+  missingType: "Pick a business type first.",
 };

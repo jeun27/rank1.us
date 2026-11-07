@@ -6,6 +6,7 @@ const STATES = [
   "1 empty",
   "1 reading",
   "1 loading",
+  "2 local",
   "2 error",
   "2 partial",
   "2 success",
@@ -30,7 +31,7 @@ test("/dev/onboarding shows every 4b onboarding state, accessibly", async ({ pag
     .evaluate((f: HTMLFormElement) => f.requestSubmit());
   const log = state("1 reading").getByRole("group", { name: "Reading exampleramen.test" });
   await expect(log.getByText("3 of 4")).toBeVisible();
-  await expect(log.getByText("Found name, phone, city in schema.org")).toBeVisible();
+  await expect(log.getByText("Found name, type, phone, city in schema.org")).toBeVisible();
   await expect(log.getByText("Reading your menu links…")).toBeVisible();
   await expect(state("2 error").getByText("We couldn't read that site. Fill in your business below.")).toBeVisible();
   await expect(state("2 partial").getByLabel("Cuisine")).toHaveAttribute("data-attention", "true");

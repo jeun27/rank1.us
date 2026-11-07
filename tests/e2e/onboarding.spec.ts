@@ -9,6 +9,14 @@ const axeClean = async (page: Page) => {
 
 // Next is the one primary button on each screen; on phones it sits in the sticky bar.
 const next = (page: Page) => page.getByRole("button", { name: "Next" });
+// UI3: the card's primary, and its type + city (no Irvine default any more).
+const looksRight = (page: Page) => page.getByRole("button", { name: "Looks right, next" });
+const restaurantIn = async (page: Page, city = "Irvine", state = "CA") => {
+  // The radio itself is visually hidden inside its segment; people click the label.
+  await page.getByRole("radiogroup", { name: "Business type" }).getByText("Restaurant", { exact: true }).click();
+  await page.getByLabel("City").fill(city);
+  await page.getByLabel("State").fill(state);
+};
 // UI1: the step shows in the rail at md+, and in the phone line/bar below md.
 const STEPS = ["Your site", "Your business", "Competitors", "Questions"];
 const onStep = async (page: Page, n: number) =>
@@ -35,10 +43,11 @@ test("a new owner sets up a business in 3 steps and lands on /app", async ({ pag
   await expect(page.getByText("We couldn't read that site. Fill in your business below.")).toBeVisible({
     timeout: 20_000,
   });
+  // An unreadable site preselects no type and no city (UI3).
+  await expect(page.getByLabel("City")).toHaveValue("");
+  await restaurantIn(page);
   await page.getByLabel("Business name").fill("Example Ramen House");
   await page.getByLabel("Cuisine").selectOption("ramen");
-  await expect(page.getByLabel("City")).toHaveValue("Irvine");
-  await expect(page.getByLabel("State")).toHaveValue("CA");
   for (const name of [
     "Diamond Jamboree",
     "Irvine Spectrum Center",
@@ -52,7 +61,7 @@ test("a new owner sets up a business in 3 steps and lands on /app", async ({ pag
   ])
     await page.getByRole("checkbox", { name, exact: true }).check();
   await axeClean(page);
-  await next(page).click();
+  await looksRight(page).click();
 
   // No DataForSEO keys in CI: the lookup reports missing keys and the manual form takes over.
   await onStep(page, 3);
@@ -136,6 +145,7 @@ test("tap targets are at least 44px on every step", async ({ page }) => {
   await page.getByLabel("Your website").fill("exampleramen.test");
   await page.getByLabel("Your website").press("Enter");
   await page.getByLabel("Business name").fill("Example Ramen House", { timeout: 20_000 });
+  await restaurantIn(page);
   await page.getByLabel("Cuisine").selectOption("ramen");
   expect(await small()).toEqual([]);
 });
@@ -201,9 +211,10 @@ test("no website: fill the card, finish, and the business is saved without a dom
   const user = await newUser("onboarding-nosite");
   await openMagicLink(page, user.email);
   await page.getByRole("button", { name: "No website? Fill it in yourself" }).click();
+  await restaurantIn(page);
   await page.getByLabel("Business name").fill("Example Ramen House");
   await page.getByLabel("Cuisine").selectOption("ramen");
-  await next(page).click();
+  await looksRight(page).click();
   await expect(page.getByText("Couldn't load nearby places. Add competitors by name.")).toBeVisible({
     timeout: 20_000,
   });

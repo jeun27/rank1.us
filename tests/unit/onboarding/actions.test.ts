@@ -150,11 +150,12 @@ describe("onboarding server actions", () => {
       await expect(finishAction(input)).rejects.toThrow("REDIRECT /app/onboarding/connect");
     });
 
-    it("off: /app, and a vertical in the payload is dropped", async () => {
+    // UI3: the card's business type picks the questions, so the vertical is saved even with the flag off.
+    it("off: /app, and the vertical is still saved", async () => {
       vi.stubEnv("ENABLE_CONNECTIONS", "false");
       user.current = { id: "u1" };
       await expect(finishAction(withVertical("saas"))).rejects.toThrow(/^REDIRECT \/app$/);
-      expect(createBusinessOnboarding).toHaveBeenCalledWith(expect.anything(), input);
+      expect(createBusinessOnboarding).toHaveBeenCalledWith(expect.anything(), withVertical("saas"));
     });
   });
 
