@@ -43,6 +43,8 @@ export async function loadHub(
       provider: c.provider,
       status: c.status,
       selected: c.selected_entities,
+      // #183: how many the account offers (null until the picker list was loaded once).
+      entityCount: c.entity_count,
     })),
     interest: [...new Set(interest.map((i) => i.provider))],
     changes: changes.map((x) => ({ id: x.id, connectionId: x.connection_id, field: x.field, at: x.created_at })),

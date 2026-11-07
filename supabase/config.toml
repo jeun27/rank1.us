@@ -245,6 +245,16 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
+# The branded sign-in emails (local dev; the hosted project gets the same files by hand). Both keep the
+# token_hash link /auth/callback verifies (HANDOFF.md, billing-auth 2026-11-05).
+[auth.email.template.magic_link]
+subject = "Sign in to Rank1"
+content_path = "./supabase/templates/magic_link.html"
+
+[auth.email.template.confirmation]
+subject = "Sign in to Rank1"
+content_path = "./supabase/templates/confirmation.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"

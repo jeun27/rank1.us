@@ -72,3 +72,21 @@ describe("Card", () => {
     expect(screen.getByRole("heading", { level: 3, name: "Leaderboard" })).toBeInTheDocument();
   });
 });
+
+// PR 27 (lead item 22): a warn banner, warnBg/warnText with role=status, for a connection that needs
+// attention; its action can be the screen's one filled button.
+describe("Banner warn", () => {
+  it("warnBg + warnText, role=status, and a primary action when asked", async () => {
+    const { Banner } = await import("@/components/ui/Banner");
+    const { render, screen } = await import("@testing-library/react");
+    render(
+      <Banner tone="warn" action={{ label: "Reconnect", onClick: () => {} }} primary>
+        Google Business Profile: Needs reconnect
+      </Banner>,
+    );
+    const el = screen.getByRole("status");
+    for (const c of ["bg-warnBg", "text-warnText", "rounded-banner"]) expect(el.className).toContain(c);
+    expectBareIcon(el, "alert");
+    expect(screen.getByRole("button", { name: "Reconnect" }).className).toContain("bg-accent");
+  });
+});

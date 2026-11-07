@@ -151,3 +151,17 @@ test("step 3: one-line rows and a sticky count + Finish bar", async ({ page }) =
   const box = (await step3.getByRole("button", { name: "Finish setup" }).boundingBox())!;
   expect(box.y + box.height).toBeLessThanOrEqual(page.viewportSize()!.height);
 });
+
+// OB2: one H1 at the app title size (22px, like every app page), and step 1 has no second heading.
+test("onboarding has one app-sized H1 and no 'Business' H2", async ({ page }) => {
+  test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
+  const user = await newUser("onboarding-heading");
+  await openMagicLink(page, user.email);
+  await page.goto("/app/onboarding");
+  const h1 = page.getByRole("heading", { level: 1 });
+  await expect(h1).toHaveCount(1);
+  await expect(h1).toHaveText("Add your business");
+  expect(await h1.evaluate((e) => getComputedStyle(e).fontSize)).toBe("22px");
+  await expect(page.getByRole("heading", { level: 2, name: "Business" })).toHaveCount(0);
+  await expect(page.getByText("Step 1 of 3")).toBeVisible();
+});

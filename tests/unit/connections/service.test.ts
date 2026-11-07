@@ -528,7 +528,8 @@ describe("G1 YouTube checklist", () => {
   });
 });
 
-describe("X30: the entity count is saved so the hub never calls Google on render", () => {
+// The picker-load count is covered above ("stores how many entities the account offers", #183).
+describe("X30: the entity count right after a connect", () => {
   const gbpFetch = () =>
     vi.fn<typeof globalThis.fetch>(async (input) => {
       const u = new URL(String(input));
@@ -543,19 +544,6 @@ describe("X30: the entity count is saved so the hub never calls Google on render
       if (u.host === "mybusinessaccountmanagement.googleapis.com") return json(fx.accountsPage2);
       return json(fx.locations);
     });
-
-  it("loading the picker saves how many entities Google listed", async () => {
-    await svc.listConnectionEntities(ctx(gbpFetch()), "conn-1");
-    expect(q.setConnectionEntityCount).toHaveBeenCalledWith(serviceDb, "conn-1", 2);
-  });
-
-  it("a failing count save never breaks the picker (code logged only)", async () => {
-    q.setConnectionEntityCount.mockRejectedValueOnce(Object.assign(new Error("secret"), { code: "42501" }));
-    const c = ctx(gbpFetch());
-    expect(await svc.listConnectionEntities(c, "conn-1")).toHaveLength(2);
-    expect(c.log.mock.calls.flat().join(" ")).toContain("42501");
-    expect(c.log.mock.calls.flat().join(" ")).not.toContain("secret");
-  });
 
   it("right after a connect, the count is saved once with the fresh token", async () => {
     const { url, cookie } = startAuth("gbp", "biz-1", ENV, NOW);

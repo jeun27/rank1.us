@@ -143,15 +143,20 @@ test("C2: the error banner is errorBg with a 1px 30% error hairline; info is inf
   await expect(error.locator("img")).toHaveCount(0);
   const info = section(page, "Banner").getByRole("status").first();
   expect(await info.evaluate((e) => getComputedStyle(e).backgroundColor)).toBe("rgb(20, 38, 59)");
-  for (const banner of [error, info])
+  const warn = section(page, "Banner").getByRole("status").nth(1);
+  for (const banner of [error, info, warn])
     expect(
       await banner.locator("[data-first-line] > svg").evaluate((i) => {
         const a = i.getBoundingClientRect();
         const text = i.parentElement!.nextElementSibling!;
         const b = text.getBoundingClientRect();
-        return [Math.round(a.width), a.top + a.height / 2 - b.top - parseFloat(getComputedStyle(text).lineHeight) / 2];
+        return [
+          i.childElementCount > 0,
+          Math.round(a.width),
+          a.top + a.height / 2 - b.top - parseFloat(getComputedStyle(text).lineHeight) / 2,
+        ];
       }),
-    ).toEqual([16, 0]);
+    ).toEqual([true, 16, 0]);
 });
 
 // Portal (b): the Status select became the check-off circle; Start is the 6px control.
