@@ -86,6 +86,27 @@ const keywordVertical = (text: string) => {
   return best;
 };
 
+// The one normalise step at the reader's output, so a read profile always fits #199's businesses CHECK
+// (no 23514 on insert): https links only (no spaces, ≤ 500 chars), deduped, at most 20; text trimmed
+// to its column cap. An emptied list loses its source tag.
+const CAP = { address: 200, areaServed: 200, phone: 40, category: 100 } as const;
+const MAX_LINKS = 20;
+const clip = (v: string | undefined, n: number) => v?.slice(0, n).trim() || undefined;
+function normalise(p: Omit<SiteProfile, "status">): Omit<SiteProfile, "status"> {
+  const out = { ...p, sources: { ...p.sources } };
+  for (const k of ["address", "phone", "category"] as const) {
+    out[k] = clip(p[k], CAP[k]);
+    if (!out[k]) {
+      delete out[k];
+      delete out.sources[k];
+    }
+  }
+  out.areaServed = p.areaServed.map((a) => clip(a, CAP.areaServed)).filter((a): a is string => !!a);
+  out.sameAs = [...new Set(p.sameAs.filter((u) => /^https:\/\/\S+$/.test(u) && u.length <= 500))].slice(0, MAX_LINKS);
+  for (const k of ["areaServed", "sameAs"] as const) if (!out[k].length) delete out.sources[k];
+  return out;
+}
+
 export function profileFromHtml(html: string): Omit<SiteProfile, "status"> {
   const all = nodes(html);
   const biz = all.find((n) =>
@@ -148,14 +169,9 @@ export function profileFromHtml(html: string): Omit<SiteProfile, "status"> {
     p.areaServed = areas;
     p.sources.areaServed = "schema";
   }
-  const links = all
-    .flatMap((n) => list(n.sameAs))
-    .filter((u): u is string => typeof u === "string" && /^https?:\/\//.test(u));
-  if (links.length) {
-    p.sameAs = [...new Set(links)];
-    p.sources.sameAs = "schema";
-  }
-  return p;
+  p.sameAs = all.flatMap((n) => list(n.sameAs)).filter((u): u is string => typeof u === "string");
+  if (p.sameAs.length) p.sources.sameAs = "schema";
+  return normalise(p);
 }
 
 // Stages 1–3 of the reading log: the home page only (robots.txt respected). Never throws.
