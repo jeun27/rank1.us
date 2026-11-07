@@ -6,7 +6,11 @@ import type { QuestionsWithLatestAnswers, RunSummary, TopFix } from "@/lib/queri
 
 export const exampleBusiness = { name: "Example Ramen House", paid: true };
 export const exampleLatest = { results: exampleRun("complete"), metrics: exampleMetrics };
-export const examplePartial = { results: exampleRun("partial"), metrics: exampleMetrics };
+// A partial run lost answers: 10 of 250 failed, leaving the 240 (72/72/72/24) that exampleMetrics counts (DQ18).
+export const examplePartial = {
+  results: exampleRun("partial", { failed: { chatgpt: 3, gemini: 3, google_aio: 3, perplexity: 1 } }),
+  metrics: exampleMetrics,
+};
 
 const perEngine = (n: number) =>
   Object.fromEntries(

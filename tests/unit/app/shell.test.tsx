@@ -116,7 +116,11 @@ describe("Dashboard (UI.md 4b)", () => {
         now={now}
       />,
     );
-    expect(screen.getByText(/^Last run partial: \d+ of 250 answers$/)).toBeInTheDocument();
+    // DQ18: the badge's received count matches the n under the %, and a partial run lost some answers.
+    const { run } = examplePartial.results;
+    expect(run.jobs_ok).toBeLessThan(run.jobs_total);
+    expect(run.jobs_ok).toBe(examplePartial.metrics.visibility.denominator);
+    expect(screen.getByText("Last run partial: 240 of 250 answers")).toBeInTheDocument();
     // X1 (S3): nothing to do renders nothing here; the Fix list's own empty state covers it.
     expect(screen.queryByText("Nothing to fix yet. Run your first check.")).not.toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "What to fix next" })).not.toBeInTheDocument();
