@@ -19,7 +19,10 @@ export default async function OnboardingPage() {
   const places = await listLocalPlaces(db, CITY, STATE);
   return (
     <main className="mx-auto max-w-2xl px-5 py-10 md:px-8 md:py-16">
-      <h1 className="mb-8 font-display text-display font-semibold">Add your business</h1>
+      {/* OB2: the app title size (Page's 22/28 gradient), not the landing's display size. */}
+      <h1 className="heading-gradient mb-8 font-display text-title font-semibold tracking-[-0.02em]">
+        Add your business
+      </h1>
       <Onboarding
         places={places}
         cuisines={CUISINES}
