@@ -51,7 +51,7 @@ export function HistoryTable({ runs, linked = true }: { runs: RunSummary[]; link
             )}
             {r.status === "partial" ? (
               <Badge tone="warn">
-                <span data-computed>{`${r.jobs_ok} of ${r.jobs_total} answers`}</span>
+                <span data-computed>{`${r.visibility.denominator} of ${r.jobs_total} answers`}</span>
               </Badge>
             ) : r.status === "failed" ? (
               <Badge tone="error">{c.failed}</Badge>

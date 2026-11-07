@@ -165,6 +165,9 @@ export default function DevUiPage() {
           We couldn&apos;t load your results. Try again.
         </Banner>
         <Banner tone="info">ChatGPT can&apos;t target a city yet, so we check it for the whole country.</Banner>
+        <Banner tone="warn" action={{ label: "Reconnect", href: "#banner" }} primary>
+          Google Business Profile: Needs reconnect
+        </Banner>
       </Section>
 
       <Section name="Table">

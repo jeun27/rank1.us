@@ -6,9 +6,13 @@ import type { QuestionsWithLatestAnswers, RunSummary, TopFix } from "@/lib/queri
 
 export const exampleBusiness = { name: "Example Ramen House", paid: true };
 export const exampleLatest = { results: exampleRun("complete"), metrics: exampleMetrics };
-// A partial run lost answers: 10 of 250 failed, leaving the 240 (72/72/72/24) that exampleMetrics counts (DQ18).
+// A partial run: 5 answers failed and 5 came back with no AI overview, leaving the 240 (72/72/72/24) that
+// exampleMetrics counts. jobs_ok is 245, so it is not the n (DQ18).
 export const examplePartial = {
-  results: exampleRun("partial", { failed: { chatgpt: 3, gemini: 3, google_aio: 3, perplexity: 1 } }),
+  results: exampleRun("partial", {
+    failed: { chatgpt: 3, gemini: 2 },
+    noOverview: { gemini: 1, google_aio: 3, perplexity: 1 },
+  }),
   metrics: exampleMetrics,
 };
 
@@ -23,8 +27,9 @@ export const exampleRuns: RunSummary[] = [80, 72, 75, 60, 66, 58, 51, 44].map((n
   kind: "weekly",
   status: i === 1 ? "partial" : "complete",
   jobs_total: 250,
-  jobs_ok: i === 1 ? 230 : 250,
-  jobs_failed: i === 1 ? 20 : 0,
+  // Run 2 is partial: 5 failed, and 5 of the 245 received had no AI overview, so its n is 240.
+  jobs_ok: i === 1 ? 245 : 250,
+  jobs_failed: i === 1 ? 5 : 0,
   started_at: new Date(Date.UTC(2026, 10, 2 - 7 * i, 14)).toISOString(),
   finished_at: new Date(Date.UTC(2026, 10, 2 - 7 * i, 14, 40)).toISOString(),
   visibility: metric(named, 240),
