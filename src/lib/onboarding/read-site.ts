@@ -97,7 +97,7 @@ export function robotsDecision(
   return { allowed: best.allow, line: best.line };
 }
 
-const decode = (s: string) =>
+export const decode = (s: string) =>
   s
     .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
@@ -108,7 +108,7 @@ const decode = (s: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
-const meta = (html: string, prop: string) => {
+export const meta = (html: string, prop: string) => {
   const tag = html.match(new RegExp(`<meta[^>]+(?:property|name)=["']${prop}["'][^>]*>`, "i"))?.[0];
   return tag?.match(/content=["']([^"']*)["']/i)?.[1];
 };
