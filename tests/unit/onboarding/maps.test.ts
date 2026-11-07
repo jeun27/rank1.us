@@ -1,3 +1,4 @@
+import { competitorCacheKey } from "@/lib/onboarding/lookup";
 import { describe, expect, it } from "vitest";
 import { mapsSearch } from "@/lib/engines/maps";
 import { findLocalCompetitors } from "@/lib/onboarding";
@@ -91,6 +92,40 @@ describe("findLocalCompetitors", () => {
       ]);
     },
   );
+
+  it('non-restaurants search their category, not "{cuisine} restaurant" (UI3 F3)', async () => {
+    const f = fakeFetch(irvine);
+    await findLocalCompetitors(
+      { cuisine: "", vertical: "plumbing", category: "Plumber", city: "Irvine", state: "CA" },
+      deps(f),
+    );
+    expect(sentBody(f)[0].keyword).toBe("plumber");
+  });
+
+  it("software, shops, or a local business with no category → no Maps request, no items", async () => {
+    for (const q of [
+      { vertical: "saas" as const, category: "CRM" },
+      { vertical: "dtc" as const, category: "wool socks" },
+      { vertical: "dental" as const, category: "  " },
+    ]) {
+      const f = fakeFetch(irvine);
+      expect(await findLocalCompetitors({ cuisine: "", city: "Irvine", state: "CA", ...q }, deps(f))).toEqual({
+        status: "ok",
+        items: [],
+      });
+      expect(f).not.toHaveBeenCalled();
+    }
+  });
+
+  it("the cache key keeps restaurants' keys as they were and separates other types by category", () => {
+    expect(competitorCacheKey({ cuisine: "Ramen", city: "Irvine", state: "ca" })).toBe("ramen|irvine|CA|");
+    expect(competitorCacheKey({ cuisine: "Ramen", vertical: "restaurant", city: "Irvine", state: "CA" })).toBe(
+      "ramen|irvine|CA|",
+    );
+    expect(
+      competitorCacheKey({ cuisine: null, vertical: "plumbing", category: "Plumber", city: "Irvine", state: "CA" }),
+    ).toBe("plumbing:plumber|irvine|CA|");
+  });
 
   it("passes missing_keys and error through with no items", async () => {
     expect(
