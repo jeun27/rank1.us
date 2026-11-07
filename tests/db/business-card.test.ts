@@ -219,6 +219,9 @@ describe("save_business_card", () => {
         .sort(),
     ).toEqual(keysOf(plumber).sort());
     expect(after.filter((r) => r.active).map((r) => r.short_text)).toContain("water heater repair in Irvine");
+    const active = after.filter((r) => r.active).length;
+    expect(active).toBeGreaterThanOrEqual(1);
+    expect(active).toBeLessThanOrEqual(25);
 
     await saveBusinessCard(user.db, id, card());
     const back = await rows(id);

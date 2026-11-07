@@ -51,6 +51,11 @@ describe("templates for every business type", () => {
       const qs = buildQuestions(business, { ...none, competitors: ["Example Rival"] });
       expect(qs.length, family).toBeGreaterThan(0);
       expect(qs.length).toBeLessThanOrEqual(MAX_ACTIVE_QUESTIONS);
+      // BE3 reconciles by key: stable and unique within one card's output.
+      expect(new Set(qs.map((q) => q.key)).size, family).toBe(qs.length);
+      expect(buildQuestions(business, { ...none, competitors: ["Example Rival"] }).map((q) => q.key)).toEqual(
+        qs.map((q) => q.key),
+      );
       for (const q of qs) {
         expect(`${q.short_text} ${q.long_text}`).not.toMatch(/\{\w+\}/);
         expect(TEMPLATES.find((t) => t.sort === q.template_sort)!.family).toBe(family);
