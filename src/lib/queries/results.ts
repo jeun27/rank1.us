@@ -218,3 +218,14 @@ export async function bumpFreeAuditNotifyAttempts(serviceDb: DbClient, runId: st
   if (error) throw error;
   return data;
 }
+
+export type BusinessFreeAudit = { runId: string; named: number; n: number; checkedAt: string | null };
+
+// The latest complete/partial free audit that is the business's own (same domain AND the workspace
+// owner's email, lead P4), for the locked Dashboard headline. Null when none or not a member. 42501 anon.
+export async function getFreeAuditForBusiness(db: DbClient, businessId: string): Promise<BusinessFreeAudit | null> {
+  const { data, error } = await db.rpc("free_audit_for_business", { p_business_id: businessId });
+  if (error) throw error;
+  const row = data[0];
+  return row ? { runId: row.run_id, named: row.named, n: row.n, checkedAt: row.checked_at } : null;
+}

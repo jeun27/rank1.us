@@ -835,6 +835,9 @@ isOneToOne: false
 "finish_report":
 { Args: { "p_error": string | null,"p_pdf_path": string | null,"p_report_id": string,"p_sent_to": string[] | null,"p_status": string }; Returns: boolean
                            },
+"free_audit_for_business":
+{ Args: { "p_business_id": string }; Returns: { "checked_at": string | null,"n": number,"named": number,"run_id": string }[]
+                           },
 "gas_ready":
 { Args: { "p_business_id": string }; Returns: { "ready_at": string | null,"show_notice": boolean }[]
                            },
