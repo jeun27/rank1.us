@@ -89,8 +89,9 @@ const keywordVertical = (text: string) => {
 // The one normalise step at the reader's output, so a read profile always fits #199's businesses CHECK
 // (no 23514 on insert): https links only (no spaces, ≤ 500 chars), deduped, at most 20; text trimmed
 // to its column cap. An emptied list loses its source tag.
-const CAP = { address: 200, areaServed: 200, phone: 40, category: 100 } as const;
-const MAX_LINKS = 20;
+// #199's businesses CHECK (0041), in one place: both readers' outputs go through this step.
+const CAP = { address: 200, areaServed: 200, phone: 40, category: 100, service: 100, link: 500 } as const;
+const MAX = { links: 20, services: 30 } as const;
 const clip = (v: string | undefined, n: number) => v?.slice(0, n).trim() || undefined;
 function normalise(p: Omit<SiteProfile, "status">): Omit<SiteProfile, "status"> {
   const out = { ...p, sources: { ...p.sources } };
@@ -102,10 +103,24 @@ function normalise(p: Omit<SiteProfile, "status">): Omit<SiteProfile, "status"> 
     }
   }
   out.areaServed = p.areaServed.map((a) => clip(a, CAP.areaServed)).filter((a): a is string => !!a);
-  out.sameAs = [...new Set(p.sameAs.filter((u) => /^https:\/\/\S+$/.test(u) && u.length <= 500))].slice(0, MAX_LINKS);
+  out.sameAs = [...new Set(p.sameAs.filter((u) => /^https:\/\/\S+$/.test(u) && u.length <= CAP.link))].slice(
+    0,
+    MAX.links,
+  );
   for (const k of ["areaServed", "sameAs"] as const) if (!out[k].length) delete out.sources[k];
   return out;
 }
+
+// Services: non-blank, each trimmed to 100 chars, deduped case-insensitively, at most 30.
+export const normaliseServices = (xs: string[]) =>
+  [
+    ...new Map(
+      xs
+        .map((x) => clip(x, CAP.service))
+        .filter((x): x is string => !!x)
+        .map((x) => [x.toLowerCase(), x]),
+    ).values(),
+  ].slice(0, MAX.services);
 
 export function profileFromHtml(html: string): Omit<SiteProfile, "status"> {
   const all = nodes(html);
@@ -195,7 +210,6 @@ export type SiteServices = {
   services: string[];
   source: Extract<ProfileSource, "schema" | "nav" | "sitemap"> | null;
 };
-const MAX_SERVICES = 12;
 const STOP = new Set([
   "home",
   "about",
@@ -231,16 +245,6 @@ const STOP = new Set([
   "terms",
   "search",
 ]);
-// Non-blank, ≤ 100 chars each, deduped, ≤ 12 (inside #199's services CHECK: 30 × 100).
-const uniq = (xs: string[]) =>
-  [
-    ...new Map(
-      xs
-        .map((x) => clip(x, 100))
-        .filter((x): x is string => !!x)
-        .map((x) => [x.toLowerCase(), x]),
-    ).values(),
-  ].slice(0, MAX_SERVICES);
 
 // An Offer's name: itemOffered.name, else its own name.
 const offerName = (o: unknown) => {
@@ -248,7 +252,7 @@ const offerName = (o: unknown) => {
   return str((n.itemOffered as Node | undefined)?.name) ?? str(n.name);
 };
 const schemaServices = (html: string) =>
-  uniq(
+  normaliseServices(
     nodes(html)
       .flatMap((n) => [...list(n.makesOffer), ...list((n.hasOfferCatalog as Node | undefined)?.itemListElement)])
       .map(offerName)
@@ -259,7 +263,7 @@ export function navServices(html: string): string[] {
   const labels = [...html.matchAll(/<nav[\s>][\s\S]*?<\/nav>/gi)].flatMap((nav) =>
     [...nav[0].matchAll(/<a\b[^>]*>([\s\S]*?)<\/a>/gi)].map((a) => decode(a[1].replace(/<[^>]+>/g, " "))),
   );
-  return uniq(labels.filter((l) => l && l.length <= 60 && !STOP.has(l.toLowerCase())));
+  return normaliseServices(labels.filter((l) => l && l.length <= 60 && !STOP.has(l.toLowerCase())));
 }
 
 export function sitemapServices(xml: string, host: string): string[] {
@@ -276,7 +280,7 @@ export function sitemapServices(xml: string, host: string): string[] {
     const words = decodeURIComponent(slug).replace(/[-_]+/g, " ").trim();
     if (words) out.push(words[0].toUpperCase() + words.slice(1));
   }
-  return uniq(out);
+  return normaliseServices(out);
 }
 
 export async function readServices(domain: string, deps: ReadSiteDeps = {}): Promise<SiteServices> {

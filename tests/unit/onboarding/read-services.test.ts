@@ -27,19 +27,6 @@ describe("parsers", () => {
     expect(navServices(NONE)).toEqual([]);
   });
 
-  it("fits #199's CHECK: non-blank, each ≤ 100 chars, at most 12 (under the 30 cap)", () => {
-    const long = `<nav>${Array.from({ length: 20 }, (_, i) => `<a href="/s${i}">Service ${i} ${"x".repeat(i ? 1 : 58)}</a>`).join("")}<a href="/b"> </a></nav>`;
-    const s = navServices(long);
-    expect(s).toHaveLength(12);
-    expect(s.every((x) => x.trim() && x.length <= 100)).toBe(true);
-    expect(
-      sitemapServices(
-        `<loc>https://example-plumbing.test/services/${"a-".repeat(80)}b</loc>`,
-        "example-plumbing.test",
-      )[0].length,
-    ).toBeLessThanOrEqual(100);
-  });
-
   it("sitemap: one level under /services/, /menu/, /treatments/ on this site only, as labels", () => {
     expect(sitemapServices(SITEMAP, "example-plumbing.test")).toEqual(["Drain cleaning", "Water heater repair"]);
   });
@@ -102,6 +89,22 @@ describe("readServices", () => {
     const d = deps({ [`${H}/robots.txt`]: "Sitemap: https://other-site.test/sitemap.xml", [`${H}/`]: NONE });
     await readServices("example-plumbing.test", d);
     expect(urls(d).every((u) => u.startsWith(H))).toBe(true);
+  });
+
+  it("fits #199's CHECK through the shared normalise step: non-blank, each ≤ 100 chars, deduped, at most 30", async () => {
+    const d = deps({ [`${H}/`]: fx("services-oversize.html") });
+    const { services, source } = await readServices("example-plumbing.test", d);
+    expect(source).toBe("schema");
+    expect(services).toHaveLength(30);
+    expect(services.every((x) => x.trim() !== "" && x.length <= 100)).toBe(true);
+    expect(services[0]).toMatch(/^Water heater repair x+$/);
+    expect(services.filter((x) => x.toLowerCase() === "drain cleaning")).toEqual(["drain cleaning"]);
+    expect(
+      sitemapServices(
+        `<loc>https://example-plumbing.test/services/${"a-".repeat(80)}b</loc>`,
+        "example-plumbing.test",
+      )[0].length,
+    ).toBeLessThanOrEqual(100);
   });
 
   it("unreadable home → unreadable, never thrown", async () => {
