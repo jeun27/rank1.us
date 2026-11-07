@@ -580,7 +580,7 @@ The /privacy section Google OAuth verification needs. The Limited Use sentence i
 | Use | "Rank1 uses this data only to show you your own business's visibility and fixes." |
 | Storage | "Google access tokens are stored encrypted. You can disconnect any Google service at any time from Connections in Rank1, or from your Google Account permissions." |
 | Never | "We never sell your Google data, use it for ads, or use it to train AI models." |
-| Limited Use | "Rank1's use and transfer of information received from Google APIs to any other app will adhere to the Google API Services User Data Policy, including the Limited Use requirements." |
+| Limited Use | "Rank1's use and transfer to any other app of information received from Google APIs will adhere to Google API Services User Data Policy, including the Limited Use requirements." |
 
 ## Engine location tooltip
 

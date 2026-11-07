@@ -46,7 +46,7 @@ export default function PrivacyPage() {
         </p>
         <p>We never sell your Google data, use it for ads, or use it to train AI models.</p>
         <p>
-          Rank1&apos;s use and transfer of information received from Google APIs to any other app will adhere to the{" "}
+          Rank1&apos;s use and transfer to any other app of information received from Google APIs will adhere to{" "}
           <a href={POLICY} className={link}>
             Google API Services User Data Policy
           </a>
