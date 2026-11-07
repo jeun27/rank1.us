@@ -128,7 +128,7 @@ test("C1: Badge is a 4px tag, 20h, Inter 500 11px; ProgressBar is a 6px overlay 
   expect(fillBg).toBe("rgb(255, 255, 255)");
 });
 
-test("C2: the error banner is errorBg with a 1px 30% error hairline and a 48px Jelly; info is infoBg", async ({
+test("C2: the error banner is errorBg with a 1px 30% error hairline; info is infoBg; both a bare 16px icon on line 1", async ({
   page,
 }) => {
   await open(page, "/dev/ui", "dark");
@@ -139,9 +139,19 @@ test("C2: the error banner is errorBg with a 1px 30% error hairline and a 48px J
       return [c.backgroundColor, c.borderTopWidth, c.borderTopColor, c.borderTopLeftRadius];
     }),
   ).toEqual(["rgb(51, 25, 26)", "1px", expect.stringMatching(/\/ 0\.3\)$/), "8px"]);
-  expect(await error.locator("img").evaluate((e) => Math.round(e.getBoundingClientRect().width))).toBe(48);
+  // DQ6 (Q3): Jelly left the banner for empty and loading moments; a bare stroke icon, centred on the first line.
+  await expect(error.locator("img")).toHaveCount(0);
   const info = section(page, "Banner").getByRole("status").first();
   expect(await info.evaluate((e) => getComputedStyle(e).backgroundColor)).toBe("rgb(20, 38, 59)");
+  for (const banner of [error, info])
+    expect(
+      await banner.locator("[data-first-line] > svg").evaluate((i) => {
+        const a = i.getBoundingClientRect();
+        const text = i.parentElement!.nextElementSibling!;
+        const b = text.getBoundingClientRect();
+        return [Math.round(a.width), a.top + a.height / 2 - b.top - parseFloat(getComputedStyle(text).lineHeight) / 2];
+      }),
+    ).toEqual([16, 0]);
 });
 
 // Portal (b): the Status select became the check-off circle; Start is the 6px control.

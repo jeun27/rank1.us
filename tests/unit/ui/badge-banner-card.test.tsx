@@ -21,8 +21,18 @@ describe("Badge", () => {
 });
 
 // v3 (UI.md "Error banner" / "Info banner", lead C2).
+// DQ6: one icon language. A bare 16px stroke icon, no disc around it (a circle in a circle), centred on
+// the first text line (a 1lh box, since banners inherit 13/19 or 16/24) so it stays put when the text wraps.
+function expectBareIcon(banner: HTMLElement, name: string) {
+  const icon = banner.querySelector(`svg[data-icon=${name}]`)!;
+  expect(icon).not.toBeNull();
+  expect(icon.getAttribute("class")!.split(" ")).toContain("size-4");
+  expect(icon.parentElement!.className.split(" ")).toEqual(expect.arrayContaining(["h-[1lh]", "items-center"]));
+  expect(banner.querySelector(".rounded-full")).toBeNull();
+}
+
 describe("Banner", () => {
-  it("error: errorBg fill, 1px error hairline at 30%, radius 8, 48px Jelly, one Inter 500 sentence, one text action", () => {
+  it("error: errorBg fill, 1px error hairline at 30%, radius 8, a bare 16px alert icon, one Inter 500 sentence, one text action", () => {
     render(
       <Banner tone="error" action={{ label: "Try again", href: "#" }}>
         We couldn&apos;t load your results. Try again.
@@ -35,21 +45,19 @@ describe("Banner", () => {
     expect(el.className).not.toMatch(/bg-white|border-\[1\.5px\]|shadow-banner-error/);
     expect(screen.getByText(/We couldn.t load your results/).className.split(" ")).toContain("font-medium");
     expect(screen.getByRole("link", { name: "Try again" }).className).toMatch(/text-link/);
-    const jelly = el.querySelector("img")!;
-    expect(jelly).toHaveAttribute("alt", "");
-    expect(jelly).toHaveAttribute("width", "48");
+    // DQ6 (Q3): no Jelly in a banner. Jelly is for empty and loading moments.
+    expect(el.querySelector("img")).toBeNull();
+    expectBareIcon(el, "alert");
     expect(screen.getAllByRole("link")).toHaveLength(1);
   });
-  it("info: infoBg fill, 1px info hairline at 25%, radius 8, 28px info chip, info text, status role, no Jelly", () => {
+  it("info: infoBg fill, 1px info hairline at 25%, radius 8, a bare 16px info icon, info text, status role, no Jelly", () => {
     render(<Banner tone="info">Info</Banner>);
     const el = screen.getByRole("status");
     const cls = el.className.split(" ");
     for (const c of ["bg-infoBg", "border", "border-jellyDeep/25", "text-jellyDeep", "rounded-banner"])
       expect(cls).toContain(c);
     expect(el.className).not.toMatch(/bg-white|border-\[1\.5px\]|shadow-field/);
-    const chip = el.querySelector("[data-icon=info]")!.parentElement!;
-    expect(chip.className.split(" ")).toContain("size-7");
-    expect(chip.className).toContain("rounded-full");
+    expectBareIcon(el, "info");
     expect(el.querySelector("img")).toBeNull();
   });
 });
