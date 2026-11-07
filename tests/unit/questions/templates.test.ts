@@ -39,9 +39,9 @@ const REQUIRED = [
 ];
 
 describe("question templates match docs/UI.md", () => {
-  it("has the 20 templates verbatim, in order", () => {
+  it("has the 32 templates verbatim, in order (20 restaurant + the 12 onboarding v2 Q10)", () => {
     const rows = tableRows("## Question templates");
-    expect(rows).toHaveLength(20);
+    expect(rows).toHaveLength(32);
     expect(TEMPLATES.map((t) => [t.short_form, t.long_form, t.origin])).toEqual(rows);
     expect(TEMPLATES.map((t) => t.sort)).toEqual(rows.map((_, i) => i + 1));
   });
@@ -95,7 +95,11 @@ describe("filling templates for Example Ramen House", () => {
 
   it("fills every template with no {slot} left", () => {
     for (const t of TEMPLATES) {
-      const q = fillTemplate(t, exampleRamenHouse, choice);
+      const q = fillTemplate(
+        t,
+        { ...exampleRamenHouse, category: "plumber" },
+        { ...choice, service: "drain cleaning", competitor: "Example Rival" },
+      );
       expect(q.short_text).not.toMatch(/[{}]/);
       expect(q.long_text).not.toMatch(/[{}]/);
     }

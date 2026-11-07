@@ -51,7 +51,8 @@ export function seedSql(data: SeedData = seedData()): string {
     "-- Reference data",
     insert(
       "question_templates",
-      TEMPLATES.map((t) => ({
+      // The restaurant templates only; the onboarding v2 Q10 rows come from backend's migration (like R19–R21).
+      TEMPLATES.filter((t) => t.family === "restaurant").map((t) => ({
         id: lit(id(`template:${t.sort}`)),
         vertical: lit("restaurant"),
         short_form: lit(t.short_form),

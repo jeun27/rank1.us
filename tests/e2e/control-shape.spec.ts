@@ -68,7 +68,7 @@ const PAGES: { where: string; path: string; prep?: (page: Page) => Promise<void>
     path: "/dev/onboarding",
     prep: (page) =>
       page
-        .locator('[data-state="3 success"]')
+        .locator('[data-state="4 success"]')
         .getByRole("group", { name: "1", exact: true })
         .locator("[aria-expanded]")
         .click(),

@@ -1,12 +1,13 @@
 "use server";
 import { redirect } from "next/navigation";
 import { readinessSet } from "@/lib/connections/recommend";
-import { findLocalCompetitors, readSite } from "@/lib/onboarding";
+import { findLocalCompetitors } from "@/lib/onboarding";
+import { readHome, readServices } from "@/lib/onboarding/site-profile";
 import { MAX_ACTIVE_QUESTIONS } from "@/lib/questions/templates";
 import { getLanding } from "@/lib/queries/auth";
 import { createBusinessOnboarding } from "@/lib/queries/onboarding";
 import { createClient } from "@/lib/supabase/server";
-import type { CompetitorQuery, CompetitorSearch, OnboardingInput, SiteRead } from "./contract";
+import type { CompetitorQuery, CompetitorSearch, OnboardingInput, SiteProfile, SiteServices } from "./contract";
 import { withLimits } from "@/lib/onboarding/limits";
 import { storeFor } from "../lookup-store";
 import { lookupCompetitors } from "@/lib/onboarding/lookup";
@@ -21,18 +22,24 @@ async function onboardingClient() {
   return { db, userId: user.id };
 }
 
-export async function readSiteAction(domain: string): Promise<SiteRead> {
+// UI2: the two reading stages are separate actions so the log ticks on real progress. Each fetches the site,
+// so each takes a read_site token (cached per stage and domain for 24 h).
+export async function readHomeAction(domain: string): Promise<SiteProfile> {
+  const unreadable: SiteProfile = { status: "unreadable", areaServed: [], sameAs: [], sources: {} };
   const caller = await onboardingClient();
-  if (!caller) return { status: "unreadable" };
-  const r = await withLimits(
-    storeFor(caller),
-    "read_site",
-    domain,
-    () => readSite(domain),
-    (x) => x.status === "ok",
-  );
-  return r === "limited" ? { status: "unreadable" } : r;
+  if (!caller) return unreadable;
+  const r = await withLimits(storeFor(caller), "read_site", `home:${domain}`, () => readHome(domain), ok);
+  return r === "limited" ? unreadable : r;
 }
+
+export async function readServicesAction(domain: string): Promise<SiteServices> {
+  const unreadable: SiteServices = { status: "unreadable", services: [], source: null };
+  const caller = await onboardingClient();
+  if (!caller) return unreadable;
+  const r = await withLimits(storeFor(caller), "read_site", `services:${domain}`, () => readServices(domain), ok);
+  return r === "limited" ? unreadable : r;
+}
+const ok = (x: { status: string }) => x.status === "ok";
 
 // The UI shows only the COPY.md message, so the raw upstream error never leaves the server.
 export async function findCompetitorsAction(q: CompetitorQuery): Promise<CompetitorSearch> {

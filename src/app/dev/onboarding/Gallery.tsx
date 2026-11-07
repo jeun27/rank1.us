@@ -26,7 +26,12 @@ const items = [
   cid: `example-cid-${i + 1}`,
 }));
 const pending = () => new Promise<never>(() => {});
-const actions: OnboardingActions = { readSite: pending, findCompetitors: pending, finish: pending };
+const actions: OnboardingActions = {
+  readHome: pending,
+  readServices: pending,
+  findCompetitors: pending,
+  finish: pending,
+};
 
 const business = { ...emptyDraft.business, domain: "exampleramen.test", name: "Example Ramen House", cuisine: "ramen" };
 const picks = {
@@ -37,7 +42,7 @@ const picks = {
 };
 const key = ["ramen", "Irvine", "CA", "exampleramen.test"].join("|");
 const found = (result: CompetitorSearch): Partial<Draft> => ({
-  step: 2,
+  step: 3,
   site: "ok",
   business,
   picks,
@@ -53,17 +58,35 @@ const found = (result: CompetitorSearch): Partial<Draft> => ({
 
 const STATES: [string, Partial<Draft>, Partial<OnboardingActions>?][] = [
   ["1 empty", {}],
+  // UI2: press Read my site here to see the log mid-read (stages 1–3 back, Services still reading).
+  [
+    "1 reading",
+    { business: { ...emptyDraft.business, domain: "exampleramen.test" } },
+    {
+      readHome: async () => ({
+        status: "ok",
+        name: "Example Ramen House",
+        cuisine: "ramen",
+        city: "Irvine",
+        state: "CA",
+        phone: "+1 949 555 0100",
+        areaServed: [],
+        sameAs: [],
+        sources: { name: "schema", cuisine: "meta", city: "schema", phone: "schema" },
+      }),
+    },
+  ],
   ["1 loading", { site: "loading", business: { ...emptyDraft.business, domain: "exampleramen.test" } }],
-  ["1 error", { site: "unreadable", business: { ...emptyDraft.business, domain: "exampleramen.test" } }],
-  ["1 partial", { site: "ok", business: { ...business, cuisine: "" } }],
-  ["1 success", { site: "ok", business, picks }],
-  ["2 loading", { step: 2, site: "ok", business, picks, search: { key, result: null } }],
-  ["2 success", found({ status: "ok", items })],
-  ["2 partial", found({ status: "ok", items: items.slice(0, 2) })],
-  ["2 empty", found({ status: "ok", items: [] })],
-  ["2 error", found({ status: "missing_keys", items: [] })],
-  ["3 success", { step: 3, site: "ok", business, picks }],
-  ["3 error", { step: 3, site: "ok", business, picks }, { finish: async () => ({ error: "save_failed" }) }],
+  ["2 error", { step: 2, site: "unreadable", business: { ...emptyDraft.business, domain: "exampleramen.test" } }],
+  ["2 partial", { step: 2, site: "ok", business: { ...business, cuisine: "" } }],
+  ["2 success", { step: 2, site: "ok", business, picks }],
+  ["3 loading", { step: 3, site: "ok", business, picks, search: { key, result: null } }],
+  ["3 success", found({ status: "ok", items })],
+  ["3 partial", found({ status: "ok", items: items.slice(0, 2) })],
+  ["3 empty", found({ status: "ok", items: [] })],
+  ["3 error", found({ status: "missing_keys", items: [] })],
+  ["4 success", { step: 4, site: "ok", business, picks }],
+  ["4 error", { step: 4, site: "ok", business, picks }, { finish: async () => ({ error: "save_failed" }) }],
 ];
 
 export function Gallery() {

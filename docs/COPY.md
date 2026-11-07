@@ -564,6 +564,36 @@ The Supabase auth emails in supabase/templates/ (#193). Magic link = magic_link.
 | Fallback line (both) | "Button not working? Copy this link into your browser:" (then the plain link URL) |
 | Ignore line (both) | "Didn’t ask for this? You can ignore this email." |
 | Footer (both) | "Rank1 · rank1.us" (rank1.us links to https://rank1.us) |
+## Privacy: Google user data (lead-approved 2026-11-07 for Google OAuth verification; founder to review)
+
+The /privacy section Google OAuth verification needs. The Limited Use sentence is Google's wording, word for word; "Google API Services User Data Policy" links to https://developers.google.com/terms/api-services-user-data-policy and "Google Account permissions" to https://myaccount.google.com/permissions. Last updated 2026-11-07.
+
+| Where | String |
+|---|---|
+| Heading | "Google user data" |
+| Intro | "When you sign in with Google or connect a Google service, Rank1 receives only this:" |
+| Sign-in | "Google sign-in: your Google account email and name." |
+| Business Profile | "Google Business Profile (the business.manage scope): Rank1 reads your listing details and applies only the edits you approve." |
+| Search Console | "Google Search Console (the webmasters.readonly scope): read-only access to your site's search data." |
+| Analytics | "Google Analytics, GA4 (the analytics.readonly scope): read-only access, used to show AI-referred traffic in your reports." |
+| YouTube | "YouTube (the youtube.readonly scope): read-only access to your channel's videos." |
+| Use | "Rank1 uses this data only to show you your own business's visibility and fixes." |
+| Storage | "Google access tokens are stored encrypted. You can disconnect any Google service at any time from Connections in Rank1, or from your Google Account permissions." |
+| Never | "We never sell your Google data, use it for ads, or use it to train AI models." |
+| Limited Use | "Rank1's use and transfer to any other app of information received from Google APIs will adhere to Google API Services User Data Policy, including the Limited Use requirements." |
+
+## Onboarding v2 (founder-approved P2, 2026-11-07)
+
+O1 only (share/ux-plan/onboarding-welcome/README.md §6). Each string lands here in the PR that first uses it.
+
+| Where | Copy |
+|---|---|
+| Welcome (Q1) | Field label "Your website" · button "Read my site" · "No website? Fill it in yourself" · "About 5 minutes to set up." |
+| Welcome (Q2) | "What happens next" · "Rank1 reads your site and fills in a card you can change." · "Pick 3 to 5 businesses to compare against." · "Rank1 writes up to {total} questions people ask AI about businesses like yours." · Example panel title "What you'll see after your first check" · footnote "Every number shows how many answers it's based on." |
+| Example panel | You row "Your business" with the "You" tag (never the real name) · headers "Business", "Visibility" · label "Example data" |
+| Reading log (Q4) | Title "Reading {domain}" · count "{n} of 4" · stages "Opened {domain}"; "Business details": "Found {fields} in schema.org" / "Not on your site"; "Title and description": "Found in the page head" / "Not on your site"; "Services": "Reading your menu links…", then "{n} found in your menu" / "Not on your site" · note "No AI reads your site. Rank1 only looks at what your pages already say." · button while reading "Reading…" |
+| Unreadable (Q8) | "We couldn't read that site. Fill in your business below." (the empty card follows) |
+| Rail (Q3) | Steps "Your site" · "Your business" · "Competitors" · "Questions" (list name "Add your business"; a finished step reads "Done" to screen readers) · phones "Step {n} of 4 · {step}" |
 
 ## Engine location tooltip
 
@@ -593,6 +623,20 @@ Greyed tooltip copy: "{Engine} can't target a city yet, so we check it for the w
 | best brunch in Irvine | Where can we get a great weekend brunch in Irvine, with good coffee, creative dishes and a table without a two-hour wait? | Growth Page (cuisine = brunch) |
 | date night at Irvine Spectrum Center | Planning a date night at Irvine Spectrum Center; which restaurant there has the best food and atmosphere for a relaxed dinner for two? | Growth Page (every Irvine business) |
 | lunch near Irvine Business Complex | I work near the Irvine Business Complex and have 45 minutes for lunch; which nearby restaurants are good, quick and not overpriced? | Growth Page (every Irvine business) |
+| best {category} in {city} | I'm in {city}, {state} and need a {category} I can trust; who are the best options nearby, and what makes them stand out? | Onboarding v2 Q10 |
+| {service} in {city} | I need {service} at my place in {city}, {state} this week; which local businesses do it well, at a fair price, and can come soon? | Onboarding v2 Q10 |
+| emergency {category} near me in {city} | It's late and I have an emergency at home in {city}, {state}; which {category} can come out tonight, and who answers fast? | Onboarding v2 Q10, trades only |
+| affordable {service} in {city} | I'm on a tight budget and need {service} in {city}, {state}; who does good work without overcharging, and what should I expect to pay? | Onboarding v2 Q10 |
+| {category} with good reviews in {city} | Which {category} in {city}, {state} has the best recent reviews from real customers, and what do people say they do better? | Onboarding v2 Q10 |
+| who does {service} near {area} | I live near {area} in {city} and need {service}; which local businesses cover my area, and who would you call first and why? | Onboarding v2 Q10 |
+| best {category} brands | I'm shopping for {category} and want something that lasts; which brands are worth the money right now, and how do they differ? | Onboarding v2 Q10 |
+| where to buy {service} | Where can I buy {service} online from a brand I can trust, with fair shipping and easy returns if it doesn't work out? | Onboarding v2 Q10 |
+| {category} brands like {competitor} | I like {competitor} but want to try something similar; which other {category} brands are as good or better, and how do they compare? | Onboarding v2 Q10 |
+| best {category} software | We're a small team picking {category} software this month; which tools are best right now, and what is each one best at? | Onboarding v2 Q10 |
+| {category} tools for small businesses | I run a five-person business; which {category} tools are easy to set up, fairly priced and good enough to grow with? | Onboarding v2 Q10 |
+| alternatives to {competitor} | We use {competitor} but it's getting expensive and clunky; what are the best alternatives right now, and why switch? | Onboarding v2 Q10 |
+
+The 12 "Onboarding v2 Q10" rows (local service, dtc, saas; "trades only" = hvac, plumbing, roofing, pest_control, auto): short forms founder-approved (P3), long forms lead-approved under P3, 2026-11-07.
 
 - **{dietary}**: vegan, vegetarian, gluten-free, halal, kosher
 - **{occasion}**: date night, birthday, business lunch, large group

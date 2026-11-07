@@ -1,4 +1,5 @@
 import "server-only";
+import { youtubeKeyword, type Business } from "@/lib/questions/templates";
 import { sendEmail } from "@/lib/email/resend";
 import type { DbClient } from "@/lib/queries/client";
 import {
@@ -383,8 +384,8 @@ export type YoutubeChecklist = {
 };
 
 // G1: the picked channel (else the first one) and its newest videos, each checked against the business's
-// one keyword: its category term (businesses.cuisine, the {cuisine} its questions are built from). No
-// cuisine = no keyword, never a guess.
+// one keyword: DP3's youtubeKeyword (restaurant "{cuisine} {city}", local the first service or category +
+// city, saas/dtc the category). Nothing to build it from = no keyword, never a guess. Read-only for now.
 async function checklist(ctx: Ctx, c: Visible, keyword: string | null): Promise<YoutubeChecklist> {
   return withGoogleToken(
     c.id,
@@ -403,10 +404,14 @@ async function checklist(ctx: Ctx, c: Visible, keyword: string | null): Promise<
   );
 }
 
-const cuisineOf = async (db: DbClient, businessId: string) => {
-  const { data, error } = await db.from("businesses").select("cuisine").eq("id", businessId).maybeSingle();
+const keywordOf = async (db: DbClient, businessId: string) => {
+  const { data, error } = await db
+    .from("businesses")
+    .select("vertical, cuisine, category, services, city, state")
+    .eq("id", businessId)
+    .maybeSingle();
   if (error) throw error;
-  return (data?.cuisine as string | null | undefined)?.trim() || null;
+  return data ? youtubeKeyword(data as unknown as Business) : null;
 };
 
 // The checklist page (members incl. the dfy_client, and the team on DFY), read-only.
@@ -420,7 +425,7 @@ export async function loadYoutubeChecklist(ctx: Ctx, connectionId: string): Prom
   ]);
   if (!connect && !edit) return "not_allowed";
   try {
-    return await checklist(ctx, c, await cuisineOf(ctx.userDb, c.business_id));
+    return await checklist(ctx, c, await keywordOf(ctx.userDb, c.business_id));
   } catch (e) {
     return failure(e);
   }
@@ -445,14 +450,14 @@ export async function youtubeChecklistForBusiness(
   if (!data) return null;
   const ctx: Ctx = { userDb: serviceDb, serviceDb, env };
   try {
-    return await checklist(ctx, data as unknown as Visible, await cuisineOf(serviceDb, businessId));
+    return await checklist(ctx, data as unknown as Visible, await keywordOf(serviceDb, businessId));
   } catch (e) {
     return failure(e);
   }
 }
 
 // The fix pass's gate for R19–R21 (lead, #146): a live YouTube connection with a chosen channel, and a
-// keyword (businesses.cuisine). Otherwise the rules don't apply and get no rows at all.
+// keyword (youtubeKeyword). Otherwise the rules don't apply and get no rows at all.
 export async function youtubeReady(serviceDb: DbClient, businessId: string): Promise<boolean> {
   const { data, error } = await serviceDb
     .from("connections")
@@ -463,5 +468,5 @@ export async function youtubeReady(serviceDb: DbClient, businessId: string): Pro
     .maybeSingle();
   if (error) throw error;
   const picked = (data?.selected_entities as unknown as ConnectionEntity[] | undefined) ?? [];
-  return picked.length > 0 && (await cuisineOf(serviceDb, businessId)) !== null;
+  return picked.length > 0 && (await keywordOf(serviceDb, businessId)) !== null;
 }

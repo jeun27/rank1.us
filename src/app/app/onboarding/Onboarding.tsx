@@ -10,8 +10,17 @@ import { connectionsCopy } from "@/components/connections/copy";
 import { VERTICALS, type Vertical } from "@/lib/queries/onboarding";
 import { MAX_ACTIVE_QUESTIONS, buildQuestions, type Picks } from "@/lib/questions/templates";
 import { normalizeDomain } from "@/lib/spam/validate";
-import type { CompetitorSearch, LocalPlace, OnboardingActions, OnboardingInput } from "./contract";
-import { copy } from "./copy";
+import type {
+  CompetitorSearch,
+  LocalPlace,
+  OnboardingActions,
+  OnboardingInput,
+  SiteProfile,
+  SiteServices,
+} from "./contract";
+import { copy, reading, welcome as w } from "./copy";
+import { ExamplePanel } from "./ExamplePanel";
+import { ReadingLog } from "./ReadingLog";
 import { Select } from "@/components/ui/Select";
 
 // docs/UI.md Question templates: {dietary} and {occasion} lists; landmarks and areas max 3 each.
@@ -27,7 +36,8 @@ export type Business = {
   cuisine: string;
   city: string;
   state: string;
-  sells: string[];
+  // Read in stage 4 of the reading log; the card shows them as chips (UI3).
+  services: string[];
   // C-b: only with ENABLE_CONNECTIONS (the page passes verticals); Restaurant until picked.
   vertical?: Vertical;
 };
@@ -46,8 +56,10 @@ export type Question = {
   level: Level;
 };
 export type Draft = {
-  step: 1 | 2 | 3;
-  site: "idle" | "loading" | "ok" | "unreadable";
+  // UI1: 1 Your site, 2 Your business, 3 Competitors, 4 Questions.
+  step: 1 | 2 | 3 | 4;
+  // manual: "No website? Fill it in yourself" (nothing read).
+  site: "idle" | "loading" | "ok" | "unreadable" | "manual";
   siteCuisine: boolean;
   business: Business;
   picks: Picks;
@@ -61,7 +73,7 @@ export const emptyDraft: Draft = {
   step: 1,
   site: "idle",
   siteCuisine: false,
-  business: { domain: "", name: "", cuisine: "", city: "Irvine", state: "CA", sells: ["", "", ""] },
+  business: { domain: "", name: "", cuisine: "", city: "Irvine", state: "CA", services: [] },
   picks: { landmarks: [], areas: [], dietary: [], occasion: [] },
   search: null,
   competitors: [],
@@ -97,6 +109,8 @@ export function Onboarding({
 }) {
   const [d, setD] = useState<Draft>(initial);
   const reached = useRef(initial.step);
+  // Focus the card's first field when it opens from step 1 (not on a resumed or gallery render).
+  const focusCard = useRef(false);
   const set = (patch: Partial<Draft>) => setD((x) => ({ ...x, ...patch }));
 
   // The step lives in ?step= so the browser Back button walks the steps.
@@ -117,25 +131,40 @@ export function Onboarding({
   }, [syncUrl]);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <p className="text-caption text-inkMuted">{copy.step(d.step)}</p>
-        {/* OB2: one heading per step. Step 1 is the page's own H1 ("Add your business"). */}
-        {d.step > 1 && <h2 className="font-display text-h2 font-semibold md:text-h2-md">{copy.titles[d.step - 1]}</h2>}
-      </div>
+    <div className={`flex flex-col gap-6 ${d.step > 1 ? "max-w-2xl" : ""}`}>
+      {d.step > 1 && (
+        <div>
+          {/* UI1: the rail shows the steps at md+; phones get this line (step 1 has it in its sticky bar). */}
+          <p className="text-caption text-inkMuted md:hidden">{w.stepOf(d.step, w.steps[d.step - 1])}</p>
+          {/* OB2: one heading per step. Steps 1 and 2 are the page's own H1 ("Add your business"). */}
+          {d.step > 2 && <h2 className="font-display text-h2 font-semibold md:text-h2-md">{w.steps[d.step - 1]}</h2>}
+        </div>
+      )}
       {d.step === 1 && (
+        <WelcomeStep
+          d={d}
+          set={set}
+          cuisines={cuisines}
+          actions={actions}
+          onNext={() => {
+            focusCard.current = true;
+            go(2);
+          }}
+        />
+      )}
+      {d.step === 2 && (
         <BusinessStep
           d={d}
           set={set}
           places={places}
           cuisines={cuisines}
-          actions={actions}
           verticals={verticals}
-          onNext={() => go(2)}
+          focusRef={focusCard}
+          onNext={() => go(3)}
         />
       )}
-      {d.step === 2 && <CompetitorsStep d={d} set={set} actions={actions} onBack={() => go(1)} onNext={() => go(3)} />}
-      {d.step === 3 && <QuestionsStep d={d} set={set} actions={actions} verticals={verticals} onBack={() => go(2)} />}
+      {d.step === 3 && <CompetitorsStep d={d} set={set} actions={actions} onBack={() => go(2)} onNext={() => go(4)} />}
+      {d.step === 4 && <QuestionsStep d={d} set={set} actions={actions} verticals={verticals} onBack={() => go(3)} />}
     </div>
   );
 }
@@ -228,76 +257,165 @@ function Checks({
   );
 }
 
-function BusinessStep({
+// UI1 (O1, README §10): the task on the left, an Example result on the right (below the task on phones), and
+// one primary. Below md the field's own button hides and a sticky bar holds the step and "Read my site".
+function WelcomeStep({
   d,
   set,
-  places,
   cuisines,
   actions,
-  verticals,
   onNext,
-}: StepProps & {
-  places: LocalPlace[];
-  cuisines: readonly string[];
-  actions: OnboardingActions;
-  verticals: boolean;
-  onNext: () => void;
-}) {
+}: StepProps & { cuisines: readonly string[]; actions: OnboardingActions; onNext: () => void }) {
   const [domainError, setDomainError] = useState(false);
-  const cuisineId = useId();
-  const verticalId = useId();
-  const sellsId = useId();
-  const reasonId = useId();
-  const [said, nudge] = useNudge();
+  // UI2: what each real reading stage returned, for the live log.
+  const [read, setRead] = useState<{ home: SiteProfile | null; services: SiteServices | null }>({
+    home: null,
+    services: null,
+  });
+  const field = useRef<HTMLDivElement>(null);
+  const nextId = useId();
   const b = d.business;
-  const setB = (patch: Partial<Business>) => set({ business: { ...b, ...patch } });
-  const read = d.site === "ok" || d.site === "unreadable";
-
-  // After a site read, focus moves to the first field the user fills in.
-  const form = useRef<HTMLFormElement>(null);
-  const wasRead = useRef(read);
-  useEffect(() => {
-    if (read && !wasRead.current) form.current?.querySelector<HTMLInputElement>('input[name="name"]')?.focus();
-    wasRead.current = read;
-  }, [read]);
+  const loading = d.site === "loading";
 
   const submitDomain = async (raw: string) => {
     const domain = normalizeDomain(raw);
     setDomainError(!domain);
     if (!domain) return;
+    setRead({ home: null, services: null });
     set({ site: "loading", business: { ...b, domain } });
-    const r = await actions.readSite(domain).catch(() => ({ status: "unreadable" as const }));
-    const name = "name" in r ? r.name : undefined;
-    const cuisine = "cuisine" in r && r.cuisine && cuisines.includes(r.cuisine) ? r.cuisine : "";
+    // Stages 1–3, then 4: two server actions, so the log only ticks on real progress.
+    const home = await actions
+      .readHome(domain)
+      .catch((): SiteProfile => ({ status: "unreadable", areaServed: [], sameAs: [], sources: {} }));
+    if (home.status !== "ok") {
+      set({ site: "unreadable", siteCuisine: false, business: { ...b, domain, name: "", cuisine: "", services: [] } });
+      return onNext();
+    }
+    setRead({ home, services: null });
+    const services = await actions
+      .readServices(domain)
+      .catch((): SiteServices => ({ status: "unreadable", services: [], source: null }));
+    setRead({ home, services });
+    const cuisine = home.cuisine && cuisines.includes(home.cuisine) ? home.cuisine : "";
     set({
-      site: r.status,
+      site: "ok",
       siteCuisine: Boolean(cuisine),
-      business: { ...b, domain, name: r.status === "ok" ? (name ?? "") : "", cuisine },
+      business: {
+        ...b,
+        domain,
+        name: home.name ?? "",
+        cuisine,
+        city: home.city ?? b.city,
+        state: home.state ?? b.state,
+        services: services.services,
+      },
     });
+    onNext();
   };
 
-  if (!read)
-    return (
-      <div className="flex flex-col gap-4">
-        <DomainField
-          label={copy.domain.label}
-          placeholder={copy.domain.placeholder}
-          buttonLabel={copy.next}
-          state={d.site === "loading" ? "loading" : domainError ? "error" : "default"}
-          errorText={copy.domain.noEnding}
-          defaultValue={b.domain}
-          onSubmit={submitDomain}
-        />
-        {d.site === "loading" && (
-          <div role="status" className="flex flex-col gap-3">
-            <p className="text-caption text-inkMuted">{copy.readingSite}</p>
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="h-11 animate-pulse rounded-control bg-white motion-reduce:animate-none md:h-9" />
-            ))}
+  return (
+    <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,25rem)] md:gap-12">
+      <div className="flex flex-col gap-8">
+        <p className="-mt-4 text-body text-text2">{copy.sub}</p>
+        <div className="flex flex-col gap-2">
+          {/* The visible label; the field keeps its own (screen-reader) label. */}
+          <p aria-hidden className="text-ui font-medium text-ink">
+            {w.label}
+          </p>
+          <div data-step-field ref={field} className="max-md:[&_[data-field]_button]:hidden">
+            <DomainField
+              label={w.label}
+              placeholder={copy.domain.placeholder}
+              buttonLabel={w.read}
+              loadingLabel={reading.button}
+              state={loading ? "loading" : domainError ? "error" : "default"}
+              errorText={copy.domain.noEnding}
+              defaultValue={b.domain}
+              onSubmit={submitDomain}
+            />
           </div>
-        )}
+          <p className="text-caption text-text2">
+            {w.time}{" "}
+            <button
+              type="button"
+              onClick={() => {
+                set({ site: "manual", business: { ...b, domain: "", name: "", cuisine: "" } });
+                onNext();
+              }}
+              className="font-medium text-accent underline underline-offset-2 max-md:inline-flex max-md:min-h-11 max-md:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
+            >
+              {w.manual}
+            </button>
+          </p>
+        </div>
+        {/* While reading, the left column is just the field (the log on the right is the feedback). */}
+        <div hidden={loading}>
+          <p id={nextId} className="text-ui font-medium text-ink">
+            {w.nextTitle}
+          </p>
+          <ol aria-labelledby={nextId} className="mt-3 border-t border-border">
+            {w.next.map((line, i) => (
+              <li key={i} className="flex gap-3 border-b border-border py-3">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full border border-fieldBorder font-mono text-caption text-text2">
+                  {i + 2}
+                </span>
+                <span className="flex flex-col">
+                  <span className="text-ui font-medium text-ink">{w.steps[i + 1]}</span>
+                  <span className="text-caption text-text2">{line(MAX_ACTIVE_QUESTIONS)}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
       </div>
-    );
+      {loading ? <ReadingLog domain={b.domain} home={read.home} services={read.services} /> : <ExamplePanel />}
+      {/* OC3/OC6: below md the step and the one primary sit in a sticky bar (44px, over the home indicator). */}
+      <div
+        data-step-bar
+        className="fixed inset-x-0 bottom-0 z-20 flex items-center justify-between gap-3 border-t border-border bg-white px-4 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] md:hidden"
+      >
+        <p className="min-w-0 truncate text-caption text-text2">{w.stepOf(1, w.steps[0])}</p>
+        <Button
+          type="button"
+          loading={loading}
+          className="min-h-11 shrink-0"
+          onClick={() => field.current?.querySelector("form")?.requestSubmit()}
+        >
+          {loading ? reading.button : w.read}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function BusinessStep({
+  d,
+  set,
+  places,
+  cuisines,
+  verticals,
+  focusRef,
+  onNext,
+}: StepProps & {
+  places: LocalPlace[];
+  cuisines: readonly string[];
+  verticals: boolean;
+  focusRef: { current: boolean };
+  onNext: () => void;
+}) {
+  const cuisineId = useId();
+  const verticalId = useId();
+  const reasonId = useId();
+  const [said, nudge] = useNudge();
+  const b = d.business;
+  const setB = (patch: Partial<Business>) => set({ business: { ...b, ...patch } });
+  // After a site read (or "No website?"), focus moves to the first field the user fills in.
+  const form = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (!focusRef.current) return;
+    focusRef.current = false;
+    form.current?.querySelector<HTMLInputElement>('input[name="name"]')?.focus();
+  }, [focusRef]);
 
   const attention = d.site === "ok" && !d.siteCuisine && !b.cuisine;
   // X24: the first missing field, in form order.
@@ -325,23 +443,10 @@ function BusinessStep({
         else onNext();
       }}
     >
-      <PillField label={copy.domain.label} name="domain" value={b.domain} readOnly icon="globe" />
-      {d.site === "unreadable" && (
-        <fieldset className="flex flex-col gap-2">
-          <legend id={sellsId} className="mb-1.5 text-ui font-semibold text-brick">
-            {copy.unreadable}
-          </legend>
-          {b.sells.map((v, i) => (
-            <input
-              key={i}
-              aria-labelledby={sellsId}
-              value={v}
-              onChange={(e) => setB({ sells: b.sells.map((x, j) => (j === i ? e.target.value : x)) })}
-              className="h-11 rounded-control border border-fieldBorder bg-paper px-3 text-ui focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep md:h-9"
-            />
-          ))}
-        </fieldset>
-      )}
+      {b.domain && <PillField label={w.label} name="domain" value={b.domain} readOnly icon="globe" />}
+      {/* Q8: an unreadable site opens the same card, empty, with one line. (The three "things you sell"
+          inputs it replaces were never sent anywhere.) */}
+      {d.site === "unreadable" && <p className="text-ui font-medium text-ink">{reading.unreadable}</p>}
       {verticals && (
         <div>
           <label htmlFor={verticalId} className="mb-1.5 block text-caption font-semibold">
@@ -611,7 +716,7 @@ function QuestionsStep({
       : buildQuestions({ cuisine: b.cuisine, city: b.city, state: b.state }, d.picks).map((q): Question => ({
           short: q.short_text,
           long: q.long_text,
-          template: { short: q.short_text, long: q.long_text, key: String(q.template_sort) },
+          template: { short: q.short_text, long: q.long_text, key: q.key },
           active: true,
           level: "city",
         }));
@@ -629,7 +734,8 @@ function QuestionsStep({
     const input: OnboardingInput = {
       business: {
         name: b.name.trim(),
-        domain: b.domain,
+        // No website: null, never "" or a placeholder (#203 B1).
+        domain: b.domain || null,
         cuisine: b.cuisine,
         city: b.city.trim(),
         state: b.state.trim(),
@@ -653,7 +759,10 @@ function QuestionsStep({
         state: q.level === "country" ? null : b.state.trim(),
         city: q.level === "city" ? b.city.trim() : null,
         template_key: q.template.key,
+        template_short: q.template.short,
+        template_long: q.template.long,
       })),
+      question_picks: d.picks,
     };
     setSaving(true);
     setFailed(false);

@@ -21,14 +21,14 @@ const FORMS: { name: string; open: (page: Page) => Promise<Locator> }[] = [
     name: "onboarding",
     open: async (page) => {
       await page.goto("/dev/onboarding");
-      return page.locator('[data-state="1 success"]').getByLabel("Business name");
+      return page.locator('[data-state="2 success"]').getByLabel("Business name");
     },
   },
   {
     name: "onboarding-select",
     open: async (page) => {
       await page.goto("/dev/onboarding");
-      return page.locator('[data-state="1 success"]').getByLabel("Cuisine");
+      return page.locator('[data-state="2 success"]').getByLabel("Cuisine");
     },
   },
   {

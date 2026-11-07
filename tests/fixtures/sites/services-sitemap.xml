@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<url><loc>https://example-plumbing.test/</loc></url>
+<url><loc>https://example-plumbing.test/services/drain-cleaning/</loc></url>
+<url><loc>https://example-plumbing.test/services/water-heater-repair</loc></url>
+<url><loc>https://example-plumbing.test/services/</loc></url>
+<url><loc>https://example-plumbing.test/services/drain-cleaning/residential</loc></url>
+<url><loc>https://other-site.test/services/roof-repair</loc></url>
+<url><loc>https://example-plumbing.test/blog/our-story</loc></url>
+</urlset>

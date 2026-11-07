@@ -23,6 +23,8 @@ for (const [where, path, scope] of [
   ["onboarding step 1", "/dev/onboarding", '[data-state="1 empty"]'],
 ] as const)
   test(`${where}: the field's radius = the button's radius + the inset gap`, async ({ page }) => {
+    // UI1: below md onboarding's button moves to the sticky bar, so there's no inner button to nest.
+    test.skip(path === "/dev/onboarding" && page.viewportSize()!.width < 768, "the phone bar holds the button");
     await page.goto(path);
     const field = page.locator(scope).locator("[data-field]").first();
     await expect(field).toBeVisible();
