@@ -367,7 +367,6 @@ describe("input validation (22023)", () => {
     ["blank city", { city: "  " }],
     ["missing state", { state: null as never }],
     ["missing country", { country: "" }],
-    ["missing domain", { domain: null }],
     ["name over 200", { name: "x".repeat(201) }],
     ["domain not a hostname", { domain: "not a domain" }],
     ["domain with a scheme", { domain: "https://example-ramen.test" }],
@@ -395,6 +394,17 @@ describe("input validation (22023)", () => {
       expect(must(await serviceClient().from("workspaces").select("id").eq("owner_id", team.id))).toEqual([]);
     });
   }
+
+  it("a business with no website (domain null, absent, empty or blank) is saved without a domain", async () => {
+    for (const domain of [null, undefined, "", "  "]) {
+      const { user } = await selfServe("no-website");
+      const id = await createBusinessOnboarding(
+        user.db,
+        input({ business: { ...input().business, domain: domain as null } }),
+      );
+      expect(must(await serviceClient().from("businesses").select("domain").eq("id", id).single()).domain).toBeNull();
+    }
+  });
 
   it("accepts limits at the boundary", async () => {
     const { user } = await selfServe("boundary");
