@@ -1,5 +1,6 @@
 // Onboarding strings, all from docs/COPY.md (4b Onboarding 1-3, "Onboarding (lead, 2026-11-05)", Final set).
 export const copy = {
+  title: "Add your business",
   next: "Next",
   // COPY.md "UX (lead, 2026-11-06)" X24: beside a disabled Next.
   missing: {
