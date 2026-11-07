@@ -9,8 +9,6 @@ import type {
   SiteProfile,
   SiteServices,
 } from "@/app/app/onboarding/contract";
-import { connectionsCopy as c } from "@/components/connections/copy";
-import { VERTICALS } from "@/lib/queries/onboarding";
 import { MAX_ACTIVE_QUESTIONS, buildQuestions } from "@/lib/questions/templates";
 
 const places = [
@@ -36,7 +34,6 @@ function setup(
     services: SiteServices;
     search: CompetitorSearch;
     finish: OnboardingActions["finish"];
-    verticals: boolean;
   }> = {},
 ) {
   const actions: OnboardingActions = {
@@ -45,16 +42,27 @@ function setup(
       areaServed: [],
       sameAs: [],
       sources: {},
-      ...(over.site ?? { status: "ok", name: "Example Ramen House", cuisine: "ramen", sources: { name: "schema" } }),
+      // UI3: a restaurant site with its type, city and state in schema.org.
+      ...(over.site ?? {
+        status: "ok",
+        name: "Example Ramen House",
+        cuisine: "ramen",
+        vertical: "restaurant",
+        city: "Irvine",
+        state: "CA",
+        sources: { name: "schema", vertical: "schema", city: "schema", state: "schema" },
+      }),
     })),
     readServices: vi.fn(
       async (): Promise<SiteServices> =>
         over.services ?? { status: "ok", services: ["Tonkotsu", "Shoyu"], source: "nav" },
     ),
+    // UI3: the places Rank1 knows for the card's city.
+    places: vi.fn(async (city: string) => (city === "Irvine" ? places : [])),
     findCompetitors: vi.fn(async (): Promise<CompetitorSearch> => over.search ?? { status: "ok", items: five }),
     finish: vi.fn(over.finish ?? (async () => undefined)),
   };
-  render(<Onboarding places={places} cuisines={cuisines} actions={actions} verticals={over.verticals} />);
+  render(<Onboarding cuisines={cuisines} actions={actions} />);
   return { actions, user: userEvent.setup() };
 }
 
@@ -71,8 +79,13 @@ async function toStepTwo(s: ReturnType<typeof setup>) {
   await toStepTwoFromBusiness(s);
 }
 
+// UI3: the card's primary.
+const looksRight = () => screen.getByRole("button", { name: "Looks right, next" });
+
 async function toStepTwoFromBusiness(s: ReturnType<typeof setup>) {
   await screen.findByLabelText("Business name");
+  // The city's places load after the card opens.
+  await screen.findByRole("checkbox", { name: "Diamond Jamboree" });
   for (const name of [
     "Diamond Jamboree",
     "Irvine Spectrum Center",
@@ -85,7 +98,7 @@ async function toStepTwoFromBusiness(s: ReturnType<typeof setup>) {
     "date night",
   ])
     await s.user.click(screen.getByRole("checkbox", { name }));
-  await s.user.click(screen.getByRole("button", { name: "Next" }));
+  await s.user.click(looksRight());
 }
 
 async function toStepThree(s: ReturnType<typeof setup>) {
@@ -158,8 +171,11 @@ describe("Onboarding 1: Your site (UI1 welcome)", () => {
   it("No website? then Finish sends the business with domain null", async () => {
     const s = setup();
     await s.user.click(screen.getByRole("button", { name: "No website? Fill it in yourself" }));
-    await s.user.type(await screen.findByLabelText("Business name"), "Example Ramen House");
+    await s.user.click(await screen.findByRole("radio", { name: "Restaurant" }));
+    await s.user.type(screen.getByLabelText("Business name"), "Example Ramen House");
     await s.user.selectOptions(screen.getByLabelText("Cuisine"), "ramen");
+    await s.user.type(screen.getByLabelText("City"), "Irvine");
+    await s.user.type(screen.getByLabelText("State"), "CA");
     await toStepTwoFromBusiness(s);
     await screen.findAllByRole("checkbox", { name: /Example/ });
     await s.user.click(screen.getByRole("button", { name: "Next" }));
@@ -208,7 +224,7 @@ describe("Onboarding 1: Your site (UI1 welcome)", () => {
 });
 
 describe("Onboarding 2: Business", () => {
-  it("starts blank with Irvine, CA prefilled, and checks the domain ending first", async () => {
+  it("checks the domain ending first, then fills the card from the site (city and state included)", async () => {
     const { actions, user } = setup();
     expect(screen.getByText("Step 1 of 4 · Your site")).toBeInTheDocument();
     await stepOne(user, "exampleramen");
@@ -303,34 +319,47 @@ describe("Onboarding 2: Business", () => {
   });
 
   it("site read but no cuisine: highlights the cuisine select, Next stays off until it's picked", async () => {
-    const { user } = setup({ site: { status: "ok", name: "Example Ramen House" } });
+    const { user } = setup({
+      site: {
+        status: "ok",
+        name: "Example Ramen House",
+        vertical: "restaurant",
+        city: "Irvine",
+        state: "CA",
+        sources: { vertical: "schema" },
+      },
+    });
     await stepOne(user);
     const cuisine = await screen.findByLabelText("Cuisine");
     expect(cuisine).toHaveAttribute("data-attention");
-    expect(screen.getByRole("button", { name: "Next" })).toHaveAttribute("aria-disabled", "true");
+    expect(looksRight()).toHaveAttribute("aria-disabled", "true");
     await user.selectOptions(cuisine, "ramen");
     expect(cuisine).not.toHaveAttribute("data-attention");
-    expect(screen.getByRole("button", { name: "Next" })).not.toHaveAttribute("aria-disabled");
+    expect(looksRight()).not.toHaveAttribute("aria-disabled");
   });
 });
 
 // X24 (UX plan PR 26): a disabled Next names what's missing, tied with aria-describedby (approved strings).
 describe("Onboarding: reason lines next to Next (X24)", () => {
-  const next = () => screen.getByRole("button", { name: "Next" });
+  const next = () => screen.getByRole("button", { name: /^(Next|Looks right, next)$/ });
 
   // Founder rule (lead, #175): never a silent disabled button. Next stays focusable (aria-disabled, not
   // disabled), points at the reason, and pressing it early keeps focus and announces the reason.
-  it("step 1 names the first missing field: name, cuisine, city, state", async () => {
+  it("the card names the first missing field: type, name, cuisine, city, state", async () => {
     const { user } = setup({ site: { status: "ok" } });
     await stepOne(user);
     await screen.findByLabelText("Business name");
     expect(next()).toHaveAttribute("aria-disabled", "true");
     expect(next()).not.toBeDisabled();
-    expect(next()).toHaveAccessibleDescription("Add your business name first.");
+    expect(next()).toHaveAccessibleDescription("Pick a business type first.");
     await user.click(next());
     expect(next()).toHaveFocus();
     expect(screen.getByText("Step 2 of 4 · Your business")).toBeInTheDocument();
-    expect(await screen.findByRole("status")).toHaveTextContent("Add your business name first.");
+    expect(await screen.findByRole("status")).toHaveTextContent("Pick a business type first.");
+    await user.click(screen.getByRole("radio", { name: "Restaurant" }));
+    expect(next()).toHaveAccessibleDescription("Add your business name first.");
+    await user.type(screen.getByLabelText("City"), "Irvine");
+    await user.type(screen.getByLabelText("State"), "CA");
     await user.type(screen.getByLabelText("Business name"), "Example Ramen House");
     expect(next()).toHaveAccessibleDescription("Pick a cuisine first.");
     await user.selectOptions(screen.getByLabelText("Cuisine"), "ramen");
@@ -432,8 +461,16 @@ describe("Onboarding 2: Competitors", () => {
 // X23 (UX plan PR 26b): 25 one-line rows (Track, short form, location tag); tapping a row opens its editor
 // (short, long, location), one at a time; a sticky "{n} of {total} questions tracked" bar holds Finish.
 describe("Onboarding 3: Questions + location", () => {
+  // UI3: step 4 builds from the card's template view (type, services), like the preview.
   const expected = buildQuestions(
-    { cuisine: "ramen", city: "Irvine", state: "CA" },
+    {
+      vertical: "restaurant",
+      cuisine: "ramen",
+      city: "Irvine",
+      state: "CA",
+      category: null,
+      services: ["Tonkotsu", "Shoyu"],
+    },
     {
       landmarks: ["Diamond Jamboree", "Irvine Spectrum Center", "UC Irvine"],
       areas: ["Northwood", "Turtle Rock", "Woodbridge"],
@@ -555,6 +592,13 @@ describe("Onboarding 3: Questions + location", () => {
       state: "CA",
       country: "US",
       aliases: [],
+      vertical: "restaurant",
+      category: null,
+      address: null,
+      phone: null,
+      services: ["Tonkotsu", "Shoyu"],
+      service_area: null,
+      profile_sources: { name: "schema", vertical: "schema", city: "schema", state: "schema" },
     });
     expect(input.competitors).toEqual(
       five
@@ -602,36 +646,133 @@ describe("Onboarding 3: Questions + location", () => {
   });
 });
 
-// C-b (lead OK 2026-11-06, Q4): "What kind of business?" sits in step 1 only with ENABLE_CONNECTIONS on
-// (the page passes verticals). Q5 (lead): questions come from the restaurant templates whatever the
-// vertical, so a non-restaurant pick still gets the full set.
-describe("Onboarding 1: the vertical (ENABLE_CONNECTIONS)", () => {
-  it("off: no select, and no vertical sent", async () => {
+// UI3 (O1, README §10): the prefilled business card. Business type first (a radiogroup), then the fields
+// for that type; only exceptions get a tag; the questions it makes show beside it.
+describe("Onboarding 2: the business card (UI3)", () => {
+  const plumber = {
+    status: "ok" as const,
+    name: "Example Plumbing Co",
+    vertical: "plumbing" as const,
+    category: "Plumber",
+    city: "Irvine",
+    state: "CA",
+    phone: "(949) 555-0142",
+    sources: { name: "schema", vertical: "schema", category: "schema", city: "schema", phone: "schema" } as const,
+  };
+
+  it("Business type comes first, as a radiogroup with the detected type checked and tagged", async () => {
     const s = setup();
     await stepOne(s.user);
     await screen.findByLabelText("Business name");
-    expect(screen.queryByLabelText(c.card.industry)).toBeNull();
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Check your business");
+    expect(screen.getByText("We filled this in from exampleramen.test.")).toBeInTheDocument();
+    const type = screen.getByRole("radiogroup", { name: "Business type" });
+    expect(
+      within(type)
+        .getAllByRole("radio")
+        .map((r) => r.closest("label")!.textContent),
+    ).toEqual(["Restaurant", "Local service", "Shop or brand", "Software", "Other"]);
+    expect(within(type).getByRole("radio", { name: "Restaurant" })).toBeChecked();
+    expect(screen.getByText("Detected from your website")).toBeInTheDocument();
+    // First field on the card.
+    const fields = [...document.querySelectorAll("[role=radiogroup], input:not([type=radio]), select")];
+    expect(fields[0]).toBe(type);
   });
 
-  it("on: Restaurant by default; HVAC is sent as hvac, still with the full question set", async () => {
-    const s = setup({ verticals: true });
+  it("an unreadable site preselects nothing ('Pick one')", async () => {
+    const s = setup({ site: { status: "unreadable" } });
     await stepOne(s.user);
-    const select = await screen.findByLabelText(c.card.industry);
-    expect(select).toHaveDisplayValue(c.card.verticals.restaurant);
-    expect(
-      within(select)
-        .getAllByRole("option")
-        .map((o) => o.textContent),
-    ).toEqual(VERTICALS.map((v) => c.card.verticals[v]));
-    await s.user.selectOptions(select, c.card.verticals.hvac);
-    await toStepTwoFromBusiness(s);
+    await screen.findByLabelText("Business name");
+    expect(screen.getAllByRole("radio").some((r) => (r as HTMLInputElement).checked)).toBe(false);
+    expect(screen.queryByLabelText("Cuisine")).toBeNull();
+  });
+
+  it("Local service: no restaurant fields; What you do, Area you serve with its default, and Services", async () => {
+    const s = setup({
+      site: plumber,
+      services: { status: "ok", services: ["Drain cleaning", "Leak repair"], source: "nav" },
+    });
+    await stepOne(s.user);
+    await screen.findByLabelText("Business name");
+    expect(screen.getByRole("radio", { name: "Local service" })).toBeChecked();
+    expect(screen.queryByLabelText("Cuisine")).toBeNull();
+    expect(screen.queryByText("Dietary options you serve")).toBeNull();
+    expect(screen.queryByText("Landmarks near you")).toBeNull();
+    expect(screen.getByLabelText("What you do")).toHaveDisplayValue("Plumbing");
+    expect(screen.getByLabelText("Area you serve")).toHaveValue("Irvine and nearby cities");
+    expect(screen.getByText("Not on your site")).toBeInTheDocument();
+    expect(screen.getByText("We picked this from your city. Change it if you travel further.")).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Services" })).toHaveTextContent("2 found in your menu");
+  });
+
+  it("an edit clears its tag: Area you serve, and the detected type", async () => {
+    const s = setup({ site: plumber });
+    await stepOne(s.user);
+    await s.user.type(await screen.findByLabelText("Area you serve"), " too");
+    expect(screen.queryByText("Not on your site")).toBeNull();
+    expect(screen.queryByText("We picked this from your city. Change it if you travel further.")).toBeNull();
+    await s.user.click(screen.getByRole("radio", { name: "Software" }));
+    expect(screen.queryByText("Detected from your website")).toBeNull();
+  });
+
+  it("restaurant: landmarks only when Rank1 knows places in the city", async () => {
+    const s = setup();
+    await stepOne(s.user);
+    expect(await screen.findByText("Landmarks near you")).toBeInTheDocument();
+    expect(screen.getByText("Places in Irvine")).toBeInTheDocument();
+    const city = screen.getByLabelText("City");
+    await s.user.clear(city);
+    await s.user.type(city, "Tustin");
+    await vi.waitFor(() => expect(screen.queryByText("Landmarks near you")).toBeNull());
+    await vi.waitFor(() => expect(s.actions.places).toHaveBeenLastCalledWith("Tustin", "CA"));
+    expect(screen.getByText("Dietary options you serve")).toBeInTheDocument();
+  });
+
+  it("service chips: 44px, each with a Remove {item} button; + Add a service adds one on Enter", async () => {
+    const s = setup({ site: plumber, services: { status: "ok", services: ["Drain cleaning"], source: "nav" } });
+    await stepOne(s.user);
+    const group = await screen.findByRole("group", { name: "Services" });
+    const remove = within(group).getByRole("button", { name: "Remove Drain cleaning" });
+    expect(remove.className).toContain("h-11");
+    expect(remove.className).toContain("w-10");
+    await s.user.type(within(group).getByRole("textbox", { name: "+ Add a service" }), "Repiping{Enter}");
+    expect(within(group).getByRole("button", { name: "Remove Repiping" })).toBeInTheDocument();
+    await s.user.click(remove);
+    expect(within(group).queryByText("Drain cleaning")).toBeNull();
+  });
+
+  it("the preview shows the first 3 questions of the card and follows edits", async () => {
+    const s = setup({ site: plumber });
+    await stepOne(s.user);
+    await screen.findByLabelText("Business name");
+    const panel = () => screen.getByRole("group", { name: "Questions Rank1 will ask AI" });
+    await vi.waitFor(() => expect(within(panel()).getAllByRole("listitem")).toHaveLength(3));
+    expect(panel()).toHaveTextContent(/Irvine/);
+    const city = screen.getByLabelText("City");
+    await s.user.clear(city);
+    await s.user.type(city, "Tustin");
+    await vi.waitFor(() => expect(panel()).toHaveTextContent(/Tustin/));
+    expect(panel()).not.toHaveTextContent(/Irvine/);
+  });
+
+  it("Finish sends the type, category, services and service area of a local service", async () => {
+    const s = setup({ site: plumber, services: { status: "ok", services: ["Drain cleaning"], source: "nav" } });
+    await stepOne(s.user);
+    await screen.findByLabelText("Business name");
+    await s.user.click(looksRight());
     await screen.findByText("Step 3 of 4 · Competitors");
     await screen.findAllByRole("checkbox", { name: /Example/ });
     await s.user.click(screen.getByRole("button", { name: "Next" }));
-    await screen.findByText("Step 4 of 4 · Questions");
-    await s.user.click(screen.getByRole("button", { name: "Finish setup" }));
+    await s.user.click(await screen.findByRole("button", { name: "Finish setup" }));
     const input = vi.mocked(s.actions.finish).mock.calls[0][0] as OnboardingInput;
-    expect(input.business.vertical).toBe("hvac");
-    expect(input.questions).toHaveLength(25);
+    expect(input.business).toMatchObject({
+      vertical: "plumbing",
+      category: "Plumber",
+      cuisine: "",
+      phone: "(949) 555-0142",
+      services: ["Drain cleaning"],
+      service_area: "Irvine and nearby cities",
+    });
+    expect(input.questions.length).toBeGreaterThan(0);
   });
 });

@@ -6,9 +6,13 @@ import { Banner } from "@/components/ui/Banner";
 import { Button } from "@/components/ui/Button";
 import { DomainField } from "@/components/ui/DomainField";
 import { LoadingState } from "@/components/ui/LoadingState";
-import { connectionsCopy } from "@/components/connections/copy";
-import { VERTICALS, type Vertical } from "@/lib/queries/onboarding";
-import { MAX_ACTIVE_QUESTIONS, buildQuestions, type Picks } from "@/lib/questions/templates";
+import { Select } from "@/components/ui/Select";
+import {
+  MAX_ACTIVE_QUESTIONS,
+  buildQuestions,
+  type Business as TemplateBusiness,
+  type Picks,
+} from "@/lib/questions/templates";
 import { normalizeDomain } from "@/lib/spam/validate";
 import type {
   CompetitorSearch,
@@ -18,29 +22,19 @@ import type {
   SiteProfile,
   SiteServices,
 } from "./contract";
-import { copy, reading, welcome as w } from "./copy";
+import { BusinessCard, kindOf, serviceAreaOf, verticalOf, type CardBusiness } from "./BusinessCard";
+import { card as cardCopy, copy, reading, welcome as w } from "./copy";
 import { ExamplePanel } from "./ExamplePanel";
+import { QuestionPreview } from "./QuestionPreview";
 import { ReadingLog } from "./ReadingLog";
-import { Select } from "@/components/ui/Select";
 
-// docs/UI.md Question templates: {dietary} and {occasion} lists; landmarks and areas max 3 each.
-export const DIETARY = ["vegan", "vegetarian", "gluten-free", "halal", "kosher"];
-export const OCCASIONS = ["date night", "birthday", "business lunch", "large group"];
-const MAX_PLACES = 3;
+// DIETARY / OCCASIONS moved to BusinessCard (UI3); re-exported for existing importers.
+export { DIETARY, OCCASIONS } from "./BusinessCard";
 const LEVELS = ["country", "state", "city"] as const;
 type Level = (typeof LEVELS)[number];
 
-export type Business = {
-  domain: string;
-  name: string;
-  cuisine: string;
-  city: string;
-  state: string;
-  // Read in stage 4 of the reading log; the card shows them as chips (UI3).
-  services: string[];
-  // C-b: only with ENABLE_CONNECTIONS (the page passes verticals); Restaurant until picked.
-  vertical?: Vertical;
-};
+// UI3: the business is the card's fields (BusinessCard).
+export type Business = CardBusiness;
 export type Competitor = {
   name: string;
   domain: string | null;
@@ -73,7 +67,22 @@ export const emptyDraft: Draft = {
   step: 1,
   site: "idle",
   siteCuisine: false,
-  business: { domain: "", name: "", cuisine: "", city: "Irvine", state: "CA", services: [] },
+  business: {
+    domain: "",
+    name: "",
+    kind: "",
+    category: "",
+    cuisine: "",
+    // UI3: no Irvine default (the landmark bug's source); the site or the owner fills the city.
+    city: "",
+    state: "",
+    address: "",
+    phone: "",
+    serviceArea: "",
+    services: [],
+    servicesFound: 0,
+    sources: {},
+  },
   picks: { landmarks: [], areas: [], dietary: [], occasion: [] },
   search: null,
   competitors: [],
@@ -86,26 +95,31 @@ const ghost =
   "inline-flex min-h-11 items-center justify-center rounded-control border border-fieldBorder bg-white px-5 text-ui font-semibold text-ink hover:bg-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep";
 const select =
   "h-11 w-full rounded-control border bg-paper px-3 text-ui text-ink focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-jellyDeep md:h-9";
-const chip =
-  "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-control border border-fieldBorder bg-white px-4 text-ui has-checked:border-jellyDeep has-checked:bg-infoBg has-disabled:cursor-not-allowed has-disabled:opacity-60 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-jellyDeep";
 
-const searchKey = (b: Business) => [b.cuisine, b.city, b.state, b.domain].join("|");
-const questionKey = (b: Business, p: Picks) => JSON.stringify([b.cuisine, b.city, b.state, p]);
+// What the competitor lookup searches for: the cuisine, or what a non-restaurant does.
+const searchTerm = (b: Business) => (b.kind === "restaurant" ? b.cuisine : b.category || b.cuisine);
+const searchKey = (b: Business) => [searchTerm(b), b.city, b.state, b.domain].join("|");
+// UI3: the templates' view of the card, shared by the preview and step 4 so they always agree.
+export const templateBusiness = (b: Business): TemplateBusiness => ({
+  vertical: verticalOf(b),
+  cuisine: b.kind === "restaurant" ? b.cuisine : null,
+  city: b.city.trim(),
+  state: b.state.trim(),
+  category: b.category || null,
+  services: b.services,
+});
+const questionKey = (b: Business, p: Picks) => JSON.stringify([templateBusiness(b), p]);
 
 export function Onboarding({
-  places,
   cuisines,
   actions,
   initial = emptyDraft,
   syncUrl = true,
-  verticals = false,
 }: {
-  places: LocalPlace[];
   cuisines: readonly string[];
   actions: OnboardingActions;
   initial?: Draft;
   syncUrl?: boolean;
-  verticals?: boolean;
 }) {
   const [d, setD] = useState<Draft>(initial);
   const reached = useRef(initial.step);
@@ -131,13 +145,16 @@ export function Onboarding({
   }, [syncUrl]);
 
   return (
-    <div className={`flex flex-col gap-6 ${d.step > 1 ? "max-w-2xl" : ""}`}>
-      {d.step > 1 && (
-        <div>
-          {/* UI1: the rail shows the steps at md+; phones get this line (step 1 has it in its sticky bar). */}
+    <div className={`flex flex-col gap-6 ${d.step > 2 ? "max-w-2xl" : ""}`}>
+      {/* OB2: one H1 at the app title size. UI3: step 2's is "Check your business". */}
+      <h1 className="heading-gradient font-display text-title font-semibold tracking-[-0.02em]">
+        {d.step === 2 ? cardCopy.title : copy.title}
+      </h1>
+      {d.step > 2 && (
+        <div className="-mt-4">
+          {/* UI1: the rail shows the steps at md+; phones get this line (steps 1 and 2 have it in a sticky bar). */}
           <p className="text-caption text-inkMuted md:hidden">{w.stepOf(d.step, w.steps[d.step - 1])}</p>
-          {/* OB2: one heading per step. Steps 1 and 2 are the page's own H1 ("Add your business"). */}
-          {d.step > 2 && <h2 className="font-display text-h2 font-semibold md:text-h2-md">{w.steps[d.step - 1]}</h2>}
+          <h2 className="font-display text-h2 font-semibold md:text-h2-md">{w.steps[d.step - 1]}</h2>
         </div>
       )}
       {d.step === 1 && (
@@ -153,18 +170,10 @@ export function Onboarding({
         />
       )}
       {d.step === 2 && (
-        <BusinessStep
-          d={d}
-          set={set}
-          places={places}
-          cuisines={cuisines}
-          verticals={verticals}
-          focusRef={focusCard}
-          onNext={() => go(3)}
-        />
+        <BusinessStep d={d} set={set} cuisines={cuisines} actions={actions} focusRef={focusCard} onNext={() => go(3)} />
       )}
       {d.step === 3 && <CompetitorsStep d={d} set={set} actions={actions} onBack={() => go(2)} onNext={() => go(4)} />}
-      {d.step === 4 && <QuestionsStep d={d} set={set} actions={actions} verticals={verticals} onBack={() => go(3)} />}
+      {d.step === 4 && <QuestionsStep d={d} set={set} actions={actions} onBack={() => go(3)} />}
     </div>
   );
 }
@@ -201,7 +210,18 @@ function useNudge() {
 const notReady = "aria-disabled:cursor-not-allowed aria-disabled:opacity-60";
 
 // Back + the one primary button; a sticky bar on phones (pinned: at every width, for step 3's long list).
-function Bar({ onBack, pinned = false, children }: { onBack?: () => void; pinned?: boolean; children: ReactNode }) {
+function Bar({
+  onBack,
+  pinned = false,
+  step,
+  children,
+}: {
+  onBack?: () => void;
+  pinned?: boolean;
+  // UI3 (OC6): on phones the bar names the step where Back would sit.
+  step?: string;
+  children: ReactNode;
+}) {
   return (
     <div
       className={`sticky bottom-0 -mx-5 flex items-center justify-between gap-3 border-t border-border bg-paper px-5 py-3 ${pinned ? "md:mx-0 md:px-0" : "md:static md:mx-0 md:border-0 md:px-0"}`}
@@ -210,50 +230,14 @@ function Bar({ onBack, pinned = false, children }: { onBack?: () => void; pinned
         <button type="button" onClick={onBack} className={ghost}>
           {copy.back}
         </button>
+      ) : step ? (
+        <p className="min-w-0 truncate text-caption text-text2 md:hidden">{step}</p>
       ) : (
         <span />
       )}
       {/* Wraps at 375 so a reason or the count never pushes the page sideways. */}
       <div className="flex min-w-0 flex-wrap items-center justify-end gap-x-3 gap-y-1 text-right">{children}</div>
     </div>
-  );
-}
-
-function Checks({
-  legend,
-  options,
-  picked,
-  onChange,
-  max,
-}: {
-  legend: string;
-  options: string[];
-  picked: string[];
-  onChange: (v: string[]) => void;
-  max?: number;
-}) {
-  if (!options.length) return null;
-  return (
-    <fieldset>
-      <legend className="mb-1.5 text-caption font-semibold">{legend}</legend>
-      <div className="flex flex-wrap gap-2">
-        {options.map((o) => {
-          const on = picked.includes(o);
-          return (
-            <label key={o} className={chip}>
-              <input
-                type="checkbox"
-                checked={on}
-                disabled={!on && max !== undefined && picked.length >= max}
-                onChange={() => onChange(on ? picked.filter((p) => p !== o) : [...picked, o])}
-                className="size-4 accent-jellyDeep"
-              />
-              <span data-computed>{o}</span>
-            </label>
-          );
-        })}
-      </div>
-    </fieldset>
   );
 }
 
@@ -288,7 +272,7 @@ function WelcomeStep({
       .readHome(domain)
       .catch((): SiteProfile => ({ status: "unreadable", areaServed: [], sameAs: [], sources: {} }));
     if (home.status !== "ok") {
-      set({ site: "unreadable", siteCuisine: false, business: { ...b, domain, name: "", cuisine: "", services: [] } });
+      set({ site: "unreadable", siteCuisine: false, business: { ...emptyDraft.business, domain } });
       return onNext();
     }
     setRead({ home, services: null });
@@ -300,14 +284,23 @@ function WelcomeStep({
     set({
       site: "ok",
       siteCuisine: Boolean(cuisine),
+      // UI3: the card, filled from the site; each field keeps its source for the tags.
       business: {
-        ...b,
+        ...emptyDraft.business,
         domain,
         name: home.name ?? "",
+        kind: kindOf(home.vertical),
+        vertical: home.vertical,
+        category: home.category ?? "",
         cuisine,
-        city: home.city ?? b.city,
-        state: home.state ?? b.state,
+        city: home.city ?? "",
+        state: home.state ?? "",
+        address: home.address ?? "",
+        phone: home.phone ?? "",
+        serviceArea: home.areaServed.join(", "),
         services: services.services,
+        servicesFound: services.services.length,
+        sources: home.sources,
       },
     });
     onNext();
@@ -339,7 +332,7 @@ function WelcomeStep({
             <button
               type="button"
               onClick={() => {
-                set({ site: "manual", business: { ...b, domain: "", name: "", cuisine: "" } });
+                set({ site: "manual", business: { ...emptyDraft.business } });
                 onNext();
               }}
               className="font-medium text-accent underline underline-offset-2 max-md:inline-flex max-md:min-h-11 max-md:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jellyDeep"
@@ -388,23 +381,20 @@ function WelcomeStep({
   );
 }
 
+// UI3 (O1, README §10): the business card, filled from the site, with the questions it makes on the right.
 function BusinessStep({
   d,
   set,
-  places,
   cuisines,
-  verticals,
+  actions,
   focusRef,
   onNext,
 }: StepProps & {
-  places: LocalPlace[];
   cuisines: readonly string[];
-  verticals: boolean;
+  actions: OnboardingActions;
   focusRef: { current: boolean };
   onNext: () => void;
 }) {
-  const cuisineId = useId();
-  const verticalId = useId();
   const reasonId = useId();
   const [said, nudge] = useNudge();
   const b = d.business;
@@ -417,109 +407,93 @@ function BusinessStep({
     form.current?.querySelector<HTMLInputElement>('input[name="name"]')?.focus();
   }, [focusRef]);
 
-  const attention = d.site === "ok" && !d.siteCuisine && !b.cuisine;
+  // The landmarks and areas Rank1 knows for this city (none: the pickers stay hidden).
+  const [places, setPlaces] = useState<LocalPlace[]>([]);
+  const city = b.city.trim();
+  const state = b.state.trim();
+  useEffect(() => {
+    let live = true;
+    const t = setTimeout(
+      () =>
+        actions
+          .places(city, state)
+          .then((p) => live && setPlaces(p))
+          .catch(() => live && setPlaces([])),
+      city && state ? 300 : 0,
+    );
+    return () => {
+      live = false;
+      clearTimeout(t);
+    };
+  }, [actions, city, state]);
+
+  const attention = d.site === "ok" && b.kind === "restaurant" && !d.siteCuisine && !b.cuisine;
   // X24: the first missing field, in form order.
-  const missing = !b.name.trim()
-    ? copy.missing.name
-    : !b.cuisine
-      ? copy.missing.cuisine
-      : !b.city.trim()
-        ? copy.missing.city
-        : !b.state.trim()
-          ? copy.missing.state
-          : null;
-  const ready = !missing;
-  const ofKind = (k: LocalPlace["kind"]) => places.filter((p) => p.kind === k).map((p) => p.name);
-  const pick = (k: keyof Picks) => (v: string[]) => set({ picks: { ...d.picks, [k]: v } });
+  const missing = !b.kind
+    ? cardCopy.missingType
+    : !b.name.trim()
+      ? copy.missing.name
+      : b.kind === "restaurant" && !b.cuisine
+        ? copy.missing.cuisine
+        : !city
+          ? copy.missing.city
+          : !state
+            ? copy.missing.state
+            : null;
 
   return (
-    <form
-      ref={form}
-      noValidate
-      className="flex flex-col gap-5"
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (missing) nudge(missing);
-        else onNext();
-      }}
-    >
-      {b.domain && <PillField label={w.label} name="domain" value={b.domain} readOnly icon="globe" />}
-      {/* Q8: an unreadable site opens the same card, empty, with one line. (The three "things you sell"
-          inputs it replaces were never sent anywhere.) */}
-      {d.site === "unreadable" && <p className="text-ui font-medium text-ink">{reading.unreadable}</p>}
-      {verticals && (
-        <div>
-          <label htmlFor={verticalId} className="mb-1.5 block text-caption font-semibold">
-            {connectionsCopy.card.industry}
-          </label>
-          <Select
-            wrap="w-full"
-            id={verticalId}
-            value={b.vertical ?? "restaurant"}
-            onChange={(e) => setB({ vertical: e.target.value as Vertical })}
-            className={`${select} border-fieldBorder`}
-          >
-            {VERTICALS.map((v) => (
-              <option key={v} value={v}>
-                {connectionsCopy.card.verticals[v]}
-              </option>
-            ))}
-          </Select>
+    <div className="grid gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,25rem)] md:gap-12">
+      <form
+        ref={form}
+        noValidate
+        className="flex flex-col gap-6"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (missing) nudge(missing);
+          else onNext();
+        }}
+      >
+        {/* OC2: one line says where the card came from; only exceptions get a tag. */}
+        {d.site === "ok" && b.domain && (
+          <p className="-mt-4 text-caption text-text2">
+            <span className="inline-flex items-center gap-1.5 font-medium text-ink">
+              <span aria-hidden className="size-1.5 rounded-full bg-moss" />
+              {cardCopy.filled(b.domain)}
+            </span>{" "}
+            {cardCopy.change}
+          </p>
+        )}
+        {/* Q8: an unreadable site opens the same card, empty, with one line. */}
+        {d.site === "unreadable" && <p className="-mt-4 text-ui font-medium text-ink">{reading.unreadable}</p>}
+        <div className="md:hidden">
+          <QuestionPreview phone business={templateBusiness(b)} picks={d.picks} />
         </div>
-      )}
-      <PillField label={copy.name} name="name" value={b.name} onChange={(e) => setB({ name: e.target.value })} />
-      <div>
-        <label htmlFor={cuisineId} className="mb-1.5 block text-caption font-semibold">
-          {copy.cuisine}
-        </label>
-        <Select
-          wrap="w-full"
-          id={cuisineId}
-          value={b.cuisine}
-          data-attention={attention || undefined}
-          onChange={(e) => setB({ cuisine: e.target.value })}
-          className={`${select} ${attention ? "border-2 border-amber" : "border-fieldBorder"}`}
-        >
-          <option value="" />
-          {cuisines.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </Select>
+        <BusinessCard
+          b={b}
+          setB={setB}
+          picks={d.picks}
+          setPicks={(picks) => set({ picks })}
+          places={places}
+          cuisines={cuisines}
+          attention={attention}
+        />
+        <Bar step={w.stepOf(2, w.steps[1])}>
+          <Reason id={reasonId} text={missing} said={said} />
+          <Button
+            type="submit"
+            aria-disabled={missing ? true : undefined}
+            aria-describedby={missing ? reasonId : undefined}
+            className={notReady}
+          >
+            {cardCopy.next}
+          </Button>
+          <span className="text-caption text-text2 max-md:hidden">{cardCopy.later}</span>
+        </Bar>
+      </form>
+      <div className="max-md:hidden">
+        <QuestionPreview business={templateBusiness(b)} picks={d.picks} />
       </div>
-      <div className="grid grid-cols-[2fr_1fr] gap-3">
-        <PillField label={copy.city} name="city" value={b.city} onChange={(e) => setB({ city: e.target.value })} />
-        <PillField label={copy.state} name="state" value={b.state} onChange={(e) => setB({ state: e.target.value })} />
-      </div>
-      <Checks
-        legend={copy.landmarks}
-        options={ofKind("landmark")}
-        picked={d.picks.landmarks}
-        onChange={pick("landmarks")}
-        max={MAX_PLACES}
-      />
-      <Checks
-        legend={copy.areas}
-        options={ofKind("area")}
-        picked={d.picks.areas}
-        onChange={pick("areas")}
-        max={MAX_PLACES}
-      />
-      <Checks legend={copy.dietary} options={DIETARY} picked={d.picks.dietary} onChange={pick("dietary")} />
-      <Checks legend={copy.occasion} options={OCCASIONS} picked={d.picks.occasion} onChange={pick("occasion")} />
-      <Bar>
-        <Reason id={reasonId} text={missing} said={said} />
-        <Button
-          type="submit"
-          aria-disabled={!ready || undefined}
-          aria-describedby={missing ? reasonId : undefined}
-          className={notReady}
-        >
-          {copy.next}
-        </Button>
-      </Bar>
-    </form>
+    </div>
   );
 }
 
@@ -542,7 +516,7 @@ function CompetitorsStep({
     if (d.search?.key === key) return;
     set({ search: { key, result: null }, competitors: [] });
     actions
-      .findCompetitors({ cuisine: b.cuisine, city: b.city, state: b.state, domain: b.domain })
+      .findCompetitors({ cuisine: searchTerm(b), city: b.city, state: b.state, domain: b.domain })
       .catch((): CompetitorSearch => ({ status: "error", items: [] }))
       .then((result) =>
         set({
@@ -576,11 +550,11 @@ function CompetitorsStep({
   return (
     <div className="flex flex-col gap-5">
       {!result ? (
-        <LoadingState message={copy.finding(b.cuisine, b.city)} />
+        <LoadingState message={copy.finding(searchTerm(b), b.city)} />
       ) : result.status !== "ok" ? (
         <Banner tone="error">{copy.loadFailed}</Banner>
       ) : result.items.length === 0 ? (
-        <p className="text-body-lg">{copy.noneFound(b.cuisine, b.city)}</p>
+        <p className="text-body-lg">{copy.noneFound(searchTerm(b), b.city)}</p>
       ) : null}
 
       {(d.competitors.length > 0 || d.manual.length > 0) && (
@@ -694,13 +668,7 @@ function CompetitorRow({ c, onToggle, onRemove }: { c: Competitor; onToggle: () 
   );
 }
 
-function QuestionsStep({
-  d,
-  set,
-  actions,
-  verticals,
-  onBack,
-}: StepProps & { actions: OnboardingActions; verticals: boolean; onBack: () => void }) {
+function QuestionsStep({ d, set, actions, onBack }: StepProps & { actions: OnboardingActions; onBack: () => void }) {
   const b = d.business;
   const key = questionKey(b, d.picks);
   const [empty, setEmpty] = useState<number | null>(null);
@@ -713,7 +681,7 @@ function QuestionsStep({
   const rows =
     d.questions?.key === key
       ? d.questions.rows
-      : buildQuestions({ cuisine: b.cuisine, city: b.city, state: b.state }, d.picks).map((q): Question => ({
+      : buildQuestions(templateBusiness(b), d.picks).map((q): Question => ({
           short: q.short_text,
           long: q.long_text,
           template: { short: q.short_text, long: q.long_text, key: q.key },
@@ -736,12 +704,19 @@ function QuestionsStep({
         name: b.name.trim(),
         // No website: null, never "" or a placeholder (#203 B1).
         domain: b.domain || null,
-        cuisine: b.cuisine,
+        cuisine: b.kind === "restaurant" ? b.cuisine : "",
         city: b.city.trim(),
         state: b.state.trim(),
         country: "US",
         aliases: [],
-        ...(verticals && { vertical: b.vertical ?? "restaurant" }),
+        // UI3: the card's type and profile fields (BE1), each with where it came from.
+        vertical: verticalOf(b),
+        category: b.category.trim() || null,
+        address: b.address.trim() || null,
+        phone: b.phone.trim() || null,
+        services: b.services,
+        service_area: serviceAreaOf(b) || null,
+        profile_sources: b.sources,
       },
       competitors: [
         ...d.competitors.map((c) => ({ c, source: "maps" as const })),

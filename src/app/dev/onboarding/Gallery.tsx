@@ -29,11 +29,39 @@ const pending = () => new Promise<never>(() => {});
 const actions: OnboardingActions = {
   readHome: pending,
   readServices: pending,
+  places: async () => places,
   findCompetitors: pending,
   finish: pending,
 };
 
-const business = { ...emptyDraft.business, domain: "exampleramen.test", name: "Example Ramen House", cuisine: "ramen" };
+const business = {
+  ...emptyDraft.business,
+  domain: "exampleramen.test",
+  name: "Example Ramen House",
+  kind: "restaurant" as const,
+  vertical: "restaurant" as const,
+  cuisine: "ramen",
+  city: "Irvine",
+  state: "CA",
+  services: ["Tonkotsu ramen", "Spicy miso ramen", "Gyoza", "Karaage"],
+  servicesFound: 4,
+  sources: { name: "schema" as const, vertical: "schema" as const, city: "schema" as const, state: "schema" as const },
+};
+// UI3: a local service read from its site (the plumber in the O1 mocks); "Area you serve" is the default.
+const plumber = {
+  ...emptyDraft.business,
+  domain: "exampleplumbing.test",
+  name: "Example Plumbing Co",
+  kind: "local" as const,
+  vertical: "plumbing" as const,
+  category: "Plumber",
+  city: "Irvine",
+  state: "CA",
+  phone: "(949) 555-0142",
+  services: ["Drain cleaning", "Water heaters", "Leak repair", "Repiping", "Sewer lines", "Emergency service"],
+  servicesFound: 6,
+  sources: { name: "schema" as const, vertical: "schema" as const, city: "schema" as const, phone: "schema" as const },
+};
 const picks = {
   landmarks: ["Diamond Jamboree", "Irvine Spectrum Center", "UC Irvine"],
   areas: ["Northwood", "Turtle Rock", "Woodbridge"],
@@ -72,11 +100,13 @@ const STATES: [string, Partial<Draft>, Partial<OnboardingActions>?][] = [
         phone: "+1 949 555 0100",
         areaServed: [],
         sameAs: [],
-        sources: { name: "schema", cuisine: "meta", city: "schema", phone: "schema" },
+        vertical: "restaurant",
+        sources: { name: "schema", vertical: "schema", cuisine: "meta", city: "schema", phone: "schema" },
       }),
     },
   ],
   ["1 loading", { site: "loading", business: { ...emptyDraft.business, domain: "exampleramen.test" } }],
+  ["2 local", { step: 2, site: "ok", business: plumber }],
   ["2 error", { step: 2, site: "unreadable", business: { ...emptyDraft.business, domain: "exampleramen.test" } }],
   ["2 partial", { step: 2, site: "ok", business: { ...business, cuisine: "" } }],
   ["2 success", { step: 2, site: "ok", business, picks }],
@@ -103,7 +133,6 @@ export function Gallery() {
             {name} <Badge tone="info">Example data</Badge>
           </p>
           <Onboarding
-            places={places}
             cuisines={CUISINES}
             actions={{ ...actions, ...over }}
             initial={{ ...emptyDraft, ...patch }}
