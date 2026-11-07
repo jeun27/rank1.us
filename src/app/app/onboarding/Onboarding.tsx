@@ -69,6 +69,9 @@ export type Draft = {
   questions: { key: string; rows: Question[] } | null;
 };
 
+// How long the finished reading log stays before the card opens.
+const LOG_HOLD_MS = 600;
+
 export const emptyDraft: Draft = {
   step: 1,
   site: "idle",
@@ -296,6 +299,8 @@ function WelcomeStep({
       .readServices(domain)
       .catch((): SiteServices => ({ status: "unreadable", services: [], source: null }));
     setRead({ home, services });
+    // QA F2: let the finished log ("4 of 4") paint and the polite live region announce it before the card.
+    await new Promise((r) => setTimeout(r, LOG_HOLD_MS));
     const cuisine = home.cuisine && cuisines.includes(home.cuisine) ? home.cuisine : "";
     set({
       site: "ok",
