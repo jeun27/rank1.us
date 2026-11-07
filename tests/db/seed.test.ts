@@ -78,12 +78,24 @@ describe("supabase/seed.sql on a fresh db reset", () => {
     expect(counts.citations).toBeGreaterThan(0);
   });
 
-  it("question_templates match TEMPLATES verbatim (the seed's restaurant rows)", async () => {
+  // DP3: the 20 restaurant rows come from seed.sql, the 12 onboarding v2 Q10 rows from backend's migration;
+  // vertical is the template's family.
+  it("question_templates match TEMPLATES verbatim (all 32, vertical = family)", async () => {
     const db = await rows(
-      `select short_form, long_form, slots, fixed_cuisine, fixed_city, origin, sort from public.question_templates
-       where vertical = 'restaurant' order by sort`,
+      `select short_form, long_form, slots, fixed_cuisine, fixed_city, origin, sort, vertical from public.question_templates order by sort`,
     );
-    expect(db).toEqual(TEMPLATES.map((t) => ({ ...t, slots: [...t.slots] })));
+    expect(db).toEqual(
+      TEMPLATES.map((t) => ({
+        short_form: t.short_form,
+        long_form: t.long_form,
+        slots: [...t.slots],
+        fixed_cuisine: t.fixed_cuisine,
+        fixed_city: t.fixed_city,
+        origin: t.origin,
+        sort: t.sort,
+        vertical: t.family,
+      })),
+    );
   });
 
   // Step 10 (lead): migration 0014 adds A1-A6 as disabled placeholders (Build Pack text unavailable).
