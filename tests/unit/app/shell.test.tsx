@@ -149,8 +149,12 @@ describe("Competitors (UI.md 4b, SoV only here)", () => {
     // F2 (lead-approved): each suggestion's Add names its competitor, so screen readers can tell them
     // apart (and from the add form's "Add"). The visible text stays "Add".
     const adds = within(suggested).getAllByRole("button", { name: /^Add / });
-    expect(adds.map((b) => b.getAttribute("aria-label"))).toEqual(exampleSuggestions.map((x) => `Add ${x.name}`));
-    expect(adds.every((b) => b.textContent === "Add")).toBe(true);
+    expect(adds.map((b) => b.textContent)).toEqual(exampleSuggestions.map((x) => `Add ${x.name}`));
+    // Visible text is "Add"; the name sits in a screen-reader span marked as data.
+    for (const b of adds) {
+      expect(b.firstChild!.textContent).toBe("Add");
+      expect(b.querySelector("span.sr-only[data-computed]")).not.toBeNull();
+    }
     expect(within(suggested).queryByRole("button", { name: "Add" })).toBeNull();
     // Unique across the page, the add form's "Add" included.
     const names = screen
