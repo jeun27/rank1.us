@@ -114,7 +114,7 @@ function SetupSteps() {
             }`}
           >
             <span
-              className={`flex size-4.5 items-center justify-center rounded-full border font-mono text-[11px] ${
+              className={`flex size-4.5 items-center justify-center rounded-full border font-mono text-tag ${
                 on || n < step ? "border-current" : "border-inkMuted text-inkMuted"
               }`}
             >

@@ -723,7 +723,8 @@ function QuestionsStep({
     const input: OnboardingInput = {
       business: {
         name: b.name.trim(),
-        domain: b.domain,
+        // No website: null, never "" or a placeholder (#203 B1).
+        domain: b.domain || null,
         cuisine: b.cuisine,
         city: b.city.trim(),
         state: b.state.trim(),
