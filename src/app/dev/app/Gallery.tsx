@@ -84,8 +84,24 @@ const allComplete = exampleRuns.map((r) => ({
 // Every UI.md 4b state of the self-serve pages with Example data. ?state= picks one.
 export const STATES: Record<string, () => React.ReactNode> = {
   "dashboard-empty": () => <Dashboard business={null} latest={null} series={none} fixes={[]} now={NOW} />,
+  // UI4: the locked preview, without and with the business's own free audit (BE2).
   "dashboard-unpaid": () => (
     <Dashboard business={{ ...exampleBusiness, paid: false }} latest={null} series={none} fixes={[]} now={NOW} />
+  ),
+  "dashboard-unpaid-audit": () => (
+    <Dashboard
+      business={{ name: "Example Plumbing Co", paid: false, vertical: "plumbing" }}
+      latest={null}
+      series={none}
+      fixes={[]}
+      now={NOW}
+      freeAudit={{
+        runId: "example-run",
+        named: 9,
+        n: 40,
+        checkedAt: new Date(NOW.getTime() - 2 * 86_400_000).toISOString(),
+      }}
+    />
   ),
   "dashboard-first-check": () => (
     <Dashboard business={exampleBusiness} latest={null} series={none} fixes={[]} now={NOW} />

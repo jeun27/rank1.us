@@ -208,6 +208,8 @@ describe("getCurrentBusiness", () => {
       city: "Irvine",
       state: "CA",
       country: "US",
+      // UI4: the locked Dashboard picks its Example board from it (the column defaults to restaurant).
+      vertical: "restaurant",
       paid: true,
     });
     for (const [status, paid] of [

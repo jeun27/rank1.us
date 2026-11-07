@@ -9,6 +9,9 @@ import { fixCopy as f } from "@/components/fixes/copy";
 import { Icon } from "@/components/ui/Icon";
 import { EmptyState, type FirstCheck } from "@/components/ui/EmptyState";
 import { FirstCheckEmpty } from "./FirstCheckEmpty";
+import { LockedPreview } from "./LockedPreview";
+import type { BusinessFreeAudit } from "@/lib/queries/results";
+import type { Vertical } from "@/lib/queries/onboarding";
 import type { SeriesPoint } from "@/lib/metrics";
 import { deltaTone, signedPts } from "@/lib/metrics/delta";
 import type { TopFix } from "@/lib/queries/shell";
@@ -27,8 +30,9 @@ export function Dashboard({
   reassure,
   narrative,
   firstCheck = "monday",
+  freeAudit = null,
 }: {
-  business: { name: string; paid: boolean } | null;
+  business: { name: string; paid: boolean; vertical?: Vertical | null } | null;
   latest: Loaded | null;
   series: { points: SeriesPoint[]; visible: boolean };
   fixes: TopFix[];
@@ -41,6 +45,8 @@ export function Dashboard({
   narrative?: ReactNode;
   // X25: whether a first check is queued or running (loadShell), for the no-run screen.
   firstCheck?: FirstCheck;
+  // UI4: the business's own free audit (BE2), for the locked headline. Null: no real headline.
+  freeAudit?: BusinessFreeAudit | null;
 }) {
   if (!business)
     return (
@@ -53,12 +59,19 @@ export function Dashboard({
         </Card>
       </Page>
     );
+  // UI4: unpaid, so no weekly check yet: the locked preview (its own one primary, Start for $99/mo).
+  if (!latest && !business.paid)
+    return (
+      <Page title={c.dashboard}>
+        <LockedPreview vertical={business.vertical} audit={freeAudit} now={now} />
+      </Page>
+    );
   if (!latest)
     return (
       <Page title={c.dashboard}>
         {notice}
         <Card>
-          {business.paid ? <FirstCheckEmpty state={firstCheck} /> : <Button href="/app/billing">{c.startPaid}</Button>}
+          <FirstCheckEmpty state={firstCheck} />
         </Card>
       </Page>
     );
