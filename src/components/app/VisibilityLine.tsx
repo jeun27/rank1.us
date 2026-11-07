@@ -15,7 +15,8 @@ const named = (p: SeriesPoint) => `named in ${p.metric.numerator} of ${p.metric.
 // The Dashboard line (UI.md Chart: lines and bars only). One series, so no legend; hover a point for its
 // n; a table carries the same numbers for screen readers. Labels and dots are HTML, so the fixed-height
 // SVG can stretch without shrinking text (X9b) or squashing dots. The axis runs from 0 to the smallest
-// 20-point step that holds the highest point (DQ5).
+// 20-point step that holds the highest point (DQ5). pt-4 keeps room for the end label above a point on
+// the top line (16px label + 6px gap, less the 6.4px top pad on phones), so it never reaches the heading.
 export function VisibilityLine({ points }: { points: SeriesPoint[] }) {
   const [active, setActive] = useState<number | null>(null);
   const x = (i: number) => PAD.l + (i * (W - PAD.l - PAD.r)) / Math.max(1, points.length - 1);
@@ -28,7 +29,7 @@ export function VisibilityLine({ points }: { points: SeriesPoint[] }) {
   const path = points.map((p, i) => `${i ? "L" : "M"}${x(i)},${y(p.metric.value)}`).join(" ");
   const tip = active === null ? null : points[active];
   return (
-    <div className="relative">
+    <div className="relative pt-4">
       <div className="flex">
         <div aria-hidden className="relative w-9 shrink-0">
           {[0, top / 2, top].map((v) => (

@@ -6,3 +6,8 @@ Audit: share/design-quality/AUDIT.md DQ5. The y axis was fixed at 0–100% while
 - Fixed height: 160px, 200px from md. The SVG stretches (`preserveAspectRatio="none"`, non-scaling strokes). The dots are HTML, so they stay round, and the axis labels were already HTML (X9b).
 - The last point is labelled directly with its % in mono (UI.md Chart).
 - tests/unit/app/visibility-axis.test.tsx: the axis ticks for the Example (0/20/40) and the domain rule for three highs, the fixed height and the end label. They failed first. UI.md's Chart row has the rule.
+
+Review fix (#189): a newest point on the axis top (e.g. 40%) put the end label about 16px above the plot,
+into the "Visibility" heading. The chart now reserves 16px above the plot (pt-4). New gallery state
+`/dev/app?state=dashboard-chart-top` and `tests/e2e/chart-end-label.spec.ts` (both themes, 375 + 1280)
+failed before the fix and pass after.

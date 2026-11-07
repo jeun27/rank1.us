@@ -49,6 +49,11 @@ import { computeSources, seriesFromSummaries } from "@/lib/metrics";
 const NOW = new Date("2026-11-05T14:30:00Z");
 const series = seriesFromSummaries(exampleRuns);
 const none = { points: [], visible: false };
+// The newest check at 40% sits on the axis top, where the end label used to rise into the heading.
+const atTop = seriesFromSummaries([
+  { ...exampleRuns[0], visibility: { ...exampleRuns[0].visibility, value: 0.4, numerator: 96 } },
+  ...exampleRuns.slice(1),
+]);
 const noop = async () => undefined;
 const actions = { add: noop, dismiss: noop };
 const experiment = { end: noop, remove: noop };
@@ -91,6 +96,9 @@ export const STATES: Record<string, () => React.ReactNode> = {
   ),
   "dashboard-success": () => (
     <Dashboard business={exampleBusiness} latest={exampleLatest} series={series} fixes={exampleFixes} now={NOW} />
+  ),
+  "dashboard-chart-top": () => (
+    <Dashboard business={exampleBusiness} latest={exampleLatest} series={atTop} fixes={exampleFixes} now={NOW} />
   ),
   // C-b: the connect card on the dashboard (ENABLE_CONNECTIONS), and the onboarding connect step.
   ...Object.fromEntries(
