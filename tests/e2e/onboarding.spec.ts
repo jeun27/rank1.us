@@ -165,3 +165,25 @@ test("onboarding has one app-sized H1 and no 'Business' H2", async ({ page }) =>
   await expect(page.getByRole("heading", { level: 2, name: "Business" })).toHaveCount(0);
   await expect(page.getByText("Step 1 of 3")).toBeVisible();
 });
+
+// OB1: the onboarding breadcrumb reads "Rank1 / Add your business" (one separator), never "Rank1 / /".
+test("the onboarding breadcrumb has no empty crumbs", async ({ page }) => {
+  test.skip(Boolean(process.env.E2E_BASE_URL), "needs local Supabase");
+  const user = await newUser("onboarding-crumbs");
+  await openMagicLink(page, user.email);
+  await page.goto("/app/onboarding");
+  const crumbs = page.getByRole("navigation", { name: "Breadcrumb" });
+  await expect(crumbs.getByText("Add your business")).toBeVisible();
+  const shown = await crumbs.locator("li").evaluateAll((lis) =>
+    lis
+      .filter((li) => getComputedStyle(li).display !== "none")
+      .map((li) => {
+        // A separator counts only when it's drawn: display:none keeps the "/" content but hides it.
+        const b = getComputedStyle(li, "::before");
+        return { text: li.textContent?.trim(), sep: b.content.includes("/") && b.display !== "none" };
+      }),
+  );
+  const phone = page.viewportSize()!.width < 768;
+  expect(shown.map((c) => c.text)).toEqual(phone ? ["Add your business"] : ["Rank1", "Add your business"]);
+  expect(shown.filter((c) => c.sep)).toHaveLength(phone ? 0 : 1);
+});

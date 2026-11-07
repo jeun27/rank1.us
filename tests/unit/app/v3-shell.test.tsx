@@ -63,4 +63,34 @@ describe("v3 /app shell", () => {
     expect(account.closest("details")).not.toBeNull();
     expect(account.parentElement).toHaveClass("md:hidden");
   });
+
+  // OB1 (planner, lead-approved): no empty crumbs. Without a business (onboarding) the trail is
+  // "Rank1 / Add your business": two crumbs, one separator, never "Rank1 / /".
+  it("onboarding: no business crumb, and the page crumb says 'Add your business'", () => {
+    path.current = "/app/onboarding";
+    render(
+      <AppShell business={null}>
+        <main>
+          <h1>Add your business</h1>
+        </main>
+      </AppShell>,
+    );
+    const crumbs = screen.getByRole("navigation", { name: "Breadcrumb" });
+    const items = within(crumbs).getAllByRole("listitem");
+    expect(items.map((li) => li.textContent)).toEqual(["Rank1", "Add your business"]);
+    // Separators are CSS on every crumb after the first, so 2 crumbs = 1 separator.
+    expect(items.filter((li) => li.previousElementSibling)).toHaveLength(1);
+    expect(within(crumbs).getByText("Add your business")).toHaveAttribute("aria-current", "page");
+  });
+
+  it("a crumb that renders nothing (an async switcher with no business) is hidden by CSS", () => {
+    path.current = "/app/onboarding";
+    render(<AppShell business={<></>}>{null}</AppShell>);
+    const ol = screen.getByRole("navigation", { name: "Breadcrumb" }).querySelector("ol")!;
+    // Hidden when empty, and the next crumb drops its "/" on phones when the crumb before it is empty.
+    expect(ol.className.split(" ")).toContain("[&>li:empty]:hidden");
+    // While the switcher streams in, its crumb holds only React's <template> placeholder: hidden too.
+    expect(within(ol).getAllByRole("listitem")[1].className).toContain("[&:not(:has(>:not(template)))]:hidden");
+    expect(within(ol).getAllByRole("listitem").at(-1)!.className).toContain("max-md:[li:empty+&]:before:hidden");
+  });
 });
