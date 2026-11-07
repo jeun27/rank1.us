@@ -95,6 +95,22 @@ describe("templates for every business type", () => {
   });
 });
 
+describe("category case (UI3 F2)", () => {
+  it("is lower-cased in the questions; all-caps words (HVAC, CRM) stay as written", () => {
+    const qs = (b: Business) => buildQuestions(b, none).map((q) => q.short_text);
+    expect(qs({ ...plumber, category: "Plumber", services: [] })).toContain("best plumber in Irvine");
+    expect(qs({ ...plumber, vertical: "hvac", category: "HVAC Contractor", services: [] })).toContain(
+      "best HVAC contractor in Irvine",
+    );
+    expect(qs({ vertical: "saas", category: "CRM", city: "", state: "" })).toContain("best CRM software");
+  });
+
+  it("the key is unchanged by the case fix (only text moves, so BE3 switches the old row off and adds one)", () => {
+    const keys = (category: string) => buildQuestions({ ...plumber, category, services: [] }, none).map((q) => q.key);
+    expect(keys("Plumber")).toEqual(keys("plumber"));
+  });
+});
+
 describe("youtubeKeyword (G1, §4)", () => {
   it("local: the first service + city; no services → category + city", () => {
     expect(youtubeKeyword(plumber)).toBe("water heater repair Irvine");

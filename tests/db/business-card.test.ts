@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { ensureSelfServeWorkspace } from "@/lib/queries/auth";
-import { saveBusinessCard, type BusinessCard } from "@/lib/queries/business-card";
+import { cardQuestions, saveBusinessCard, type BusinessCard } from "@/lib/queries/business-card";
 import { createBusinessOnboarding } from "@/lib/queries/onboarding";
 import { buildQuestions, type KeyedQuestion, type Picks } from "@/lib/questions/templates";
 import { must, newUser, serviceClient, type TestUser } from "./helpers";
@@ -231,6 +231,24 @@ describe("save_business_card", () => {
         .map((r) => r.id)
         .sort(),
     ).toEqual([...restaurant].sort());
+  });
+
+  it("UI3 F2: the lower-case category moves text only; an old 'best Plumber' row is never rewritten", async () => {
+    const { user, id } = await business("bc-case");
+    const plumber = card({ vertical: "plumbing", cuisine: null, category: "Plumber", services: [] });
+    const real = cardQuestions(plumber);
+    const best = real.find((q) => q.short_text === "best plumber in Irvine")!;
+    // What the builder produced before the fix: same key, the category as written.
+    const before = (c: BusinessCard) =>
+      cardQuestions(c).map((q) => (q.key === best.key ? { ...q, short_text: "best Plumber in Irvine" } : q));
+    await saveBusinessCard(user.db, id, plumber, before);
+    const old = (await rows(id)).find((r) => r.short_text === "best Plumber in Irvine")!;
+
+    await saveBusinessCard(user.db, id, plumber);
+    const after = await rows(id);
+    expect(after.find((r) => r.id === old.id)).toMatchObject({ short_text: "best Plumber in Irvine", active: false });
+    expect(after.filter((r) => r.active).map((r) => r.short_text)).toContain("best plumber in Irvine");
+    expect(after.filter((r) => r.active).length).toBe(real.length);
   });
 
   it("a row the owner switched off stays off through saves and a type round trip; save-off rows come back", async () => {
