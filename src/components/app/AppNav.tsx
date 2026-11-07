@@ -218,6 +218,8 @@ function BottomBar({
 // The current page's nav label, for the breadcrumb.
 export function CurrentPage() {
   const path = usePathname();
+  // OB1: onboarding has no nav item; its crumb is the page's own title.
+  if (path.startsWith("/app/onboarding")) return <span aria-current="page">{c.onboardingTitle}</span>;
   const item = [...NAV_GROUPS.flat(), SETTINGS_ITEM].find((i) => isCurrent(path, i.href));
   return item ? <span aria-current="page">{item.label}</span> : null;
 }

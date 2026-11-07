@@ -2,6 +2,8 @@
 export const appCopy = {
   nav: "App",
   dashboard: "Dashboard",
+  // COPY.md "Placeholder H1s": /app/onboarding.
+  onboardingTitle: "Add your business",
   competitors: "Competitors",
   questions: "Questions",
   sources: "Sources",
