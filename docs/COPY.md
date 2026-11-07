@@ -564,7 +564,7 @@ The Supabase auth emails in supabase/templates/ (#193). Magic link = magic_link.
 | Fallback line (both) | "Button not working? Copy this link into your browser:" (then the plain link URL) |
 | Ignore line (both) | "Didn’t ask for this? You can ignore this email." |
 | Footer (both) | "Rank1 · rank1.us" (rank1.us links to https://rank1.us) |
-## Privacy: Google user data (founder-approved 2026-11-07)
+## Privacy: Google user data (lead-approved 2026-11-07 for Google OAuth verification; founder to review)
 
 The /privacy section Google OAuth verification needs. The Limited Use sentence is Google's wording, word for word; "Google API Services User Data Policy" links to https://developers.google.com/terms/api-services-user-data-policy and "Google Account permissions" to https://myaccount.google.com/permissions. Last updated 2026-11-07.
 

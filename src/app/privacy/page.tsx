@@ -10,7 +10,7 @@ const link =
 const POLICY = "https://developers.google.com/terms/api-services-user-data-policy";
 
 // Placeholder copy (exempt from COPY.md): only the topics in the step 2 brief. The Google user data section is
-// in COPY.md (founder OK 2026-11-07, for Google OAuth verification); its Limited Use sentence is Google's, word
+// in COPY.md (lead-approved 2026-11-07 for Google OAuth verification; founder to review); its Limited Use sentence is Google's, word
 // for word.
 export default function PrivacyPage() {
   return (
