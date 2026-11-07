@@ -27,7 +27,7 @@ for (const state of STATES)
 
 test("switcher: keyboard opens it, axe clean open, Esc closes and focus returns", async ({ page }) => {
   await page.goto("/dev/app?state=switcher-many");
-  const trigger = page.getByRole("button", { name: "Example Ramen House ▾" });
+  const trigger = page.getByRole("button", { name: "Example Ramen House", exact: true });
   await expect(trigger).toBeVisible();
   await trigger.focus();
   await page.keyboard.press("Enter");
@@ -40,7 +40,7 @@ test("switcher: keyboard opens it, axe clean open, Esc closes and focus returns"
 
 test("phones: the switcher is a bottom sheet with 56px rows; wide screens: a popover", async ({ page }) => {
   await page.goto("/dev/app?state=switcher-many");
-  await page.getByRole("button", { name: "Example Ramen House ▾" }).click();
+  await page.getByRole("button", { name: "Example Ramen House", exact: true }).click();
   const list = page.getByRole("list", { name: "Business switcher" });
   const rows = list.getByRole("button", { name: /^Example/ });
   for (const r of await rows.all()) expect((await r.boundingBox())!.height).toBeGreaterThanOrEqual(56);
@@ -55,7 +55,7 @@ test("phones: the switcher is a bottom sheet with 56px rows; wide screens: a pop
 
 test("Add and Remove dialogs: focus moves in, Tab stays inside, Esc returns focus, axe clean", async ({ page }) => {
   await page.goto("/dev/app?state=switcher-many");
-  await page.getByRole("button", { name: "Example Ramen House ▾" }).click();
+  await page.getByRole("button", { name: "Example Ramen House", exact: true }).click();
   const add = page.getByRole("button", { name: "+ Add a business ($99/mo)" });
   await add.click();
   const dialog = page.getByRole("dialog");

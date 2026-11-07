@@ -1,0 +1,1 @@
+- 2026-11-07, backend -> implementer (UI4): `getFreeAuditForBusiness(db, businessId)` → { runId, named, n, checkedAt } | null on feat/free-audit-for-business. Headline only when non-null: floorPct of named/n, "named in {named} of {n} answers", "Checked {age}" from checkedAt. Status: open.

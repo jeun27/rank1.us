@@ -11,8 +11,10 @@ export function Breadcrumb({ business, page }: { business: ReactNode; page: Reac
     // One row at every width (C5): Rank1 and the page don't shrink; the business crumb gives way first and
     // ends in an ellipsis.
     <nav aria-label="Breadcrumb" className="min-w-0 flex-1">
-      {/* "/" separators come from CSS (::before on every crumb after the first), never extra list items. */}
-      <ol className="flex min-w-0 items-center gap-2 whitespace-nowrap text-ui [&>li+li]:before:mr-2 [&>li+li]:before:text-inkMuted [&>li+li]:before:content-['/']">
+      {/* "/" separators come from CSS (::before on every crumb after the first), never extra list items.
+          OB1: a crumb with nothing in it is left out (or hidden, when an async switcher renders nothing or is
+          still streaming in, holding only React's <template> placeholder), so there's never an empty "/". */}
+      <ol className="flex min-w-0 items-center gap-2 whitespace-nowrap text-ui [&>li:empty]:hidden [&>li+li]:before:mr-2 [&>li+li]:before:text-inkMuted [&>li+li]:before:content-['/']">
         {/* Phones (X9a): the page name only. A real switcher (several businesses, /team) stays. */}
         <li className="shrink-0 text-text2 max-md:hidden">
           <Link
@@ -22,16 +24,23 @@ export function Breadcrumb({ business, page }: { business: ReactNode; page: Reac
             Rank1
           </Link>
         </li>
-        <li className="flex min-w-0 items-center font-medium text-ink max-md:before:hidden max-md:has-[[data-crumb-static]]:hidden">
-          {typeof business === "string" ? (
-            <span data-crumb-name data-crumb-static className="min-w-0 truncate">
-              {business}
-            </span>
-          ) : (
-            business
-          )}
+        {business != null && business !== false && business !== "" && (
+          <li className="flex min-w-0 items-center font-medium text-ink max-md:before:hidden max-md:has-[[data-crumb-static]]:hidden [&:not(:has(>:not(template)))]:hidden">
+            {typeof business === "string" ? (
+              <span data-crumb-name data-crumb-static className="min-w-0 truncate">
+                {business}
+              </span>
+            ) : (
+              business
+            )}
+          </li>
+        )}
+        {/* Phones hide Rank1, so the page crumb drops its "/" when nothing visible comes before it. */}
+        <li
+          className={`shrink-0 text-ink max-md:[li:has([data-crumb-static])+&]:before:hidden max-md:[li:empty+&]:before:hidden ${business == null || business === false || business === "" ? "max-md:before:hidden" : ""}`}
+        >
+          {page}
         </li>
-        <li className="shrink-0 text-ink max-md:[li:has([data-crumb-static])+&]:before:hidden">{page}</li>
       </ol>
     </nav>
   );

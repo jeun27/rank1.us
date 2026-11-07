@@ -218,7 +218,7 @@ Strings for the self-serve /app shell (Step 8): the nav and the Dashboard, Compe
 |---|---|
 | Nav (label) | "App" |
 | Section titles | "Visibility", "Competitors", "What to fix next", "Suggested competitors", "Share of voice" |
-| Suggested competitor buttons | "Add", "Not a competitor" |
+| Suggested competitor buttons | "Add", "Not a competitor". Screen readers hear "Add {name}" (F2, lead 2026-11-07): the visible word is "Add", the name is data |
 | Questions: failed answer ('–' tooltip) | "This check failed. It doesn't count toward your numbers." |
 | Questions drawer | "Close" |
 | History status | "Complete", "Failed" |

@@ -53,8 +53,13 @@ export function CompetitorSuggestions({
               </span>
             </span>
             <span className="flex gap-2">
+              {/* F2: "Add {name}", so screen readers can tell the Adds apart. The name is data (data-computed),
+                  in a screen-reader span; the visible word stays "Add". */}
               <button type="button" className={ghost} onClick={() => act(actions.add, s)}>
-                {c.add}
+                {c.add}{" "}
+                <span className="sr-only" data-computed>
+                  {s.name}
+                </span>
               </button>
               <button type="button" className={ghost} onClick={() => act(actions.dismiss, s)}>
                 {c.notCompetitor}

@@ -104,14 +104,14 @@ isOneToOne: false
                   ]
                 },"businesses": {
                   Row: {
-                    "aliases": (string)[],"archive_at": string | null,"archived_at": string | null,"brand_color": string | null,"city": string,"country": string,"created_at": string,"cuisine": string | null,"domain": string | null,"fix_list_visible": boolean,"gas_ready_at": string | null,"gas_ready_dismissed_at": string | null,"ga4_property_id": string | null,"id": string,"logo_path": string | null,"narrative_avoid": (string)[],"narrative_want": (string)[],"name": string,"report_recipients": (string)[],"service": string,"state": string,"vertical": string,"workspace_id": string
+                    "address": string | null,"aliases": (string)[],"archive_at": string | null,"archived_at": string | null,"brand_color": string | null,"category": string | null,"city": string,"country": string,"created_at": string,"cuisine": string | null,"domain": string | null,"fix_list_visible": boolean,"ga4_property_id": string | null,"gas_ready_at": string | null,"gas_ready_dismissed_at": string | null,"id": string,"logo_path": string | null,"name": string,"narrative_avoid": (string)[],"narrative_want": (string)[],"phone": string | null,"profile_links": (string)[],"profile_sources": Json,"report_recipients": (string)[],"service": string,"service_area": string | null,"services": (string)[],"state": string,"vertical": string,"workspace_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "aliases"?: (string)[],"archive_at"?: string | null,"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"gas_ready_at"?: string | null,"gas_ready_dismissed_at"?: string | null,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"narrative_avoid"?: (string)[],"narrative_want"?: (string)[],"name": string,"report_recipients"?: (string)[],"service"?: string,"state"?: string,"vertical"?: string,"workspace_id": string
+                    "address"?: string | null,"aliases"?: (string)[],"archive_at"?: string | null,"archived_at"?: string | null,"brand_color"?: string | null,"category"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"ga4_property_id"?: string | null,"gas_ready_at"?: string | null,"gas_ready_dismissed_at"?: string | null,"id"?: string,"logo_path"?: string | null,"name": string,"narrative_avoid"?: (string)[],"narrative_want"?: (string)[],"phone"?: string | null,"profile_links"?: (string)[],"profile_sources"?: Json,"report_recipients"?: (string)[],"service"?: string,"service_area"?: string | null,"services"?: (string)[],"state"?: string,"vertical"?: string,"workspace_id": string
                   }
                   Update: {
-                    "aliases"?: (string)[],"archive_at"?: string | null,"archived_at"?: string | null,"brand_color"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"gas_ready_at"?: string | null,"gas_ready_dismissed_at"?: string | null,"ga4_property_id"?: string | null,"id"?: string,"logo_path"?: string | null,"narrative_avoid"?: (string)[],"narrative_want"?: (string)[],"name"?: string,"report_recipients"?: (string)[],"service"?: string,"state"?: string,"vertical"?: string,"workspace_id"?: string
+                    "address"?: string | null,"aliases"?: (string)[],"archive_at"?: string | null,"archived_at"?: string | null,"brand_color"?: string | null,"category"?: string | null,"city"?: string,"country"?: string,"created_at"?: string,"cuisine"?: string | null,"domain"?: string | null,"fix_list_visible"?: boolean,"ga4_property_id"?: string | null,"gas_ready_at"?: string | null,"gas_ready_dismissed_at"?: string | null,"id"?: string,"logo_path"?: string | null,"name"?: string,"narrative_avoid"?: (string)[],"narrative_want"?: (string)[],"phone"?: string | null,"profile_links"?: (string)[],"profile_sources"?: Json,"report_recipients"?: (string)[],"service"?: string,"service_area"?: string | null,"services"?: (string)[],"state"?: string,"vertical"?: string,"workspace_id"?: string
                   }
                   Relationships: [
                     {
@@ -834,6 +834,9 @@ isOneToOne: false
                            },
 "finish_report":
 { Args: { "p_error": string | null,"p_pdf_path": string | null,"p_report_id": string,"p_sent_to": string[] | null,"p_status": string }; Returns: boolean
+                           },
+"free_audit_for_business":
+{ Args: { "p_business_id": string }; Returns: { "checked_at": string | null,"n": number,"named": number,"run_id": string }[]
                            },
 "gas_ready":
 { Args: { "p_business_id": string }; Returns: { "ready_at": string | null,"show_notice": boolean }[]

@@ -12,7 +12,8 @@ describe("Competitor suggestion controls", () => {
         actions={{ add: vi.fn(async () => undefined), dismiss: vi.fn(async () => undefined) }}
       />,
     );
-    for (const name of ["Add", "Not a competitor"]) {
+    // F2: the Add is named by its competitor.
+    for (const name of ["Add Example Pho Spot", "Not a competitor"]) {
       const cls = screen.getByRole("button", { name }).className.split(" ");
       expect(cls, name).toEqual(expect.arrayContaining(["rounded-control", "h-11", "md:h-8"]));
       expect(cls, name).not.toContain("rounded-full");

@@ -17,6 +17,7 @@ export function exampleRun(
     kind?: RunResults["run"]["kind"];
     done?: Partial<Record<Engine, number>>;
     failed?: Partial<Record<Engine, number>>;
+    noOverview?: Partial<Record<Engine, number>>;
   } = {},
 ): RunResults {
   const done = opts.done ?? { chatgpt: 75, gemini: 75, google_aio: 75, perplexity: 25 };
@@ -25,7 +26,12 @@ export function exampleRun(
       id: `${engine}-${i}`,
       engine,
       run_index: (i % 3) + 1,
-      status: i < (opts.failed?.[engine] ?? 0) ? ("failed" as const) : ("ok" as const),
+      status:
+        i < (opts.failed?.[engine] ?? 0)
+          ? ("failed" as const)
+          : i < (opts.failed?.[engine] ?? 0) + (opts.noOverview?.[engine] ?? 0)
+            ? ("no_overview" as const)
+            : ("ok" as const),
       question_id: opts.kind === "free_audit" ? null : `q${Math.floor(i / 3)}`,
       question_text_used: "best ramen in Irvine",
       mentioned: i % 3 === 0,
@@ -51,7 +57,8 @@ export function exampleRun(
       kind: opts.kind ?? "audit",
       status,
       jobs_total: 250,
-      jobs_ok: answers.filter((a) => a.status === "ok").length,
+      // As private.recompute_run counts them: no_overview answers arrived, so they count as ok jobs.
+      jobs_ok: answers.filter((a) => a.status !== "failed").length,
       jobs_failed: answers.filter((a) => a.status === "failed").length,
       started_at: "2026-11-05T12:00:00Z",
       finished_at: status === "queued" || status === "running" ? null : "2026-11-05T12:40:00Z",

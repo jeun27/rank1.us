@@ -34,12 +34,22 @@ type Business = Tables<"businesses">;
 type Competitor = Tables<"competitors">;
 type Question = Tables<"questions">;
 
+// Where a profile value came from; a user edit turns it into "user".
+export type ProfileSource = "schema" | "meta" | "title" | "nav" | "sitemap" | "default" | "user";
+type ProfileField =
+  "name" | "vertical" | "category" | "cuisine" | "city" | "state" | "address" | "phone" | "services" | "service_area";
+
 // Shape of create_business_onboarding's jsonb argument. Only these fields are read.
 export type OnboardingInput = {
   // vertical defaults to "restaurant"; anything outside VERTICALS is refused (22023).
+  // The profile fields (onboarding v2) are optional; create_dfy_client ignores them.
   business: Pick<Business, "name" | "domain" | "cuisine" | "city" | "state" | "country" | "aliases"> & {
     vertical?: Vertical;
-  };
+  } & Partial<
+      Pick<Business, "address" | "phone" | "category" | "services" | "service_area" | "profile_links"> & {
+        profile_sources: Partial<Record<ProfileField, ProfileSource>>;
+      }
+    >;
   competitors: (Pick<Competitor, "name"> &
     Partial<Pick<Competitor, "domain" | "rating" | "maps_cid">> & { source: "maps" | "manual" })[];
   questions: (Pick<Question, "short_text" | "long_text" | "active" | "template_key"> & {
