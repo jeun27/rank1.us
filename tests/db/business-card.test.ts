@@ -233,6 +233,46 @@ describe("save_business_card", () => {
     ).toEqual([...restaurant].sort());
   });
 
+  // 0046: a template text that changes only in case must not lose the question. The old row goes off
+  // with its text unchanged, the new text gets its own row; a round trip gets the old id back.
+  it("a case-only template change keeps the active count: old row off and unchanged, new-text row added", async () => {
+    const { user, id } = await business("bc-case-only");
+    const out = (best: string) => (): KeyedQuestion[] => [
+      { key: "1", short_text: best, long_text: "l1" },
+      { key: "2", short_text: "plumber with good reviews in Irvine", long_text: "l2" },
+    ];
+    await saveBusinessCard(user.db, id, card(), out("best Plumber in Irvine"));
+    const old = (await rows(id)).find((r) => r.short_text === "best Plumber in Irvine")!;
+
+    await saveBusinessCard(user.db, id, card(), out("best plumber in Irvine"));
+    const after = await rows(id);
+    expect(after.find((r) => r.id === old.id)).toEqual({ ...old, active: false });
+    expect(
+      after
+        .filter((r) => r.active)
+        .map((r) => r.short_text)
+        .sort(),
+    ).toEqual(["best plumber in Irvine", "plumber with good reviews in Irvine"]);
+
+    await saveBusinessCard(user.db, id, card(), out("best Plumber in Irvine"));
+    const back = await rows(id);
+    expect(back).toHaveLength(after.length);
+    expect(back.find((r) => r.id === old.id)!.active).toBe(true);
+  });
+
+  it("an owner row in another case still blocks the template text (no near-duplicate)", async () => {
+    const { user, id } = await business("bc-case-owner");
+    must(
+      await user.db
+        .from("questions")
+        .insert({ business_id: id, short_text: "Best plumber in Irvine", location_level: "country", active: true }),
+    );
+    await saveBusinessCard(user.db, id, card(), () => [
+      { key: "1", short_text: "best plumber in Irvine", long_text: "l1" },
+    ]);
+    expect((await rows(id)).map((r) => r.short_text)).toEqual(["Best plumber in Irvine"]);
+  });
+
   it("a row the owner switched off stays off through saves and a type round trip; save-off rows come back", async () => {
     const { user, id } = await business("bc-owner-off");
     await saveBusinessCard(user.db, id, card(), fixture);
