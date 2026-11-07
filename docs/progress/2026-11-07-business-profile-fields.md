@@ -1,0 +1,3 @@
+# Business profile fields (backend, onboarding v2 BE1) (branch feat/business-profile-fields)
+- Migration 20261105000041 (+ .down.sql): businesses gains address, phone, category, services text[], service_area, profile_sources jsonb, profile_links text[] (all optional, defaults null / '{}'). check_business_input validates them (lengths, ≤ 30 services, ≤ 20 http(s) links, known source tags; 22023); create_business_onboarding stores them. Business type is the existing vertical; dietary and occasion stay question picks. RLS unchanged.
+- Types: OnboardingInput.business takes them; ProfileSource exported from src/lib/queries/onboarding.ts.
