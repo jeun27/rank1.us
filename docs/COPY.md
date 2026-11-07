@@ -621,6 +621,20 @@ Greyed tooltip copy: "{Engine} can't target a city yet, so we check it for the w
 | best brunch in Irvine | Where can we get a great weekend brunch in Irvine, with good coffee, creative dishes and a table without a two-hour wait? | Growth Page (cuisine = brunch) |
 | date night at Irvine Spectrum Center | Planning a date night at Irvine Spectrum Center; which restaurant there has the best food and atmosphere for a relaxed dinner for two? | Growth Page (every Irvine business) |
 | lunch near Irvine Business Complex | I work near the Irvine Business Complex and have 45 minutes for lunch; which nearby restaurants are good, quick and not overpriced? | Growth Page (every Irvine business) |
+| best {category} in {city} | I'm in {city}, {state} and need a {category} I can trust; who are the best options nearby, and what makes them stand out? | Onboarding v2 Q10 |
+| {service} in {city} | I need {service} at my place in {city}, {state} this week; which local businesses do it well, at a fair price, and can come soon? | Onboarding v2 Q10 |
+| emergency {category} near me in {city} | It's late and I have an emergency at home in {city}, {state}; which {category} can come out tonight, and who answers fast? | Onboarding v2 Q10, trades only |
+| affordable {service} in {city} | I'm on a tight budget and need {service} in {city}, {state}; who does good work without overcharging, and what should I expect to pay? | Onboarding v2 Q10 |
+| {category} with good reviews in {city} | Which {category} in {city}, {state} has the best recent reviews from real customers, and what do people say they do better? | Onboarding v2 Q10 |
+| who does {service} near {area} | I live near {area} in {city} and need {service}; which local businesses cover my area, and who would you call first and why? | Onboarding v2 Q10 |
+| best {category} brands | I'm shopping for {category} and want something that lasts; which brands are worth the money right now, and how do they differ? | Onboarding v2 Q10 |
+| where to buy {service} | Where can I buy {service} online from a brand I can trust, with fair shipping and easy returns if it doesn't work out? | Onboarding v2 Q10 |
+| {category} brands like {competitor} | I like {competitor} but want to try something similar; which other {category} brands are as good or better, and how do they compare? | Onboarding v2 Q10 |
+| best {category} software | We're a small team picking {category} software this month; which tools are best right now, and what is each one best at? | Onboarding v2 Q10 |
+| {category} tools for small businesses | I run a five-person business; which {category} tools are easy to set up, fairly priced and good enough to grow with? | Onboarding v2 Q10 |
+| alternatives to {competitor} | We use {competitor} but it's getting expensive and clunky; what are the best alternatives right now, and why switch? | Onboarding v2 Q10 |
+
+The 12 "Onboarding v2 Q10" rows (local service, dtc, saas; "trades only" = hvac, plumbing, roofing, pest_control, auto): short forms founder-approved (P3), long forms lead-approved under P3, 2026-11-07.
 
 - **{dietary}**: vegan, vegetarian, gluten-free, halal, kosher
 - **{occasion}**: date night, birthday, business lunch, large group

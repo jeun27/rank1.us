@@ -44,13 +44,14 @@ describe("supabase/seed.sql", () => {
     expect(dev).toBe(devSeedSql());
   });
 
-  it("question_templates match TEMPLATES verbatim", () => {
+  it("question_templates match the restaurant TEMPLATES verbatim (the Q10 rows are migration-seeded)", () => {
     const rows = tuples(seed, "question_templates");
+    const restaurant = TEMPLATES.filter((t) => t.family === "restaurant");
     expect(rows.map(([, , short_form, long_form]) => ({ short_form, long_form }))).toEqual(
-      TEMPLATES.map((t) => ({ short_form: t.short_form, long_form: t.long_form })),
+      restaurant.map((t) => ({ short_form: t.short_form, long_form: t.long_form })),
     );
     expect(rows.map((r) => r.slice(-4))).toEqual(
-      TEMPLATES.map((t) => [t.fixed_cuisine ?? "null", t.fixed_city ?? "null", t.origin, String(t.sort)]),
+      restaurant.map((t) => [t.fixed_cuisine ?? "null", t.fixed_city ?? "null", t.origin, String(t.sort)]),
     );
   });
 
