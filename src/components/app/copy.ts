@@ -25,7 +25,8 @@ export const appCopy = {
   firstMonday: "Your first check runs Monday.",
   reviewQuestions: "Review your questions",
   startPaid: "Start for $99/mo",
-  lastPartial: (ok: number, total: number) => `Last run partial: ${ok} of ${total} answers`,
+  // n is the % denominator, not jobs_ok (which also counts no_overview), so a screen has one answer count.
+  lastPartial: (n: number, total: number) => `Last run partial: ${n} of ${total} answers`,
   noCompetitors: "No competitors yet. Add 3-5 local places to compare.",
   shareOfVoice: "Share of voice",
   suggested: "Suggested competitors",

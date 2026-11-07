@@ -73,7 +73,9 @@ export function Dashboard({
             {signedPts(lead.change)}
           </Badge>
         )}
-        {run.status === "partial" && <Badge tone="warn">{c.lastPartial(run.jobs_ok, run.jobs_total)}</Badge>}
+        {run.status === "partial" && (
+          <Badge tone="warn">{c.lastPartial(latest.metrics.visibility.denominator, run.jobs_total)}</Badge>
+        )}
       </div>
     </Hero>
   );
