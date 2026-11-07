@@ -43,9 +43,12 @@ function setup(
   return { actions, user: userEvent.setup() };
 }
 
+// UI1: the field's own "Read my site" (the phone bar repeats it below md; jsdom renders both).
+const readMySite = () => screen.getAllByRole("button", { name: "Read my site" })[0];
+
 async function stepOne(user: ReturnType<typeof userEvent.setup>, domain = "exampleramen.test") {
-  await user.type(screen.getByLabelText("Your domain"), domain);
-  await user.click(screen.getByRole("button", { name: "Next" }));
+  await user.type(screen.getByLabelText("Your website"), domain);
+  await user.click(readMySite());
 }
 
 async function toStepTwo(s: ReturnType<typeof setup>) {
@@ -72,37 +75,118 @@ async function toStepTwoFromBusiness(s: ReturnType<typeof setup>) {
 
 async function toStepThree(s: ReturnType<typeof setup>) {
   await toStepTwo(s);
-  await screen.findByText("Step 2 of 3");
+  await screen.findByText("Step 3 of 4 · Competitors");
   await screen.findAllByRole("checkbox", { name: /Example/ });
   await s.user.click(screen.getByRole("button", { name: "Next" }));
-  await screen.findByText("Step 3 of 3");
+  await screen.findByText("Step 4 of 4 · Questions");
 }
 
 // OB2 (planner, lead-approved): one heading per step. The page's H1 is "Add your business"; step 1 adds no
 // H2 of its own (it said "Business" again), steps 2 and 3 keep theirs. "Step n of 3" stays.
 describe("Onboarding: one heading per step (OB2)", () => {
-  it("step 1 has no H2; steps 2 and 3 keep Competitors and Questions", async () => {
+  it("steps 1 and 2 have no H2; Competitors and Questions keep theirs", async () => {
     const s = setup();
-    expect(screen.getByText("Step 1 of 3")).toBeInTheDocument();
+    expect(screen.getByText("Step 1 of 4 · Your site")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { level: 2 })).toBeNull();
     await toStepTwo(s);
-    await screen.findByText("Step 2 of 3");
+    await screen.findByText("Step 3 of 4 · Competitors");
     expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("Competitors");
     await screen.findAllByRole("checkbox", { name: /Example/ });
     await s.user.click(screen.getByRole("button", { name: "Next" }));
-    await screen.findByText("Step 3 of 3");
+    await screen.findByText("Step 4 of 4 · Questions");
     expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("Questions");
   });
 });
 
-describe("Onboarding 1: Business", () => {
+// UI1 (onboarding v2, O1; README §10): the welcome step. Task on the left, an Example result on the right
+// (stacked below the task on phones), "What happens next", and one primary, "Read my site". Strings are P2
+// pending (the founder's copy pass), in onboarding/copy.ts's welcome block.
+describe("Onboarding 1: Your site (UI1 welcome)", () => {
+  it("the field, the two links under it and What happens next (steps 2 to 4)", () => {
+    setup();
+    expect(screen.getByLabelText("Your website")).toHaveAttribute("placeholder", "yoursite.com");
+    expect(screen.getByText("About 5 minutes to set up.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "No website? Fill it in yourself" })).toBeInTheDocument();
+    const next = screen.getByRole("list", { name: "What happens next" });
+    expect(
+      within(next)
+        .getAllByRole("listitem")
+        .map((li) => li.textContent),
+    ).toEqual([
+      "2Your businessRank1 reads your site and fills in a card you can change.",
+      "3CompetitorsPick 3 to 5 businesses to compare against.",
+      `4QuestionsRank1 writes up to ${MAX_ACTIVE_QUESTIONS} questions people ask AI about businesses like yours.`,
+    ]);
+    // No eyebrow above the H1 (OC6): the step lives in the rail, and in the phone bar.
+    expect(screen.getByText("Step 1 of 4 · Your site").closest("[data-step-bar]")).not.toBeNull();
+  });
+
+  it("one primary: the field's Read my site at md+, the phone bar's below md, never both", () => {
+    setup();
+    const [field, bar] = screen.getAllByRole("button", { name: "Read my site" });
+    expect(field.className).toContain("bg-accent");
+    expect(field.closest("[data-step-field]")!.className).toContain("max-md:[&_[data-field]_button]:hidden");
+    expect(bar.closest("[data-step-bar]")!.className).toContain("md:hidden");
+    const filled = screen.getAllByRole("button").filter((b) => b.className.includes("bg-accent"));
+    expect(filled).toEqual([field, bar]);
+  });
+
+  it("the phone bar's Read my site submits the field", async () => {
+    const { actions, user } = setup();
+    await user.type(screen.getByLabelText("Your website"), "exampleramen.test");
+    await user.click(screen.getAllByRole("button", { name: "Read my site" })[1]);
+    expect(actions.readSite).toHaveBeenCalledWith("exampleramen.test");
+    expect(await screen.findByText("Step 2 of 4 · Your business")).toBeInTheDocument();
+  });
+
+  it("No website? opens an empty business card without reading anything", async () => {
+    const { actions, user } = setup();
+    await user.click(screen.getByRole("button", { name: "No website? Fill it in yourself" }));
+    expect(await screen.findByLabelText("Business name")).toHaveValue("");
+    expect(screen.getByText("Step 2 of 4 · Your business")).toBeInTheDocument();
+    expect(actions.readSite).not.toHaveBeenCalled();
+    expect(screen.queryByText(/We couldn't read that site/)).toBeNull();
+  });
+
+  it("the Example panel: labelled Example data, the You row says Your business, and every % has its n", () => {
+    setup();
+    const panel = screen.getByRole("region", { name: "What you'll see after your first check" });
+    expect(within(panel).getByText("Example data")).toBeInTheDocument();
+    expect(within(panel).getByText("Every number shows how many answers it's based on.")).toBeInTheDocument();
+    const rows = within(within(panel).getByRole("table")).getAllByRole("row").slice(1);
+    expect(rows.map((r) => r.textContent)).toEqual([
+      "Example Izakaya43% 70 of 160",
+      "Your businessYou34% 55 of 160",
+      "Example Udon House31% 50 of 160",
+      "Example Pho Spot23% 38 of 160",
+    ]);
+    for (const [engine, n] of [
+      ["ChatGPT", "16 of 40"],
+      ["Gemini", "13 of 40"],
+      ["Google AI Overview", "15 of 40"],
+      ["Perplexity", "11 of 40"],
+    ])
+      expect(within(panel).getByText(engine).parentElement).toHaveTextContent(n);
+    expect(within(panel).queryByText("Example Ramen House")).toBeNull();
+    for (const t of within(panel).getAllByText(/\d+%/)) expect(t.textContent).toMatch(/\d+% \d+ of \d+/);
+  });
+
+  it("the Example panel only shows on step 1", async () => {
+    const s = setup();
+    await stepOne(s.user);
+    await screen.findByLabelText("Business name");
+    expect(screen.queryByText("Example data")).toBeNull();
+  });
+});
+
+describe("Onboarding 2: Business", () => {
   it("starts blank with Irvine, CA prefilled, and checks the domain ending first", async () => {
     const { actions, user } = setup();
-    expect(screen.getByText("Step 1 of 3")).toBeInTheDocument();
+    expect(screen.getByText("Step 1 of 4 · Your site")).toBeInTheDocument();
     await stepOne(user, "exampleramen");
     expect(screen.getByText("Add the ending, like ramenhouse.com")).toBeInTheDocument();
     expect(actions.readSite).not.toHaveBeenCalled();
-    await user.clear(screen.getByLabelText("Your domain"));
+    await user.clear(screen.getByLabelText("Your website"));
     await stepOne(user, "https://www.ExampleRamen.test/menu");
     expect(actions.readSite).toHaveBeenCalledWith("exampleramen.test");
     expect(await screen.findByLabelText("Business name")).toHaveValue("Example Ramen House");
@@ -153,7 +237,7 @@ describe("Onboarding: reason lines next to Next (X24)", () => {
     expect(next()).toHaveAccessibleDescription("Add your business name first.");
     await user.click(next());
     expect(next()).toHaveFocus();
-    expect(screen.getByText("Step 1 of 3")).toBeInTheDocument();
+    expect(screen.getByText("Step 2 of 4 · Your business")).toBeInTheDocument();
     expect(await screen.findByRole("status")).toHaveTextContent("Add your business name first.");
     await user.type(screen.getByLabelText("Business name"), "Example Ramen House");
     expect(next()).toHaveAccessibleDescription("Pick a cuisine first.");
@@ -174,11 +258,11 @@ describe("Onboarding: reason lines next to Next (X24)", () => {
     const s = setup();
     vi.mocked(s.actions.findCompetitors).mockReturnValue(new Promise((r) => (done = r)));
     await toStepTwo(s);
-    await screen.findByText("Step 2 of 3");
+    await screen.findByText("Step 3 of 4 · Competitors");
     expect(next()).toHaveAttribute("aria-disabled", "true");
     expect(next()).toHaveAccessibleDescription("Finding places near you…");
     await s.user.click(next());
-    expect(screen.getByText("Step 2 of 3")).toBeInTheDocument();
+    expect(screen.getByText("Step 3 of 4 · Competitors")).toBeInTheDocument();
     expect(next()).toHaveFocus();
     // The loading state is a status region too: look for the one saying the reason.
     expect(await screen.findByText("Finding places near you…", { selector: "[role=status]" })).toBeInTheDocument();
@@ -365,7 +449,7 @@ describe("Onboarding 3: Questions + location", () => {
     const boxes = await screen.findAllByRole("checkbox", { name: /Example/ });
     await s.user.click(boxes[4]);
     await s.user.click(screen.getByRole("button", { name: "Next" }));
-    await screen.findByText("Step 3 of 3");
+    await screen.findByText("Step 4 of 4 · Questions");
     await s.user.click(screen.getAllByRole("checkbox", { name: /^Track: / })[1]);
     await openRow(s, 0);
     await s.user.selectOptions(screen.getByLabelText("Location level"), "state");
@@ -412,7 +496,7 @@ describe("Onboarding 3: Questions + location", () => {
     const s = setup();
     await toStepThree(s);
     await s.user.click(screen.getByRole("button", { name: "Back" }));
-    expect(await screen.findByText("Step 2 of 3")).toBeInTheDocument();
+    expect(await screen.findByText("Step 3 of 4 · Competitors")).toBeInTheDocument();
     expect(screen.getAllByRole("checkbox", { name: /Example/ })).toHaveLength(5);
     expect(s.actions.findCompetitors).toHaveBeenCalledTimes(1);
   });
@@ -441,10 +525,10 @@ describe("Onboarding 1: the vertical (ENABLE_CONNECTIONS)", () => {
     ).toEqual(VERTICALS.map((v) => c.card.verticals[v]));
     await s.user.selectOptions(select, c.card.verticals.hvac);
     await toStepTwoFromBusiness(s);
-    await screen.findByText("Step 2 of 3");
+    await screen.findByText("Step 3 of 4 · Competitors");
     await screen.findAllByRole("checkbox", { name: /Example/ });
     await s.user.click(screen.getByRole("button", { name: "Next" }));
-    await screen.findByText("Step 3 of 3");
+    await screen.findByText("Step 4 of 4 · Questions");
     await s.user.click(screen.getByRole("button", { name: "Finish setup" }));
     const input = vi.mocked(s.actions.finish).mock.calls[0][0] as OnboardingInput;
     expect(input.business.vertical).toBe("hvac");
