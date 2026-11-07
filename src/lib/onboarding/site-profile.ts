@@ -1,6 +1,6 @@
 import type { Vertical } from "@/lib/queries/onboarding";
 import { createSiteFetcher, decode, isHtmlPage, matchCuisine, meta, pageText, siteName } from "./read-site";
-import type { ReadSiteDeps } from "./read-site";
+import type { ReadSiteDeps, SiteFetcher } from "./read-site";
 import type { ProfileSource, SiteProfile } from "./types";
 
 // Onboarding v2 DP1 (share/ux-plan/onboarding-welcome §4): the business profile from the home page.
@@ -189,18 +189,30 @@ export function profileFromHtml(html: string): Omit<SiteProfile, "status"> {
   return normalise(p);
 }
 
-// Stages 1–3 of the reading log: the home page only (robots.txt respected). Never throws.
-export async function readHome(domain: string, deps: ReadSiteDeps = {}): Promise<SiteProfile> {
-  const unreadable: SiteProfile = { status: "unreadable", areaServed: [], sameAs: [], sources: {} };
+// Stages 1–3 of the reading log: the home page only (robots.txt respected). Never throws. The home page's own
+// services (JSON-LD offers, nav labels) come back too, so stage 4 never fetches it again (#213 review):
+// services is null when the home page lists none and stage 4 has to try the sitemap.
+export async function readHomeStage(
+  domain: string,
+  deps: ReadSiteDeps = {},
+): Promise<{ profile: SiteProfile; services: SiteServices | null }> {
+  const unreadable = {
+    profile: { status: "unreadable", areaServed: [], sameAs: [], sources: {} } as SiteProfile,
+    services: null,
+  };
   try {
     const f = await createSiteFetcher(domain, deps);
     if (!f || !f.allowed("/")) return unreadable;
     const home = await f.page("/");
-    return isHtmlPage(home) ? { status: "ok", ...profileFromHtml(home.body) } : unreadable;
+    if (!isHtmlPage(home)) return unreadable;
+    return { profile: { status: "ok", ...profileFromHtml(home.body) }, services: homeServices(home.body) };
   } catch {
     return unreadable;
   }
 }
+
+export const readHome = async (domain: string, deps: ReadSiteDeps = {}): Promise<SiteProfile> =>
+  (await readHomeStage(domain, deps)).profile;
 
 // DP2: services, stage 4 of the reading log. JSON-LD offers → <nav> link labels minus the stoplist →
 // sitemap paths one level under /services/, /menu/ or /treatments/. At most one sitemap fetch (robots'
@@ -283,23 +295,43 @@ export function sitemapServices(xml: string, host: string): string[] {
   return normaliseServices(out);
 }
 
-export async function readServices(domain: string, deps: ReadSiteDeps = {}): Promise<SiteServices> {
-  const unreadable: SiteServices = { status: "unreadable", services: [], source: null };
+// The home page's services: JSON-LD offers first, then nav labels; null when it lists none.
+function homeServices(html: string): SiteServices | null {
+  for (const [source, services] of [
+    ["schema", schemaServices(html)],
+    ["nav", navServices(html)],
+  ] as const)
+    if (services.length) return { status: "ok", services, source };
+  return null;
+}
+
+// Stage 4's last signal: at most one sitemap (robots' Sitemap: line, else /sitemap.xml). Never the home page.
+async function sitemapFrom(f: SiteFetcher): Promise<SiteServices> {
+  const listed = f.robots.text.match(/^\s*sitemap\s*:\s*(\S+)/im)?.[1];
+  const sitemap = await f.page(listed ?? "/sitemap.xml");
+  const services = sitemap && sitemap.status < 300 ? sitemapServices(sitemap.body, f.host) : [];
+  return { status: "ok", services, source: services.length ? "sitemap" : null };
+}
+const noServices: SiteServices = { status: "unreadable", services: [], source: null };
+
+export async function readSitemapServices(domain: string, deps: ReadSiteDeps = {}): Promise<SiteServices> {
   try {
     const f = await createSiteFetcher(domain, deps);
-    if (!f || !f.allowed("/")) return unreadable;
-    const home = await f.page("/");
-    if (!isHtmlPage(home)) return unreadable;
-    for (const [source, services] of [
-      ["schema", schemaServices(home.body)],
-      ["nav", navServices(home.body)],
-    ] as const)
-      if (services.length) return { status: "ok", services, source };
-    const listed = f.robots.text.match(/^\s*sitemap\s*:\s*(\S+)/im)?.[1];
-    const sitemap = await f.page(listed ?? "/sitemap.xml");
-    const services = sitemap && sitemap.status < 300 ? sitemapServices(sitemap.body, f.host) : [];
-    return { status: "ok", services, source: services.length ? "sitemap" : null };
+    return f ? await sitemapFrom(f) : noServices;
   } catch {
-    return unreadable;
+    return noServices;
+  }
+}
+
+// Both in one go, on one fetcher: the home page's services, else the sitemap's.
+export async function readServices(domain: string, deps: ReadSiteDeps = {}): Promise<SiteServices> {
+  try {
+    const f = await createSiteFetcher(domain, deps);
+    if (!f || !f.allowed("/")) return noServices;
+    const home = await f.page("/");
+    if (!isHtmlPage(home)) return noServices;
+    return homeServices(home.body) ?? (await sitemapFrom(f));
+  } catch {
+    return noServices;
   }
 }
