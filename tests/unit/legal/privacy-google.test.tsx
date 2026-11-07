@@ -6,8 +6,9 @@ import PrivacyPage from "@/app/privacy/page";
 // Google OAuth verification (founder OK 2026-11-07): /privacy has a Google user data section with each scope,
 // the use, storage, what we never do, and Google's exact Limited Use sentence linking the policy.
 const POLICY = "https://developers.google.com/terms/api-services-user-data-policy";
+// Google's sentence, word for word (lead, 2026-11-07).
 const LIMITED_USE =
-  "Rank1's use and transfer of information received from Google APIs to any other app will adhere to the Google API Services User Data Policy, including the Limited Use requirements.";
+  "Rank1's use and transfer to any other app of information received from Google APIs will adhere to Google API Services User Data Policy, including the Limited Use requirements.";
 const text = () => document.body.textContent!.replace(/\s+/g, " ");
 
 describe("/privacy: Google user data", () => {
