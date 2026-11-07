@@ -252,6 +252,25 @@ describe("Coming soon, collapsed to one line", () => {
     await user.click(within(section(c.tiers.later)!).getByRole("button", { name: c.notify }));
     expect(a.notify.mock.calls.map((x) => (x as unknown[])[0])).not.toContain("yelp");
   });
+
+  // #196 review: a retry after a partly failed Notify me sends only the connectors that failed.
+  it("a retry after a partial failure re-sends only the ones that failed", async () => {
+    const { a, user } = hub({ industry: "restaurant" });
+    const soon = Object.values(recommend("restaurant"))
+      .flat()
+      .filter((t) => t.available === "coming_soon")
+      .map((t) => t.connector);
+    const [failing] = soon;
+    const notify = a.notify as unknown as ReturnType<typeof vi.fn>;
+    notify.mockImplementation(async (k: unknown) => (k === failing ? { error: "failed" } : undefined));
+    await user.click(within(section(c.tiers.later)!).getByRole("button", { name: c.notify }));
+    expect(within(section(c.tiers.later)!).queryByText(c.noted)).toBeNull();
+    notify.mockClear();
+    notify.mockImplementation(async () => undefined);
+    await user.click(within(section(c.tiers.later)!).getByRole("button", { name: c.notify }));
+    expect(a.notify.mock.calls.map((x) => (x as unknown[])[0])).toEqual([failing]);
+    expect(within(section(c.tiers.later)!).getByRole("status")).toHaveTextContent(c.noted);
+  });
 });
 
 describe("the callback outcome and read-only viewers", () => {
