@@ -63,6 +63,9 @@ end;
 $$;
 
 drop function if exists public.save_business_card(uuid, jsonb, jsonb);
+drop trigger if exists questions_owner_toggle on public.questions;
+drop function if exists private.record_owner_toggle();
 alter table public.businesses drop column if exists question_picks;
 drop function if exists private.question_picks_ok(jsonb);
-alter table public.questions drop column if exists template_short, drop column if exists template_long;
+alter table public.questions drop column if exists template_short, drop column if exists template_long,
+  drop column if exists owner_off;

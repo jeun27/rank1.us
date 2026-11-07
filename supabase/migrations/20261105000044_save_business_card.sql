@@ -8,6 +8,25 @@ alter table public.questions
   add column if not exists template_short text,
   add column if not exists template_long text;
 
+-- owner_off: the owner switched the row off (lead: a card save never undoes that). Every change to active
+-- outside save_business_card is the owner's (onboarding's step 3 included), so a trigger records it;
+-- the save marks its own writes with the transaction-local setting rank1.card_save.
+alter table public.questions add column if not exists owner_off boolean not null default false;
+create or replace function private.record_owner_toggle() returns trigger
+language plpgsql set search_path = '' as $$
+begin
+  if coalesce(current_setting('rank1.card_save', true), '') <> 'on'
+     and (tg_op = 'INSERT' or new.active is distinct from old.active) then
+    new.owner_off := not new.active;
+  end if;
+  return new;
+end;
+$$;
+revoke all on function private.record_owner_toggle() from public;
+drop trigger if exists questions_owner_toggle on public.questions;
+create trigger questions_owner_toggle before insert or update of active on public.questions
+  for each row execute function private.record_owner_toggle();
+
 -- The question picks (landmarks, areas, dietary, occasion), so Settings can regenerate and prefill them.
 create or replace function private.question_picks_ok(j jsonb) returns boolean
 language sql immutable set search_path = '' as $$
@@ -30,8 +49,9 @@ grant insert (question_picks), update (question_picks) on table public.businesse
 -- p_questions is the builder's output for the new card, in template order: [{ key, short, long }].
 -- Hand-added (no template_key) and edited rows are untouched. Unedited rows whose key is still produced
 -- are rewritten in place (same id); the others are deactivated, never deleted. New keys (and texts) are
--- inserted. Owner rows keep their active flag; template rows fill the free slots of the 25 cap in
--- template order (so a save also re-enables a template row the owner switched off unedited).
+-- inserted. Owner rows keep their active flag, and a row the owner switched off (owner_off) stays off;
+-- the other template rows fill the free slots of the 25 cap in template order, so rows a save switched
+-- off come back when their template applies again.
 -- Errors: 42501, 22023 bad input, 23514 a CHECK.
 create or replace function public.save_business_card(p_business_id uuid, p_card jsonb, p_questions jsonb)
 returns void
@@ -42,6 +62,7 @@ declare
   free bigint;
 begin
   select * into b from public.businesses where id = p_business_id for update;
+  perform set_config('rank1.card_save', 'on', true);
   if auth.uid() is null or not found or not private.member_can_write_business(p_business_id) then
     raise exception 'Not allowed to edit this business' using errcode = 'insufficient_privilege';
   end if;
@@ -97,8 +118,8 @@ begin
                       and (q.template_key = n.key or lower(q.short_text) = lower(n.short)))
   order by n.ord;
 
-  -- Owner rows (hand-added or edited) keep their flag; the template rows fill the rest of the 25 slots
-  -- in template order. Off before on, so the cap trigger never sees 26.
+  -- Owner rows (hand-added or edited) keep their flag and owner_off rows stay off; the other template
+  -- rows fill the rest of the 25 slots in template order. Off before on, so the cap trigger never sees 26.
   select 25 - count(*) into free from public.questions q
   where q.business_id = p_business_id and q.active
     and (q.template_key is null or q.template_short is null or q.short_text <> q.template_short
@@ -109,7 +130,7 @@ begin
      join jsonb_to_recordset(p_questions) with ordinality as n(key text, short text, long text, ord bigint)
        on n.key = q.template_key
      where q.business_id = p_business_id and q.template_short is not null and q.short_text = q.template_short
-       and q.long_text is not distinct from q.template_long) r
+       and q.long_text is not distinct from q.template_long and not q.owner_off) r
   where q.id = r.id and r.rk > free and q.active;
   update public.questions q set active = true
   from (select q.id, row_number() over (order by n.ord, q.id) as rk
@@ -117,8 +138,9 @@ begin
      join jsonb_to_recordset(p_questions) with ordinality as n(key text, short text, long text, ord bigint)
        on n.key = q.template_key
      where q.business_id = p_business_id and q.template_short is not null and q.short_text = q.template_short
-       and q.long_text is not distinct from q.template_long) r
+       and q.long_text is not distinct from q.template_long and not q.owner_off) r
   where q.id = r.id and r.rk <= free and not q.active;
+  perform set_config('rank1.card_save', 'off', true);
 end;
 $$;
 revoke all on function public.save_business_card(uuid, jsonb, jsonb) from public, anon;

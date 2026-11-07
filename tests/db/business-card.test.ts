@@ -176,6 +176,73 @@ describe("save_business_card", () => {
     expect(back.filter((r) => r.active && r.template_key?.startsWith("ls"))).toHaveLength(0);
   });
 
+  it("a row the owner switched off stays off through saves and a type round trip; save-off rows come back", async () => {
+    const { user, id } = await business("bc-owner-off");
+    await saveBusinessCard(user.db, id, card(), fixture);
+    const two = (await rows(id)).find((r) => r.template_key === "2")!;
+    expect(two.owner_off).toBe(false);
+    must(await user.db.from("questions").update({ active: false }).eq("id", two.id));
+    expect((await rows(id)).find((r) => r.id === two.id)).toMatchObject({ active: false, owner_off: true });
+
+    await saveBusinessCard(user.db, id, card({ city: "Tustin" }), fixture);
+    expect((await rows(id)).find((r) => r.id === two.id)).toMatchObject({
+      active: false,
+      owner_off: true,
+      short_text: "best pho 1 in Tustin",
+    });
+
+    await saveBusinessCard(user.db, id, card({ vertical: "plumbing", cuisine: null }), fixture);
+    await saveBusinessCard(user.db, id, card(), fixture);
+    const back = await rows(id);
+    const restaurant = back.filter((r) => /^\d+$/.test(r.template_key ?? ""));
+    expect(
+      restaurant
+        .filter((r) => r.active)
+        .map((r) => r.template_key)
+        .sort(),
+    ).toEqual(["1", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"].sort());
+    expect(back.find((r) => r.id === two.id)).toMatchObject({ active: false, owner_off: true });
+    expect(back.filter((r) => r.template_key?.startsWith("ls")).every((r) => !r.active && !r.owner_off)).toBe(true);
+
+    // Switching it back on clears the flag, and the next save keeps it on.
+    must(await user.db.from("questions").update({ active: true }).eq("id", two.id));
+    await saveBusinessCard(user.db, id, card(), fixture);
+    expect((await rows(id)).find((r) => r.id === two.id)).toMatchObject({ active: true, owner_off: false });
+  });
+
+  it("onboarding's unticked rows are owner-off", async () => {
+    const user = await newUser("bc-onboard-off");
+    await ensureSelfServeWorkspace(user.db);
+    const q = (i: number, active: boolean) => ({
+      short_text: `best pho ${i} in Irvine`,
+      long_text: `long ${i}`,
+      active_form: "long" as const,
+      active,
+      location_level: "city" as const,
+      city: "Irvine",
+      state: "CA",
+      country: "US",
+      template_key: String(i),
+      template_short: `best pho ${i} in Irvine`,
+      template_long: `long ${i}`,
+    });
+    const id = await createBusinessOnboarding(user.db, {
+      business: {
+        name: "Example Pho Spot",
+        domain: `bc-onb-${randomUUID().slice(0, 8)}.test`,
+        cuisine: "pho",
+        city: "Irvine",
+        state: "CA",
+        country: "US",
+        aliases: [],
+      },
+      competitors: [],
+      questions: [q(1, true), q(2, false)],
+    });
+    const qs = await rows(id);
+    expect(Object.fromEntries(qs.map((r) => [r.template_key, r.owner_off]))).toEqual({ "1": false, "2": true });
+  });
+
   it("the 25 cap keeps owner rows active first; new template rows beyond it are inserted inactive", async () => {
     const { user, id } = await business("bc-cap");
     const hand = Array.from({ length: 20 }, (_, i) => ({

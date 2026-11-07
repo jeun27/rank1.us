@@ -568,14 +568,14 @@ isOneToOne: false
                   ]
                 },"questions": {
                   Row: {
-                    "active": boolean,"active_form": string,"business_id": string,"city": string | null,"country": string | null,"dfs_location_code": number | null,"id": string,"location_level": string,"long_text": string | null,"short_text": string,"state": string | null,"template_key": string | null,"template_long": string | null,"template_short": string | null
+                    "active": boolean,"active_form": string,"business_id": string,"city": string | null,"country": string | null,"dfs_location_code": number | null,"id": string,"location_level": string,"owner_off": boolean,"long_text": string | null,"short_text": string,"state": string | null,"template_key": string | null,"template_long": string | null,"template_short": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "active"?: boolean,"active_form"?: string,"business_id": string,"city"?: string | null,"country"?: string | null,"dfs_location_code"?: number | null,"id"?: string,"location_level": string,"long_text"?: string | null,"short_text": string,"state"?: string | null,"template_key"?: string | null,"template_long"?: string | null,"template_short"?: string | null
+                    "active"?: boolean,"active_form"?: string,"business_id": string,"city"?: string | null,"country"?: string | null,"dfs_location_code"?: number | null,"id"?: string,"location_level": string,"owner_off"?: boolean,"long_text"?: string | null,"short_text": string,"state"?: string | null,"template_key"?: string | null,"template_long"?: string | null,"template_short"?: string | null
                   }
                   Update: {
-                    "active"?: boolean,"active_form"?: string,"business_id"?: string,"city"?: string | null,"country"?: string | null,"dfs_location_code"?: number | null,"id"?: string,"location_level"?: string,"long_text"?: string | null,"short_text"?: string,"state"?: string | null,"template_key"?: string | null,"template_long"?: string | null,"template_short"?: string | null
+                    "active"?: boolean,"active_form"?: string,"business_id"?: string,"city"?: string | null,"country"?: string | null,"dfs_location_code"?: number | null,"id"?: string,"location_level"?: string,"owner_off"?: boolean,"long_text"?: string | null,"short_text"?: string,"state"?: string | null,"template_key"?: string | null,"template_long"?: string | null,"template_short"?: string | null
                   }
                   Relationships: [
                     {
