@@ -544,6 +544,24 @@ Strings the lead approved for the UX plan (share/ux-plan §C; founder OK 2026-11
 | Onboarding step 2, beside Next while the place search runs (X24; §C) | "Finding places near you…" |
 | Onboarding step 3, sticky bar beside Finish setup (X23; §C, lead edit a) | "{n} of {total} questions tracked" ({total} is the plan limit, MAX_ACTIVE_QUESTIONS) |
 
+## Privacy: Google user data (founder-approved 2026-11-07)
+
+The /privacy section Google OAuth verification needs. The Limited Use sentence is Google's wording, word for word; "Google API Services User Data Policy" links to https://developers.google.com/terms/api-services-user-data-policy and "Google Account permissions" to https://myaccount.google.com/permissions. Last updated 2026-11-07.
+
+| Where | String |
+|---|---|
+| Heading | "Google user data" |
+| Intro | "When you sign in with Google or connect a Google service, Rank1 receives only this:" |
+| Sign-in | "Google sign-in: your Google account email and name." |
+| Business Profile | "Google Business Profile (the business.manage scope): Rank1 reads your listing details and applies only the edits you approve." |
+| Search Console | "Google Search Console (the webmasters.readonly scope): read-only access to your site's search data." |
+| Analytics | "Google Analytics, GA4 (the analytics.readonly scope): read-only access, used to show AI-referred traffic in your reports." |
+| YouTube | "YouTube (the youtube.readonly scope): read-only access to your channel's videos." |
+| Use | "Rank1 uses this data only to show you your own business's visibility and fixes." |
+| Storage | "Google access tokens are stored encrypted. You can disconnect any Google service at any time from Connections in Rank1, or from your Google Account permissions." |
+| Never | "We never sell your Google data, use it for ads, or use it to train AI models." |
+| Limited Use | "Rank1's use and transfer of information received from Google APIs to any other app will adhere to the Google API Services User Data Policy, including the Limited Use requirements." |
+
 ## Engine location tooltip
 
 Greyed tooltip copy: "{Engine} can't target a city yet, so we check it for the whole country."
