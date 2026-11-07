@@ -274,6 +274,21 @@ describe("Onboarding 2: Business", () => {
     expect(screen.getByText("Step 2 of 4 · Your business")).toBeInTheDocument();
   });
 
+  // v0.8.2 QA F2: the finished log ("4 of 4", Services ticked) paints and is announced before the card opens.
+  it("the finished log shows 4 of 4 before the card opens", async () => {
+    const { actions, user } = setup();
+    let services!: (s: SiteServices) => void;
+    vi.mocked(actions.readServices).mockReturnValue(new Promise((r) => (services = r)));
+    await stepOne(user);
+    const log = screen.getByRole("group", { name: "Reading exampleramen.test" });
+    await within(log).findByText("3 of 4");
+    services({ status: "ok", services: ["Tonkotsu", "Shoyu"], source: "nav" });
+    expect(await within(log).findByText("4 of 4")).toBeInTheDocument();
+    expect(within(log).getByText("2 found in your menu")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Business name")).toBeNull();
+    expect(await screen.findByLabelText("Business name")).toBeInTheDocument();
+  });
+
   it("nothing in schema.org or the page head reads 'Not on your site'", async () => {
     const { actions, user } = setup({ site: { status: "ok", sources: {} } });
     vi.mocked(actions.readServices).mockReturnValue(new Promise(() => {}));
