@@ -2,8 +2,11 @@ import { test, expect, type Page } from "@playwright/test";
 
 // DQ10 (design-quality audit): the Dashboard's loading skeleton was three equal 112px bars, so the page
 // jumped when results arrived. Each skeleton block now sits where its success block lands (24px slack).
+// boundingBox() doesn't wait for visibility, and on a cold production load the page isn't laid out yet.
 const box = async (page: Page, selector: string) => {
-  const b = (await page.locator(selector).first().boundingBox())!;
+  const el = page.locator(selector).first();
+  await expect(el).toBeVisible();
+  const b = (await el.boundingBox())!;
   return { y: b.y, h: b.height, x: b.x, w: b.width };
 };
 const SUCCESS = {
