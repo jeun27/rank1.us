@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/app/states";
+import { DashboardSkeleton } from "@/components/app/states";
 
 export default function Loading() {
-  return <Skeleton title="Dashboard" />;
+  return <DashboardSkeleton />;
 }

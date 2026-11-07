@@ -38,7 +38,7 @@ const STATES: Record<string, () => ReactNode> = {
   narrative: () => view({ narrative: <NarrativeDashboard view={exampleNarrative} readOnly /> }),
   "narrative-no-clash": () => view({ narrative: <NarrativeDashboard view={exampleNarrativeNoClash} readOnly /> }),
   loading: () => <Skeleton title="Dashboard" />,
-  error: () => <ErrorState title="Dashboard" message="We couldn't load your results. Try again." reset={() => {}} />,
+  error: () => <ErrorState title="Dashboard" message="We couldn't load your results." reset={() => {}} />,
 };
 
 export function Gallery({ state }: { state?: string }) {

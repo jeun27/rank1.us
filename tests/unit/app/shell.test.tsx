@@ -270,7 +270,8 @@ describe("History (UI.md 4b)", () => {
 describe("app shell copy", () => {
   it("uses only strings that are in docs/COPY.md", () => {
     const md = readFileSync("docs/COPY.md", "utf8");
-    const strings = Object.values(appCopy).map((v) => (typeof v === "function" ? v(230, 250) : v));
-    for (const s of strings) expect(md, s).toContain(s.replace("230 of 250", "230 of 250"));
+    // The partial badge is documented with the Example numbers (240 of 250, after DQ18).
+    const strings = Object.values(appCopy).map((v) => (typeof v === "function" ? v(240, 250) : v));
+    for (const s of strings) expect(md, s).toContain(s);
   });
 });
