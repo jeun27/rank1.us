@@ -123,6 +123,21 @@ describe("profileFromHtml: JSON-LD → meta/og → title/H1", () => {
   });
 });
 
+describe("normalised to #199's business CHECK (no 23514 on insert)", () => {
+  it("https links only (no spaces, ≤ 500 chars), deduped, at most 20; text fields trimmed to their caps", () => {
+    const p = profileFromHtml(fx("oversize"));
+    expect(p.sameAs).toHaveLength(20);
+    expect(p.sameAs.every((u) => /^https:\/\/\S+$/.test(u) && u.length <= 500)).toBe(true);
+    expect(p.sameAs[0]).toBe("https://www.example-profile.test/p0");
+    expect(new Set(p.sameAs).size).toBe(20);
+    expect(p.address!.length).toBeLessThanOrEqual(200);
+    expect(p.address).toMatch(/^1 Example Way/);
+    expect(p.phone!.length).toBeLessThanOrEqual(40);
+    expect(p.areaServed.every((a) => a.length > 0 && a.length <= 200)).toBe(true);
+    expect(p.category!.length).toBeLessThanOrEqual(100);
+  });
+});
+
 describe("readHome", () => {
   const H = "https://example-ramen-house.test";
   const deps = (pages: Record<string, string>) => ({
