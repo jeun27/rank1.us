@@ -3,6 +3,13 @@
 -- its workspace owner's email. Additive (live builds never call it). Re-runnable.
 -- Rollback: supabase/rollbacks/20261105000042_free_audit_for_business.down.sql
 
+-- A host compared as the same site: lowercase, no trailing dot, no leading "www." (www.x.com = x.com).
+create or replace function private.site_host(h text) returns text
+language sql immutable set search_path = '' as $$
+  select regexp_replace(rtrim(lower(btrim(h)), '.'), '^www\.', '');
+$$;
+revoke all on function private.site_host(text) from public;
+
 -- Definer (free_audits, leads and auth.users are service-only). Members of the business only; anyone
 -- else gets no row; anon is refused. Only complete/partial audits; named/n = its ok answers, as the
 -- free-audit page counts them. Returns no email, token or brand list.
@@ -16,7 +23,7 @@ language sql stable security definer set search_path = '' as $$
   from public.businesses b
   join public.workspaces w on w.id = b.workspace_id
   join auth.users u on u.id = w.owner_id
-  join public.free_audits fa on lower(fa.domain) = lower(b.domain)
+  join public.free_audits fa on private.site_host(fa.domain) = private.site_host(b.domain)
   join public.leads l on l.id = fa.lead_id and lower(l.email) = lower(u.email)
   join public.runs r on r.id = fa.run_id and r.status in ('complete', 'partial')
   where b.id = p_business_id and private.is_business_member(p_business_id)

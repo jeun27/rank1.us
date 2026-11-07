@@ -83,6 +83,16 @@ describe("free audit for a business", () => {
     expect(await getFreeAuditForBusiness(owner.db, businessId)).toMatchObject({ runId: latest, named: 9, n: 40 });
   });
 
+  it("folds www. and a trailing dot on both sides: an audit of www.x.test matches x.test, and back", async () => {
+    const { owner, businessId, domain } = await owned("fa-www");
+    const run = await freeAudit(owner.email, `WWW.${domain}.`, 4, 10);
+    expect(await getFreeAuditForBusiness(owner.db, businessId)).toMatchObject({ runId: run, named: 4, n: 10 });
+
+    const other = await owned("fa-www2", `www.fa-www2-${randomUUID().slice(0, 8)}.test`);
+    const back = await freeAudit(other.owner.email, other.domain.slice(4), 1, 4);
+    expect(await getFreeAuditForBusiness(other.owner.db, other.businessId)).toMatchObject({ runId: back });
+  });
+
   it("ignores another user's audit for the same domain, and the owner's audit of another domain", async () => {
     const { owner, businessId, domain } = await owned("fa-other");
     const stranger = await newUser("fa-stranger");
