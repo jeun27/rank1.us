@@ -231,7 +231,16 @@ const STOP = new Set([
   "terms",
   "search",
 ]);
-const uniq = (xs: string[]) => [...new Map(xs.map((x) => [x.toLowerCase(), x])).values()].slice(0, MAX_SERVICES);
+// Non-blank, ≤ 100 chars each, deduped, ≤ 12 (inside #199's services CHECK: 30 × 100).
+const uniq = (xs: string[]) =>
+  [
+    ...new Map(
+      xs
+        .map((x) => clip(x, 100))
+        .filter((x): x is string => !!x)
+        .map((x) => [x.toLowerCase(), x]),
+    ).values(),
+  ].slice(0, MAX_SERVICES);
 
 // An Offer's name: itemOffered.name, else its own name.
 const offerName = (o: unknown) => {

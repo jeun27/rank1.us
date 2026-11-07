@@ -8,5 +8,5 @@ Spec: share/ux-plan/onboarding-welcome/README.md §4 (Services row) and §5 DP2.
   - Sitemap paths exactly one level under `/services/`, `/menu/`, `/treatments/`, this site only, with slugs turned into labels.
 - Fetch budget: robots + home + at most one sitemap. That's robots' `Sitemap:` line, else `/sitemap.xml`, robots respected, an index never followed, and other hosts refused by the fetcher. The sitemap is fetched only when schema and nav found nothing.
 - The home page is fetched again, because readServices is its own server action after readHome (no client-sent HTML).
-- Deduped case-insensitively, capped at 12 chips. The cap is mine; §4 sets none.
+- Each service is trimmed to 100 chars, blanks dropped, deduped case-insensitively, at most 12 chips (inside #199's 30 × 100 CHECK). The 12 is mine; §4 sets none.
 - Fixtures: tests/fixtures/sites/services-{nav,none}.html and services-sitemap.xml. The "both" and "schema" cases are composed in the test. No network.

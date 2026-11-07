@@ -27,6 +27,19 @@ describe("parsers", () => {
     expect(navServices(NONE)).toEqual([]);
   });
 
+  it("fits #199's CHECK: non-blank, each ≤ 100 chars, at most 12 (under the 30 cap)", () => {
+    const long = `<nav>${Array.from({ length: 20 }, (_, i) => `<a href="/s${i}">Service ${i} ${"x".repeat(i ? 1 : 58)}</a>`).join("")}<a href="/b"> </a></nav>`;
+    const s = navServices(long);
+    expect(s).toHaveLength(12);
+    expect(s.every((x) => x.trim() && x.length <= 100)).toBe(true);
+    expect(
+      sitemapServices(
+        `<loc>https://example-plumbing.test/services/${"a-".repeat(80)}b</loc>`,
+        "example-plumbing.test",
+      )[0].length,
+    ).toBeLessThanOrEqual(100);
+  });
+
   it("sitemap: one level under /services/, /menu/, /treatments/ on this site only, as labels", () => {
     expect(sitemapServices(SITEMAP, "example-plumbing.test")).toEqual(["Drain cleaning", "Water heater repair"]);
   });
