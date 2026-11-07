@@ -1,4 +1,5 @@
 import { ENGINE_IDS, type EngineId } from "@/lib/engines/types";
+import type { Vertical } from "./onboarding";
 import { metric } from "@/lib/metrics/compute";
 import type { Category } from "@/lib/runs/categorize";
 import type { Metric } from "@/types/metrics";
@@ -15,6 +16,8 @@ export type CurrentBusiness = {
   city: string;
   state: string;
   country: string;
+  // UI4: picks the locked Dashboard's Example board (null = restaurant, the default before onboarding v2).
+  vertical: Vertical | null;
   // The workspace's subscription is active or trialing (the status itself is never returned).
   paid: boolean;
 };
@@ -36,7 +39,7 @@ export async function getCurrentBusiness(db: DbClient, selectedId?: string | nul
   if (!member) return null;
   const { data, error: bizError } = await db
     .from("businesses")
-    .select("id, name, domain, cuisine, city, state, country, workspaces(subscription_status)")
+    .select("id, name, domain, cuisine, city, state, country, vertical, workspaces(subscription_status)")
     .eq("workspace_id", member.workspace_id)
     .eq("service", "self_serve")
     .is("archived_at", null)
@@ -47,7 +50,11 @@ export async function getCurrentBusiness(db: DbClient, selectedId?: string | nul
   if (!picked) return null;
   const { workspaces, ...business } = picked;
   const status = (workspaces as { subscription_status: string | null } | null)?.subscription_status;
-  return { ...business, paid: status === "active" || status === "trialing" };
+  return {
+    ...business,
+    vertical: business.vertical as Vertical | null,
+    paid: status === "active" || status === "trialing",
+  };
 }
 
 export type RunSummary = {

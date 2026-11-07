@@ -1,5 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { Dashboard } from "@/components/app/Dashboard";
 import { LockedPreview } from "@/components/app/LockedPreview";
 
 // UI4 (O1, README §3 + §10): the unpaid Dashboard. The real headline only when BE2 found the business's own
@@ -72,5 +73,37 @@ describe("LockedPreview", () => {
     expect(names("saas")).toMatch(/Example Analytics/);
     expect(names("dtc")).toMatch(/Example Analytics/);
     expect(names(null)).toMatch(/Example Izakaya/);
+  });
+});
+
+describe("Dashboard, no run yet", () => {
+  const none = { points: [], visible: false };
+  it("unpaid: the locked preview, with the free audit it's given", () => {
+    render(
+      <Dashboard
+        business={{ name: "Example Plumbing Co", paid: false, vertical: "plumbing" }}
+        latest={null}
+        series={none}
+        fixes={[]}
+        now={NOW}
+        freeAudit={audit}
+      />,
+    );
+    expect(screen.getByRole("region", { name: "From your free audit" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Start for $99/mo" })).toHaveAttribute("href", "/app/billing");
+  });
+
+  it("paid: the first-check empty state, no locked preview", () => {
+    render(
+      <Dashboard
+        business={{ name: "Example Plumbing Co", paid: true }}
+        latest={null}
+        series={none}
+        fixes={[]}
+        now={NOW}
+      />,
+    );
+    expect(screen.queryByText(/Find out who AI names instead of you/)).toBeNull();
+    expect(screen.queryByRole("link", { name: "Start for $99/mo" })).toBeNull();
   });
 });

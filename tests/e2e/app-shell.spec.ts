@@ -7,6 +7,7 @@ const isMobile = (page: Page) => page.viewportSize()!.width < 768;
 const STATES = [
   "dashboard-empty",
   "dashboard-unpaid",
+  "dashboard-unpaid-audit",
   "dashboard-first-check",
   "dashboard-first-running",
   "dashboard-success",
