@@ -197,6 +197,39 @@ describe("save_business_card", () => {
     expect(back.filter((r) => r.active && r.template_key?.startsWith("ls"))).toHaveLength(0);
   });
 
+  it("DP3, the real templates: Restaurant → Local service turns the plumbing questions on and back again", async () => {
+    const { user, id } = await business("bc-dp3");
+    const plumber = card({
+      vertical: "plumbing",
+      cuisine: null,
+      category: "plumber",
+      services: ["water heater repair", "drain cleaning"],
+    });
+    await saveBusinessCard(user.db, id, card());
+    const restaurant = (await rows(id)).filter((r) => r.active).map((r) => r.id);
+    expect(restaurant.length).toBeGreaterThan(0);
+
+    await saveBusinessCard(user.db, id, plumber);
+    const after = await rows(id);
+    expect(after.filter((r) => restaurant.includes(r.id)).every((r) => !r.active)).toBe(true);
+    expect(
+      after
+        .filter((r) => r.active)
+        .map((r) => r.template_key)
+        .sort(),
+    ).toEqual(keysOf(plumber).sort());
+    expect(after.filter((r) => r.active).map((r) => r.short_text)).toContain("water heater repair in Irvine");
+
+    await saveBusinessCard(user.db, id, card());
+    const back = await rows(id);
+    expect(
+      back
+        .filter((r) => r.active)
+        .map((r) => r.id)
+        .sort(),
+    ).toEqual([...restaurant].sort());
+  });
+
   it("a row the owner switched off stays off through saves and a type round trip; save-off rows come back", async () => {
     const { user, id } = await business("bc-owner-off");
     await saveBusinessCard(user.db, id, card(), fixture);

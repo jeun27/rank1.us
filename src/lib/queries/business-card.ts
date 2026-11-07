@@ -11,12 +11,20 @@ export type BusinessCard = Pick<OnboardingInput["business"], "name" | "cuisine" 
     >
   > & { vertical: Vertical; question_picks: Picks };
 
-// The template questions for a card: the restaurant templates need a cuisine; other types get theirs
-// with DP3 (until then none, so a save leaves their template rows off and owner rows as they are).
+// The template questions for a card, for every business type (DP3): its family's templates, each
+// skipped when a slot it needs is empty (a restaurant with no cuisine gets none).
 export const cardQuestions = (card: BusinessCard) =>
-  card.vertical === "restaurant" && card.cuisine
-    ? buildQuestions({ cuisine: card.cuisine, city: card.city, state: card.state }, card.question_picks)
-    : [];
+  buildQuestions(
+    {
+      vertical: card.vertical,
+      cuisine: card.cuisine,
+      city: card.city,
+      state: card.state,
+      category: card.category,
+      services: card.services,
+    },
+    card.question_picks,
+  );
 
 // Saves the card and reconciles its questions in one transaction (save_business_card): edited and
 // hand-added rows are untouched; a row's text never changes, so an unedited row whose text is no longer
