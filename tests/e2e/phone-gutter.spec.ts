@@ -8,6 +8,9 @@ for (const state of ["dashboard-success", "dashboard-error"])
     await page.goto(`/dev/app?state=${state}`);
     const crumb = page.getByRole("navigation", { name: "Breadcrumb" }).getByText("Dashboard", { exact: true });
     const h1 = page.getByRole("heading", { level: 1 });
-    expect(Math.round((await crumb.boundingBox())!.x)).toBe(16);
-    expect(Math.round((await h1.boundingBox())!.x)).toBe(16);
+    // boundingBox() doesn't wait for visibility; a cold production load isn't laid out yet.
+    for (const el of [crumb, h1]) {
+      await expect(el).toBeVisible();
+      expect(Math.round((await el.boundingBox())!.x)).toBe(16);
+    }
   });
