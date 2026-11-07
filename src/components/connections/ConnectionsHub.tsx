@@ -248,7 +248,10 @@ function ComingSoon({
   props: HubProps;
   onFailed: () => void;
 }) {
-  const [noted, setNoted] = useState(connectors.every((k) => props.interest.includes(k)));
+  // The connectors registered so far, the saved interest plus this visit's successes, so a retry after a
+  // partial failure sends only what's still missing (#196 review).
+  const [done, setDone] = useState<ConnectorKey[]>(props.interest);
+  const noted = connectors.every((k) => done.includes(k));
   return (
     <section aria-labelledby="tier-later" className="flex flex-col gap-3">
       <h2 id="tier-later" className="text-ui font-semibold">
@@ -267,12 +270,13 @@ function ComingSoon({
             <Button
               variant="alt"
               onClick={async () => {
-                const rest = connectors.filter((k) => !props.interest.includes(k));
-                const r = await Promise.all(rest.map((k) => props.actions.notify(k))).catch(() => [
-                  { error: "failed" },
-                ]);
-                if (r.some((x) => x && "error" in x)) return onFailed();
-                setNoted(true);
+                const rest = connectors.filter((k) => !done.includes(k));
+                const r = await Promise.all(
+                  rest.map((k) => props.actions.notify(k).catch(() => ({ error: "failed" }))),
+                );
+                const ok = rest.filter((_, i) => !(r[i] && "error" in r[i]!));
+                setDone((d) => [...d, ...ok]);
+                if (ok.length < rest.length) onFailed();
               }}
             >
               {c.notify}

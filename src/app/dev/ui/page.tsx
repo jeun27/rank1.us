@@ -162,7 +162,7 @@ export default function DevUiPage() {
 
       <Section name="Banner">
         <Banner tone="error" action={{ label: "Try again", href: "#banner" }}>
-          We couldn&apos;t load your results. Try again.
+          We couldn&apos;t load your results.
         </Banner>
         <Banner tone="info">ChatGPT can&apos;t target a city yet, so we check it for the whole country.</Banner>
         <Banner tone="warn" action={{ label: "Reconnect", href: "#banner" }} primary>
@@ -252,7 +252,7 @@ export default function DevUiPage() {
             </SetRow>
             <SetRow title="Banners" note="Red edge for errors, blue edge for info. Actions use the text link.">
               <Banner tone="error" action={{ label: "Try again", href: "#banner" }}>
-                We couldn&apos;t load your results. Try again.
+                We couldn&apos;t load your results.
               </Banner>
               <Banner tone="info">ChatGPT can&apos;t target a city yet, so we check it for the whole country.</Banner>
             </SetRow>
