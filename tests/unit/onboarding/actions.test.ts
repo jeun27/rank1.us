@@ -251,6 +251,20 @@ describe("onboarding server actions", () => {
       expect(await tokenCalls()).toBe(1);
     });
 
+    // #216 review B1: the sitemap result is cached with the home stage, so a repeat call fetches nothing.
+    it("a repeat stage 4 after a sitemap read makes no fetch", async () => {
+      homeServices.current = null;
+      await readHomeAction("exampleramen.test");
+      await readServicesAction("exampleramen.test");
+      expect(await readServicesAction("exampleramen.test")).toEqual({
+        status: "ok",
+        services: ["Drain cleaning"],
+        source: "sitemap",
+      });
+      expect(readSitemapServices).toHaveBeenCalledTimes(1);
+      expect(await tokenCalls()).toBe(1);
+    });
+
     it("stage 4 without stages 1–3 for that domain: unreadable, no fetch, no token", async () => {
       expect(await readServicesAction("example-other.test")).toEqual({
         status: "unreadable",
