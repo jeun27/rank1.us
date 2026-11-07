@@ -42,10 +42,10 @@ describe("BusinessSwitcher", () => {
     expect(screen.queryByRole("button", { name: /Example Ramen House/ })).toBeNull();
   });
 
-  it("two: 'Example Ramen House ▾' lists name, city, '34% · 250 answers', status; picking one selects it", async () => {
+  it("two: 'Example Ramen House' (with the chevron icon) lists name, city, '34% · 250 answers', status; picking one selects it", async () => {
     const p = props(2, { businesses: [biz(1), biz(2, { active: false })] });
     render(<BusinessSwitcher {...p} />);
-    await userEvent.click(screen.getByRole("button", { name: "Example Ramen House ▾" }));
+    await userEvent.click(screen.getByRole("button", { name: "Example Ramen House" }));
     const list = screen.getByRole("list", { name: "Business switcher" });
     expect(within(list).getAllByText("34% · 250 answers")).toHaveLength(2);
     expect(within(list).getAllByText("Irvine")).toHaveLength(2);
@@ -58,11 +58,11 @@ describe("BusinessSwitcher", () => {
 
   it("search shows only with more than 8 businesses, and filters by name", async () => {
     const { unmount } = render(<BusinessSwitcher {...props(8)} />);
-    await userEvent.click(screen.getByRole("button", { name: "Example Ramen House ▾" }));
+    await userEvent.click(screen.getByRole("button", { name: "Example Ramen House" }));
     expect(screen.queryByLabelText("Search businesses")).toBeNull();
     unmount();
     render(<BusinessSwitcher {...props(9)} />);
-    await userEvent.click(screen.getByRole("button", { name: "Example Ramen House ▾" }));
+    await userEvent.click(screen.getByRole("button", { name: "Example Ramen House" }));
     await userEvent.type(screen.getByLabelText("Search businesses"), "Business 9");
     const list = screen.getByRole("list", { name: "Business switcher" });
     expect(within(list).getAllByRole("button", { name: /^Example Business 9/ })).toHaveLength(1);
@@ -73,7 +73,7 @@ describe("BusinessSwitcher", () => {
     const seats = vi.fn().mockResolvedValueOnce(2).mockResolvedValueOnce(3);
     const p = props(2, { actions: actions({ seats }) });
     render(<BusinessSwitcher {...p} />);
-    await userEvent.click(screen.getByRole("button", { name: "Example Ramen House ▾" }));
+    await userEvent.click(screen.getByRole("button", { name: "Example Ramen House" }));
     await userEvent.click(screen.getByRole("button", { name: "+ Add a business ($99/mo)" }));
     const dialog = screen.getByRole("dialog");
     expect(dialog).toHaveTextContent(
@@ -90,7 +90,7 @@ describe("BusinessSwitcher", () => {
   it("Add poll times out at 30 s: keeps 'Adding your business…' with a manual retry, no error", async () => {
     const p = props(1, { businesses: [biz(1), biz(2)], seats: 2, actions: actions({ seats: vi.fn(async () => 2) }) });
     render(<BusinessSwitcher {...p} />);
-    await userEvent.click(screen.getByRole("button", { name: "Example Ramen House ▾" }));
+    await userEvent.click(screen.getByRole("button", { name: "Example Ramen House" }));
     await userEvent.click(screen.getByRole("button", { name: "+ Add a business ($99/mo)" }));
     vi.useFakeTimers({ shouldAdvanceTime: true });
     await userEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Add business" }));
@@ -104,7 +104,7 @@ describe("BusinessSwitcher", () => {
   it("Remove: 'More for {name}' → 'Remove business' → the exact dialog → remove; Cancel and Esc close it", async () => {
     const p = props(2);
     render(<BusinessSwitcher {...p} />);
-    await userEvent.click(screen.getByRole("button", { name: "Example Ramen House ▾" }));
+    await userEvent.click(screen.getByRole("button", { name: "Example Ramen House" }));
     await userEvent.click(screen.getByRole("button", { name: "More for Example Business 2" }));
     await userEvent.click(screen.getByRole("menuitem", { name: "Remove business" }));
     const dialog = screen.getByRole("dialog");
@@ -132,11 +132,20 @@ describe("BusinessSwitcher failures", () => {
   ] as const)("%s failure: 'We couldn't save that. Try again.'", async (kind, opener, confirm) => {
     const p = props(2, { actions: actions({ [kind]: vi.fn(async () => ({ error: "failed" })) }) });
     render(<BusinessSwitcher {...p} />);
-    await userEvent.click(screen.getByRole("button", { name: "Example Ramen House ▾" }));
+    await userEvent.click(screen.getByRole("button", { name: "Example Ramen House" }));
     await userEvent.click(screen.getByRole("button", { name: opener }));
     if (kind === "remove") await userEvent.click(screen.getByRole("menuitem", { name: "Remove business" }));
     await userEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: confirm }));
     expect(await screen.findByRole("alert")).toHaveTextContent("We couldn't save that. Try again.");
     expect(screen.queryByText("We couldn't open billing. Try again in a minute.")).toBeNull();
+  });
+
+  // #186 follow-up (lead): the trigger's chevron is the ui/Icon chevronDown, not a "▾" glyph, so it matches
+  // the selects and stays out of the button's accessible name.
+  it("the trigger draws the chevron icon, and its name is just the business", () => {
+    render(<BusinessSwitcher {...props(2)} />);
+    const trigger = screen.getByRole("button", { name: "Example Ramen House" });
+    expect(trigger.textContent).not.toContain("▾");
+    expect(trigger.querySelector("[data-icon=chevronDown]")).toHaveAttribute("aria-hidden", "true");
   });
 });
