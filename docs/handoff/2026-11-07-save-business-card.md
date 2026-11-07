@@ -1,0 +1,2 @@
+- 2026-11-07, backend -> implementer (UI5): `saveBusinessCard(db, businessId, card)` in src/lib/queries/business-card.ts; card = { name, vertical, cuisine, city, state, question_picks, …profile fields }. Prefill question_picks from businesses.question_picks. Errors 42501 / 22023 / 23514. Status: open.
+- 2026-11-07, backend -> data-pipeline (DP3): BuiltQuestion now has `key` ("{sort}|slot=value…"), the row's template_key. Keep it stable when adding per-type templates; extend cardQuestions in business-card.ts for non-restaurant verticals. Status: open.

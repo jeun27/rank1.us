@@ -9,7 +9,11 @@ beforeEach(() =>
   vi.stubGlobal("matchMedia", () => ({ matches: false, addEventListener() {}, removeEventListener() {} })),
 );
 afterEach(() => vi.unstubAllGlobals());
-vi.mock("next/navigation", () => ({ usePathname: () => path.current }));
+const search = { current: "" };
+vi.mock("next/navigation", () => ({
+  usePathname: () => path.current,
+  useSearchParams: () => new URLSearchParams(search.current),
+}));
 
 // v3 PR 2 (D14/D42): the dark rail with grouped items, and a breadcrumb top bar.
 describe("v3 /app shell", () => {
@@ -62,6 +66,33 @@ describe("v3 /app shell", () => {
     expect(bar.parentElement).toHaveClass("max-md:hidden");
     expect(account.closest("details")).not.toBeNull();
     expect(account.parentElement).toHaveClass("md:hidden");
+  });
+
+  // UI1 (absorbs v1 OB3): while onboarding, the rail is a 4-step stepper read from ?step= (no links).
+  it("onboarding: the rail lists the 4 steps, the current one marked, earlier ones done", () => {
+    path.current = "/app/onboarding";
+    search.current = "step=3";
+    render(<AppShell business={null}>{null}</AppShell>);
+    const steps = screen.getByRole("list", { name: "Add your business" });
+    const items = within(steps).getAllByRole("listitem");
+    expect(items.map((li) => li.textContent)).toEqual([
+      "1Your site Done",
+      "2Your business Done",
+      "3Competitors",
+      "4Questions",
+    ]);
+    expect(items[2]).toHaveAttribute("aria-current", "step");
+    expect(within(steps).queryAllByRole("link")).toHaveLength(0);
+    search.current = "";
+  });
+
+  it("onboarding without ?step= starts at Your site", () => {
+    path.current = "/app/onboarding";
+    render(<AppShell business={null}>{null}</AppShell>);
+    expect(within(screen.getByRole("list", { name: "Add your business" })).getAllByRole("listitem")[0]).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
   });
 
   // OB1 (planner, lead-approved): no empty crumbs. Without a business (onboarding) the trail is

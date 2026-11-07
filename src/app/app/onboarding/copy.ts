@@ -1,7 +1,5 @@
 // Onboarding strings, all from docs/COPY.md (4b Onboarding 1-3, "Onboarding (lead, 2026-11-05)", Final set).
 export const copy = {
-  step: (n: number) => `Step ${n} of 3`,
-  titles: ["Business", "Competitors", "Questions"],
   next: "Next",
   // COPY.md "UX (lead, 2026-11-06)" X24: beside a disabled Next.
   missing: {
@@ -13,9 +11,10 @@ export const copy = {
   },
   back: "Back",
   finish: "Finish setup",
-  domain: { label: "Your domain", placeholder: "yoursite.com", noEnding: "Add the ending, like ramenhouse.com" },
-  readingSite: "Reading your site…",
-  unreadable: "We couldn't read that site. Type 3 things you sell.",
+  // The landing hero sub and the Example label, reused as they are (README §6).
+  sub: "See how often ChatGPT, Gemini, Google AI Overview and Perplexity name your business, how you stack up against competitors, and what to fix next.",
+  exampleData: "Example data",
+  domain: { placeholder: "yoursite.com", noEnding: "Add the ending, like ramenhouse.com" },
   name: "Business name",
   cuisine: "Cuisine",
   city: "City",
@@ -45,4 +44,50 @@ export const copy = {
   emptyQuestion: (n: number) => `Couldn't save question ${n}: it's empty.`,
   cityNote: (engine: string) => `${engine} can't target a city yet, so we check it for the whole country.`,
   saveFailed: "We couldn't save your business. Try again.",
+};
+
+// Onboarding v2, O1 (founder-approved P2, 2026-11-07): README §6 Q1–Q3, in docs/COPY.md "Onboarding v2".
+export const welcome = {
+  steps: ["Your site", "Your business", "Competitors", "Questions"],
+  stepOf: (n: number, step: string) => `Step ${n} of 4 · ${step}`,
+  label: "Your website",
+  read: "Read my site",
+  manual: "No website? Fill it in yourself",
+  time: "About 5 minutes to set up.",
+  nextTitle: "What happens next",
+  next: [
+    () => "Rank1 reads your site and fills in a card you can change.",
+    () => "Pick 3 to 5 businesses to compare against.",
+    (total: number) => `Rank1 writes up to ${total} questions people ask AI about businesses like yours.`,
+  ],
+  exampleTitle: "What you'll see after your first check",
+  footnote: "Every number shows how many answers it's based on.",
+  // OC10: the You row in an Example never shows a real name.
+  you: "Your business",
+  // Reused as they are: the leaderboard headers, the You tag, the page title (the rail's list name) and the
+  // Fix list's "Done" (a finished step, for screen readers).
+  business: "Business",
+  visibility: "Visibility",
+  youTag: "You",
+  stepsLabel: "Add your business",
+  done: "Done",
+};
+
+// Onboarding v2, O1 (founder-approved P2): README §6 Q4 (the reading log) and Q8 (unreadable).
+export const reading = {
+  title: (domain: string) => `Reading ${domain}`,
+  count: (n: number) => `${n} of 4`,
+  opened: (domain: string) => `Opened ${domain}`,
+  details: "Business details",
+  foundSchema: (fields: string) => `Found ${fields} in schema.org`,
+  notOnSite: "Not on your site",
+  head: "Title and description",
+  foundHead: "Found in the page head",
+  services: "Services",
+  readingServices: "Reading your menu links…",
+  // Q5's tag, reused for the finished Services stage.
+  servicesFound: (n: number) => `${n} found in your menu`,
+  note: "No AI reads your site. Rank1 only looks at what your pages already say.",
+  button: "Reading…",
+  unreadable: "We couldn't read that site. Fill in your business below.",
 };
