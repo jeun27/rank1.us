@@ -63,7 +63,7 @@ describe("supabase/seed.sql on a fresh db reset", () => {
       ),
     );
     expect(counts).toMatchObject({
-      question_templates: 20,
+      question_templates: 32,
       fix_rules: 28,
       domain_categories: 5,
       workspaces: 1,
@@ -78,9 +78,10 @@ describe("supabase/seed.sql on a fresh db reset", () => {
     expect(counts.citations).toBeGreaterThan(0);
   });
 
-  it("question_templates match TEMPLATES verbatim", async () => {
+  it("question_templates match TEMPLATES verbatim (the seed's restaurant rows)", async () => {
     const db = await rows(
-      `select short_form, long_form, slots, fixed_cuisine, fixed_city, origin, sort from public.question_templates order by sort`,
+      `select short_form, long_form, slots, fixed_cuisine, fixed_city, origin, sort from public.question_templates
+       where vertical = 'restaurant' order by sort`,
     );
     expect(db).toEqual(TEMPLATES.map((t) => ({ ...t, slots: [...t.slots] })));
   });
