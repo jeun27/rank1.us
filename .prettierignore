@@ -9,3 +9,5 @@ tests/fixtures/engines/**/*.json
 *.md
 # Must match docs/UI.md tokens text exactly (tokens.test.ts); Prettier lowercases hex.
 src/app/globals.css
+# Site fixtures are raw HTML as sites serve it (one is deliberately broken JSON-LD).
+tests/fixtures/sites/*.html
